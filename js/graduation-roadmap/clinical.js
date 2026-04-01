@@ -3,6 +3,7 @@
 // ==================== CLINICAL TAB FUNCTIONS ====================
 
 let currentPatientTasks = []; // Temporary storage for patient modal tasks
+var _lastRemovedEvidence = null; // Stores last removed evidence entry for undo
 
 function switchClinicalSubtab(subtab, btn) {
     // Update button states
@@ -622,10 +623,10 @@ const DEFAULT_COMPETENCIES = {
                 { id: 'perio-form-recall', text: '6 Recall', required: 6, completed: 0, status: 'pending', completionEntries: [], note: '', d3Deadline: null, unlockedBy: null, unlockEmailTo: null, isSummative: false, rules: null, custom: false }
             ]},
             { title: 'Summatives (3rd + 4th Year Cumulative)', items: [
-                { id: 'perio-sum-hci', text: '1 Home Care Instruction', required: 1, completed: 0, status: 'pending', completionEntries: [], note: '', d3Deadline: null, unlockedBy: [{ id: 'perio-form-ohi', required: 2 }], unlockEmailTo: null, isSummative: true, rules: 'Must initiate in SPS BEFORE procedure', custom: false },
+                { id: 'perio-sum-hci', text: '1 Home Care Instruction', required: 1, completed: 0, status: 'pending', completionEntries: [], note: '', d3Deadline: '2025-10-01', unlockedBy: [{ id: 'perio-form-ohi', required: 2 }], unlockEmailTo: null, isSummative: true, rules: 'Must initiate in SPS BEFORE procedure', custom: false },
                 { id: 'perio-sum-dx', text: '2 Diagnosis & Treatment Plan (Type 2)', required: 2, completed: 0, status: 'pending', completionEntries: [], note: '', d3Deadline: null, unlockedBy: [{ id: 'perio-form-dx', required: 4 }], unlockEmailTo: null, isSummative: true, rules: 'Must initiate in SPS BEFORE procedure', custom: false },
-                { id: 'perio-sum-prophy', text: '3 Prophy (total)', required: 3, completed: 0, status: 'pending', completionEntries: [], note: '', d3Deadline: null, unlockedBy: [{ id: 'perio-form-prophy', required: 5 }], unlockEmailTo: null, isSummative: true, rules: 'Must initiate in SPS BEFORE procedure', custom: false },
-                { id: 'perio-sum-reeval-ging', text: '2 Re-evaluate Gingivitis', required: 2, completed: 0, status: 'pending', completionEntries: [], note: '', d3Deadline: null, unlockedBy: [{ id: 'perio-form-reeval-ging', required: 3 }], unlockEmailTo: null, isSummative: true, rules: 'Must initiate in SPS BEFORE procedure', custom: false },
+                { id: 'perio-sum-prophy', text: '3 Prophy (total)', required: 3, completed: 0, status: 'pending', completionEntries: [], note: '', d3Deadline: '2026-05-15', unlockedBy: [{ id: 'perio-form-prophy', required: 5 }], unlockEmailTo: null, isSummative: true, rules: '1 of 3 due by D3 (May 2026); remaining 2 by D4', custom: false },
+                { id: 'perio-sum-reeval-ging', text: '2 Re-evaluate Gingivitis', required: 2, completed: 0, status: 'pending', completionEntries: [], note: '', d3Deadline: '2026-05-15', unlockedBy: [{ id: 'perio-form-reeval-ging', required: 3 }], unlockEmailTo: null, isSummative: true, rules: '1 of 2 due by D3 (May 2026); remaining 1 by D4', custom: false },
                 { id: 'perio-sum-impr', text: '1 Re-evaluate Impression', required: 1, completed: 0, status: 'pending', completionEntries: [], note: '', d3Deadline: null, unlockedBy: [{ id: 'perio-form-impr', required: 3 }], unlockEmailTo: null, isSummative: true, rules: 'Must initiate in SPS BEFORE procedure', custom: false },
                 { id: 'perio-sum-recall', text: '2 Recall', required: 2, completed: 0, status: 'pending', completionEntries: [], note: '', d3Deadline: null, unlockedBy: [{ id: 'perio-form-recall', required: 6 }], unlockEmailTo: null, isSummative: true, rules: 'Must initiate in SPS BEFORE procedure', custom: false },
                 { id: 'perio-sum-mock', text: '1 Mock Board', required: 1, completed: 0, status: 'pending', completionEntries: [], note: '', d3Deadline: null, unlockedBy: null, unlockEmailTo: null, isSummative: true, rules: 'Must initiate in SPS BEFORE procedure', custom: false }
@@ -956,9 +957,11 @@ function renderMilestoneDashboard() {
     var readiness = typeof calculateGraduationReadiness === 'function' ? calculateGraduationReadiness() : { percent: 0 };
 
     // Build 3 rings + readiness
+    var aptTarget = roadmapData.clinicHeadlines?.appointments?.target ?? 90;
+    var procTarget = roadmapData.clinicHeadlines?.procedures?.target ?? 116;
     var rings = [
-        { label: 'Appointments', current: aptCount.total, target: 90, color: '#3b82f6' },
-        { label: 'Procedures', current: procCount.total, target: 116, color: '#10b981' },
+        { label: 'Appointments', current: aptCount.total, target: aptTarget, color: '#3b82f6' },
+        { label: 'Procedures', current: procCount.total, target: procTarget, color: '#10b981' },
         { label: 'Summatives', current: summativeCompleted, target: summativeTotal, color: '#f59e0b' }
     ];
 
@@ -1039,7 +1042,7 @@ function renderD3Deadlines() {
 
     var html = '<div style="font-size:0.85em; color:#94a3b8; margin-bottom:8px; font-weight:600;">D3 Deadlines</div>';
     deadlineItems.forEach(function(d) {
-        var urgency = d.daysLeft < 0 ? 'overdue' : d.daysLeft < 7 ? 'overdue' : d.daysLeft < 30 ? 'soon' : 'ok';
+        var urgency = d.daysLeft < 0 ? 'overdue' : d.daysLeft < 7 ? 'soon' : d.daysLeft < 30 ? 'soon' : 'ok';
         var colorMap = { overdue: '#ef4444', soon: '#f59e0b', ok: '#22c55e' };
         var label = d.daysLeft < 0 ? (Math.abs(d.daysLeft) + 'd overdue') : d.daysLeft === 0 ? 'TODAY' : (d.daysLeft + 'd left');
         var safeCatKey = (d.catKey || '').replace(/['"\\]/g, '');
@@ -1088,8 +1091,7 @@ function renderReviewQueue() {
     var container = document.getElementById('compReviewQueue');
     if (!container) return;
 
-    var queue = roadmapData.clinicalData?.autoLinkReviewQueue;
-    if (!Array.isArray(queue)) queue = [];
+    var queue = getValues(roadmapData.clinicalData?.autoLinkReviewQueue);
     queue = queue.filter(function(q) { return q && q.procedureId; });
 
     if (queue.length === 0) {
@@ -1104,8 +1106,8 @@ function renderReviewQueue() {
 }
 
 function openReviewQueuePanel() {
-    var queue = roadmapData.clinicalData?.autoLinkReviewQueue;
-    if (!Array.isArray(queue) || queue.length === 0) {
+    var queue = getValues(roadmapData.clinicalData?.autoLinkReviewQueue);
+    if (queue.length === 0) {
         showToast('No items in review queue');
         return;
     }
@@ -1120,8 +1122,9 @@ function openReviewQueuePanel() {
             + '<div style="font-weight:600; color:#e2e8f0;">' + escapeHtml(q.procedureName || 'Unknown') + '</div>'
             + '<div style="font-size:0.85em; color:#94a3b8; margin-bottom:8px;">' + dateStr + '</div>';
 
-        if (q.suggestedItems && q.suggestedItems.length > 0) {
-            q.suggestedItems.forEach(function(s) {
+        var suggestions = getValues(q.suggestedItems);
+        if (suggestions.length > 0) {
+            suggestions.forEach(function(s) {
                 var safeItemId = (s.itemId || '').replace(/['"\\]/g, '');
                 html += '<div style="display:flex; align-items:center; gap:8px; padding:6px 0; border-bottom:1px solid rgba(100,116,139,0.15);">'
                     + '<span style="flex:1; color:#e2e8f0; font-size:0.9em;">' + escapeHtml(s.itemText || '') + '</span>'
@@ -1141,7 +1144,29 @@ function openReviewQueuePanel() {
     });
     html += '</div>';
 
-    showCustomConfirm(html, null, null, 'Competency Review Queue');
+    var panelOverlay = document.createElement('div');
+    panelOverlay.id = 'reviewQueuePanelOverlay';
+    panelOverlay.style.cssText = 'position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.6); z-index:10000; display:flex; align-items:center; justify-content:center;';
+    var panelContent = document.createElement('div');
+    panelContent.style.cssText = 'background:#1e293b; border:1px solid #334155; border-radius:12px; padding:24px; max-width:500px; width:90%; max-height:80vh; overflow-y:auto;';
+    var panelHeader = document.createElement('div');
+    panelHeader.style.cssText = 'display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;';
+    var panelTitle = document.createElement('h3');
+    panelTitle.style.cssText = 'color:#e2e8f0; margin:0;';
+    panelTitle.textContent = 'Competency Review Queue';
+    var panelClose = document.createElement('button');
+    panelClose.style.cssText = 'background:none; border:none; color:#94a3b8; font-size:1.5em; cursor:pointer;';
+    panelClose.textContent = '\u00D7';
+    panelClose.onclick = function() { panelOverlay.remove(); };
+    panelHeader.appendChild(panelTitle);
+    panelHeader.appendChild(panelClose);
+    panelContent.appendChild(panelHeader);
+    var panelBody = document.createElement('div');
+    panelBody.innerHTML = html;
+    panelContent.appendChild(panelBody);
+    panelOverlay.appendChild(panelContent);
+    panelOverlay.onclick = function(e) { if (e.target === panelOverlay) panelOverlay.remove(); };
+    document.body.appendChild(panelOverlay);
 }
 
 function acceptReviewSuggestion(procId, itemId) {
@@ -1155,10 +1180,11 @@ function acceptReviewSuggestion(procId, itemId) {
     }
 
     // Remove this suggestion from queue item
-    var queue = roadmapData.clinicalData.autoLinkReviewQueue || [];
+    var queue = getValues(roadmapData.clinicalData.autoLinkReviewQueue);
     var qItem = queue.find(function(q) { return q.procedureId === procId; });
-    if (qItem && qItem.suggestedItems) {
-        qItem.suggestedItems = qItem.suggestedItems.filter(function(s) { return s.itemId !== itemId; });
+    if (qItem) {
+        var sugItems = getValues(qItem.suggestedItems);
+        qItem.suggestedItems = sugItems.filter(function(s) { return s.itemId !== itemId; });
         if (qItem.suggestedItems.length === 0) {
             roadmapData.clinicalData.autoLinkReviewQueue = queue.filter(function(q) { return q.procedureId !== procId; });
         }
@@ -1168,14 +1194,16 @@ function acceptReviewSuggestion(procId, itemId) {
     safeLocalStorageSet(STORAGE_KEY, JSON.stringify(roadmapData));
     saveData();
     renderCompetencies();
+    if (typeof renderDashboard === 'function') renderDashboard();
     showToast('Competency linked');
 }
 
 function rejectReviewSuggestion(procId, itemId) {
-    var queue = roadmapData.clinicalData?.autoLinkReviewQueue || [];
+    var queue = getValues(roadmapData.clinicalData?.autoLinkReviewQueue);
     var qItem = queue.find(function(q) { return q.procedureId === procId; });
-    if (qItem && qItem.suggestedItems) {
-        qItem.suggestedItems = qItem.suggestedItems.filter(function(s) { return s.itemId !== itemId; });
+    if (qItem) {
+        var sugItems = getValues(qItem.suggestedItems);
+        qItem.suggestedItems = sugItems.filter(function(s) { return s.itemId !== itemId; });
         if (qItem.suggestedItems.length === 0) {
             roadmapData.clinicalData.autoLinkReviewQueue = queue.filter(function(q) { return q.procedureId !== procId; });
         }
@@ -1188,7 +1216,7 @@ function rejectReviewSuggestion(procId, itemId) {
 }
 
 function dismissReviewItem(procId) {
-    var queue = roadmapData.clinicalData?.autoLinkReviewQueue || [];
+    var queue = getValues(roadmapData.clinicalData?.autoLinkReviewQueue);
     roadmapData.clinicalData.autoLinkReviewQueue = queue.filter(function(q) { return q.procedureId !== procId; });
     clinicalDataDirty = true;
     safeLocalStorageSet(STORAGE_KEY, JSON.stringify(roadmapData));
@@ -1266,14 +1294,13 @@ function renderEvidenceCards(item, catKey) {
             typeBadge = 'Auto-linked';
         }
 
-        var patientClickable = entry.patientId
-            ? ' onclick="navigateToEntity(\'patient\', \'' + (entry.patientId || '').replace(/['"\\]/g, '') + '\')" style="cursor:pointer; text-decoration:underline;"'
-            : '';
+        var spanStyle = 'color:#e2e8f0;' + (entry.patientId ? ' cursor:pointer; text-decoration:underline;' : '');
+        var spanClick = entry.patientId ? ' onclick="navigateToEntity(\'patient\', \'' + (entry.patientId || '').replace(/['"\\]/g, '') + '\')"' : '';
 
         html += '<div class="comp-evidence-card ' + typeClass + '">'
             + '<span style="color:#64748b; font-size:0.75em; padding:1px 5px; border-radius:3px; background:rgba(100,116,139,0.15); white-space:nowrap;">' + typeBadge + '</span>'
             + '<span style="color:#94a3b8; white-space:nowrap;">' + dateStr + '</span>'
-            + '<span' + patientClickable + ' style="color:#e2e8f0;' + (entry.patientId ? ' cursor:pointer; text-decoration:underline;' : '') + '">'
+            + '<span' + spanClick + ' style="' + spanStyle + '">'
             + escapeHtml(entry.patientName || 'Unknown') + '</span>'
             + (entry.note ? '<span style="color:#64748b; flex:1; overflow:hidden; text-overflow:ellipsis;">' + escapeHtml(entry.note.substring(0, 50)) + '</span>' : '')
             + '<button onclick="removeEvidenceEntry(\'' + safeCatKey + '\', \'' + safeItemId + '\', ' + idx + '); event.stopPropagation();" '
@@ -1315,8 +1342,21 @@ function removeEvidenceEntry(catKey, itemId, entryIndex) {
     saveData();
     renderCompetencies();
 
-    // Undo toast
-    showToast('Evidence removed. <span style="text-decoration:underline; cursor:pointer;" onclick="undoRemoveEvidence(\'' + catKey.replace(/['"\\]/g, '') + '\', \'' + itemId.replace(/['"\\]/g, '') + '\', ' + JSON.stringify(removed).replace(/'/g, "\\'") + ')">Undo</span>');
+    // Undo toast — use module-level variable + DOM click listener (showToast uses textContent, not innerHTML)
+    _lastRemovedEvidence = { catKey: catKey, itemId: itemId, entry: removed };
+    showToast('Evidence removed. Tap here to undo.');
+    var toastEl = document.getElementById('toast');
+    if (toastEl) {
+        toastEl.style.cursor = 'pointer';
+        toastEl.onclick = function() {
+            if (_lastRemovedEvidence) {
+                undoRemoveEvidence(_lastRemovedEvidence.catKey, _lastRemovedEvidence.itemId, _lastRemovedEvidence.entry);
+                _lastRemovedEvidence = null;
+                toastEl.onclick = null;
+                toastEl.style.display = 'none';
+            }
+        };
+    }
 }
 
 function undoRemoveEvidence(catKey, itemId, removedJson) {
@@ -1363,8 +1403,8 @@ function getPatientsFulfilling(itemId) {
     Object.values(competencies).forEach(function(cat) {
         getValues(cat.sections).forEach(function(sec) {
             getValues(sec.items).forEach(function(it) {
-                if ((it.id || '').toLowerCase() === itemIdLower && Array.isArray(it.completionEntries)) {
-                    it.completionEntries.forEach(function(ce) {
+                if ((it.id || '').toLowerCase() === itemIdLower) {
+                    getValues(it.completionEntries).forEach(function(ce) {
                         if (ce.patientId) completedPatientIds[ce.patientId] = true;
                     });
                 }
@@ -1375,8 +1415,9 @@ function getPatientsFulfilling(itemId) {
     Object.entries(records).forEach(function(entry) {
         var ptId = entry[0], pt = entry[1];
         if (!pt || !pt.name) return;
-        if (Array.isArray(pt.importedRequirements)) {
-            var hasMatch = pt.importedRequirements.some(function(req) {
+        var ptReqs = getValues(pt.importedRequirements);
+        if (ptReqs.length > 0) {
+            var hasMatch = ptReqs.some(function(req) {
                 return req.reqId && req.reqId.toLowerCase() === itemIdLower;
             });
             if (hasMatch) {
@@ -1426,13 +1467,14 @@ function showPatientCompPreview(patientId, itemId) {
     var compCatName = compResult ? (getCompetenciesData()[compResult.catKey]?.name || '') : '';
 
     var isCompleted = false;
-    if (compResult && Array.isArray(compResult.item.completionEntries)) {
-        isCompleted = compResult.item.completionEntries.some(function(ce) { return ce.patientId === patientId; });
+    if (compResult) {
+        isCompleted = getValues(compResult.item.completionEntries).some(function(ce) { return ce.patientId === patientId; });
     }
 
     var matchedReq = null;
-    if (Array.isArray(pt.importedRequirements)) {
-        matchedReq = pt.importedRequirements.find(function(req) {
+    var ptReqsPreview = getValues(pt.importedRequirements);
+    if (ptReqsPreview.length > 0) {
+        matchedReq = ptReqsPreview.find(function(req) {
             return req.reqId && req.reqId.toLowerCase() === (itemId || '').toLowerCase();
         });
     }
@@ -1731,6 +1773,8 @@ function openCompQuickRecord(itemId) {
     var overlay = document.createElement('div');
     overlay.innerHTML = modalHtml;
     document.body.appendChild(overlay.firstChild);
+    var overlayEl = document.getElementById('compQuickRecordOverlay');
+    if (overlayEl) overlayEl.onclick = function(e) { if (e.target === overlayEl) closeCompQuickRecord(); };
 }
 
 function closeCompQuickRecord() {
@@ -1776,7 +1820,8 @@ function submitCompQuickRecord(itemId, catKey) {
 function persistExpandedState() {
     if (!roadmapData.competencyUIState) roadmapData.competencyUIState = { expandedCategories: [], viewMode: 'department' };
     roadmapData.competencyUIState.expandedCategories = Array.from(expandedCompCategories);
-    // Lightweight save — no full saveData() needed for UI state
+    // Lightweight save — persist to localStorage for UI state
+    safeLocalStorageSet(STORAGE_KEY, JSON.stringify(roadmapData));
 }
 
 function restoreExpandedState() {
@@ -1853,6 +1898,7 @@ function renderCompViewToggle() {
 function setCompViewMode(mode) {
     if (!roadmapData.competencyUIState) roadmapData.competencyUIState = { expandedCategories: [], viewMode: 'department' };
     roadmapData.competencyUIState.viewMode = mode;
+    safeLocalStorageSet(STORAGE_KEY, JSON.stringify(roadmapData));
     renderCompetencies();
 }
 
@@ -1865,9 +1911,10 @@ function renderByPatientView(container) {
     Object.entries(records).forEach(function(entry) {
         var ptId = entry[0], pt = entry[1];
         if (!pt || !pt.name || pt.status === 'inactive') return;
-        if (!Array.isArray(pt.importedRequirements) || pt.importedRequirements.length === 0) return;
+        var ptReqs = getValues(pt.importedRequirements);
+        if (ptReqs.length === 0) return;
 
-        var outstanding = pt.importedRequirements.filter(function(req) {
+        var outstanding = ptReqs.filter(function(req) {
             var result = typeof findCompetencyItem === 'function' ? findCompetencyItem(req.reqId) : null;
             if (!result) return false;
             return result.item.completed < result.item.required;
@@ -2040,8 +2087,9 @@ function renderCompetencies() {
             getValues(sec.items).forEach(function(item) { allCatItems.push(item); });
         });
 
+        var safeKey = (key || '').replace(/['"\\]/g, '');
         categoriesHtml += '<div class="comp-category ' + (isComplete ? 'category-complete' : '') + '" data-category="' + escapeHtml(key) + '">'
-            + '<div class="comp-category-header" onclick="toggleCompCategory(\'' + key + '\')">'
+            + '<div class="comp-category-header" onclick="toggleCompCategory(\'' + safeKey + '\')">'
             + '<div class="comp-category-title">'
             + '<span style="font-size: 1.2em;">' + (cat.icon || '') + '</span>'
             + '<h4 style="color: ' + (cat.color || '#e2e8f0') + ';">' + escapeHtml(cat.name) + '</h4>'
@@ -2091,7 +2139,6 @@ function renderCompetencies() {
             itemsToRender.forEach(function(item) {
                 var status = getItemStatus(item);
                 var isCustom = item.custom === true;
-                var safeKey = key;
                 var safeItemId = (item.id || '').replace(/['"\\]/g, '');
 
                 categoriesHtml += '<div class="comp-req-item status-' + status + '" data-item-id="' + escapeHtml(item.id) + '">'
@@ -2103,7 +2150,7 @@ function renderCompetencies() {
                 categoriesHtml += '<div class="comp-req-note" contenteditable="true" '
                     + 'data-catkey="' + safeKey + '" data-itemid="' + safeItemId + '" '
                     + 'style="min-height:16px; font-size:0.82em; color:#94a3b8; padding:2px 4px; border-radius:3px; outline:none; cursor:text;" '
-                    + 'onfocus="this.style.background=\'rgba(100,116,139,0.1)\'; this.style.border=\'1px solid #334155\';" '
+                    + 'onfocus="delete _compNoteCommitted[\'' + safeKey + ':' + safeItemId + '\']; this.style.background=\'rgba(100,116,139,0.1)\'; this.style.border=\'1px solid #334155\';" '
                     + 'onblur="this.style.background=\'transparent\'; this.style.border=\'none\'; saveCompItemNote(\'' + safeKey + '\', \'' + safeItemId + '\', this.textContent.trim());" '
                     + 'onkeydown="if(event.key===\'Escape\'){_compNoteCommitted[\'' + safeKey + ':' + safeItemId + '\']=true; this.blur();} if(event.key===\'Enter\'){event.preventDefault(); this.blur();}" '
                     + 'placeholder="Add note...">'
@@ -2111,6 +2158,9 @@ function renderCompetencies() {
 
                 // Task 4.9: Patient badges
                 categoriesHtml += renderPatientBadges(item.id);
+
+                // Task 4.8: Evidence trail cards
+                categoriesHtml += renderEvidenceCards(item, key);
 
                 categoriesHtml += '</div>'; // close comp-req-content
 
@@ -2146,7 +2196,7 @@ function renderCompetencies() {
                 categoriesHtml += '</div>'; // close comp-req-item
             });
 
-            categoriesHtml += '<button class="comp-add-req-btn" onclick="openAddCompItemModal(\'' + key + '\', \'' + escapeHtml(sec.id) + '\'); event.stopPropagation();">'
+            categoriesHtml += '<button class="comp-add-req-btn" onclick="openAddCompItemModal(\'' + safeKey + '\', \'' + (sec.id || '').replace(/[\'\"\\\\]/g, '') + '\'); event.stopPropagation();">'
                 + '&#x2795; Add Requirement</button>'
                 + '</div>'; // close comp-requirements-section
         });
@@ -2155,13 +2205,16 @@ function renderCompetencies() {
         categoriesHtml += '<div style="margin-top: 15px;">'
             + '<label style="font-size: 0.85em; color: #94a3b8;">Category Notes:</label>'
             + '<textarea class="comp-notes-input" rows="2" placeholder="Add notes for ' + escapeHtml(cat.name) + '..." '
-            + 'onchange="updateCompNotes(\'' + key + '\', this.value)">' + escapeHtml(cat.notes || '') + '</textarea>'
+            + 'onchange="updateCompNotes(\'' + safeKey + '\', this.value)">' + escapeHtml(cat.notes || '') + '</textarea>'
             + '</div>';
 
         categoriesHtml += '</div></div>'; // close comp-category-body and comp-category
     });
 
+    var scrollParent = container.closest('.tab-content') || container.parentElement;
+    var savedScroll = scrollParent ? scrollParent.scrollTop : 0;
     container.innerHTML = categoriesHtml;
+    if (scrollParent) scrollParent.scrollTop = savedScroll;
 }
 
 function toggleCompCategory(key) {
@@ -2402,6 +2455,7 @@ function openAddCompItemModal(catKey, sectionId) {
     document.getElementById('compItemNotes').value = '';
 
     document.getElementById('compItemModal').style.display = 'flex';
+    document.getElementById('compItemModal').onclick = function(e) { if (e.target === this) closeCompItemModal(); };
 }
 
 function openEditCompItemModal(catKey, itemId) {
@@ -2413,9 +2467,8 @@ function openEditCompItemModal(catKey, itemId) {
     let foundItem = null;
     let foundSectionId = null;
     for (const [secId, sec] of Object.entries(cat.sections)) {
-        const item = getValues(sec.items).find(it => it.id === itemId);
-        if (item) {
-            foundItem = item;
+        if (sec.items && sec.items[itemId]) {
+            foundItem = sec.items[itemId];
             foundSectionId = secId;
             break;
         }
@@ -2440,6 +2493,7 @@ function openEditCompItemModal(catKey, itemId) {
     document.getElementById('compItemNotes').value = foundItem.note || '';
 
     document.getElementById('compItemModal').style.display = 'flex';
+    document.getElementById('compItemModal').onclick = function(e) { if (e.target === this) closeCompItemModal(); };
 }
 
 function closeCompItemModal() {
@@ -2519,7 +2573,7 @@ function saveCompItem() {
                     item.status = 'completed';
                 } else if (item.completed > 0) {
                     item.status = 'in_progress';
-                } else if (item.status === 'completed') {
+                } else {
                     item.status = 'pending';
                 }
 
@@ -2562,7 +2616,7 @@ function deleteCompItem(catKey, itemId) {
         return;
     }
 
-    showCustomConfirm(`Delete "${escapeHtml(itemText)}"? This cannot be undone.`, function() {
+    showCustomConfirm('Delete "' + itemText + '"? This cannot be undone.', function() {
         // Re-lookup to ensure data is still valid after async confirm
         const comp = getCompetenciesData();
         const c = comp[catKey];
@@ -2678,6 +2732,7 @@ function deleteProcedure(procId) {
 
     showCustomConfirm('Delete this procedure record? Competency counts will be adjusted.', function() {
         // CIS v2: Delegate to cascade function
+        clinicalDataDirty = true;
         cascadeDeleteProcedure(procId);
         safeLocalStorageSet(STORAGE_KEY, JSON.stringify(roadmapData));
         saveData();
@@ -3000,6 +3055,7 @@ function completeAppointment(aptId) {
 
 function uncompleteAppointment(aptId) {
     // CIS v2: Delegate to cascade function
+    clinicalDataDirty = true;
     cascadeUncompleteAppointment(aptId);
     safeLocalStorageSet(STORAGE_KEY, JSON.stringify(roadmapData));
     saveData();

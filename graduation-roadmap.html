@@ -4031,6 +4031,8 @@
         @media (max-width: 768px) {
             #compMilestoneDashboard { flex-direction:column; }
             .comp-milestone-ring { min-width:unset; }
+            .comp-counter-btn { min-width: 36px; min-height: 36px; font-size: 1.1em; }
+            .comp-req-counter { gap: 8px; }
         }
 
         .comp-category {
@@ -4245,6 +4247,13 @@
             color: #94a3b8;
             margin-top: 3px;
             font-style: italic;
+        }
+
+        .comp-req-note:empty:before {
+            content: attr(placeholder);
+            color: #64748b;
+            font-style: italic;
+            pointer-events: none;
         }
 
         /* Status Toggle Buttons */
@@ -6319,8 +6328,7 @@
                 gap: 6px;
                 align-items: flex-start;
             }
-            .comp-section-item,
-            .comp-item {
+            .comp-req-item {
                 padding: 8px;
                 font-size: 0.85em;
             }
@@ -10821,18 +10829,18 @@ NOTES: ...
     <!-- Toast Notification -->
     <div class="toast" id="toast">Saved!</div>
 
-    <script src="js/graduation-roadmap/state.js?v=20260401d"></script>
-    <script src="js/graduation-roadmap/firebase-sync.js?v=20260401d"></script>
-    <script src="js/graduation-roadmap/deadlines.js?v=20260401d"></script>
-    <script src="js/graduation-roadmap/grades.js?v=20260401d"></script>
-    <script src="js/graduation-roadmap/exam-content.js?v=20260401d"></script>
-    <script src="js/graduation-roadmap/clinical.js?v=20260401d"></script>
-    <script src="js/graduation-roadmap/patients.js?v=20260401d"></script>
-    <script src="js/graduation-roadmap/import-system.js?v=20260401d"></script>
-    <script src="js/graduation-roadmap/daily-planner.js?v=20260401d"></script>
-    <script src="js/graduation-roadmap/monthly-planner.js?v=20260401d"></script>
-    <script src="js/graduation-roadmap/periodic-review.js?v=20260401d"></script>
-    <script src="js/graduation-roadmap/troubleshooting.js?v=20260401d"></script>
-    <script src="js/graduation-roadmap/init.js?v=20260401d"></script>
+    <script src="js/graduation-roadmap/state.js?v=20260401e"></script>
+    <script src="js/graduation-roadmap/firebase-sync.js?v=20260401e"></script>
+    <script src="js/graduation-roadmap/deadlines.js?v=20260401e"></script>
+    <script src="js/graduation-roadmap/grades.js?v=20260401e"></script>
+    <script src="js/graduation-roadmap/exam-content.js?v=20260401e"></script>
+    <script src="js/graduation-roadmap/clinical.js?v=20260401e"></script>
+    <script src="js/graduation-roadmap/patients.js?v=20260401e"></script>
+    <script src="js/graduation-roadmap/import-system.js?v=20260401e"></script>
+    <script src="js/graduation-roadmap/daily-planner.js?v=20260401e"></script>
+    <script src="js/graduation-roadmap/monthly-planner.js?v=20260401e"></script>
+    <script src="js/graduation-roadmap/periodic-review.js?v=20260401e"></script>
+    <script src="js/graduation-roadmap/troubleshooting.js?v=20260401e"></script>
+    <script src="js/graduation-roadmap/init.js?v=20260401e"></script>
 </body>
 </html>

@@ -484,7 +484,7 @@ function restoreBackup(backupId) {
             patients: bData.clinicalData?.patients || {},
             appointments: migrateArrayToObject(bData.clinicalData?.appointments, 'appt'),
             completedProcedures: migrateArrayToObject(bData.clinicalData?.completedProcedures, 'proc'),
-            competencies: mergeCompetencies(defaults.clinicalData?.competencies, bData.clinicalData?.competencies),
+            competencies: mergeCompetencies(bData.clinicalData?.competencies, defaults.clinicalData?.competencies),
             patientRecords: bData.clinicalData?.patientRecords || defaults.clinicalData.patientRecords,
             dashboardSnapshots: mergeDashboardSnapshots(defaults.clinicalData?.dashboardSnapshots, bData.clinicalData?.dashboardSnapshots),
             missingNotes: bData.clinicalData?.missingNotes ?? defaults.clinicalData.missingNotes,
@@ -523,7 +523,7 @@ function restoreBackup(backupId) {
 
     // Clear migration flags so migrations re-run against restored data
     localStorage.removeItem('unifiedPatientStoreDone_v1');
-    localStorage.removeItem('competencyEnhancementsDone_v1');
+    localStorage.removeItem('competencyEnhancementsDone_v2');
 
     migrateInvalidFirebaseKeys(roadmapData);
     clinicalDataDirty = true;
@@ -599,7 +599,7 @@ function importBackup(file) {
                     patients: bData.clinicalData?.patients || {},
                     appointments: migrateArrayToObject(bData.clinicalData?.appointments, 'appt'),
                     completedProcedures: migrateArrayToObject(bData.clinicalData?.completedProcedures, 'proc'),
-                    competencies: mergeCompetencies(defaults.clinicalData?.competencies, bData.clinicalData?.competencies),
+                    competencies: mergeCompetencies(bData.clinicalData?.competencies, defaults.clinicalData?.competencies),
                     patientRecords: bData.clinicalData?.patientRecords || defaults.clinicalData.patientRecords,
                     dashboardSnapshots: mergeDashboardSnapshots(defaults.clinicalData?.dashboardSnapshots, bData.clinicalData?.dashboardSnapshots),
                     missingNotes: bData.clinicalData?.missingNotes ?? defaults.clinicalData.missingNotes,
@@ -1926,7 +1926,7 @@ function restoreCheckpoint(index) {
                     patients: cpData.clinicalData?.patients || {},
                     appointments: migrateArrayToObject(cpData.clinicalData?.appointments, 'appt'),
                     completedProcedures: migrateArrayToObject(cpData.clinicalData?.completedProcedures, 'proc'),
-                    competencies: mergeCompetencies(roadmapData.clinicalData?.competencies, cpData.clinicalData?.competencies),
+                    competencies: mergeCompetencies(cpData.clinicalData?.competencies, roadmapData.clinicalData?.competencies),
                     patientRecords: cpData.clinicalData?.patientRecords || roadmapData.clinicalData?.patientRecords || {},
                     dashboardSnapshots: mergeDashboardSnapshots(roadmapData.clinicalData?.dashboardSnapshots, cpData.clinicalData?.dashboardSnapshots),
                     missingNotes: cpData.clinicalData?.missingNotes ?? roadmapData.clinicalData?.missingNotes ?? {},
@@ -1973,7 +1973,7 @@ function restoreCheckpoint(index) {
 
             // Clear migration flags so migrations re-run against restored data
             localStorage.removeItem('unifiedPatientStoreDone_v1');
-            localStorage.removeItem('competencyEnhancementsDone_v1');
+            localStorage.removeItem('competencyEnhancementsDone_v2');
 
             migrateInvalidFirebaseKeys(roadmapData);
             clinicalDataDirty = true;
@@ -2243,7 +2243,7 @@ function importAndRestoreDirectly() {
                             patients: data.clinicalData?.patients || {},
                             appointments: migrateArrayToObject(data.clinicalData?.appointments, 'appt'),
                             completedProcedures: migrateArrayToObject(data.clinicalData?.completedProcedures, 'proc'),
-                            competencies: mergeCompetencies(roadmapData.clinicalData?.competencies, data.clinicalData?.competencies),
+                            competencies: mergeCompetencies(data.clinicalData?.competencies, roadmapData.clinicalData?.competencies),
                             patientRecords: data.clinicalData?.patientRecords || roadmapData.clinicalData?.patientRecords || {},
                             dashboardSnapshots: mergeDashboardSnapshots(roadmapData.clinicalData?.dashboardSnapshots, data.clinicalData?.dashboardSnapshots),
                             missingNotes: data.clinicalData?.missingNotes ?? roadmapData.clinicalData?.missingNotes ?? {},
@@ -2290,7 +2290,7 @@ function importAndRestoreDirectly() {
 
                     // Clear migration flags so migrations re-run against restored data
                     localStorage.removeItem('unifiedPatientStoreDone_v1');
-                    localStorage.removeItem('competencyEnhancementsDone_v1');
+                    localStorage.removeItem('competencyEnhancementsDone_v2');
 
                     migrateInvalidFirebaseKeys(roadmapData);
                     clinicalDataDirty = true;
@@ -2520,6 +2520,15 @@ function validateStateIntegrity(data) {
     if (typeof data.clinicalData !== 'object' || data.clinicalData === null) {
         errors.push('clinicalData missing');
     } else {
+        // Auto-fix Firebase array→object conversion before validation
+        if (data.clinicalData.dashboardSnapshots && !Array.isArray(data.clinicalData.dashboardSnapshots) && typeof data.clinicalData.dashboardSnapshots === 'object') {
+            console.warn('[GUARD-F] Auto-converting dashboardSnapshots from object to array');
+            data.clinicalData.dashboardSnapshots = getValues(data.clinicalData.dashboardSnapshots);
+        }
+        if (data.clinicalData.autoLinkReviewQueue && !Array.isArray(data.clinicalData.autoLinkReviewQueue) && typeof data.clinicalData.autoLinkReviewQueue === 'object') {
+            console.warn('[GUARD-F] Auto-converting autoLinkReviewQueue from object to array');
+            data.clinicalData.autoLinkReviewQueue = getValues(data.clinicalData.autoLinkReviewQueue);
+        }
         // clinicalData sub-fields must be objects (not undefined)
         if (typeof data.clinicalData.patients !== 'object') errors.push('clinicalData.patients missing');
         if (typeof data.clinicalData.appointments !== 'object') errors.push('clinicalData.appointments missing');

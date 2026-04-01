@@ -914,9 +914,13 @@ function escapeHtml(str) {
 }
 
 // ==================== TOAST & MODALS ====================
-function showToast(message, type) {
+function showToast(message, type, options) {
     const toast = document.getElementById('toast');
-    toast.textContent = message;
+    if (options && options.html) {
+        toast.innerHTML = message;
+    } else {
+        toast.textContent = message;
+    }
     toast.className = 'toast';
     if (type === 'error') toast.classList.add('toast-error');
     else if (type === 'warning') toast.classList.add('toast-warning');
@@ -945,9 +949,9 @@ function showCustomAlert(message, title = 'Notice', callback = null) {
 }
 
 // Custom Confirm Modal (replaces blocking confirm())
-function showCustomConfirm(message, onConfirm, onCancel = null, title = 'Confirm') {
+function showCustomConfirm(message, onConfirm, onCancel = null, title = 'Confirm', rawHtml = false) {
     var safeTitle = escapeHtml(title);
-    var safeMessage = escapeHtml(message).replace(/\n/g, '<br>');
+    var safeMessage = rawHtml ? message : escapeHtml(message).replace(/\n/g, '<br>');
     const modal = document.createElement('div');
     modal.className = 'custom-modal-overlay';
     modal.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.7);display:flex;align-items:center;justify-content:center;z-index:10001;';
@@ -1276,6 +1280,17 @@ function navigateToEntity(type, id) {
                     if (body && !body.classList.contains('expanded')) {
                         toggleCompCategory(result.catKey);
                     }
+                    // Scroll to the specific item after category expansion
+                    setTimeout(function() {
+                        var safeId = id.replace(/['"\\]/g, '');
+                        var itemEl = document.querySelector('[data-item-id="' + safeId + '"]');
+                        if (itemEl) {
+                            itemEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                            itemEl.style.transition = 'background 0.3s';
+                            itemEl.style.background = 'rgba(251, 191, 36, 0.15)';
+                            setTimeout(function() { itemEl.style.background = ''; }, 2000);
+                        }
+                    }, 300);
                 }
             }, 100);
             break;
@@ -1296,7 +1311,8 @@ function navigateToCompetencyItem(catKey, itemId) {
         }
         // Scroll to the specific item after expansion animation
         setTimeout(function() {
-            var itemEl = document.querySelector('[data-item-id="' + itemId + '"]');
+            var safeId = typeof CSS !== 'undefined' && CSS.escape ? CSS.escape(itemId) : itemId.replace(/["\\]/g, '\\$&');
+            var itemEl = document.querySelector('[data-item-id="' + safeId + '"]');
             if (itemEl) {
                 itemEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
                 // Brief highlight flash

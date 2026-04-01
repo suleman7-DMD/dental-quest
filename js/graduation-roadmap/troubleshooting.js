@@ -37,7 +37,7 @@ function tsCheck(name, status, detail, fixFn) {
 // ==================== MAIN RENDER ====================
 
 function renderTroubleshooting() {
-    var container = document.getElementById('tab-troubleshooting');
+    var container = document.getElementById('troubleshootingContainer');
     if (!container) return;
     var allChecks = runAllIntegrityChecks();
     var score = calculateIntegrityScore(allChecks);
@@ -117,7 +117,7 @@ function tsCheckParser() {
 
 function tsCheckPatients() {
     var checks = [];
-    var records = {}; try { records = getAllPatientRecords(); } catch (e) { /* */ }
+    var records = {}; try { records = getAllPatientRecords(); } catch (e) { console.error('[TS] Error loading patients:', e); }
     var ids = Object.keys(records);
     if (ids.length === 0) return [tsCheck('Patient records exist', 'fail', 'No patient records found.')];
     checks.push(tsCheck('Patient records loaded', 'pass', ids.length + ' patient record(s) found.'));
@@ -165,13 +165,13 @@ function tsCheckPatients() {
 
 function tsCheckCompetencies() {
     var checks = [];
-    var comp = {}; try { comp = getCompetenciesData(); } catch (e) { /* */ }
+    var comp = {}; try { comp = getCompetenciesData(); } catch (e) { console.error('[TS] Error loading competencies:', e); }
     var catKeys = Object.keys(comp);
     if (catKeys.length === 0) return [tsCheck('Competencies initialized', 'fail', 'No competency data found.')];
     checks.push(tsCheck('Competencies initialized', 'pass', catKeys.length + ' categories loaded.'));
 
     // Completed vs entries divergence
-    var divergences = [], totalItems = 0, matched = 0;
+    var divergences = [], spsInfoItems = [], totalItems = 0, matched = 0;
     var linkedProcIds = {};
     for (var ci = 0; ci < catKeys.length; ci++) {
         var secs = getValues(comp[catKeys[ci]].sections);
@@ -180,19 +180,28 @@ function tsCheckCompetencies() {
             for (var ii = 0; ii < items.length; ii++) {
                 var item = items[ii]; totalItems++;
                 var ents = getValues(item.completionEntries || []);
-                var exp = Math.min(item.required, ents.length);
-                if (item.completed !== exp) divergences.push({ id: item.id || '?', completed: item.completed, entries: ents.length, expected: exp });
-                else matched++;
+                if (item.completed < ents.length) {
+                    // Under-count: entries exceed completed — real divergence
+                    divergences.push({ id: item.id || '?', completed: item.completed, entries: ents.length });
+                } else if (item.completed > ents.length) {
+                    // Over-count: completed > entries — normal for SPS absolute-set, info only
+                    spsInfoItems.push(item.id || '?');
+                } else {
+                    matched++;
+                }
                 for (var ei = 0; ei < ents.length; ei++) if (ents[ei].procedureId) linkedProcIds[ents[ei].procedureId] = true;
             }
         }
     }
     checks.push(tsCheck('Completed/entries sync (' + matched + '/' + totalItems + ')',
         divergences.length === 0 ? 'pass' : 'warn',
-        divergences.length === 0 ? 'All ' + totalItems + ' items in sync.'
-            : divergences.length + ' divergent: ' + divergences.slice(0, 5).map(function(d) {
-                return d.id + '(c=' + d.completed + ' e=' + d.entries + ' exp=' + d.expected + ')'; }).join('; '),
+        divergences.length === 0 ? 'All ' + totalItems + ' items in sync.' + (spsInfoItems.length > 0 ? ' (' + spsInfoItems.length + ' with SPS absolute-set counts)' : '')
+            : divergences.length + ' under-count: ' + divergences.slice(0, 5).map(function(d) {
+                return d.id + '(c=' + d.completed + ' e=' + d.entries + ')'; }).join('; '),
         divergences.length > 0 ? 'tsFixResyncCompCounts' : null));
+    if (spsInfoItems.length > 0)
+        checks.push(tsCheck('SPS absolute-set counts', 'info',
+            spsInfoItems.length + ' item(s) have completed > entries (normal for SPS imports): ' + spsInfoItems.slice(0, 5).join(', ') + (spsInfoItems.length > 5 ? '...' : '')));
 
     // Orphaned procedures
     var procs = getValues(roadmapData.clinicalData ? roadmapData.clinicalData.completedProcedures : {});
@@ -269,7 +278,7 @@ function tsCheckSchedule() {
         cwsArr.length === 0 ? 'warn' : hasCurrent ? 'pass' : 'warn',
         cwsArr.length === 0 ? 'No entries.' : hasCurrent ? cwsArr.length + ' entries incl. current week.'
             : cwsArr.length + ' entries but none for current week.',
-        !hasCurrent ? 'tsFixRebuildDeadlines' : null));
+        !hasCurrent ? 'tsFixRebuildWeekSchedule' : null));
     return checks;
 }
 
@@ -398,7 +407,8 @@ function tsRenderQuickFixButtons(allChecks) {
         'tsFixResyncCompCounts': 'Re-sync Competency Counts',
         'tsFixValidatePatientSchemas': 'Add Missing Brief Defaults',
         'tsFixDedupSchedule': 'De-duplicate Schedule',
-        'tsFixRebuildDeadlines': 'Rebuild Deadlines'
+        'tsFixRebuildDeadlines': 'Rebuild Deadlines',
+        'tsFixRebuildWeekSchedule': 'Rebuild Week Schedule'
     };
     var dks = Object.keys(allChecks);
     for (var d = 0; d < dks.length; d++) {
@@ -422,13 +432,18 @@ function tsFixResyncCompCounts() {
     Object.keys(comp).forEach(function(ck) {
         getValues(comp[ck].sections).forEach(function(sec) {
             getValues(sec.items).forEach(function(item) {
-                var exp = Math.min(item.required, getValues(item.completionEntries || []).length);
-                if (item.completed !== exp) { item.completed = exp; fixCount++; }
+                var entries = getValues(item.completionEntries || []);
+                var entriesCount = entries.length;
+                // Only sync upward: if entries exceed completed, increase. Never decrease (preserves SPS absolute-set).
+                if (entriesCount > item.completed) {
+                    item.completed = Math.min(item.required, entriesCount);
+                    fixCount++;
+                }
             });
         });
     });
-    if (fixCount > 0) { safeLocalStorageSet(STORAGE_KEY, JSON.stringify(roadmapData)); saveData(); }
-    showToast(fixCount > 0 ? 'Fixed ' + fixCount + ' competency count(s)' : 'All counts in sync', 'warning');
+    if (fixCount > 0) { clinicalDataDirty = true; safeLocalStorageSet(STORAGE_KEY, JSON.stringify(roadmapData)); saveData(); }
+    showToast(fixCount > 0 ? 'Fixed ' + fixCount + ' under-count(s)' : 'All counts in sync', 'warning');
     renderTroubleshooting();
 }
 
@@ -437,11 +452,26 @@ function tsFixValidatePatientSchemas() {
     var fixCount = 0;
     Object.keys(recs).forEach(function(id) {
         var p = recs[id]; if (!p) return;
-        if (!p.clinicalBrief) { p.clinicalBrief = {}; fixCount++; }
-        for (var f = 0; f < TS_CLINICAL_BRIEF_FIELDS.length; f++)
-            if (p.clinicalBrief[TS_CLINICAL_BRIEF_FIELDS[f]] === undefined) p.clinicalBrief[TS_CLINICAL_BRIEF_FIELDS[f]] = '';
+        var needsFix = false;
+        if (!p.clinicalBrief) { p.clinicalBrief = {}; needsFix = true; }
+        for (var f = 0; f < TS_CLINICAL_BRIEF_FIELDS.length; f++) {
+            if (p.clinicalBrief[TS_CLINICAL_BRIEF_FIELDS[f]] === undefined) {
+                p.clinicalBrief[TS_CLINICAL_BRIEF_FIELDS[f]] = '';
+                needsFix = true;
+            }
+        }
+        if (needsFix) {
+            fixCount++;
+            // Write to canonical store, not merged view
+            if (!roadmapData.clinicalData.patientRecords[id]) {
+                roadmapData.clinicalData.patientRecords[id] = {};
+            }
+            Object.keys(p).forEach(function(key) {
+                roadmapData.clinicalData.patientRecords[id][key] = p[key];
+            });
+        }
     });
-    if (fixCount > 0) { safeLocalStorageSet(STORAGE_KEY, JSON.stringify(roadmapData)); saveData(); }
+    if (fixCount > 0) { clinicalDataDirty = true; safeLocalStorageSet(STORAGE_KEY, JSON.stringify(roadmapData)); saveData(); }
     showToast(fixCount > 0 ? 'Added brief defaults to ' + fixCount + ' patient(s)' : 'All patients have clinicalBrief', 'warning');
     renderTroubleshooting();
 }
@@ -460,7 +490,7 @@ function tsFixDedupSchedule() {
         var hasClinic = g.some(function(x) { return x.id.indexOf('clinic_') === 0; });
         if (hasClinic) g.forEach(function(x) { if (x.id.indexOf('clinic_') !== 0) { delete cws[x.key]; removeCount++; } });
     });
-    if (removeCount > 0) { safeLocalStorageSet(STORAGE_KEY, JSON.stringify(roadmapData)); saveData(); }
+    if (removeCount > 0) { clinicalDataDirty = true; safeLocalStorageSet(STORAGE_KEY, JSON.stringify(roadmapData)); saveData(); if (typeof buildCurrentWeekSchedule === 'function') buildCurrentWeekSchedule(); }
     showToast(removeCount > 0 ? 'Removed ' + removeCount + ' duplicate(s)' : 'No duplicates found', 'warning');
     renderTroubleshooting();
 }
@@ -468,6 +498,18 @@ function tsFixDedupSchedule() {
 function tsFixRebuildDeadlines() {
     if (typeof rebuildUpcomingDeadlines === 'function') { rebuildUpcomingDeadlines(); showToast('Deadlines rebuilt', 'warning'); }
     else showToast('rebuildUpcomingDeadlines not available', 'error');
+    renderTroubleshooting();
+}
+
+function tsFixRebuildWeekSchedule() {
+    if (typeof buildCurrentWeekSchedule === 'function') buildCurrentWeekSchedule();
+    if (typeof syncClinicalToMonthlyPlanner === 'function') {
+        clinicalDataDirty = true;
+        syncClinicalToMonthlyPlanner();
+    }
+    safeLocalStorageSet(STORAGE_KEY, JSON.stringify(roadmapData));
+    saveData();
+    showToast('Week schedule rebuilt', 'warning');
     renderTroubleshooting();
 }
 

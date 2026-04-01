@@ -1734,14 +1734,16 @@ function parsePatientRecord(text) {
         // Check if line starts with a known key
         var matched = false;
         var trimmedUpper = line.trimStart().toUpperCase();
-        Object.keys(fieldMap).forEach(function(key) {
-            if (trimmedUpper.indexOf(key + ':') === 0) {
-                currentKey = fieldMap[key];
+        var fmKeys = Object.keys(fieldMap);
+        for (var ki = 0; ki < fmKeys.length; ki++) {
+            if (trimmedUpper.indexOf(fmKeys[ki] + ':') === 0) {
+                currentKey = fieldMap[fmKeys[ki]];
                 var value = line.substring(line.indexOf(':') + 1).trim();
                 record[currentKey] = value;
                 matched = true;
+                break;
             }
-        });
+        }
         // Continuation line: any non-empty line that doesn't match a known key
         if (!matched && currentKey && line.trim()) {
             record[currentKey] = (record[currentKey] || '') + '\n' + line.trim();
@@ -1785,14 +1787,16 @@ function parsePatientUpdate(text) {
         }
 
         var matched = false;
-        Object.keys(fieldMap).forEach(function(key) {
-            if (upperTrimmed.indexOf(key + ':') === 0) {
-                currentKey = fieldMap[key];
+        var fmKeys = Object.keys(fieldMap);
+        for (var ki = 0; ki < fmKeys.length; ki++) {
+            if (upperTrimmed.indexOf(fmKeys[ki] + ':') === 0) {
+                currentKey = fieldMap[fmKeys[ki]];
                 var value = trimmed.substring(trimmed.indexOf(':') + 1).trim();
                 update[currentKey] = value;
                 matched = true;
+                break;
             }
-        });
+        }
 
         // Continuation line: any non-empty line that doesn't match a known key
         if (!matched && currentKey && line.trim()) {
@@ -2039,14 +2043,16 @@ function parseClinicalBrief(text) {
     lines.forEach(function(line) {
         var matched = false;
         var trimmedUpper = line.trimStart().toUpperCase();
-        Object.keys(fieldMap).forEach(function(key) {
-            if (trimmedUpper.indexOf(key + ':') === 0) {
-                currentKey = fieldMap[key];
+        var fmKeys = Object.keys(fieldMap);
+        for (var ki = 0; ki < fmKeys.length; ki++) {
+            if (trimmedUpper.indexOf(fmKeys[ki] + ':') === 0) {
+                currentKey = fieldMap[fmKeys[ki]];
                 var value = line.substring(line.indexOf(':') + 1).trim();
                 brief[currentKey] = value;
                 matched = true;
+                break;
             }
-        });
+        }
         if (!matched && currentKey && line.trim()) {
             brief[currentKey] = (brief[currentKey] || '') + '\n' + line.trim();
         }
@@ -2389,6 +2395,12 @@ function confirmUnifiedImport() {
     // Apply requirement statuses
     if (parsed.reqStatuses.length > 0) {
         applyRequirementCheckoffs(parsed.reqStatuses);
+        // Persist metadata about this requirements status import
+        roadmapData.lastRequirementsStatusImport = {
+            updated: parsed.reqStatusUpdated || null,
+            source: parsed.reqStatusSource || null,
+            importedAt: new Date().toISOString()
+        };
     }
 
     // Handle completed-today from reqMatches — pass patient context for procedure records
@@ -2828,7 +2840,16 @@ function applyRequirementCheckoffs(items, importContext) {
     // importContext may have { patientName, patientId, date } for procedure record creation
     var ctx = importContext || {};
 
+    // Alias map for competency IDs that changed names between webchat export and DEFAULT_COMPETENCIES.
+    // Add new aliases here when requirement IDs are renamed or consolidated.
+    var COMPETENCY_ALIASES = {
+        'perio-sum-reeval-srp': 'srp-reeval'
+    };
+
     items.forEach(function(item) {
+        // Resolve aliased IDs before matching
+        var resolvedId = COMPETENCY_ALIASES[(item.reqId || '').toLowerCase()] || item.reqId;
+
         for (var catKey in competencies) {
             var cat = competencies[catKey];
             var sections = cat.sections;
@@ -2841,11 +2862,11 @@ function applyRequirementCheckoffs(items, importContext) {
 
                 var itemList = getValues(sec.items);
                 for (var i = 0; i < itemList.length; i++) {
-                    if ((itemList[i].id || '').toLowerCase() === (item.reqId || '').toLowerCase()) {
+                    if ((itemList[i].id || '').toLowerCase() === (resolvedId || '').toLowerCase()) {
                         // Format D Safeguard: warn if REQUIREMENTS_STATUS (absolute-set) touches clinical procedure counts
                         var clinicalProcCategories = { fixed: 1, operative: 1, dentures: 1, rpd: 1, srp: 1, endo: 1, oralsurg: 1, perio: 1 };
                         if (!item.isDelta && clinicalProcCategories[catKey]) {
-                            console.warn('[COMPETENCY-SAFEGUARD] REQUIREMENTS_STATUS absolute-set on clinical category "' + catKey + '" item "' + item.reqId + '" = ' + item.completed + '. This sets the count directly with NO procedure record. If this inflates progress, the webchat export may have been incorrect. Use COMPLETED_TODAY (isDelta) for patient-level procedures.');
+                            console.warn('[COMPETENCY-SAFEGUARD] REQUIREMENTS_STATUS absolute-set on clinical category "' + catKey + '" item "' + resolvedId + '" = ' + item.completed + '. This sets the count directly with NO procedure record. If this inflates progress, the webchat export may have been incorrect. Use COMPLETED_TODAY (isDelta) for patient-level procedures.');
                         }
 
                         // Increment or set completed count
@@ -2865,10 +2886,16 @@ function applyRequirementCheckoffs(items, importContext) {
                         // Write back to the actual storage (handle object-based storage)
                         if (typeof sec.items === 'object' && !Array.isArray(sec.items)) {
                             for (var key in sec.items) {
-                                if (sec.items[key] && (sec.items[key].id || '').toLowerCase() === (item.reqId || '').toLowerCase()) {
+                                if (sec.items[key] && (sec.items[key].id || '').toLowerCase() === (resolvedId || '').toLowerCase()) {
                                     // Cache intended count — recordProcedure → linkProcedureToCompetencies overwrites item.completed
                                     var intendedCompleted = itemList[i].completed;
                                     sec.items[key].completed = intendedCompleted;
+                                    // Derive status from completed count
+                                    if (intendedCompleted >= (sec.items[key].required || 999)) {
+                                        sec.items[key].status = 'completed';
+                                    } else if (intendedCompleted > 0) {
+                                        sec.items[key].status = 'in_progress';
+                                    }
                                     if (item.note) sec.items[key].note = item.note;
 
                                     // CROSS-SYNC: Create procedure record ONLY for delta/incremental imports (COMPLETED_TODAY).
@@ -2881,7 +2908,7 @@ function applyRequirementCheckoffs(items, importContext) {
 
                                         // Dedup: check if procedure already recorded for same req+date+patient
                                         var procs = getValues(roadmapData.clinicalData?.completedProcedures);
-                                        var reqIdLower = (item.reqId || '').toLowerCase();
+                                        var reqIdLower = (resolvedId || '').toLowerCase();
                                         var isDupe = procs.some(function(p) {
                                             return p.competencyItemIds && p.competencyItemIds.some(function(cid) { return (cid || '').toLowerCase() === reqIdLower; })
                                                 && p.date === procDate
@@ -2895,7 +2922,7 @@ function applyRequirementCheckoffs(items, importContext) {
                                                 date: procDate,
                                                 procedureType: catKey,
                                                 procedure: item.note || sec.items[key].text || 'Imported procedure',
-                                                competencyItemIds: [item.reqId],
+                                                competencyItemIds: [resolvedId],
                                                 notes: 'Imported via requirement checkoff'
                                             });
                                             // Re-apply intended count (linkProcedureToCompetencies overwrites to completionEntries.length)
