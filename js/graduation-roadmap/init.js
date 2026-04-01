@@ -963,9 +963,12 @@ function initUI() {
     // Ensure competencies are initialized before any render that reads them
     try { ensureCompetenciesInitialized(); } catch(e) { console.error('ensureCompetenciesInitialized error:', e); }
 
-    // CIS v2 migrations — idempotent, gated by localStorage flags
+    // CIS v3 migrations — idempotent, gated by localStorage flags
     try { migrateCompetencyEnhancements(); } catch(e) { console.error('migrateCompetencyEnhancements error:', e); }
     try { migrateToUnifiedPatientStore(); } catch(e) { console.error('migrateToUnifiedPatientStore error:', e); }
+
+    // Permanent schema field sync — d3Deadline/rules/text/required always match DEFAULT_COMPETENCIES
+    try { syncSchemaFields(); } catch(e) { console.error('syncSchemaFields error:', e); }
 
     // ALWAYS try to render, even if above steps failed
     try { renderDashboard(); } catch(e) { console.error('renderDashboard error:', e); }

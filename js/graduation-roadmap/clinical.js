@@ -756,11 +756,11 @@ function ensureCompetenciesInitialized() {
     }
 }
 
-// CIS v2: Force-sync schema fields from DEFAULT_COMPETENCIES to saved data
-// v1 used ?? which preserved old incorrect d3Deadline values; v2 ALWAYS overwrites schema fields
-// Also: adds missing categories (grouppractice4), cleans phantom progress, handles GP D3/D4 split
+// CIS v3: Force-sync schema fields from DEFAULT_COMPETENCIES to saved data
+// v1 used ?? which preserved old incorrect d3Deadline values; v2 ALWAYS overwrites but ran before ground truth rebuild
+// v3: re-syncs after ground truth rebuild + removes orphaned items (perio-sum-calc, gp-comm, etc.)
 function migrateCompetencyEnhancements() {
-    if (localStorage.getItem('competencyEnhancementsDone_v2')) return;
+    if (localStorage.getItem('competencyEnhancementsDone_v3')) return;
     var comp = roadmapData.clinicalData?.competencies;
     if (!comp || typeof comp !== 'object') return;
 
@@ -802,11 +802,13 @@ function migrateCompetencyEnhancements() {
         }
     });
 
-    // 4. Force-sync schema fields + clean phantom progress
+    // 4. Force-sync schema fields + clean phantom progress + remove orphans
     Object.values(comp).forEach(function(cat) {
         getValues(cat.sections).forEach(function(sec) {
             var items = sec.items || {};
-            Object.values(items).forEach(function(item) {
+            Object.keys(items).forEach(function(itemKey) {
+                var item = items[itemKey];
+                if (!item) return;
                 var def = defaults[item.id];
                 if (def) {
                     // FORCE overwrite — these are schema fields, not user data
@@ -815,10 +817,17 @@ function migrateCompetencyEnhancements() {
                     item.unlockEmailTo = def.unlockEmailTo ?? null;
                     item.isSummative = def.isSummative ?? false;
                     item.rules = def.rules ?? null;
+                    item.text = def.text;
+                    item.required = def.required;
                     item.custom = item.custom ?? def.custom ?? false;
+                } else {
+                    // Orphaned item: exists in saved data but NOT in DEFAULT_COMPETENCIES
+                    // Remove it (e.g., perio-sum-calc, gp-comm)
+                    console.log('[CIS-v3] Removing orphaned competency item: ' + (item.id || itemKey));
+                    delete items[itemKey];
+                    return;
                 }
                 // Clean phantom progress: completed > 0 but no evidence trail
-                // This happens when REQUIREMENTS_STATUS (Format D) absolute-set counts with no procedure records
                 var entries = getValues(item.completionEntries);
                 if (item.completed > 0 && entries.length === 0) {
                     item.completed = 0;
@@ -828,8 +837,35 @@ function migrateCompetencyEnhancements() {
         });
     });
 
-    localStorage.setItem('competencyEnhancementsDone_v2', '1');
-    console.log('[CIS-v2] Migrated competency enhancements v2: force-synced schema fields, cleaned phantom progress');
+    localStorage.setItem('competencyEnhancementsDone_v3', '1');
+    console.log('[CIS-v3] Migrated competency enhancements v3: re-synced schema fields after ground truth rebuild, removed orphans');
+}
+
+// Permanent d3Deadline sync — runs on EVERY initUI to prevent merge drift
+// d3Deadline is a SCHEMA field, not user data. Must always match DEFAULT_COMPETENCIES.
+function syncSchemaFields() {
+    var comp = roadmapData.clinicalData?.competencies;
+    if (!comp || typeof comp !== 'object') return;
+    var defaults = {};
+    Object.keys(DEFAULT_COMPETENCIES).forEach(function(catKey) {
+        (DEFAULT_COMPETENCIES[catKey].sections || []).forEach(function(sec) {
+            (sec.items || []).forEach(function(item) { defaults[item.id] = item; });
+        });
+    });
+    Object.values(comp).forEach(function(cat) {
+        getValues(cat.sections).forEach(function(sec) {
+            var items = sec.items || {};
+            Object.values(items).forEach(function(item) {
+                var def = defaults[item.id];
+                if (def) {
+                    item.d3Deadline = def.d3Deadline ?? null;
+                    item.rules = def.rules ?? null;
+                    item.text = def.text;
+                    item.required = def.required;
+                }
+            });
+        });
+    });
 }
 
 // Pure read-only accessor — no side effects during render.
