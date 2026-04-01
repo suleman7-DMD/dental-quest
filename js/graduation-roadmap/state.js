@@ -564,6 +564,16 @@ function mergeCompetencies(localComp, cloudComp) {
     var result = {};
     Object.keys(local).forEach(function(k) { result[k] = local[k]; });
 
+    // Build flat set of ALL item IDs across ALL local sections (prevents cross-section duplication)
+    var allLocalItemIds = {};
+    Object.values(result).forEach(function(cat) {
+        getValues(cat.sections).forEach(function(sec) {
+            Object.values(sec.items || {}).forEach(function(item) {
+                if (item && item.id) allLocalItemIds[item.id] = true;
+            });
+        });
+    });
+
     Object.keys(cloud).forEach(function(catKey) {
         if (!result[catKey]) { result[catKey] = cloud[catKey]; return; }
         var localCat = result[catKey];
@@ -573,13 +583,40 @@ function mergeCompetencies(localComp, cloudComp) {
         var localSections = localCat.sections || {};
         var cloudSections = cloudCat.sections || {};
         Object.keys(cloudSections).forEach(function(secKey) {
-            if (!localSections[secKey]) { localSections[secKey] = cloudSections[secKey]; return; }
+            if (!localSections[secKey]) {
+                // Cloud section key doesn't exist locally. Check if its ITEMS already exist
+                // in other local sections (different key, same items = structural mismatch from rebuild).
+                var cloudSecItems = cloudSections[secKey].items || {};
+                var hasNewItems = false;
+                Object.values(cloudSecItems).forEach(function(ci) {
+                    if (ci && ci.id && !allLocalItemIds[ci.id]) hasNewItems = true;
+                });
+                if (!hasNewItems) {
+                    // All items already exist locally under different section keys — skip to prevent duplication
+                    return;
+                }
+                // Section has genuinely new items — add it, but filter out duplicates
+                var filteredItems = {};
+                Object.keys(cloudSecItems).forEach(function(ik) {
+                    var ci = cloudSecItems[ik];
+                    if (ci && ci.id && !allLocalItemIds[ci.id]) {
+                        filteredItems[ik] = ci;
+                        allLocalItemIds[ci.id] = true;
+                    }
+                });
+                if (Object.keys(filteredItems).length > 0) {
+                    localSections[secKey] = { title: cloudSections[secKey].title, items: filteredItems };
+                }
+                return;
+            }
             var localItems = localSections[secKey].items || {};
             var cloudItems = cloudSections[secKey].items || {};
             Object.keys(cloudItems).forEach(function(itemId) {
                 var ci = cloudItems[itemId];
                 if (!ci) return;
-                if (!localItems[itemId]) { localItems[itemId] = ci; return; }
+                // Skip if this item ID already exists in ANY local section (cross-section dedup)
+                if (ci.id && allLocalItemIds[ci.id] && !localItems[itemId]) return;
+                if (!localItems[itemId]) { localItems[itemId] = ci; allLocalItemIds[ci.id || itemId] = true; return; }
                 var li = localItems[itemId];
                 li.completed = Math.max(li.completed || 0, ci.completed || 0);
                 // Union completionEntries by procedureId

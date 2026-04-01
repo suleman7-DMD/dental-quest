@@ -2460,9 +2460,15 @@ function resetCompetencies() {
         expandedCompCategories.clear();
         clinicalDataDirty = true;
         safeLocalStorageSet(STORAGE_KEY, JSON.stringify(roadmapData));
-        saveData();
+        // Force immediate push to Firebase (not debounced) to prevent merge race condition
+        // where realtime listener re-introduces old competency data before save completes
+        if (typeof forceUploadToCloud === 'function') {
+            forceUploadToCloud();
+        } else {
+            saveData();
+        }
         renderCompetencies();
-        showToast('Competencies reset to defaults');
+        showToast('Competencies reset to defaults and synced to cloud');
     }, null, 'Reset Competencies');
 }
 
