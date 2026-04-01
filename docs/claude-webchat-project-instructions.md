@@ -204,6 +204,11 @@ can be even shorter (e.g., "Ready to 'export' when you are.").
   REQUIREMENT CATEGORIES AND IDS:
   (Use these EXACT IDs in your exports — the app parses them)
   FIXED PROSTHODONTICS (fixed):
+    Aggregate Trackers:
+      fixed-units-total  | 10 Total fixed units (start to completion)
+      fixed-fpd          | 1 Must include 1 FPD (fixed partial denture)
+      fixed-implant-crown | 1 Must include 1 implant-supported crown
+      fixed-cerec        | 3 Must include 3 CEREC restorations
     Formatives (to qualify for summatives):
       fixed-form-prov    | 6 Provisional Restoration
       fixed-form-prep    | 6 Tooth Preparation
@@ -238,6 +243,8 @@ can be even shorter (e.g., "Ready to 'export' when you are.").
       op-assignment      | 1 Operative assignment (Blackboard)
       op-license         | 1 Licensing Exam Prep (Dr. Robinson)
   COMPLETE DENTURES (dentures):
+    Aggregate Tracker:
+      cd-units-total     | 4 Total CD units (1 unit = 1 full arch)
     Formatives:
       cd-form-prelim     | 2 arches Preliminary Impressions
       cd-form-final      | 2 arches Final Impression
@@ -320,7 +327,6 @@ can be even shorter (e.g., "Ready to 'export' when you are.").
       perio-sum-hci      — DONE (1/1)
       perio-sum-dx       | 2 Diagnosis & Treatment Plan Type 2 (0/2)
       perio-sum-prophy   | 3 Prophy (1/3 — need 2 more)
-      perio-sum-calc     | 3 Calculus removal (0/3)
       perio-sum-reeval-ging | 2 Re-evaluate Gingivitis (0/2)
       perio-sum-reeval-srp  | 1 Re-evaluate SRP (0/1)
       perio-sum-impr     | 1 Re-evaluate Impression (0/1)
@@ -333,10 +339,14 @@ can be even shorter (e.g., "Ready to 'export' when you are.").
       gp-sum-review      | 1 Summative Periodic Review
       gp-form-analysis   | 2 Formative Written Analyses (1/2)
       gp-sum-analysis    | 1 Summative Written Analysis
-      gp-comm            — DONE
+      gp-comm-workshop   — DONE (Communication Workshop attended)
+      gp-comm-form-txplan | 1 Formative Tx Plan Presentation
+      gp-comm-sum-txplan | 1 Summative Tx Plan Presentation
       gp-leader          | 1 Leadership Workshop
       gp-case            — DONE
       gp-pms-3rd         | 1 Practice Management Scenarios
+      gp-meetings        | ongoing Monthly group meetings (mandatory)
+      gp-ohra            | ongoing OHRA at every PE/Tx Plan appt
     4th Year GD 642:
       gp4-comm-txplan    | 1 Communication Tx Plan Presentation
       gp4-periodicrev-1  | 2 Periodic Reviews
@@ -412,7 +422,6 @@ can be even shorter (e.g., "Ready to 'export' when you are.").
     perio-form-reeval-srp — only post-SRP patients
     perio-sum-reeval-srp  — only post-SRP patients
     perio-surg-assist     — surgical, always noteworthy
-    perio-sum-calc        — only for periodontitis patients
     perio-sum-mock        — always noteworthy
   IMPORTANT:
   - Only match OUTSTANDING requirements (not already completed)
@@ -468,11 +477,14 @@ FORMATTING RULES:
   CHART: [chart number]
   TYPE: [Active / status note / age y/o sex if known]
   MEDICAL_HX: [conditions, precautions, ASA, age/sex/vitals]
-  MEDICATIONS: [full med list]. Allergies: [if any].
+  MEDICATIONS: [full med list]
+  ALLERGIES: [drug, latex, environmental allergies]
   DENTAL_HX: [existing restorations, prior major work,
     extractions, implants, prosthetics]
   TX_SUMMARY_BU: [all treatment rendered at BU. Most recent
     tx date and what was done. Which student/provider]
+  TX_COMPLETED_BY_ME: [procedures completed by Suleman on
+    this patient, with dates]
   POE_LAST: [date and details of last POE/prophy/perio chart]
   POE_NEXT: [date | what is due at next recall]
   TX_PLAN: [outstanding treatment, organized by priority]
@@ -482,6 +494,8 @@ FORMATTING RULES:
   LAST_BW: [date and quality notes]
   LAST_CBCT: [date or unknown]
   LAST_PANO: [date or unknown]
+  RECALL_HISTORY: [recall visit dates and outcomes]
+  ACTIVE_STATUS: [active | inactive | transferred]
     NOTES: [clinical notes, alerts, behavioral patterns,
       no-shows, special considerations, follow-ups]
     RELIABILITY: [green | yellow | red]                                                  
