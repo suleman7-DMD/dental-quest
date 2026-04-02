@@ -285,7 +285,6 @@ function isEmptyState(data) {
     var hasDailyPlannerContent = (data.dailyPlanner?.focus ?? '') !== '' ||
                                  (data.dailyPlanner?.notes ?? '') !== '' ||
                                  (data.dailyPlanner?.pomodorosCompleted ?? 0) > 0;
-    const hasReviewQueue = Array.isArray(data.clinicalData?.autoLinkReviewQueue) && data.clinicalData.autoLinkReviewQueue.length > 0;
     // clinicHeadlines: only count as real data if user changed the target from default (90/116)
     const hasClinicHeadlines = data.clinicHeadlines && (
         (data.clinicHeadlines.appointments?.target != null && data.clinicHeadlines.appointments.target !== 90) ||
@@ -319,7 +318,7 @@ function isEmptyState(data) {
            !hasNotes && !hasPatients && !hasCompletedDeadlines &&
            !hasExamStudyProgress && !hasGrades && !hasEditedDeadlines &&
            !hasPatientRecords && !hasDashboardSnapshots && !hasCompletedProcedures && !hasCompetencies &&
-           !hasMissingNotes && !hasTodoItems && !hasDailyPlannerContent && !hasReviewQueue && !hasPeriodicReview && !hasGraduationPrep && !hasClinicHeadlines;
+           !hasMissingNotes && !hasTodoItems && !hasDailyPlannerContent && !hasPeriodicReview && !hasGraduationPrep && !hasClinicHeadlines;
 }
 
 function hasRealData(data) {
@@ -622,25 +621,21 @@ function mergeCompetencies(localComp, cloudComp) {
                 if (ci.id && allLocalItemIds[ci.id] && !localItems[itemId]) return;
                 if (!localItems[itemId]) { localItems[itemId] = ci; allLocalItemIds[ci.id || itemId] = true; return; }
                 var li = localItems[itemId];
-                li.completed = Math.max(li.completed || 0, ci.completed || 0);
-                // Union completionEntries by procedureId
-                var le = getValues(li.completionEntries);
-                var ce = getValues(ci.completionEntries);
-                if (ce.length > 0) {
-                    var seen = {};
-                    le.forEach(function(e) { if (e.procedureId != null) seen[e.procedureId] = true; });
-                    ce.forEach(function(e) {
-                        if (e.procedureId != null) {
-                            if (!seen[e.procedureId]) { le.push(e); seen[e.procedureId] = true; }
-                        } else {
-                            var dup = le.some(function(x) { return x.procedureId == null && x.date === e.date && x.note === e.note; });
-                            if (!dup) le.push(e);
-                        }
-                    });
-                    li.completionEntries = le;
-                    li.completed = Math.min(li.required || 999, Math.max(li.completed, le.length));
+                // V2: Timestamp-based merge — most recent lastVerified wins
+                if (li.lastVerified && ci.lastVerified) {
+                    if (new Date(ci.lastVerified) > new Date(li.lastVerified)) {
+                        li.completed = ci.completed ?? li.completed;
+                        li.lastVerified = ci.lastVerified;
+                    }
+                } else if (ci.lastVerified && !li.lastVerified) {
+                    li.completed = ci.completed ?? li.completed;
+                    li.lastVerified = ci.lastVerified;
+                } else if (!li.lastVerified && !ci.lastVerified) {
+                    // Neither verified — safe default: take higher count
+                    li.completed = Math.max(li.completed || 0, ci.completed || 0);
                 }
-                // Derive status from completed count after merge
+                li.note = li.note || ci.note || '';
+                // Derive status from completed count
                 if (li.completed >= (li.required || 999)) {
                     li.status = 'completed';
                 } else if (li.completed > 0) {
@@ -710,8 +705,8 @@ const PROCEDURE_TYPES = {
     other: 'Other'
 };
 
-// Keyword patterns for auto-linking procedures to competency items
-// Single source of truth — used by autoLinkProcedureToCompetencies() and inferProcedureType()
+// Keyword patterns for mapping procedure text to competency items
+// Used by inferProcedureType()
 const KEYWORD_PATTERNS = [
     // Fixed Prosthodontics
     { keywords: ['crown', 'prep', 'fpd', 'bridge', 'pfm', 'e.max', 'emax', 'zirconia'], ids: ['fixed-form-prep', 'fixed-sum-prep'], confidence: 'high' },
@@ -1086,8 +1081,9 @@ function getSmartProcedureCount() {
     // Source 1: Formal procedure records
     var formalCount = procedures.length;
 
-    // Source 2: Competency items with completed > 0 (deduped against procedure-linked entries)
-    // ONLY count categories that represent actual clinical procedures — NOT grouppractice, txplanning, geriatrics, externship, peds
+    // Source 2: Competency items with manual adjustments (not backed by formal procedure records)
+    // V2: No completionEntries exist — count items where completed > 0 in procedure categories
+    // Only counts as "additional" procedures beyond what's in formal records
     var competencyDerivedCount = 0;
     var procedureCategories = { fixed: 1, operative: 1, dentures: 1, rpd: 1, srp: 1, endo: 1, oralsurg: 1, perio: 1 };
 
@@ -1095,20 +1091,18 @@ function getSmartProcedureCount() {
         Object.entries(competencies).forEach(function(entry) {
             var catKey = entry[0];
             var cat = entry[1];
-            if (!procedureCategories[catKey]) return; // Skip non-procedure categories
+            if (!procedureCategories[catKey]) return;
             getValues(cat.sections).forEach(function(sec) {
                 getValues(sec.items).forEach(function(item) {
                     if (item.completed > 0) {
-                        // Only count entries with a valid procedureId as evidence-linked.
-                        // Entries with procedureId: null are manual/backfill entries (not deductions).
-                        var linkedEvidenceCount = getValues(item.completionEntries).filter(function(e) { return e.procedureId != null; }).length;
-                        // Manual adjustments = completed count minus procedure-linked entries
-                        var manualCount = Math.max(0, item.completed - linkedEvidenceCount);
-                        competencyDerivedCount += manualCount;
+                        competencyDerivedCount += item.completed;
                     }
                 });
             });
         });
+        // Subtract formal procedure records to avoid double-counting
+        // (procedures already counted in Source 1)
+        competencyDerivedCount = Math.max(0, competencyDerivedCount - formalCount);
     }
 
     var computedTotal = formalCount + competencyDerivedCount;
@@ -1416,7 +1410,6 @@ function recalculatePatientLastVisit(patientId) {
 }
 
 function cascadeDeleteProcedure(procId) {
-    if (typeof unlinkProcedureFromCompetencies === 'function') unlinkProcedureFromCompetencies(procId);
     delete roadmapData.clinicalData.completedProcedures[procId];
     propagateClinicalChanges({ procedures: true, competencies: true, source: 'cascadeDeleteProcedure' });
 }
@@ -1429,7 +1422,6 @@ function cascadeDeleteAppointment(aptId, { skipPropagation = false } = {}) {
     getValues(roadmapData.clinicalData.completedProcedures)
         .filter(function(p) { return p.appointmentId === aptId; })
         .forEach(function(p) {
-            if (typeof unlinkProcedureFromCompetencies === 'function') unlinkProcedureFromCompetencies(p.id);
             delete roadmapData.clinicalData.completedProcedures[p.id];
         });
 
@@ -1473,7 +1465,6 @@ function cascadeDeletePatient(patientId) {
     var orphanedProcs = getValues(roadmapData.clinicalData.completedProcedures)
         .filter(function(p) { return p.patientId === patientId; });
     orphanedProcs.forEach(function(p) {
-        if (typeof unlinkProcedureFromCompetencies === 'function') unlinkProcedureFromCompetencies(p.id);
         delete roadmapData.clinicalData.completedProcedures[p.id];
     });
 
@@ -1481,13 +1472,7 @@ function cascadeDeletePatient(patientId) {
     delete roadmapData.clinicalData.patientRecords[patientId];
     if (roadmapData.clinicalData?.patients?.[patientId]) delete roadmapData.clinicalData.patients[patientId];
 
-    // 5. Remove from review queue
-    if (roadmapData.clinicalData.autoLinkReviewQueue) {
-        roadmapData.clinicalData.autoLinkReviewQueue =
-            roadmapData.clinicalData.autoLinkReviewQueue.filter(function(q) { return q.patientId !== patientId; });
-    }
-
-    // 6. Propagate ONCE at the end
+    // 5. Propagate ONCE at the end
     propagateClinicalChanges({
         appointments: true, procedures: true,
         competencies: true, patients: true,
@@ -1507,7 +1492,6 @@ function cascadeUncompleteAppointment(aptId) {
     getValues(roadmapData.clinicalData.completedProcedures)
         .filter(function(p) { return p.appointmentId === aptId; })
         .forEach(function(p) {
-            if (typeof unlinkProcedureFromCompetencies === 'function') unlinkProcedureFromCompetencies(p.id);
             delete roadmapData.clinicalData.completedProcedures[p.id];
         });
 
@@ -1523,116 +1507,6 @@ function cascadeUncompleteAppointment(aptId) {
         appointments: true, procedures: true, competencies: true,
         source: 'cascadeUncompleteAppointment'
     });
-}
-
-// ==================== CIS v2: AUTO-LINK ENGINE ====================
-
-function isItemUnlocked(item, competencies) {
-    if (!item.unlockedBy || !Array.isArray(item.unlockedBy) || item.unlockedBy.length === 0) return true;
-    return item.unlockedBy.every(function(prereq) {
-        var prereqResult = findCompetencyItem(prereq.id);
-        if (!prereqResult) return true; // Prereq not found = treat as unlocked
-        return prereqResult.item.completed >= prereq.required;
-    });
-}
-
-function matchProcedureToCompetencies(procedureText, patientId) {
-    // Priority 1: If patient has importedRequirements, use those as authoritative
-    var patient = patientId ? (roadmapData.clinicalData.patientRecords || {})[patientId] : null;
-    if (patient && Array.isArray(patient.importedRequirements) && patient.importedRequirements.length > 0) {
-        return patient.importedRequirements
-            .filter(function(req) {
-                var result = findCompetencyItem(req.reqId);
-                return result && result.item.completed < result.item.required;
-            })
-            .map(function(req) {
-                var result = findCompetencyItem(req.reqId);
-                return { item: result.item, confidence: 'high', source: 'importedRequirements' };
-            })
-            .filter(function(m) { return m.item; });
-    }
-
-    // Priority 2: Keyword matching against KEYWORD_PATTERNS
-    var text = (procedureText || '').toLowerCase();
-    var matches = [];
-    KEYWORD_PATTERNS.forEach(function(pattern) {
-        var matched = pattern.keywords.some(function(kw) { return text.includes(kw); });
-        if (matched) {
-            pattern.ids.forEach(function(itemId) {
-                var result = findCompetencyItem(itemId);
-                if (result) {
-                    matches.push({ item: result.item, confidence: pattern.confidence, source: 'keyword' });
-                }
-            });
-        }
-    });
-    return matches;
-}
-
-function addToReviewQueue(procedure, suggestions) {
-    if (!roadmapData.clinicalData.autoLinkReviewQueue) roadmapData.clinicalData.autoLinkReviewQueue = [];
-    if (!Array.isArray(roadmapData.clinicalData.autoLinkReviewQueue)) {
-        roadmapData.clinicalData.autoLinkReviewQueue = getValues(roadmapData.clinicalData.autoLinkReviewQueue || []);
-    }
-    // Dedup by procedureId
-    var existing = roadmapData.clinicalData.autoLinkReviewQueue.find(function(q) { return q.procedureId === procedure.id; });
-    if (existing) return;
-    roadmapData.clinicalData.autoLinkReviewQueue.push({
-        patientId: procedure.patientId ?? null,
-        procedureId: procedure.id,
-        procedureName: procedure.procedure ?? '',
-        date: procedure.date ?? '',
-        suggestedItems: suggestions.map(function(s) {
-            return { itemId: s.item.id, itemText: s.item.text, category: s.item.id.split('-')[0], confidence: s.confidence };
-        }),
-        createdAt: new Date().toISOString()
-    });
-}
-
-function autoLinkProcedureToCompetencies(procedure) {
-    // Step 1: If procedure already has competencyItemIds, use those (manual override)
-    if (procedure.competencyItemIds && procedure.competencyItemIds.length > 0) {
-        if (typeof linkProcedureToCompetencies === 'function') linkProcedureToCompetencies(procedure);
-        return;
-    }
-
-    // Step 2: Match by keyword/imported requirements
-    var competencies = roadmapData.clinicalData?.competencies;
-    if (!competencies) return;
-    var procedureText = procedure.procedure || '';
-    var matches = matchProcedureToCompetencies(procedureText, procedure.patientId);
-
-    // Step 3: Filter to items with remaining > 0
-    var actionable = matches.filter(function(m) {
-        return m.item.completed < m.item.required;
-    });
-
-    // Step 4: Check unlock chains
-    var unlocked = actionable.filter(function(m) { return isItemUnlocked(m.item, competencies); });
-
-    // Step 5: Separate by confidence
-    var highConfidence = unlocked.filter(function(m) { return m.confidence === 'high'; });
-    var lowConfidence = unlocked.filter(function(m) { return m.confidence !== 'high'; });
-
-    // Auto-link high confidence matches
-    if (highConfidence.length > 0) {
-        procedure.competencyItemIds = highConfidence.map(function(m) { return m.item.id; });
-        procedure.autoLinked = true;
-        if (typeof linkProcedureToCompetencies === 'function') linkProcedureToCompetencies(procedure);
-        showAutoLinkToast(highConfidence, procedure.id);
-    }
-
-    // Queue low confidence for review
-    if (lowConfidence.length > 0) {
-        addToReviewQueue(procedure, lowConfidence);
-    }
-}
-
-function showAutoLinkToast(matches, procedureId) {
-    var names = matches.map(function(m) { return m.item.text; }).join(', ');
-    if (typeof showToast === 'function') {
-        showToast('✓ Linked to: ' + names + '. Review on Competencies tab.');
-    }
 }
 
 function findPatientByChartOrName(chartNumber, name) {

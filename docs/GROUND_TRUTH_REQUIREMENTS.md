@@ -1,6 +1,6 @@
 # GROUND TRUTH: DMD 2027 GRADUATION REQUIREMENTS
 ## Suleman Shaikh — Single Source of Truth
-### Last Updated: 2026-04-01
+### Last Updated: 2026-04-02
 
 > **THIS FILE IS THE ONLY REQUIREMENTS REFERENCE.**
 > It replaces PR_PART_1_SULEMAN_SHAIKH.pdf and GRADUATION_REQUIREMENTS.pdf.
@@ -142,11 +142,11 @@ From Sam Gaston — hard minimums based on historical lowest-10 students.
 
 | Requirement ID | Description | Required | Completed | D3 Deadline |
 |---|---|---|---|---|
-| cd-form-prelim | Preliminary Impressions (edentulous preferred) | 2 arches | 2 | null — DONE |
-| cd-form-final | Final Impression (edentulous preferred) | 2 arches | 2 | null — DONE |
-| cd-form-records | Intermaxillary Records (1 edentulous arch preferred) | 1 case | 1 | null — DONE |
-| cd-form-postdam | Post Dam Technique (edentulous or max Kennedy Class I) | 1 case | 1 | null — DONE |
-| cd-form-trial | Trial Denture / Tooth Try-In (1 edentulous arch preferred) | 2 arches | 2 | null — DONE |
+| cd-form-prelim | Preliminary Impressions (edentulous preferred) | 2 arches | 0 | null |
+| cd-form-final | Final Impression (edentulous preferred) | 2 arches | 0 | null |
+| cd-form-records | Intermaxillary Records (1 edentulous arch preferred) | 1 case | 0 | null |
+| cd-form-postdam | Post Dam Technique (edentulous or max Kennedy Class I) | 1 case | 0 | null |
+| cd-form-trial | Trial Denture / Tooth Try-In (1 edentulous arch preferred) | 2 arches | 0 | null |
 | cd-form-insert | Insertion / Clinical Remount | 2 arches | 0 | null |
 | cd-form-adjust | Adjustment (1 edentulous arch preferred) | 2 arches | 0 | null |
 
@@ -548,4 +548,4 @@ Everything that MUST be done specifically by end of D3:
 | Date | Change |
 |---|---|
 | 2026-04-01 | Initial ground truth document created. Replaces PR_PART_1_SULEMAN_SHAIKH.pdf and GRADUATION_REQUIREMENTS.pdf. Resolves SRP duplication, adds aggregate trackers, splits GP comm module, adds missing D3 deadline items. |
-| 2026-04-01 | Corrections after manual audit: op-multi-5 completed 1→0 (only 4 multisurface summatives done), perio-sum-prophy 2→3 (all 3 done), gp-form-analysis 1→2 (both formative WAs done), peds-course 0→1 (PD 530 finished), cd-form-prelim/final/records/postdam/trial all updated to done (Jose Rosario interim through try-in). |
+| 2026-04-02 | Manual audit corrections: op-multi-5 completed 1→0 (only 4 multisurface summatives done), perio-sum-prophy completed 2→3 (all 3 done), gp-form-analysis completed 1→2 (both formative WAs done), peds-course completed 0→1 (PD 530 finished). Master checklist updated accordingly. |
