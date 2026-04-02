@@ -279,6 +279,7 @@ function mpToggleTaskComplete(taskId) {
     safeLocalStorageSet(STORAGE_KEY, JSON.stringify(roadmapData));
     saveData();
     if (typeof buildCurrentWeekSchedule === 'function') buildCurrentWeekSchedule();
+    if (typeof dpSyncAppointmentsToTimeline === 'function') dpSyncAppointmentsToTimeline();
     if (typeof syncClinicalToMonthlyPlanner === 'function') { clinicalDataDirty = true; syncClinicalToMonthlyPlanner(); }
     mpRenderAllCalendars();
     mpUpdateStats();
@@ -869,7 +870,7 @@ function mpClickCell(date, hour, weekNum) {
     document.getElementById('mpModalDate').min = week.start;
     document.getElementById('mpModalDate').max = week.end;
     document.getElementById('mpModalTime').value = String(hour).padStart(2, '0') + ':00';
-    document.getElementById('mpModalEndTime').value = String(hour + 1).padStart(2, '0') + ':00';
+    document.getElementById('mpModalEndTime').value = hour < 23 ? String(hour + 1).padStart(2, '0') + ':00' : '23:59';
     document.getElementById('mpModalType').value = 'other';
     document.getElementById('mpModalNotes').value = '';
     document.getElementById('mpDeleteSection').style.display = 'none';
@@ -1012,6 +1013,10 @@ function mpSaveTask() {
             mpCurrentTask.endTime = endTime;
             mpCurrentTask.type = type;
             mpCurrentTask.notes = notes;
+            // Mark as user-edited so syncClinicalToMonthlyPlanner won't overwrite
+            if (mpCurrentTask.syncedFromClinical || mpCurrentTask.clinicalAppointmentId) {
+                mpCurrentTask.userEdited = true;
+            }
             showToast('Task updated!');
         }
     } else {
@@ -1314,9 +1319,20 @@ function buildCurrentWeekSchedule() {
     var schedule = {};
     var seen = {}; // Dedup by date+time+item
 
+    // Build set of overridden/converted static task IDs
+    var overridden = getValues(roadmapData.monthlyPlanner?.overriddenStatic);
+    var convertedStaticIds = {};
+    overridden.forEach(function(o) { convertedStaticIds[o.value || o] = true; });
+    getValues(roadmapData.monthlyPlanner?.customTasks).forEach(function(ct) {
+        if (ct.convertedFrom) convertedStaticIds[ct.convertedFrom] = true;
+    });
+
     // 1. Add static tasks for current week
     MP_STATIC_TASKS.forEach(function(task) {
         if (task.date >= mondayStr && task.date <= sundayStr) {
+            var staticId = 'static-' + task.date + '-' + task.item.substring(0, 15).replace(/[^a-zA-Z0-9]/g, '');
+            if (convertedStaticIds[staticId]) return;
+
             var key = task.date + '|' + (task.time || '') + '|' + task.item;
             if (seen[key]) return;
             seen[key] = true;
@@ -1359,6 +1375,8 @@ function buildCurrentWeekSchedule() {
     getValues(roadmapData.clinicalData?.appointments).forEach(function(apt) {
         if (!apt.date || apt.date < mondayStr || apt.date > sundayStr) return;
         if (apt.status === 'cancelled') return;
+        var hiddenClinic = roadmapData.monthlyPlanner?.hiddenClinicTasks || {};
+        if (hiddenClinic[apt.id]) return;
 
         // Skip if already added via synced custom task (prevents duplicate entries)
         if (schedule['clinic_' + apt.id]) return;
@@ -1422,6 +1440,7 @@ function mpHideClinicTask(taskId, clinicalAppointmentId) {
 function mpUnhideClinicTask(aptId) {
     if (!roadmapData.monthlyPlanner?.hiddenClinicTasks?.[aptId]) return;
     delete roadmapData.monthlyPlanner.hiddenClinicTasks[aptId];
+    clinicalDataDirty = true;
     syncClinicalToMonthlyPlanner();
     safeLocalStorageSet(STORAGE_KEY, JSON.stringify(roadmapData));
     saveData();

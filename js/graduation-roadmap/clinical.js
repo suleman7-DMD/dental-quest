@@ -97,8 +97,13 @@ function renderActiveRoster() {
             if (aptDate && aptDate >= now && aptDate <= monthEnd) { thisMonth.push(item); return; }
         }
         if (p.lastVisit) {
-            var lastDate = parseLocalDate(p.lastVisit);
-            if (lastDate && lastDate >= thirtyDaysAgo) { recent.push(item); return; }
+            var lastVisitDateStr = p.lastVisit.split('|')[0].trim();
+            var lastDate = parseLocalDate(lastVisitDateStr);
+            if (!lastDate || isNaN(lastDate.getTime())) {
+                var mdyParts = lastVisitDateStr.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+                if (mdyParts) lastDate = new Date(parseInt(mdyParts[3]), parseInt(mdyParts[1]) - 1, parseInt(mdyParts[2]));
+            }
+            if (lastDate && !isNaN(lastDate.getTime()) && lastDate >= thirtyDaysAgo) { recent.push(item); return; }
         }
     });
 
@@ -122,7 +127,7 @@ function renderActiveRoster() {
                 : '<span style="color:#64748b">No upcoming apt</span>';
             return '<div style="display:flex;align-items:center;justify-content:space-between;padding:8px 12px;border-bottom:1px solid rgba(255,255,255,0.06);">'
                 + '<div>' + reliabilityDot + '<strong>' + escapeHtml(p.name) + '</strong> <span style="color:#64748b;font-size:0.85em;">#' + escapeHtml(p.chartNumber || 'N/A') + '</span>'
-                + '<div style="font-size:0.8em;color:#94a3b8;margin-top:2px;">Next: ' + nextAptStr + (p.lastVisit ? ' | Last: ' + escapeHtml(p.lastVisit) : '') + '</div></div>'
+                + '<div style="font-size:0.8em;color:#94a3b8;margin-top:2px;">Next: ' + nextAptStr + (p.lastVisit ? ' | Last: ' + escapeHtml(p.lastVisit.split('|')[0].trim()) : '') + '</div></div>'
                 + '<button onclick="navigateToEntity(\'patient\',\'' + safeId + '\')" style="padding:4px 10px;background:#334155;border:none;border-radius:4px;color:#93c5fd;cursor:pointer;font-size:0.8em;">View</button>'
                 + '</div>';
         }).join('');
@@ -866,6 +871,15 @@ function syncSchemaFields() {
                     item.required = def.required;
                 }
             });
+            // Remove orphaned items not in DEFAULT_COMPETENCIES
+            // Prevents zombie re-addition from cloud merge inflating totalUnits
+            Object.keys(items).forEach(function(itemKey) {
+                var item = items[itemKey];
+                if (item && item.id && !defaults[item.id] && !item.custom) {
+                    console.log('[SCHEMA-SYNC] Removing orphaned item: ' + item.id);
+                    delete items[itemKey];
+                }
+            });
         });
     });
 }
@@ -1030,7 +1044,7 @@ function renderMilestoneDashboard() {
     // Pace projection
     var paceResult = typeof calculatePaceProjection === 'function' ? calculatePaceProjection(aptCount.total, 90) : null;
     if (paceResult && paceResult.ratePerWeek > 0) {
-        var paceClass = paceResult.behindSchedule ? 'comp-pace-red' : (paceResult.pastGraduation ? 'comp-pace-yellow' : 'comp-pace-green');
+        var paceClass = paceResult.pastGraduation ? 'comp-pace-red' : (paceResult.behindSchedule ? 'comp-pace-yellow' : 'comp-pace-green');
         html += '<div class="comp-pace-badge ' + paceClass + '" style="margin-top:6px;">'
             + paceResult.ratePerWeek + '/wk pace</div>';
     }
@@ -1380,20 +1394,30 @@ function removeEvidenceEntry(catKey, itemId, entryIndex) {
     saveData();
     renderCompetencies();
 
-    // Undo toast — use module-level variable + DOM click listener (showToast uses textContent, not innerHTML)
+    // Undo toast — use module-level variable + DOM click listener
     _lastRemovedEvidence = { catKey: catKey, itemId: itemId, entry: removed };
     showToast('Evidence removed. Tap here to undo.');
     var toastEl = document.getElementById('toast');
     if (toastEl) {
         toastEl.style.cursor = 'pointer';
-        toastEl.onclick = function() {
+        var undoHandler = function() {
             if (_lastRemovedEvidence) {
                 undoRemoveEvidence(_lastRemovedEvidence.catKey, _lastRemovedEvidence.itemId, _lastRemovedEvidence.entry);
                 _lastRemovedEvidence = null;
-                toastEl.onclick = null;
-                toastEl.style.display = 'none';
             }
+            toastEl.onclick = null;
+            toastEl.style.cursor = '';
+            toastEl.classList.remove('show');
         };
+        toastEl.onclick = undoHandler;
+        // Auto-clear handler when toast auto-hides
+        setTimeout(function() {
+            if (toastEl.onclick === undoHandler) {
+                toastEl.onclick = null;
+                toastEl.style.cursor = '';
+                _lastRemovedEvidence = null;
+            }
+        }, 2100);
     }
 }
 
@@ -2338,6 +2362,7 @@ function setCompItemStatus(catKey, itemId, newStatus) {
     safeLocalStorageSet(STORAGE_KEY, JSON.stringify(roadmapData));
     saveData();
     renderCompetencies();
+    if (typeof renderDashboard === 'function') renderDashboard();
 
     // Show milestone toast if just completed
     if (!wasCompleted && isNowCompleted) {

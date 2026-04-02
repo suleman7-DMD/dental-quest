@@ -110,6 +110,9 @@ function renderDashboard() {
         if (d.done) return false;
         if (!d.date || d.tbd) return true;
         return false;
+    }).map(function(d) {
+        if (!d.date && !d.tbd) return Object.assign({}, d, { tbd: true });
+        return d;
     });
 
     // === Row 4: Key Dates Countdown ===
@@ -494,8 +497,8 @@ function renderMissingNotesSection() {
     }
 
     // Cross-reference with SPS dashboard
-    var snapshots = roadmapData.clinicalData?.dashboardSnapshots;
-    if (snapshots && snapshots.length > 0 && pending.length > 0) {
+    var snapshots = getValues(roadmapData.clinicalData?.dashboardSnapshots);
+    if (snapshots.length > 0 && pending.length > 0) {
         var notesAtRisk = snapshots[0]?.appointments?.notesAtRisk ?? 0;
         if (notesAtRisk > 0 && notesAtRisk !== pending.length) {
             html += '<div style="color:#94a3b8; font-size:0.7em; margin-top:8px; padding:4px 8px; background:rgba(100,116,139,0.08); border-radius:4px;">';
@@ -572,18 +575,34 @@ function renderTodoListSection() {
     return html;
 }
 
-// Targeted re-render for Missing Notes section (preserves scroll, focus, details state)
+// Targeted re-render for Missing Notes section (preserves details open state)
 function rerenderMissingNotesSection() {
     var container = document.getElementById('dashMissingNotesContainer');
     if (!container) return;
+    var details = container.querySelector('details');
+    var wasOpen = details ? details.open : false;
+    // NOTE: innerHTML is safe here — renderMissingNotesSection() builds HTML from
+    // escapeHtml()-sanitized user data only. No raw user input enters the template.
     container.innerHTML = renderMissingNotesSection();
+    if (wasOpen) {
+        var newDetails = container.querySelector('details');
+        if (newDetails) newDetails.open = true;
+    }
 }
 
-// Targeted re-render for Todo List section (preserves scroll, focus, details state)
+// Targeted re-render for Todo List section (preserves details open state)
 function rerenderTodoListSection() {
     var container = document.getElementById('dashTodoListContainer');
     if (!container) return;
+    var details = container.querySelector('details');
+    var wasOpen = details ? details.open : false;
+    // NOTE: innerHTML is safe here — renderTodoListSection() builds HTML from
+    // escapeHtml()-sanitized user data only. No raw user input enters the template.
     container.innerHTML = renderTodoListSection();
+    if (wasOpen) {
+        var newDetails = container.querySelector('details');
+        if (newDetails) newDetails.open = true;
+    }
 }
 
 // Dashboard quick-add todo handler
