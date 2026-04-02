@@ -326,21 +326,8 @@ function reconstructState(source, options) {
         cd.missingNotes = s.clinicalData?.missingNotes ?? f.clinicalData?.missingNotes ?? {};
     }
 
-    // autoLinkReviewQueue
-    if (isRemoteWins) {
-        // Union by procedureId: keep all local, add remote-only
-        var localQ = getValues(f.clinicalData?.autoLinkReviewQueue);
-        var remoteQ = getValues(s.clinicalData?.autoLinkReviewQueue);
-        var localProcIds = new Set(localQ.map(function(q) { return q.procedureId; }));
-        cd.autoLinkReviewQueue = localQ.concat(remoteQ.filter(function(q) {
-            return q.procedureId && !localProcIds.has(q.procedureId);
-        }));
-    } else {
-        // stored-wins and source-wins: take source array directly
-        cd.autoLinkReviewQueue = Array.isArray(s.clinicalData?.autoLinkReviewQueue)
-            ? s.clinicalData.autoLinkReviewQueue
-            : (f.clinicalData?.autoLinkReviewQueue || []);
-    }
+    // autoLinkReviewQueue — dead feature, always empty
+    cd.autoLinkReviewQueue = [];
 
     result.clinicalData = cd;
 
@@ -601,18 +588,6 @@ function mergeRemoteCollectionsIntoLocal(data) {
                 roadmapData.clinicalData.competencies, data.clinicalData.competencies
             );
         }
-        // autoLinkReviewQueue: union by procedureId (local wins for same procedureId)
-        var remoteQueue = getValues(data.clinicalData.autoLinkReviewQueue);
-        if (remoteQueue.length > 0) {
-            var localQueue = getValues(roadmapData.clinicalData.autoLinkReviewQueue);
-            roadmapData.clinicalData.autoLinkReviewQueue = localQueue;
-            var localProcIds = new Set(localQueue.map(function(q) { return q.procedureId; }));
-            remoteQueue.forEach(function(remoteQ) {
-                if (remoteQ.procedureId && !localProcIds.has(remoteQ.procedureId)) {
-                    roadmapData.clinicalData.autoLinkReviewQueue.push(remoteQ);
-                }
-            });
-        }
     }
 
     // Monthly planner collections
@@ -857,6 +832,7 @@ function importBackup(file) {
             localStorage.removeItem('unifiedPatientStoreDone_v1');
             localStorage.removeItem('competencyEnhancementsDone_v2');
             localStorage.removeItem('competencyEnhancementsDone_v3');
+            localStorage.removeItem('competencyV2Migrated');
             localStorage.removeItem('leadingZeroDedupDone_v2');
             localStorage.removeItem('perioNoiseCleanupDone_v1');
 
@@ -1508,9 +1484,9 @@ function renderDoTodayTasks() {
         return;
     }
 
-    // Sort by id (recent first)
+    // Sort by id (recent first) — IDs are strings like task_1712345678_abc123
     const sorted = [...doTodayTasks].sort((a, b) => {
-        return (b.id || 0) - (a.id || 0);
+        return (b.id || '').localeCompare(a.id || '');
     });
 
     // Category display names
@@ -1853,6 +1829,7 @@ function restoreCheckpoint(index) {
             localStorage.removeItem('unifiedPatientStoreDone_v1');
             localStorage.removeItem('competencyEnhancementsDone_v2');
             localStorage.removeItem('competencyEnhancementsDone_v3');
+            localStorage.removeItem('competencyV2Migrated');
             localStorage.removeItem('leadingZeroDedupDone_v2');
             localStorage.removeItem('perioNoiseCleanupDone_v1');
 
@@ -2123,6 +2100,7 @@ function importAndRestoreDirectly() {
                     localStorage.removeItem('unifiedPatientStoreDone_v1');
                     localStorage.removeItem('competencyEnhancementsDone_v2');
                     localStorage.removeItem('competencyEnhancementsDone_v3');
+                    localStorage.removeItem('competencyV2Migrated');
                     localStorage.removeItem('leadingZeroDedupDone_v2');
                     localStorage.removeItem('perioNoiseCleanupDone_v1');
 
@@ -2364,10 +2342,6 @@ function validateStateIntegrity(data) {
             console.warn('[GUARD-F] Auto-converting dashboardSnapshots from object to array');
             data.clinicalData.dashboardSnapshots = getValues(data.clinicalData.dashboardSnapshots);
         }
-        if (data.clinicalData.autoLinkReviewQueue && !Array.isArray(data.clinicalData.autoLinkReviewQueue) && typeof data.clinicalData.autoLinkReviewQueue === 'object') {
-            console.warn('[GUARD-F] Auto-converting autoLinkReviewQueue from object to array');
-            data.clinicalData.autoLinkReviewQueue = getValues(data.clinicalData.autoLinkReviewQueue);
-        }
         // clinicalData sub-fields must be objects (not undefined)
         if (typeof data.clinicalData.patients !== 'object') errors.push('clinicalData.patients missing');
         if (typeof data.clinicalData.appointments !== 'object') errors.push('clinicalData.appointments missing');
@@ -2412,11 +2386,6 @@ function validateStateIntegrity(data) {
     if (data.clinicalData?.competencies !== undefined && data.clinicalData.competencies !== null && typeof data.clinicalData.competencies !== 'object') {
         console.error('[GUARD-F] clinicalData.competencies is not an object');
         errors.push('clinicalData.competencies is not an object');
-    }
-    // autoLinkReviewQueue must be array if present
-    if (data.clinicalData?.autoLinkReviewQueue !== undefined && !Array.isArray(data.clinicalData.autoLinkReviewQueue)) {
-        console.error('[GUARD-F] clinicalData.autoLinkReviewQueue is not an array');
-        errors.push('clinicalData.autoLinkReviewQueue is not an array');
     }
     // competencyUIState must be object if present
     if (data.competencyUIState !== undefined && data.competencyUIState !== null && typeof data.competencyUIState !== 'object') {

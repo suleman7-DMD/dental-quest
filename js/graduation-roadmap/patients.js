@@ -2524,9 +2524,7 @@ function confirmUnifiedImport() {
                     competencyItemIds: [],
                     notes: 'Auto-created from import', createdAt: new Date().toISOString()
                 });
-                if (proc && proc.id && typeof autoLinkProcedureToCompetencies === 'function') {
-                    autoLinkProcedureToCompetencies(proc);
-                }
+                // V2: autoLinkProcedureToCompetencies removed — competency counts are manual-only
             }
         });
 
@@ -2923,15 +2921,10 @@ function applyRequirementCheckoffs(items, importContext) {
                             console.warn('[COMPETENCY-SAFEGUARD] REQUIREMENTS_STATUS absolute-set on clinical category "' + catKey + '" item "' + resolvedId + '" = ' + item.completed + '. This sets the count directly with NO procedure record. If this inflates progress, the webchat export may have been incorrect. Use COMPLETED_TODAY (isDelta) for patient-level procedures.');
                         }
 
-                        // Increment or set completed count
-                        if (typeof item.completed === 'number') {
-                            if (item.isDelta) {
-                                itemList[i].completed = (itemList[i].completed || 0) + item.completed;
-                            } else {
-                                itemList[i].completed = item.completed;
-                            }
-                        } else {
-                            itemList[i].completed = (itemList[i].completed || 0) + 1;
+                        // Only REQUIREMENTS_STATUS (absolute-set, !isDelta) modifies competency counts.
+                        // COMPLETED_TODAY (isDelta) creates procedure records but does NOT touch counts.
+                        if (!item.isDelta && typeof item.completed === 'number') {
+                            itemList[i].completed = item.completed;
                         }
                         if (item.note) {
                             itemList[i].note = item.note;
@@ -2941,20 +2934,26 @@ function applyRequirementCheckoffs(items, importContext) {
                         if (typeof sec.items === 'object' && !Array.isArray(sec.items)) {
                             for (var key in sec.items) {
                                 if (sec.items[key] && (sec.items[key].id || '').toLowerCase() === (resolvedId || '').toLowerCase()) {
-                                    // Cache intended count — recordProcedure → linkProcedureToCompetencies overwrites item.completed
-                                    var intendedCompleted = itemList[i].completed;
-                                    sec.items[key].completed = intendedCompleted;
-                                    // Derive status from completed count
-                                    if (intendedCompleted >= (sec.items[key].required || 999)) {
-                                        sec.items[key].status = 'completed';
-                                    } else if (intendedCompleted > 0) {
-                                        sec.items[key].status = 'in_progress';
+                                    // REQUIREMENTS_STATUS (!isDelta): write the absolute count + set lastVerified
+                                    if (!item.isDelta) {
+                                        sec.items[key].completed = itemList[i].completed;
+                                        // Set lastVerified to today's local date
+                                        var now = new Date();
+                                        sec.items[key].lastVerified = now.getFullYear() + '-' +
+                                            String(now.getMonth() + 1).padStart(2, '0') + '-' +
+                                            String(now.getDate()).padStart(2, '0');
+                                        // Derive status from completed count
+                                        if (sec.items[key].completed >= (sec.items[key].required || 999)) {
+                                            sec.items[key].status = 'completed';
+                                        } else if (sec.items[key].completed > 0) {
+                                            sec.items[key].status = 'in_progress';
+                                        } else {
+                                            sec.items[key].status = 'pending';
+                                        }
                                     }
                                     if (item.note) sec.items[key].note = item.note;
 
-                                    // CROSS-SYNC: Create procedure record ONLY for delta/incremental imports (COMPLETED_TODAY).
-                                    // REQUIREMENTS_STATUS (absolute-set, !isDelta) should NOT create procedure records —
-                                    // it is a status sync, not a procedure event. Creating records inflates getSmartProcedureCount().
+                                    // COMPLETED_TODAY (isDelta): create procedure record but do NOT touch competency counts
                                     if (item.isDelta && typeof recordProcedure === 'function') {
                                         var procDate = ctx.date || item.date || getLocalDateString();
                                         var patientName = ctx.patientName || item.patientName || '';
@@ -2976,11 +2975,9 @@ function applyRequirementCheckoffs(items, importContext) {
                                                 date: procDate,
                                                 procedureType: catKey,
                                                 procedure: item.note || sec.items[key].text || 'Imported procedure',
-                                                competencyItemIds: [resolvedId],
+                                                competencyItemIds: [],
                                                 notes: 'Imported via requirement checkoff'
                                             });
-                                            // Re-apply intended count (linkProcedureToCompetencies overwrites to completionEntries.length)
-                                            sec.items[key].completed = intendedCompleted;
                                         }
                                     }
                                     break;

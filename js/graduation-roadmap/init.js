@@ -989,6 +989,9 @@ function initUI() {
     // Permanent schema field sync — d3Deadline/rules/text/required always match DEFAULT_COMPETENCIES
     try { syncSchemaFields(); } catch(e) { console.error('syncSchemaFields error:', e); }
 
+    // Competency V2: strip evidence-trail model, seed from ground truth audit
+    try { migrateToCompetencyV2(); } catch(e) { console.error('migrateToCompetencyV2 error:', e); }
+
     // ALWAYS try to render, even if above steps failed
     try { renderDashboard(); } catch(e) { console.error('renderDashboard error:', e); }
     try { renderDeadlines(); } catch(e) { console.error('renderDeadlines error:', e); }

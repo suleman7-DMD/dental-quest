@@ -3,7 +3,6 @@
 // ==================== CLINICAL TAB FUNCTIONS ====================
 
 let currentPatientTasks = []; // Temporary storage for patient modal tasks
-var _lastRemovedEvidence = null; // Stores last removed evidence entry for undo
 
 function switchClinicalSubtab(subtab, btn) {
     // Update button states
@@ -848,6 +847,70 @@ function migrateCompetencyEnhancements() {
     console.log('[CIS-v3] Migrated competency enhancements v3: re-synced schema fields after ground truth rebuild, removed orphans');
 }
 
+// Competency V2 Migration: Strip evidence-trail model, seed from manual audit
+// Old model: completionEntries[], rules, unlockedBy, unlockEmailTo, custom, autoLinkReviewQueue
+// New model: completed (number), required (number), note (string), lastVerified (date|null)
+function migrateToCompetencyV2() {
+    if (localStorage.getItem('competencyV2Migrated')) return;
+    var comp = roadmapData.clinicalData?.competencies;
+    if (!comp || typeof comp !== 'object') return;
+
+    // Seed counts from verified manual audit (2026-04-01 ground truth)
+    var SEED_COUNTS = {
+        // OPERATIVE (completed items)
+        'op-formatives': 20, 'op-approval': 1,
+        'op-multi-1': 1, 'op-multi-2': 1, 'op-multi-3': 1, 'op-multi-4': 1,
+        // PERIO FORMATIVES
+        'perio-form-ohi': 2, 'perio-form-dx': 4, 'perio-form-prophy': 5,
+        'perio-form-quad': 1, 'perio-form-recall': 5,
+        // PERIO 3RD YEAR SUMMATIVES
+        'perio-3rd-ohi': 1, 'perio-3rd-prophy': 1,
+        // PERIO SUMMATIVES
+        'perio-sum-hci': 1, 'perio-sum-prophy': 3,
+        // ORAL SURGERY 3RD YEAR
+        'os-3rd-rotation': 1, 'os-3rd-consult': 1, 'os-3rd-nerve': 1, 'os-3rd-suture': 1,
+        // PEDS
+        'peds-course': 1,
+        // GP D3
+        'gp-attend': 1, 'gp-form-review': 1, 'gp-case': 1,
+        'gp-comm-workshop': 1, 'gp-form-analysis': 2
+    };
+
+    // Iterate ALL items across ALL categories/sections
+    Object.values(comp).forEach(function(cat) {
+        getValues(cat.sections).forEach(function(sec) {
+            var items = sec.items || {};
+            Object.keys(items).forEach(function(itemKey) {
+                var item = items[itemKey];
+                if (!item) return;
+
+                // Strip old evidence-trail fields
+                delete item.completionEntries;
+                delete item.rules;
+                delete item.custom;
+                delete item.unlockedBy;
+                delete item.unlockEmailTo;
+
+                // Wipe count, then seed from ground truth if applicable
+                item.completed = 0;
+                var itemId = item.id || itemKey;
+                if (SEED_COUNTS[itemId] !== undefined) {
+                    item.completed = SEED_COUNTS[itemId];
+                    item.lastVerified = '2026-04-01';
+                } else {
+                    item.lastVerified = null;
+                }
+            });
+        });
+    });
+
+    // Delete the autoLinkReviewQueue entirely
+    roadmapData.clinicalData.autoLinkReviewQueue = [];
+
+    localStorage.setItem('competencyV2Migrated', '1');
+    console.log('[COMP-V2] Migration complete: wiped evidence, seeded from ground truth audit');
+}
+
 // Permanent d3Deadline sync — runs on EVERY initUI to prevent merge drift
 // d3Deadline is a SCHEMA field, not user data. Must always match DEFAULT_COMPETENCIES.
 function syncSchemaFields() {
@@ -1139,316 +1202,6 @@ function renderWhatsNextPanel(competencies) {
 }
 
 // --- Task 4.6: Review Queue UI ---
-function renderReviewQueue() {
-    var container = document.getElementById('compReviewQueue');
-    if (!container) return;
-
-    var queue = getValues(roadmapData.clinicalData?.autoLinkReviewQueue);
-    queue = queue.filter(function(q) { return q && q.procedureId; });
-
-    if (queue.length === 0) {
-        container.innerHTML = '';
-        return;
-    }
-
-    container.innerHTML = '<span style="font-weight:600;">' + queue.length + ' procedure'
-        + (queue.length > 1 ? 's' : '') + ' pending competency review</span>'
-        + ' <span style="color:#818cf8; text-decoration:underline;">Click to review</span>';
-    container.onclick = function() { openReviewQueuePanel(); };
-}
-
-function openReviewQueuePanel() {
-    var queue = getValues(roadmapData.clinicalData?.autoLinkReviewQueue);
-    if (queue.length === 0) {
-        showToast('No items in review queue');
-        return;
-    }
-
-    var html = '<div style="max-height:60vh; overflow-y:auto;">';
-    queue.forEach(function(q, idx) {
-        var procDate = q.date ? parseLocalDate(q.date) : null;
-        var dateStr = procDate ? procDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : '';
-        var safeProcId = (q.procedureId || '').replace(/['"\\]/g, '');
-
-        html += '<div style="background:rgba(30,41,59,0.8); border:1px solid rgba(100,116,139,0.3); border-radius:8px; padding:12px; margin-bottom:10px;">'
-            + '<div style="font-weight:600; color:#e2e8f0;">' + escapeHtml(q.procedureName || 'Unknown') + '</div>'
-            + '<div style="font-size:0.85em; color:#94a3b8; margin-bottom:8px;">' + dateStr + '</div>';
-
-        var suggestions = getValues(q.suggestedItems);
-        if (suggestions.length > 0) {
-            suggestions.forEach(function(s) {
-                var safeItemId = (s.itemId || '').replace(/['"\\]/g, '');
-                html += '<div style="display:flex; align-items:center; gap:8px; padding:6px 0; border-bottom:1px solid rgba(100,116,139,0.15);">'
-                    + '<span style="flex:1; color:#e2e8f0; font-size:0.9em;">' + escapeHtml(s.itemText || '') + '</span>'
-                    + '<span style="color:#94a3b8; font-size:0.75em; padding:2px 6px; border-radius:3px; background:rgba(100,116,139,0.15);">'
-                    + escapeHtml(s.confidence || 'medium') + '</span>'
-                    + '<button onclick="acceptReviewSuggestion(\'' + safeProcId + '\', \'' + safeItemId + '\')" '
-                    + 'style="background:rgba(16,185,129,0.15); border:1px solid rgba(16,185,129,0.3); color:#10b981; border-radius:4px; padding:3px 8px; cursor:pointer; font-size:0.8em;">Accept</button>'
-                    + '<button onclick="rejectReviewSuggestion(\'' + safeProcId + '\', \'' + safeItemId + '\')" '
-                    + 'style="background:rgba(239,68,68,0.1); border:1px solid rgba(239,68,68,0.2); color:#f87171; border-radius:4px; padding:3px 8px; cursor:pointer; font-size:0.8em;">Reject</button>'
-                    + '</div>';
-            });
-        }
-
-        html += '<button onclick="dismissReviewItem(\'' + safeProcId + '\')" '
-            + 'style="margin-top:8px; background:none; border:1px solid #334155; color:#94a3b8; border-radius:4px; padding:4px 10px; cursor:pointer; font-size:0.8em;">Dismiss</button>'
-            + '</div>';
-    });
-    html += '</div>';
-
-    var panelOverlay = document.createElement('div');
-    panelOverlay.id = 'reviewQueuePanelOverlay';
-    panelOverlay.style.cssText = 'position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.6); z-index:10000; display:flex; align-items:center; justify-content:center;';
-    var panelContent = document.createElement('div');
-    panelContent.style.cssText = 'background:#1e293b; border:1px solid #334155; border-radius:12px; padding:24px; max-width:500px; width:90%; max-height:80vh; overflow-y:auto;';
-    var panelHeader = document.createElement('div');
-    panelHeader.style.cssText = 'display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;';
-    var panelTitle = document.createElement('h3');
-    panelTitle.style.cssText = 'color:#e2e8f0; margin:0;';
-    panelTitle.textContent = 'Competency Review Queue';
-    var panelClose = document.createElement('button');
-    panelClose.style.cssText = 'background:none; border:none; color:#94a3b8; font-size:1.5em; cursor:pointer;';
-    panelClose.textContent = '\u00D7';
-    panelClose.onclick = function() { panelOverlay.remove(); };
-    panelHeader.appendChild(panelTitle);
-    panelHeader.appendChild(panelClose);
-    panelContent.appendChild(panelHeader);
-    var panelBody = document.createElement('div');
-    panelBody.innerHTML = html;
-    panelContent.appendChild(panelBody);
-    panelOverlay.appendChild(panelContent);
-    panelOverlay.onclick = function(e) { if (e.target === panelOverlay) panelOverlay.remove(); };
-    document.body.appendChild(panelOverlay);
-}
-
-function acceptReviewSuggestion(procId, itemId) {
-    var proc = roadmapData.clinicalData?.completedProcedures?.[procId];
-    if (!proc) { showToast('Procedure not found', 'error'); return; }
-
-    if (!Array.isArray(proc.competencyItemIds)) proc.competencyItemIds = [];
-    if (proc.competencyItemIds.indexOf(itemId) === -1) {
-        proc.competencyItemIds.push(itemId);
-        linkProcedureToCompetencies(proc);
-    }
-
-    // Remove this suggestion from queue item
-    var queue = getValues(roadmapData.clinicalData.autoLinkReviewQueue);
-    var qItem = queue.find(function(q) { return q.procedureId === procId; });
-    if (qItem) {
-        var sugItems = getValues(qItem.suggestedItems);
-        qItem.suggestedItems = sugItems.filter(function(s) { return s.itemId !== itemId; });
-        if (qItem.suggestedItems.length === 0) {
-            roadmapData.clinicalData.autoLinkReviewQueue = queue.filter(function(q) { return q.procedureId !== procId; });
-        }
-    }
-
-    clinicalDataDirty = true;
-    safeLocalStorageSet(STORAGE_KEY, JSON.stringify(roadmapData));
-    saveData();
-    renderCompetencies();
-    if (typeof renderDashboard === 'function') renderDashboard();
-    showToast('Competency linked');
-}
-
-function rejectReviewSuggestion(procId, itemId) {
-    var queue = getValues(roadmapData.clinicalData?.autoLinkReviewQueue);
-    var qItem = queue.find(function(q) { return q.procedureId === procId; });
-    if (qItem) {
-        var sugItems = getValues(qItem.suggestedItems);
-        qItem.suggestedItems = sugItems.filter(function(s) { return s.itemId !== itemId; });
-        if (qItem.suggestedItems.length === 0) {
-            roadmapData.clinicalData.autoLinkReviewQueue = queue.filter(function(q) { return q.procedureId !== procId; });
-        }
-    }
-    clinicalDataDirty = true;
-    safeLocalStorageSet(STORAGE_KEY, JSON.stringify(roadmapData));
-    saveData();
-    renderReviewQueue();
-    showToast('Suggestion rejected');
-}
-
-function dismissReviewItem(procId) {
-    var queue = getValues(roadmapData.clinicalData?.autoLinkReviewQueue);
-    roadmapData.clinicalData.autoLinkReviewQueue = queue.filter(function(q) { return q.procedureId !== procId; });
-    clinicalDataDirty = true;
-    safeLocalStorageSet(STORAGE_KEY, JSON.stringify(roadmapData));
-    saveData();
-    renderReviewQueue();
-    showToast('Review item dismissed');
-}
-
-// --- Task 4.7: Unlock Chain Visualization ---
-function renderUnlockChain(catKey, items) {
-    // Collect items that have unlockedBy prerequisites
-    var chainItems = items.filter(function(item) {
-        return item.unlockedBy && Array.isArray(item.unlockedBy) && item.unlockedBy.length > 0;
-    });
-    if (chainItems.length === 0) return '';
-
-    var competencies = getCompetenciesData();
-    var html = '';
-    chainItems.forEach(function(item) {
-        var unlocked = typeof isItemUnlocked === 'function' ? isItemUnlocked(item, competencies) : true;
-        var lockIcon = unlocked ? '<span style="color:#10b981;">&#x1f513;</span>' : '<span style="color:#ef4444;">&#x1f512;</span>';
-
-        html += '<div class="comp-unlock-chain">';
-        item.unlockedBy.forEach(function(prereq, idx) {
-            var prereqResult = typeof findCompetencyItem === 'function' ? findCompetencyItem(prereq.id) : null;
-            var prereqItem = prereqResult ? prereqResult.item : null;
-            var prereqDone = prereqItem ? prereqItem.completed >= prereq.required : false;
-            var prereqPct = prereqItem && prereq.required > 0 ? Math.round((prereqItem.completed / prereq.required) * 100) : 0;
-
-            if (idx > 0) html += '<span class="comp-unlock-arrow">+</span>';
-            html += '<span style="color:' + (prereqDone ? '#10b981' : '#f59e0b') + '; font-size:0.85em;">'
-                + escapeHtml(prereqItem ? prereqItem.text.substring(0, 25) : prereq.id)
-                + ' (' + (prereqItem ? prereqItem.completed : '?') + '/' + prereq.required + ')'
-                + '</span>';
-        });
-        html += '<span class="comp-unlock-arrow">&rarr;</span>';
-        html += lockIcon + ' <span style="color:#e2e8f0; font-size:0.85em;">' + escapeHtml(item.text.substring(0, 30)) + '</span>';
-        if (item.unlockEmailTo) {
-            html += '<span style="color:#64748b; font-size:0.75em; margin-left:4px;">(email ' + escapeHtml(item.unlockEmailTo) + ')</span>';
-        }
-        html += '</div>';
-    });
-    return html;
-}
-
-// --- Task 4.8: Full Evidence Trail with Rich Cards ---
-function renderEvidenceCards(item, catKey) {
-    var entries = getValues(item.completionEntries);
-    if (entries.length === 0) return '';
-
-    var safeItemId = (item.id || '').replace(/['"\\]/g, '');
-    var safeCatKey = (catKey || '').replace(/['"\\]/g, '');
-
-    var html = '<div style="margin: 4px 0 8px 20px;">'
-        + '<div style="color:#6ee7b7; font-weight:600; margin-bottom:4px; font-size:0.8em;">Evidence (' + entries.length + '):</div>';
-
-    entries.forEach(function(entry, idx) {
-        var entryDate = entry.date ? parseLocalDate(entry.date) : null;
-        var dateStr = entryDate ? entryDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : '';
-
-        // Determine type for styling
-        var typeClass = 'type-manual';
-        var typeBadge = 'Manual';
-        if (entry.procedureId) {
-            typeClass = 'type-procedure';
-            typeBadge = 'Procedure';
-        } else if (entry.note && entry.note.indexOf('Backfill') !== -1) {
-            typeClass = 'type-backfill';
-            typeBadge = 'Backfill';
-        } else if (entry.note && entry.note.indexOf('import') !== -1) {
-            typeClass = 'type-import';
-            typeBadge = 'Import';
-        } else if (entry.note && entry.note.indexOf('auto') !== -1) {
-            typeClass = 'type-autolinked';
-            typeBadge = 'Auto-linked';
-        }
-
-        var spanStyle = 'color:#e2e8f0;' + (entry.patientId ? ' cursor:pointer; text-decoration:underline;' : '');
-        var spanClick = entry.patientId ? ' onclick="navigateToEntity(\'patient\', \'' + (entry.patientId || '').replace(/['"\\]/g, '') + '\')"' : '';
-
-        html += '<div class="comp-evidence-card ' + typeClass + '">'
-            + '<span style="color:#64748b; font-size:0.75em; padding:1px 5px; border-radius:3px; background:rgba(100,116,139,0.15); white-space:nowrap;">' + typeBadge + '</span>'
-            + '<span style="color:#94a3b8; white-space:nowrap;">' + dateStr + '</span>'
-            + '<span' + spanClick + ' style="' + spanStyle + '">'
-            + escapeHtml(entry.patientName || 'Unknown') + '</span>'
-            + (entry.note ? '<span style="color:#64748b; flex:1; overflow:hidden; text-overflow:ellipsis;">' + escapeHtml(entry.note.substring(0, 50)) + '</span>' : '')
-            + '<button onclick="removeEvidenceEntry(\'' + safeCatKey + '\', \'' + safeItemId + '\', ' + idx + '); event.stopPropagation();" '
-            + 'style="background:none; border:none; color:#64748b; cursor:pointer; font-size:0.85em; padding:2px 4px;" title="Remove">x</button>'
-            + '</div>';
-    });
-
-    html += '</div>';
-    return html;
-}
-
-function removeEvidenceEntry(catKey, itemId, entryIndex) {
-    var competencies = getCompetenciesData();
-    var cat = competencies[catKey];
-    if (!cat) return;
-
-    var foundItem = null;
-    getValues(cat.sections).forEach(function(sec) {
-        if (sec.items && sec.items[itemId]) foundItem = sec.items[itemId];
-    });
-    if (!foundItem) return;
-
-    var entries = getValues(foundItem.completionEntries);
-    if (entryIndex < 0 || entryIndex >= entries.length) return;
-
-    var removed = entries[entryIndex];
-    foundItem.completionEntries = entries.filter(function(e, i) { return i !== entryIndex; });
-    foundItem.completed = Math.min(foundItem.required, foundItem.completionEntries.length);
-    if (foundItem.completed >= foundItem.required) {
-        foundItem.status = 'completed';
-    } else if (foundItem.completed > 0) {
-        foundItem.status = 'in_progress';
-    } else {
-        foundItem.status = 'pending';
-    }
-
-    clinicalDataDirty = true;
-    safeLocalStorageSet(STORAGE_KEY, JSON.stringify(roadmapData));
-    saveData();
-    renderCompetencies();
-
-    // Undo toast — use module-level variable + DOM click listener
-    _lastRemovedEvidence = { catKey: catKey, itemId: itemId, entry: removed };
-    showToast('Evidence removed. Tap here to undo.');
-    var toastEl = document.getElementById('toast');
-    if (toastEl) {
-        toastEl.style.cursor = 'pointer';
-        var undoHandler = function() {
-            if (_lastRemovedEvidence) {
-                undoRemoveEvidence(_lastRemovedEvidence.catKey, _lastRemovedEvidence.itemId, _lastRemovedEvidence.entry);
-                _lastRemovedEvidence = null;
-            }
-            toastEl.onclick = null;
-            toastEl.style.cursor = '';
-            toastEl.classList.remove('show');
-        };
-        toastEl.onclick = undoHandler;
-        // Auto-clear handler when toast auto-hides
-        setTimeout(function() {
-            if (toastEl.onclick === undoHandler) {
-                toastEl.onclick = null;
-                toastEl.style.cursor = '';
-                _lastRemovedEvidence = null;
-            }
-        }, 2100);
-    }
-}
-
-function undoRemoveEvidence(catKey, itemId, removedJson) {
-    var competencies = getCompetenciesData();
-    var cat = competencies[catKey];
-    if (!cat) return;
-
-    var foundItem = null;
-    getValues(cat.sections).forEach(function(sec) {
-        if (sec.items && sec.items[itemId]) foundItem = sec.items[itemId];
-    });
-    if (!foundItem) return;
-
-    if (!Array.isArray(foundItem.completionEntries)) foundItem.completionEntries = getValues(foundItem.completionEntries);
-    var entry = typeof removedJson === 'string' ? JSON.parse(removedJson) : removedJson;
-    foundItem.completionEntries.push(entry);
-    foundItem.completed = Math.min(foundItem.required, foundItem.completionEntries.length);
-    if (foundItem.completed >= foundItem.required) {
-        foundItem.status = 'completed';
-    } else if (foundItem.completed > 0) {
-        foundItem.status = 'in_progress';
-    }
-
-    clinicalDataDirty = true;
-    safeLocalStorageSet(STORAGE_KEY, JSON.stringify(roadmapData));
-    saveData();
-    renderCompetencies();
-    showToast('Evidence restored');
-}
-
 // --- Task 4.9: "Which Patients Can Fulfill This?" Badges ---
 // Returns patients matching this competency item, with fulfillment status:
 //   'completed' = has a procedure record linked to this item
@@ -1461,18 +1214,7 @@ function getPatientsFulfilling(itemId) {
     var completedPatientIds = {};
     var competencies = getCompetenciesData();
     var itemIdLower = (itemId || '').toLowerCase();
-    // Search all categories for the item's completionEntries
-    Object.values(competencies).forEach(function(cat) {
-        getValues(cat.sections).forEach(function(sec) {
-            getValues(sec.items).forEach(function(it) {
-                if ((it.id || '').toLowerCase() === itemIdLower) {
-                    getValues(it.completionEntries).forEach(function(ce) {
-                        if (ce.patientId) completedPatientIds[ce.patientId] = true;
-                    });
-                }
-            });
-        });
-    });
+    // V2: completionEntries removed — completed patients tracked via procedure records only
 
     Object.entries(records).forEach(function(entry) {
         var ptId = entry[0], pt = entry[1];
@@ -1530,7 +1272,8 @@ function showPatientCompPreview(patientId, itemId) {
 
     var isCompleted = false;
     if (compResult) {
-        isCompleted = getValues(compResult.item.completionEntries).some(function(ce) { return ce.patientId === patientId; });
+        // V2: Check completion from item.completed count (no completionEntries)
+        isCompleted = compResult.item.completed >= (compResult.item.required || 1);
     }
 
     var matchedReq = null;
@@ -1970,79 +1713,6 @@ function setCompViewMode(mode) {
     renderCompetencies();
 }
 
-function renderByPatientView(container) {
-    var records = typeof getAllPatientRecords === 'function' ? getAllPatientRecords() : (roadmapData.clinicalData?.patientRecords || {});
-    var competencies = getCompetenciesData();
-
-    // Collect patients with outstanding imported requirements
-    var patientItems = [];
-    Object.entries(records).forEach(function(entry) {
-        var ptId = entry[0], pt = entry[1];
-        if (!pt || !pt.name || pt.status === 'inactive') return;
-        var ptReqs = getValues(pt.importedRequirements);
-        if (ptReqs.length === 0) return;
-
-        var outstanding = ptReqs.filter(function(req) {
-            var result = typeof findCompetencyItem === 'function' ? findCompetencyItem(req.reqId) : null;
-            if (!result) return false;
-            return result.item.completed < result.item.required;
-        });
-
-        if (outstanding.length > 0) {
-            patientItems.push({ id: ptId, patient: pt, outstanding: outstanding });
-        }
-    });
-
-    if (patientItems.length === 0) {
-        container.innerHTML = '<div style="text-align:center; padding:40px; color:#94a3b8;">'
-            + '<div style="font-size:2em; margin-bottom:10px;">&#128100;</div>'
-            + '<p>No patients with outstanding imported requirements.</p>'
-            + '<p style="font-size:0.85em;">Import patient requirements from clinical data to see them here.</p>'
-            + '</div>';
-        return;
-    }
-
-    // Sort by number of outstanding requirements (most first)
-    patientItems.sort(function(a, b) { return b.outstanding.length - a.outstanding.length; });
-
-    var html = '';
-    patientItems.forEach(function(pi) {
-        var safeId = (pi.id || '').replace(/['"\\]/g, '');
-        html += '<div style="background:rgba(30,41,59,0.6); border:1px solid rgba(100,116,139,0.2); border-radius:10px; padding:14px; margin-bottom:10px;">'
-            + '<div style="display:flex; align-items:center; gap:10px; margin-bottom:10px;">'
-            + '<span style="font-size:1.4em;">&#128100;</span>'
-            + '<div>'
-            + '<div style="font-weight:600; color:#e2e8f0; cursor:pointer; text-decoration:underline;" onclick="navigateToEntity(\'patient\', \'' + safeId + '\')">'
-            + escapeHtml(pi.patient.name) + '</div>'
-            + (pi.patient.chartNumber ? '<div style="font-size:0.8em; color:#94a3b8;">#' + escapeHtml(pi.patient.chartNumber) + '</div>' : '')
-            + '</div>'
-            + '<span style="margin-left:auto; background:rgba(245,158,11,0.15); color:#fcd34d; padding:2px 8px; border-radius:4px; font-size:0.8em;">'
-            + pi.outstanding.length + ' remaining</span>'
-            + '</div>';
-
-        pi.outstanding.forEach(function(req) {
-            var result = typeof findCompetencyItem === 'function' ? findCompetencyItem(req.reqId) : null;
-            if (!result) return;
-            var item = result.item;
-            var pct = item.required > 0 ? Math.round((item.completed / item.required) * 100) : 0;
-            var safeItemId = (item.id || '').replace(/['"\\]/g, '');
-
-            html += '<div style="display:flex; align-items:center; gap:8px; padding:6px 0; border-bottom:1px solid rgba(100,116,139,0.1);">'
-                + '<span style="flex:1; color:#e2e8f0; font-size:0.9em;">' + escapeHtml(item.text) + '</span>'
-                + '<span style="color:#94a3b8; font-size:0.8em; white-space:nowrap;">' + item.completed + '/' + item.required + '</span>'
-                + '<div style="width:50px; height:4px; background:#334155; border-radius:2px; overflow:hidden;">'
-                + '<div style="height:100%; width:' + pct + '%; background:#10b981; border-radius:2px;"></div></div>'
-                + '<button onclick="openCompQuickRecord(\'' + safeItemId + '\')" '
-                + 'style="background:rgba(16,185,129,0.15); border:1px solid rgba(16,185,129,0.3); color:#10b981; border-radius:4px; padding:3px 8px; cursor:pointer; font-size:0.8em;">Record</button>'
-                + '</div>';
-        });
-
-        html += '</div>';
-    });
-
-    container.innerHTML = html;
-}
-
 // --- Task 4.17: Inline Editable Per-Item Notes ---
 var _compNoteCommitted = {};
 
@@ -2072,238 +1742,508 @@ function saveCompItemNote(catKey, itemId, newNote) {
 
 function renderCompetencies() {
     var container = document.getElementById('competenciesContainer');
-    var dashboardContainer = document.getElementById('overallProgressSummary');
     if (!container) return;
 
     var competencies = getCompetenciesData();
     var stats = calculateOverallStats(competencies);
 
-    // Task 4.14: Restore persisted expanded state
+    // Restore persisted expanded state
     restoreExpandedState();
 
-    // Task 4.12: Render search and filter bar
-    renderCompSearchBar();
-
-    // Task 4.16: Render view mode toggle
-    renderCompViewToggle();
-
-    // Task 4.3: Render milestone dashboard (3 progress rings)
-    renderMilestoneDashboard();
-
-    // Task 4.4: Render D3 deadline alert bar
-    renderD3Deadlines();
-
-    // Task 4.5: Render what's next panel
-    renderWhatsNextPanel(competencies);
-
-    // Task 4.6: Render review queue banner
-    renderReviewQueue();
-
-    // Calculate progress ring values for overall summary
-    var circumference = 2 * Math.PI * 54;
-    var dashOffset = circumference - (stats.overallPercent / 100) * circumference;
-
-    // Render overall dashboard with progress ring
-    if (dashboardContainer) {
-        dashboardContainer.innerHTML = '<div class="comp-overall-dashboard">'
-            + '<div class="comp-overall-stats">'
-            + '<div class="comp-stat-card"><div class="comp-stat-value" style="color: #10b981;">' + stats.completedItems + '</div><div class="comp-stat-label">Completed</div></div>'
-            + '<div class="comp-stat-card"><div class="comp-stat-value" style="color: #fbbf24;">' + stats.inProgressItems + '</div><div class="comp-stat-label">In Progress</div></div>'
-            + '<div class="comp-stat-card"><div class="comp-stat-value" style="color: #60a5fa;">' + stats.plannedItems + '</div><div class="comp-stat-label">Planned</div></div>'
-            + '<div class="comp-stat-card"><div class="comp-stat-value" style="color: #94a3b8;">' + stats.pendingItems + '</div><div class="comp-stat-label">Not Started</div></div>'
-            + '</div>'
-            + '<div class="comp-progress-ring-container">'
-            + '<div class="comp-progress-ring">'
-            + '<svg width="140" height="140">'
-            + '<defs><linearGradient id="progressGradient" x1="0%" y1="0%" x2="100%" y2="0%">'
-            + '<stop offset="0%" style="stop-color:#10b981"/><stop offset="100%" style="stop-color:#34d399"/></linearGradient></defs>'
-            + '<circle class="comp-progress-ring-bg" cx="70" cy="70" r="54"/>'
-            + '<circle class="comp-progress-ring-fill" cx="70" cy="70" r="54" stroke-dasharray="' + circumference.toFixed(1) + '" stroke-dashoffset="' + dashOffset.toFixed(1) + '"/>'
-            + '</svg>'
-            + '<div class="comp-progress-ring-text">'
-            + '<div class="comp-progress-ring-pct">' + stats.overallPercent + '%</div>'
-            + '<div class="comp-progress-ring-label">Complete</div>'
-            + '</div></div>'
-            + '<div style="font-size: 0.8em; color: #94a3b8; margin-top: 8px;">' + stats.completedUnits + '/' + stats.totalUnits + ' units</div>'
-            + '</div></div>';
-    }
-
-    // Task 4.16: Check view mode — "By Patient" renders differently
-    var viewMode = roadmapData.competencyUIState?.viewMode || 'department';
-    if (viewMode === 'patient') {
-        renderByPatientView(container);
-        return;
-    }
-
-    // Task 4.15: Urgency-sorted category accordion
-    var sortedCategories = getUrgencySortedCategoryKeys(competencies);
-
-    var categoriesHtml = '';
-    sortedCategories.forEach(function(entry) {
-        var key = entry.key;
-        var cat = entry.cat;
-        var catStats = entry.stats;
-        var isExpanded = expandedCompCategories.has(key);
-        var isComplete = catStats.percent === 100;
-
-        // Task 4.12: Skip categories with no visible items when filtering
-        if ((compSearchQuery || compActiveFilters.length > 0) && !compCategoryHasVisibleItems(cat)) return;
-
-        // Collect all items for this category (for unlock chains, rules, etc.)
-        var allCatItems = [];
-        getValues(cat.sections).forEach(function(sec) {
-            getValues(sec.items).forEach(function(item) { allCatItems.push(item); });
-        });
-
-        var safeKey = (key || '').replace(/['"\\]/g, '');
-        categoriesHtml += '<div class="comp-category ' + (isComplete ? 'category-complete' : '') + '" data-category="' + escapeHtml(key) + '">'
-            + '<div class="comp-category-header" onclick="toggleCompCategory(\'' + safeKey + '\')">'
-            + '<div class="comp-category-title">'
-            + '<span style="font-size: 1.2em;">' + (cat.icon || '') + '</span>'
-            + '<h4 style="color: ' + (cat.color || '#e2e8f0') + ';">' + escapeHtml(cat.name) + '</h4>'
-            + (isComplete ? '<span class="comp-category-badge">&#x2713; Complete</span>' : '')
-            + '</div>'
-            + '<div class="comp-category-progress">'
-            + '<div class="comp-progress-bar"><div class="comp-progress-fill" style="width: ' + catStats.percent + '%; background: ' + (cat.color || '#3b82f6') + ';"></div></div>'
-            + '<span class="comp-progress-text">'
-            + '<span class="comp-progress-pct">' + catStats.percent + '%</span>'
-            + '<span style="color: #94a3b8; margin-left: 4px;">(' + catStats.completedUnits + '/' + catStats.totalUnits + ')</span>'
-            + '</span>'
-            // Task 4.11: Pace badge in header
-            + renderCategoryPace(key, catStats)
-            + '<span style="color: #94a3b8; font-size: 1.2em; transition: transform 0.2s;" id="compArrow-' + key + '">' + (isExpanded ? '&#x25BC;' : '&#x25B6;') + '</span>'
-            + '</div></div>'
-            + '<div class="comp-category-body ' + (isExpanded ? 'expanded' : '') + '" id="compBody-' + key + '">'
-            + '<div class="comp-status-row">'
-            + '<div class="comp-status-item"><div class="comp-status-value" style="color: #10b981;">' + catStats.completed + '</div><div class="comp-status-label">Completed</div></div>'
-            + '<div class="comp-status-item"><div class="comp-status-value" style="color: #fbbf24;">' + catStats.inProgress + '</div><div class="comp-status-label">In Progress</div></div>'
-            + '<div class="comp-status-item"><div class="comp-status-value" style="color: #60a5fa;">' + catStats.planned + '</div><div class="comp-status-label">Planned</div></div>'
-            + '<div class="comp-status-item"><div class="comp-status-value" style="color: #94a3b8;">' + catStats.pending + '</div><div class="comp-status-label">Not Started</div></div>'
-            + '</div>';
-
-        // Category notes
-        if (cat.notes) {
-            categoriesHtml += '<div style="background: rgba(251, 191, 36, 0.1); border-left: 3px solid #fbbf24; padding: 10px; margin-bottom: 12px; border-radius: 6px; font-size: 0.85em; color: #fde68a;">'
-                + escapeHtml(cat.notes) + '</div>';
-        }
-
-        // Task 4.10: Category rules
-        categoriesHtml += renderCategoryRules(key, allCatItems);
-
-        // Task 4.7: Unlock chain visualization
-        categoriesHtml += renderUnlockChain(key, allCatItems);
-
-        // Render sections and items
-        getValues(cat.sections).forEach(function(sec) {
-            var visibleItems = getValues(sec.items).filter(function(item) {
-                return compItemMatchesFilter(item);
-            });
-            if (visibleItems.length === 0 && (compSearchQuery || compActiveFilters.length > 0)) return;
-
-            categoriesHtml += '<div class="comp-requirements-section" data-section-id="' + escapeHtml(sec.id) + '">'
-                + '<div class="comp-requirements-title">' + escapeHtml(sec.title) + '</div>';
-
-            var itemsToRender = (compSearchQuery || compActiveFilters.length > 0) ? visibleItems : getValues(sec.items);
-            itemsToRender.forEach(function(item) {
-                var status = getItemStatus(item);
-                var isCustom = item.custom === true;
-                var safeItemId = (item.id || '').replace(/['"\\]/g, '');
-
-                categoriesHtml += '<div class="comp-req-item status-' + status + '" data-item-id="' + escapeHtml(item.id) + '">'
-                    + '<div class="comp-req-content">'
-                    + '<div class="comp-req-text">' + escapeHtml(item.text) + '</div>';
-
-                // Task 4.17: Inline editable note
-                var escapedNote = escapeHtml(item.note || '');
-                categoriesHtml += '<div class="comp-req-note" contenteditable="true" '
-                    + 'data-catkey="' + safeKey + '" data-itemid="' + safeItemId + '" '
-                    + 'style="min-height:16px; font-size:0.82em; color:#94a3b8; padding:2px 4px; border-radius:3px; outline:none; cursor:text;" '
-                    + 'onfocus="delete _compNoteCommitted[\'' + safeKey + ':' + safeItemId + '\']; this.style.background=\'rgba(100,116,139,0.1)\'; this.style.border=\'1px solid #334155\';" '
-                    + 'onblur="this.style.background=\'transparent\'; this.style.border=\'none\'; saveCompItemNote(\'' + safeKey + '\', \'' + safeItemId + '\', this.textContent.trim());" '
-                    + 'onkeydown="if(event.key===\'Escape\'){_compNoteCommitted[\'' + safeKey + ':' + safeItemId + '\']=true; this.blur();} if(event.key===\'Enter\'){event.preventDefault(); this.blur();}" '
-                    + 'placeholder="Add note...">'
-                    + escapedNote + '</div>';
-
-                // Task 4.9: Patient badges
-                categoriesHtml += renderPatientBadges(item.id);
-
-                // Task 4.8: Evidence trail cards
-                categoriesHtml += renderEvidenceCards(item, key);
-
-                categoriesHtml += '</div>'; // close comp-req-content
-
-                // Counter or status toggle
-                if (item.required > 1) {
-                    categoriesHtml += '<div class="comp-req-counter">'
-                        + '<button class="comp-counter-btn" onclick="adjustCompItem(\'' + safeKey + '\', \'' + safeItemId + '\', -1); event.stopPropagation();">&minus;</button>'
-                        + '<span class="comp-counter-value">' + item.completed + '/' + item.required + '</span>'
-                        + '<button class="comp-counter-btn" onclick="adjustCompItem(\'' + safeKey + '\', \'' + safeItemId + '\', 1); event.stopPropagation();">+</button>'
-                        + '</div>';
-                } else {
-                    categoriesHtml += '<div class="comp-status-toggle">'
-                        + '<button class="comp-status-btn btn-planned ' + (status === 'planned' ? 'active' : '') + '" '
-                        + 'onclick="setCompItemStatus(\'' + safeKey + '\', \'' + safeItemId + '\', \'planned\'); event.stopPropagation();">Plan</button>'
-                        + '<button class="comp-status-btn btn-progress ' + (status === 'in_progress' ? 'active' : '') + '" '
-                        + 'onclick="setCompItemStatus(\'' + safeKey + '\', \'' + safeItemId + '\', \'in_progress\'); event.stopPropagation();">WIP</button>'
-                        + '<button class="comp-status-btn btn-done ' + (status === 'completed' ? 'active' : '') + '" '
-                        + 'onclick="setCompItemStatus(\'' + safeKey + '\', \'' + safeItemId + '\', \'completed\'); event.stopPropagation();">Done</button>'
-                        + '</div>';
-                }
-
-                // Item actions (edit, delete, quick record)
-                categoriesHtml += '<div class="comp-item-actions">'
-                    + '<button class="comp-edit-btn" onclick="openEditCompItemModal(\'' + safeKey + '\', \'' + safeItemId + '\'); event.stopPropagation();" title="Edit">&#x270F;&#xFE0F;</button>';
-                if (item.completed < item.required) {
-                    categoriesHtml += '<button class="comp-edit-btn" onclick="openCompQuickRecord(\'' + safeItemId + '\'); event.stopPropagation();" title="Quick Record" style="color:#10b981;">+</button>';
-                }
-                if (isCustom) {
-                    categoriesHtml += '<button class="comp-delete-btn" onclick="deleteCompItem(\'' + safeKey + '\', \'' + safeItemId + '\'); event.stopPropagation();" title="Delete">&#x1F5D1;&#xFE0F;</button>';
-                }
-                categoriesHtml += '</div>';
-
-                categoriesHtml += '</div>'; // close comp-req-item
-            });
-
-            categoriesHtml += '<button class="comp-add-req-btn" onclick="openAddCompItemModal(\'' + safeKey + '\', \'' + (sec.id || '').replace(/[\'\"\\\\]/g, '') + '\'); event.stopPropagation();">'
-                + '&#x2795; Add Requirement</button>'
-                + '</div>'; // close comp-requirements-section
-        });
-
-        // Category notes textarea
-        categoriesHtml += '<div style="margin-top: 15px;">'
-            + '<label style="font-size: 0.85em; color: #94a3b8;">Category Notes:</label>'
-            + '<textarea class="comp-notes-input" rows="2" placeholder="Add notes for ' + escapeHtml(cat.name) + '..." '
-            + 'onchange="updateCompNotes(\'' + safeKey + '\', this.value)">' + escapeHtml(cat.notes || '') + '</textarea>'
-            + '</div>';
-
-        categoriesHtml += '</div></div>'; // close comp-category-body and comp-category
-    });
-
+    // Save scroll position
     var scrollParent = container.closest('.tab-content') || container.parentElement;
     var savedScroll = scrollParent ? scrollParent.scrollTop : 0;
-    container.innerHTML = categoriesHtml;
+
+    // Hide old containers no longer used in cv2 layout
+    var oldDashboard = document.getElementById('overallProgressSummary');
+    if (oldDashboard) oldDashboard.innerHTML = '';
+    var oldViewToggle = document.getElementById('compViewToggle');
+    if (oldViewToggle) oldViewToggle.innerHTML = '';
+    var oldMilestone = document.getElementById('compMilestoneDashboard');
+    if (oldMilestone) oldMilestone.innerHTML = '';
+    var oldD3 = document.getElementById('compD3Deadlines');
+    if (oldD3) oldD3.innerHTML = '';
+    var oldSearchBar = document.getElementById('compSearchBar');
+    if (oldSearchBar) oldSearchBar.innerHTML = '';
+    var oldWhatsNext = document.getElementById('compWhatsNext');
+    if (oldWhatsNext) oldWhatsNext.innerHTML = '';
+    var oldReviewQueue = document.getElementById('compReviewQueue');
+    if (oldReviewQueue) oldReviewQueue.innerHTML = '';
+
+    // === ALL 3 PANELS rendered into competenciesContainer ===
+    var html = '<div class="cv2-container">';
+
+    // === PANEL 1: MILESTONE STRIP + D3 ALERT ===
+    html += cv2BuildMilestoneStrip(competencies, stats);
+
+    // === SEARCH BAR (inline) ===
+    html += '<input class="cv2-search" type="text" placeholder="Search requirements..." oninput="cv2FilterCompetencies(this.value)"'
+        + (compSearchQuery ? ' value="' + escapeHtml(compSearchQuery) + '"' : '') + '>';
+
+    // === PANEL 2: CATEGORY ACCORDION ===
+    var sortedCategories = getUrgencySortedCategoryKeys(competencies);
+
+    sortedCategories.forEach(function(entry) {
+        var key = entry.key, cat = entry.cat, catStats = entry.stats;
+        var isExpanded = expandedCompCategories.has(key);
+        var pct = catStats.percent || 0;
+        var barCls = pct >= 100 ? 'cv2-bar-done' : pct > 0 ? 'cv2-bar-wip' : 'cv2-bar-critical';
+        var safeKey = (key || '').replace(/['"\\]/g, '');
+
+        // Skip if search/filter active and no visible items
+        if ((compSearchQuery || compActiveFilters.length > 0) && !compCategoryHasVisibleItems(cat)) return;
+
+        html += '<div class="cv2-category' + (isExpanded ? ' expanded' : '') + '" data-cat="' + escapeHtml(key) + '">';
+        html += '<div class="cv2-cat-header" onclick="cv2ToggleCategory(\'' + safeKey + '\')">';
+        html += '<span class="cv2-cat-icon">' + (cat.icon || '') + '</span>';
+        html += '<span class="cv2-cat-name">' + escapeHtml(cat.name || key) + '</span>';
+        html += '<span class="cv2-cat-count">' + catStats.completedUnits + '/' + catStats.totalUnits + '</span>';
+        html += '<div class="cv2-cat-bar"><div class="cv2-cat-bar-fill ' + barCls + '" style="width:' + pct + '%"></div></div>';
+        html += '<span class="cv2-cat-pct">' + pct + '%</span>';
+        html += '<span class="cv2-cat-chevron">' + (isExpanded ? '\u25BC' : '\u25B6') + '</span>';
+        html += '</div>'; // close cv2-cat-header
+
+        // Category body
+        html += '<div class="cv2-cat-body"' + (isExpanded ? '' : ' style="display:none;"') + '>';
+        if (isExpanded) {
+            // Category notes callout
+            if (cat.notes) {
+                html += '<div class="cv2-cat-notes">' + escapeHtml(cat.notes) + '</div>';
+            }
+
+            // Category rules
+            var allCatItems = [];
+            getValues(cat.sections).forEach(function(sec) {
+                getValues(sec.items).forEach(function(item) { allCatItems.push(item); });
+            });
+            html += renderCategoryRules(key, allCatItems);
+
+            // Sections and items
+            getValues(cat.sections).forEach(function(sec) {
+                var visibleItems = getValues(sec.items).filter(function(item) {
+                    return compItemMatchesFilter(item);
+                });
+                if (visibleItems.length === 0 && (compSearchQuery || compActiveFilters.length > 0)) return;
+
+                if (sec.title) {
+                    html += '<div class="cv2-section-title">' + escapeHtml(sec.title) + '</div>';
+                }
+
+                var itemsToRender = (compSearchQuery || compActiveFilters.length > 0) ? visibleItems : getValues(sec.items);
+                itemsToRender.forEach(function(item) {
+                    if (!item || !item.id) return;
+                    var completed = item.completed || 0;
+                    var required = item.required || 1;
+                    var safeItemId = (item.id || '').replace(/['"\\]/g, '');
+
+                    // Status icon
+                    var statusIcon = '\u2B1C'; // white square
+                    if (completed >= required) {
+                        statusIcon = '\u2705'; // green check
+                    } else if (completed > 0) {
+                        statusIcon = '\uD83D\uDFE1'; // yellow circle
+                    }
+
+                    var pipelineCount = typeof getPatientsFulfilling === 'function' ? getPatientsFulfilling(item.id).length : 0;
+                    var hasNote = item.note && item.note.trim().length > 0;
+
+                    html += '<div class="cv2-req-row" data-item="' + escapeHtml(item.id) + '">';
+                    html += '<span class="cv2-req-name" onclick="cv2ShowItemDetail(\'' + safeKey + '\',\'' + safeItemId + '\')">' + escapeHtml(item.text || item.id) + '</span>';
+                    html += '<div class="cv2-counter">';
+                    html += '<button class="cv2-counter-btn" onclick="event.stopPropagation();adjustCompItem(\'' + safeKey + '\',\'' + safeItemId + '\',-1)">\u2212</button>';
+                    html += '<span class="cv2-counter-val" onclick="event.stopPropagation();cv2EditCount(\'' + safeKey + '\',\'' + safeItemId + '\',this)">'
+                        + completed + '/' + required + '</span>';
+                    html += '<button class="cv2-counter-btn" onclick="event.stopPropagation();adjustCompItem(\'' + safeKey + '\',\'' + safeItemId + '\',1)">+</button>';
+                    html += '</div>';
+                    html += '<span class="cv2-status">' + statusIcon + '</span>';
+
+                    // Pipeline badge
+                    if (pipelineCount > 0) {
+                        html += '<span class="cv2-pipeline" onclick="event.stopPropagation();cv2ShowPipeline(\'' + safeItemId + '\')">'
+                            + pipelineCount + ' pt' + (pipelineCount > 1 ? 's' : '') + '</span>';
+                    } else {
+                        html += '<span class="cv2-pipeline cv2-pipeline-empty">0 pts</span>';
+                    }
+
+                    // Notes icon
+                    html += '<span class="cv2-notes-icon' + (hasNote ? ' cv2-has-note' : '') + '" onclick="event.stopPropagation();cv2ToggleNote(\'' + safeKey + '\',\'' + safeItemId + '\',this)"'
+                        + ' title="' + (hasNote ? escapeHtml(item.note) : 'Add note') + '">\uD83D\uDCDD</span>';
+
+                    // Quick record for incomplete items
+                    if (completed < required) {
+                        html += '<span class="cv2-quick-record" onclick="openCompQuickRecord(\'' + safeItemId + '\'); event.stopPropagation();" title="Quick record">+</span>';
+                    }
+
+                    // Custom item delete
+                    if (item.custom === true) {
+                        html += '<span class="cv2-delete-btn" onclick="deleteCompItem(\'' + safeKey + '\',\'' + safeItemId + '\'); event.stopPropagation();" title="Delete">\u2716</span>';
+                    }
+
+                    html += '</div>'; // close cv2-req-row
+                });
+
+                // Add requirement button per section
+                var safeSectionId = (sec.id || '').replace(/['"\\]/g, '');
+                html += '<button class="cv2-add-req-btn" onclick="openAddCompItemModal(\'' + safeKey + '\',\'' + safeSectionId + '\'); event.stopPropagation();">'
+                    + '+ Add Requirement</button>';
+            });
+
+            // Category notes textarea
+            html += '<div class="cv2-cat-notes-edit">'
+                + '<label class="cv2-cat-notes-label">Category Notes:</label>'
+                + '<textarea class="cv2-cat-notes-textarea" rows="2" placeholder="Add notes for ' + escapeHtml(cat.name) + '..." '
+                + 'onchange="updateCompNotes(\'' + safeKey + '\', this.value)">' + escapeHtml(cat.notes || '') + '</textarea>'
+                + '</div>';
+        }
+        html += '</div></div>'; // close cv2-cat-body and cv2-category
+    });
+
+    // === PANEL 3: WHAT'S NEXT ===
+    html += cv2BuildWhatsNext(competencies);
+
+    html += '</div>'; // close cv2-container
+
+    container.innerHTML = html;
     if (scrollParent) scrollParent.scrollTop = savedScroll;
 }
 
-function toggleCompCategory(key) {
-    var body = document.getElementById('compBody-' + key);
-    var arrow = document.getElementById('compArrow-' + key);
-    if (!body) return;
+// === CV2 PANEL 1: Build Milestone Strip + D3 Alert (returns HTML string) ===
+function cv2BuildMilestoneStrip(competencies, stats) {
+    var aptCount = typeof getSmartAppointmentCount === 'function' ? getSmartAppointmentCount() : { total: 0 };
+    var procCount = typeof getSmartProcedureCount === 'function' ? getSmartProcedureCount() : { total: 0 };
 
-    var isExpanded = body.classList.contains('expanded');
+    // Count summatives
+    var summativeCompleted = 0;
+    var summativeTotal = 0;
+    Object.values(competencies).forEach(function(cat) {
+        getValues(cat.sections).forEach(function(sec) {
+            getValues(sec.items).forEach(function(item) {
+                if (item.isSummative) {
+                    summativeTotal++;
+                    if (item.completed >= item.required) summativeCompleted++;
+                }
+            });
+        });
+    });
+    if (summativeTotal === 0) summativeTotal = 7;
 
-    if (isExpanded) {
-        body.classList.remove('expanded');
-        if (arrow) arrow.innerHTML = '&#x25B6;';
-        expandedCompCategories.delete(key);
-    } else {
-        body.classList.add('expanded');
-        if (arrow) arrow.innerHTML = '&#x25BC;';
-        expandedCompCategories.add(key);
+    var aptTarget = roadmapData.clinicHeadlines?.appointments?.target ?? 90;
+    var procTarget = roadmapData.clinicHeadlines?.procedures?.target ?? 116;
+
+    var kpis = [
+        { label: 'Appointments', current: aptCount.total, target: aptTarget },
+        { label: 'Procedures', current: procCount.total, target: procTarget },
+        { label: 'Summatives', current: summativeCompleted, target: summativeTotal }
+    ];
+
+    var html = '<div class="cv2-milestones">';
+
+    kpis.forEach(function(kpi) {
+        var pct = kpi.target > 0 ? Math.min(100, Math.round((kpi.current / kpi.target) * 100)) : 0;
+        var colorClass = pct >= 80 ? 'on-track' : pct >= 40 ? 'behind' : 'critical';
+        var barClass = pct >= 100 ? 'cv2-bar-done' : pct > 0 ? 'cv2-bar-wip' : 'cv2-bar-critical';
+        html += '<div class="cv2-kpi-card">'
+            + '<div class="cv2-kpi-value cv2-color-' + colorClass + '">' + kpi.current + '/' + kpi.target + '</div>'
+            + '<div class="cv2-kpi-label">' + escapeHtml(kpi.label) + '</div>'
+            + '<div class="cv2-kpi-bar"><div class="cv2-kpi-bar-fill ' + barClass + '" style="width:' + pct + '%;"></div></div>'
+            + '<div class="cv2-kpi-pct">' + pct + '%</div>'
+            + '</div>';
+    });
+
+    // Readiness card
+    var overallPct = stats.overallPercent || 0;
+    var gradDate = new Date(2027, 4, 15); // May 15, 2027
+    var today = new Date();
+    today.setHours(0, 0, 0, 0);
+    var daysLeft = Math.max(0, Math.ceil((gradDate - today) / 86400000));
+    var weeksLeft = Math.max(1, Math.floor(daysLeft / 7));
+    var remainingUnits = Math.max(0, stats.totalUnits - stats.completedUnits);
+    var itemsPerWeek = weeksLeft > 0 ? (remainingUnits / weeksLeft).toFixed(1) : '0';
+    var readinessColor = overallPct >= 80 ? 'done' : overallPct >= 40 ? 'wip' : 'critical';
+
+    html += '<div class="cv2-readiness">'
+        + '<div class="cv2-readiness-score cv2-color-' + readinessColor + '">' + overallPct + '% Ready</div>'
+        + '<div class="cv2-readiness-meta">' + daysLeft + ' days left \u00B7 ' + itemsPerWeek + ' items/week needed</div>'
+        + '</div>';
+
+    html += '</div>'; // close cv2-milestones
+
+    // D3 Deadline alert bar
+    html += cv2BuildD3Alert(competencies, daysLeft);
+
+    return html;
+}
+
+// === D3 Alert Bar (returns HTML string) ===
+function cv2BuildD3Alert(comp, daysLeft) {
+    var d3Items = [];
+    var today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    Object.entries(comp).forEach(function(entry) {
+        var catKey = entry[0], cat = entry[1];
+        getValues(cat.sections).forEach(function(sec) {
+            getValues(sec.items).forEach(function(item) {
+                if (item.d3Deadline && item.completed < (item.required || 1)) {
+                    var parts = item.d3Deadline.split('-').map(Number);
+                    var dlDate = new Date(parts[0], parts[1] - 1, parts[2]);
+                    var itemDaysLeft = Math.floor((dlDate - today) / 86400000);
+                    d3Items.push({
+                        catKey: catKey,
+                        item: item,
+                        catName: cat.name || catKey,
+                        catColor: cat.color || '#94a3b8',
+                        daysLeft: itemDaysLeft
+                    });
+                }
+            });
+        });
+    });
+
+    if (d3Items.length === 0) return '';
+
+    d3Items.sort(function(a, b) { return a.daysLeft - b.daysLeft; });
+    var zeroProgress = d3Items.filter(function(d) { return (d.item.completed || 0) === 0; });
+
+    var html = '<div class="cv2-d3-alert" onclick="this.classList.toggle(\'expanded\')">'
+        + '<div class="cv2-d3-alert-header">'
+        + '<span class="cv2-d3-alert-icon">\u26A0\uFE0F</span>'
+        + '<span class="cv2-d3-alert-text">' + d3Items.length + ' D3 deadline' + (d3Items.length > 1 ? 's' : '') + ' remaining';
+    if (zeroProgress.length > 0) {
+        html += ' \u00B7 <strong>' + zeroProgress.length + ' with zero progress</strong>';
+    }
+    html += ' \u00B7 ' + daysLeft + ' days left</span>'
+        + '<span class="cv2-d3-alert-toggle">\u25BC</span>'
+        + '</div>';
+
+    html += '<div class="cv2-d3-alert-list">';
+    d3Items.forEach(function(d) {
+        var urgency = d.daysLeft < 0 ? 'overdue' : d.daysLeft < 7 ? 'soon' : d.daysLeft < 30 ? 'upcoming' : 'ok';
+        var label = d.daysLeft < 0 ? (Math.abs(d.daysLeft) + 'd overdue') : d.daysLeft === 0 ? 'TODAY' : (d.daysLeft + 'd left');
+        var safeCatKey = (d.catKey || '').replace(/['"\\]/g, '');
+        var safeItemId = (d.item.id || '').replace(/['"\\]/g, '');
+        html += '<div class="cv2-d3-item cv2-d3-' + urgency + '" onclick="event.stopPropagation();navigateToCompetencyItem(\'' + safeCatKey + '\',\'' + safeItemId + '\')">'
+            + '<span class="cv2-d3-cat" style="color:' + d.catColor + ';">' + escapeHtml(d.catName) + '</span>'
+            + '<span class="cv2-d3-name">' + escapeHtml(d.item.text.length > 40 ? d.item.text.substring(0, 40) + '...' : d.item.text) + '</span>'
+            + '<span class="cv2-d3-countdown cv2-d3-' + urgency + '">' + label + '</span>'
+            + '<span class="cv2-d3-progress">' + d.item.completed + '/' + d.item.required + '</span>'
+            + '</div>';
+    });
+    html += '</div></div>';
+
+    return html;
+}
+
+// === CV2 PANEL 3: What's Next (returns HTML string) ===
+function cv2BuildWhatsNext(competencies) {
+    var items = getWhatsNextItems(competencies);
+
+    // Gather upcoming appointment pipeline
+    var appointments = getValues(roadmapData.clinicalData?.appointments);
+    var today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    var upcomingApts = appointments
+        .filter(function(apt) {
+            if (!apt.date || apt.status === 'completed' || apt.status === 'cancelled') return false;
+            var parts = (apt.date || '').split('-').map(Number);
+            if (parts.length < 3) return false;
+            var aptDate = new Date(parts[0], parts[1] - 1, parts[2]);
+            return aptDate >= today;
+        })
+        .sort(function(a, b) {
+            return (a.date || '').localeCompare(b.date || '');
+        })
+        .slice(0, 5);
+
+    if (items.length === 0 && upcomingApts.length === 0) return '';
+
+    var html = '<div class="cv2-whatsnext">';
+    html += '<div class="cv2-whatsnext-title">What\'s Next</div>';
+
+    // In-progress / planned items
+    if (items.length > 0) {
+        html += '<div class="cv2-whatsnext-section">Active Items</div>';
+        items.forEach(function(item) {
+            var pct = item.required > 0 ? Math.round((item.completed / item.required) * 100) : 0;
+            var barClass = pct === 0 ? 'cv2-bar-critical' : pct >= 100 ? 'cv2-bar-done' : 'cv2-bar-wip';
+            var safeId = (item.id || '').replace(/['"\\]/g, '');
+            html += '<div class="cv2-wn-card">'
+                + '<span class="cv2-wn-badge" style="background:' + (item.catColor || '#3b82f6') + '22; color:' + (item.catColor || '#3b82f6') + ';">' + escapeHtml(item.catName) + '</span>'
+                + '<span class="cv2-wn-name">' + escapeHtml(item.text) + '</span>'
+                + '<div class="cv2-wn-bar-container"><div class="cv2-wn-bar-fill ' + barClass + '" style="width:' + pct + '%;"></div></div>'
+                + '<span class="cv2-wn-count">' + item.completed + '/' + item.required + '</span>'
+                + '<button class="cv2-wn-record-btn" onclick="openCompQuickRecord(\'' + safeId + '\')">Record</button>'
+                + '</div>';
+        });
     }
 
-    // Task 4.14: Persist expanded state
+    // Upcoming appointments
+    if (upcomingApts.length > 0) {
+        html += '<div class="cv2-whatsnext-section">Upcoming Appointments</div>';
+        upcomingApts.forEach(function(apt) {
+            var ptName = escapeHtml(apt.patientName || apt.patient || 'Unknown');
+            var aptDate = apt.date || '';
+            var proc = escapeHtml(apt.procedure || apt.procedures || '');
+            html += '<div class="cv2-wn-apt">'
+                + '<span class="cv2-wn-apt-date">' + escapeHtml(aptDate) + '</span>'
+                + '<span class="cv2-wn-apt-patient">' + ptName + '</span>'
+                + '<span class="cv2-wn-apt-proc">' + proc + '</span>'
+                + '</div>';
+        });
+    }
+
+    html += '</div>';
+    return html;
+}
+
+// === CV2 HELPER: Toggle category expanded/collapsed ===
+function cv2ToggleCategory(catKey) {
+    if (expandedCompCategories.has(catKey)) {
+        expandedCompCategories.delete(catKey);
+    } else {
+        expandedCompCategories.add(catKey);
+    }
     persistExpandedState();
+    renderCompetencies();
+}
+
+// Keep old name as alias for external callers
+function toggleCompCategory(key) {
+    cv2ToggleCategory(key);
+}
+
+// === CV2 HELPER: Search filter ===
+function cv2FilterCompetencies(query) {
+    compSearchQuery = (query || '').trim();
+    renderCompetencies();
+}
+
+// === CV2 HELPER: Inline count edit ===
+function cv2EditCount(catKey, itemId, el) {
+    var parts = el.textContent.split('/');
+    var current = parseInt(parts[0]) || 0;
+    var required = parseInt(parts[1]) || 1;
+    var input = document.createElement('input');
+    input.type = 'number';
+    input.className = 'cv2-counter-input';
+    input.value = current;
+    input.min = 0;
+    input.max = required;
+    el.replaceWith(input);
+    input.focus();
+    input.select();
+    var committed = false;
+    function commit() {
+        if (committed) return;
+        committed = true;
+        var newVal = Math.max(0, Math.min(required, parseInt(input.value) || 0));
+        var delta = newVal - current;
+        if (delta !== 0) {
+            adjustCompItem(catKey, itemId, delta);
+        } else {
+            renderCompetencies();
+        }
+    }
+    input.addEventListener('blur', commit);
+    input.addEventListener('keydown', function(e) {
+        if (e.key === 'Enter') commit();
+        if (e.key === 'Escape') { committed = true; renderCompetencies(); }
+    });
+}
+
+// === CV2 HELPER: Toggle inline note editor ===
+function cv2ToggleNote(catKey, itemId, el) {
+    var row = el.closest('.cv2-req-row');
+    if (!row) return;
+    var existing = row.querySelector('.cv2-note-editor');
+    if (existing) { existing.remove(); return; }
+    var comp = getCompetenciesData();
+    var item = null;
+    var cat = comp[catKey];
+    if (cat) {
+        getValues(cat.sections).forEach(function(sec) {
+            if (sec.items) {
+                Object.values(sec.items).forEach(function(it) {
+                    if (it.id === itemId) item = it;
+                });
+            }
+        });
+    }
+    var textarea = document.createElement('textarea');
+    textarea.className = 'cv2-note-editor';
+    textarea.value = (item && item.note) || '';
+    textarea.placeholder = 'Add notes...';
+    row.appendChild(textarea);
+    textarea.focus();
+    textarea.addEventListener('blur', function() {
+        saveCompItemNote(catKey, itemId, textarea.value);
+    });
+    textarea.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') { textarea.remove(); }
+    });
+}
+
+// === CV2 HELPER: Show pipeline patients for a requirement ===
+function cv2ShowPipeline(itemId) {
+    var patients = typeof getPatientsFulfilling === 'function' ? getPatientsFulfilling(itemId) : [];
+    if (patients.length === 0) {
+        showToast('No patients in pipeline for this requirement', 'info');
+        return;
+    }
+    if (patients.length === 1) {
+        showPatientCompPreview(patients[0].id || patients[0].patientId);
+        return;
+    }
+    // Multi-patient popup using DOM construction (XSS safe)
+    var overlay = document.createElement('div');
+    overlay.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.6);z-index:10000;display:flex;align-items:center;justify-content:center;';
+    var card = document.createElement('div');
+    card.style.cssText = 'background:#1e293b;border:1px solid #334155;border-radius:12px;padding:20px;max-width:340px;width:90%;';
+    var title = document.createElement('h4');
+    title.textContent = 'Pipeline Patients';
+    title.style.cssText = 'margin:0 0 12px;color:#e2e8f0;font-size:1em;';
+    card.appendChild(title);
+    patients.forEach(function(p) {
+        var row = document.createElement('div');
+        row.style.cssText = 'padding:8px 4px;cursor:pointer;border-bottom:1px solid #334155;color:#e2e8f0;font-size:0.9em;';
+        row.textContent = (p.name || 'Unknown') + ' #' + (p.chartNumber || '');
+        row.onclick = function() {
+            overlay.remove();
+            showPatientCompPreview(p.id || p.patientId);
+        };
+        card.appendChild(row);
+    });
+    var closeBtn = document.createElement('button');
+    closeBtn.textContent = 'Close';
+    closeBtn.style.cssText = 'margin-top:12px;padding:8px 20px;border:1px solid #334155;border-radius:6px;background:#0f172a;color:#94a3b8;cursor:pointer;font-size:0.85em;';
+    closeBtn.onclick = function() { overlay.remove(); };
+    card.appendChild(closeBtn);
+    overlay.appendChild(card);
+    overlay.onclick = function(e) { if (e.target === overlay) overlay.remove(); };
+    document.body.appendChild(overlay);
+}
+
+// === CV2 HELPER: Show item detail (navigate + expand category) ===
+function cv2ShowItemDetail(catKey, itemId) {
+    if (!expandedCompCategories.has(catKey)) {
+        expandedCompCategories.add(catKey);
+        persistExpandedState();
+        renderCompetencies();
+    }
+    setTimeout(function() {
+        navigateToCompetencyItem(catKey, itemId);
+    }, 50);
+}
+
+// === CV2 HELPER: Add requirement (delegates to existing modal) ===
+function cv2AddRequirement(catKey) {
+    var comp = getCompetenciesData();
+    var cat = comp[catKey];
+    if (!cat) return;
+    var firstSection = getValues(cat.sections)[0];
+    var sectionId = firstSection ? (firstSection.id || '') : '';
+    openAddCompItemModal(catKey, sectionId);
 }
 
 // Set item status for single-count items
@@ -2323,41 +2263,24 @@ function setCompItemStatus(catKey, itemId, newStatus) {
             wasCompleted = item.completed >= item.required;
             itemText = item.text;
 
-            // Toggle: if clicking active status, go back to pending
+            // V2: Simple status toggle — no evidence entries
             const currentStatus = getItemStatus(item);
             if (currentStatus === newStatus) {
-                // Clear manual evidence entries, keep procedure-linked
-                if (!Array.isArray(item.completionEntries)) item.completionEntries = getValues(item.completionEntries || []);
-                item.completionEntries = item.completionEntries.filter(function(e) { return !!e.procedureId; });
-                // Resync completed from remaining procedure-linked entries
-                item.completed = Math.min(item.required, item.completionEntries.length);
-                item.status = item.completed >= item.required ? 'completed' : item.completed > 0 ? 'in_progress' : 'pending';
+                // Toggle off — reset to derived status
+                item.completed = 0;
+                item.status = 'pending';
             } else {
                 item.status = newStatus;
-                // Set completed count based on status
                 if (newStatus === 'completed') {
                     item.completed = item.required;
-                    // Add evidence entries for manual completion
-                    if (!Array.isArray(item.completionEntries)) item.completionEntries = getValues(item.completionEntries || []);
-                    while (item.completionEntries.length < item.required) {
-                        item.completionEntries.push({
-                            procedureId: null,
-                            patientId: null,
-                            patientName: 'Manual entry',
-                            date: getLocalDateString(),
-                            note: 'Status set to completed'
-                        });
-                    }
-                } else if (newStatus === 'in_progress' && item.completed === 0) {
-                    // Keep completed at 0 for in_progress but set status
                 } else if (newStatus === 'pending') {
-                    // Clear manual entries, keep procedure-linked, resync count
-                    if (!Array.isArray(item.completionEntries)) item.completionEntries = getValues(item.completionEntries || []);
-                    item.completionEntries = item.completionEntries.filter(function(e) { return !!e.procedureId; });
-                    item.completed = Math.min(item.required, item.completionEntries.length);
-                    item.status = item.completed >= item.required ? 'completed' : item.completed > 0 ? 'in_progress' : 'pending';
+                    item.completed = 0;
                 }
+                // in_progress keeps current count
             }
+            // Set lastVerified
+            var now = new Date();
+            item.lastVerified = now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0') + '-' + String(now.getDate()).padStart(2, '0');
 
             isNowCompleted = item.completed >= item.required;
             break;
@@ -2396,36 +2319,9 @@ function adjustCompItem(catKey, itemId, delta) {
             const newCompleted = Math.max(0, Math.min(item.required, item.completed + delta));
             item.completed = newCompleted;
 
-            // Evidence trail: create lightweight entry for manual adjustments
-            if (delta > 0 && newCompleted > 0) {
-                if (!Array.isArray(item.completionEntries)) item.completionEntries = getValues(item.completionEntries);
-                // Only add entry if manual adjustment (not already covered by procedure linking)
-                var manualCount = newCompleted - item.completionEntries.length;
-                if (manualCount > 0) {
-                    item.completionEntries.push({
-                        procedureId: null,
-                        patientId: null,
-                        patientName: 'Manual entry',
-                        date: getLocalDateString(),
-                        note: 'Manually adjusted +' + delta
-                    });
-                }
-            } else if (delta < 0 && item.completionEntries) {
-                if (!Array.isArray(item.completionEntries)) item.completionEntries = getValues(item.completionEntries);
-                // Remove excess manual entries (last ones first, prefer removing manual over procedure-linked)
-                while (item.completionEntries.length > newCompleted) {
-                    var lastIdx = -1;
-                    for (var ei = item.completionEntries.length - 1; ei >= 0; ei--) {
-                        if (!item.completionEntries[ei].procedureId) { lastIdx = ei; break; }
-                    }
-                    if (lastIdx >= 0) {
-                        item.completionEntries.splice(lastIdx, 1);
-                    } else {
-                        // All entries are procedure-linked, remove last one
-                        item.completionEntries.pop();
-                    }
-                }
-            }
+            // V2: Set lastVerified on manual edit
+            var now = new Date();
+            item.lastVerified = now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0') + '-' + String(now.getDate()).padStart(2, '0');
 
             // Auto-update status based on completed count
             if (newCompleted >= item.required) {
@@ -2734,72 +2630,7 @@ function recordProcedure(data) {
 
     roadmapData.clinicalData.completedProcedures[id] = procedure;
 
-    // Auto-link to competency items with evidence trail
-    if (procedure.competencyItemIds.length > 0) {
-        linkProcedureToCompetencies(procedure);
-    }
-
     return procedure;
-}
-
-function linkProcedureToCompetencies(procedure) {
-    const competencies = getCompetenciesData();
-
-    procedure.competencyItemIds.forEach(function(itemId) {
-        const result = findCompetencyItem(itemId);
-        if (!result) return;
-
-        const item = result.item;
-
-        // Add completion entry (audit trail)
-        if (!Array.isArray(item.completionEntries)) item.completionEntries = getValues(item.completionEntries);
-
-        // Dedup by procedureId
-        if (!item.completionEntries.some(function(e) { return e.procedureId === procedure.id; })) {
-            item.completionEntries.push({
-                procedureId: procedure.id,
-                patientId: procedure.patientId,
-                patientName: procedure.patientName,
-                date: procedure.date,
-                note: procedure.notes || procedure.procedure
-            });
-        }
-
-        // Sync completed count from evidence entries (floor: never decrease existing count, protects REQUIREMENTS_STATUS absolute-set)
-        item.completed = Math.min(item.required, Math.max(item.completed, item.completionEntries.length));
-
-        // Auto-update status
-        if (item.completed >= item.required) {
-            item.status = 'completed';
-        } else if (item.completed > 0) {
-            item.status = 'in_progress';
-        }
-    });
-}
-
-function unlinkProcedureFromCompetencies(procedureId) {
-    const competencies = getCompetenciesData();
-
-    Object.values(competencies).forEach(function(cat) {
-        getValues(cat.sections).forEach(function(sec) {
-            getValues(sec.items).forEach(function(item) {
-                if (!item.completionEntries) return;
-                if (!Array.isArray(item.completionEntries)) item.completionEntries = getValues(item.completionEntries);
-                const before = item.completionEntries.length;
-                item.completionEntries = item.completionEntries.filter(function(e) { return e.procedureId !== procedureId; });
-                if (item.completionEntries.length < before) {
-                    item.completed = Math.min(item.required, item.completionEntries.length);
-                    if (item.completed >= item.required) {
-                        item.status = 'completed';
-                    } else if (item.completed > 0) {
-                        item.status = 'in_progress';
-                    } else {
-                        item.status = 'pending';
-                    }
-                }
-            });
-        });
-    });
 }
 
 function deleteProcedure(procId) {
@@ -3105,10 +2936,7 @@ function completeAppointment(aptId) {
             competencyItemIds: [],
             notes: 'Auto-created from appointment completion'
         }) : null;
-        // 4. Smart auto-link fires on created procedure
-        if (proc && proc.id && typeof autoLinkProcedureToCompetencies === 'function') {
-            autoLinkProcedureToCompetencies(proc);
-        }
+        // V2: autoLinkProcedureToCompetencies removed — competency counts are manual-only
     }
 
     // 5. Mark deadline + planner done
