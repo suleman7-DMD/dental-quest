@@ -249,8 +249,13 @@ function initApp() {
             }
         }, 10000);
 
-        // Create backup every 5 minutes
-        setInterval(function() { BackupManager.createBackup(); }, 5 * 60 * 1000);
+        // localStorage backups removed — Firebase sync is the backup system
+        // One-time cleanup of legacy backup + checkpoint data to reclaim localStorage space
+        try {
+            localStorage.removeItem('dentalquest_backups');
+            var _pin = localStorage.getItem('dentalQuestPin') || 'default';
+            localStorage.removeItem('dentalQuest_checkpoints_' + btoa(_pin).replace(/[^a-zA-Z0-9]/g, ''));
+        } catch(e) {}
 
         // Global escape key handler to close any open modal (priority-ordered)
         document.addEventListener('keydown', function(e) {

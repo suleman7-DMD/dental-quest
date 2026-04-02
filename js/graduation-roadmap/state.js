@@ -429,27 +429,31 @@ function safeLocalStorageSet(key, value) {
         return true;
     } catch (e) {
         if (e.name === 'QuotaExceededError' || e.code === 22) {
-            console.warn('localStorage quota exceeded, clearing backups...');
+            console.warn('localStorage quota exceeded, running cross-app cleanup...');
+            // Cross-app cleanup: remove ALL known expendable keys from ALL apps
+            var expendableKeys = [
+                'dentalquest_backups', 'graduationRoadmapBackup', 'd3RoadmapBackup',
+                'bodycomp_backups', 'stimcalc_backups', 'd3RoadmapData',
+                'bodyCompCheckpoints', 'stimCalcCheckpoints'
+            ];
+            var pinHash = localStorage.getItem('dentalQuestPin');
+            if (pinHash) {
+                expendableKeys.push(
+                    'dentalQuest_checkpoints_' + pinHash,
+                    'gradRoadmap_checkpoints_' + pinHash,
+                    'd3roadmap_checkpoints_' + pinHash
+                );
+            }
+            expendableKeys.forEach(function(k) {
+                try { localStorage.removeItem(k); } catch(ignore) {}
+            });
             try {
-                localStorage.removeItem(BACKUP_STORAGE_KEY);
-                // Also try removing old backup key
-                localStorage.removeItem('d3RoadmapBackup');
                 localStorage.setItem(key, value);
                 return true;
             } catch (e2) {
-                try {
-                    const pinHash = localStorage.getItem('dentalQuestPin');
-                    if (pinHash) {
-                        localStorage.removeItem('gradRoadmap_checkpoints_' + pinHash);
-                        localStorage.removeItem('d3roadmap_checkpoints_' + pinHash);
-                    }
-                    localStorage.setItem(key, value);
-                    return true;
-                } catch (e3) {
-                    console.error('Storage full even after cleanup');
-                    if (typeof showToast === 'function') showToast('Storage full - data saved to cloud only', 'warning');
-                    return false;
-                }
+                console.error('Storage full even after cross-app cleanup');
+                if (typeof showToast === 'function') showToast('Storage full - saved to cloud only', 'warning');
+                return false;
             }
         }
         console.error('localStorage write error:', e);

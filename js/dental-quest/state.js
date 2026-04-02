@@ -919,22 +919,31 @@ function safeLocalStorageSet(key, value) {
         return true;
     } catch (e) {
         if (e.name === 'QuotaExceededError' || e.code === 22) {
-            console.warn('localStorage quota exceeded, clearing backups...');
+            console.warn('localStorage quota exceeded, running cross-app cleanup...');
+            // Cross-app cleanup: remove ALL known expendable keys from ALL apps
+            var expendableKeys = [
+                'dentalquest_backups', 'graduationRoadmapBackup', 'd3RoadmapBackup',
+                'bodycomp_backups', 'stimcalc_backups', 'd3RoadmapData',
+                'bodyCompCheckpoints', 'stimCalcCheckpoints'
+            ];
+            var pinHash = localStorage.getItem('dentalQuestPin');
+            if (pinHash) {
+                expendableKeys.push(
+                    'dentalQuest_checkpoints_' + pinHash,
+                    'gradRoadmap_checkpoints_' + pinHash,
+                    'd3roadmap_checkpoints_' + pinHash
+                );
+            }
+            expendableKeys.forEach(function(k) {
+                try { localStorage.removeItem(k); } catch(ignore) {}
+            });
             try {
-                localStorage.removeItem('dentalquest_backups');
                 localStorage.setItem(key, value);
                 return true;
             } catch (e2) {
-                try {
-                    var pinHash = localStorage.getItem('dentalQuestPin');
-                    if (pinHash) localStorage.removeItem('dentalQuest_checkpoints_' + pinHash);
-                    localStorage.setItem(key, value);
-                    return true;
-                } catch (e3) {
-                    console.error('Storage full even after cleanup');
-                    if (typeof showToast === 'function') showToast('Storage full - data saved to cloud only', 'warning');
-                    return false;
-                }
+                console.error('Storage full even after cross-app cleanup');
+                if (typeof showToast === 'function') showToast('Storage full - saved to cloud only', 'warning');
+                return false;
             }
         }
         console.error('localStorage write error:', e);
@@ -942,51 +951,11 @@ function safeLocalStorageSet(key, value) {
     }
 }
 
-// ==================== BACKUP MANAGER ====================
+// ==================== BACKUP MANAGER (localStorage backups removed — Firebase is the backup) ====================
 var BackupManager = {
-    maxBackups: 3,
-
-    createBackup: function() {
-        try {
-            var backups = JSON.parse(localStorage.getItem('dentalquest_backups') || '[]');
-            var currentData = localStorage.getItem('dentalStudentQuestData');
-            if (!currentData) return;
-
-            backups.unshift({
-                timestamp: Date.now(),
-                data: currentData
-            });
-
-            while (backups.length > this.maxBackups) {
-                backups.pop();
-            }
-
-            safeLocalStorageSet('dentalquest_backups', JSON.stringify(backups));
-        } catch (e) {
-            console.error('Backup failed:', e);
-        }
-    },
-
-    listBackups: function() {
-        var backups = JSON.parse(localStorage.getItem('dentalquest_backups') || '[]');
-        return backups.map(function(b) {
-            return {
-                timestamp: b.timestamp,
-                date: new Date(b.timestamp).toLocaleString()
-            };
-        });
-    },
-
-    restoreBackup: function(timestamp) {
-        var backups = JSON.parse(localStorage.getItem('dentalquest_backups') || '[]');
-        var backup = backups.find(function(b) { return b.timestamp === timestamp; });
-        if (backup) {
-            showCustomConfirm('Restore backup from ' + new Date(timestamp).toLocaleString() + '?', function() {
-                safeLocalStorageSet('dentalStudentQuestData', backup.data);
-                location.reload();
-            }, null, 'Restore Backup');
-        }
-    }
+    createBackup: function() { /* no-op: Firebase sync replaces localStorage backups */ },
+    listBackups: function() { return []; },
+    restoreBackup: function() { if (typeof showToast === 'function') showToast('Use Force Pull from Cloud to restore', 'info'); }
 };
 
 // ============================================

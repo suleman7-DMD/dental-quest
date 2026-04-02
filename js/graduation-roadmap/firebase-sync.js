@@ -7,10 +7,13 @@
 let isFirebaseConnected = false;
 let connectionMonitorRef = null;
 
-// Backup system
+// Backup system (localStorage backups removed — Firebase is the backup)
+// Constants kept for one-time cleanup of legacy data
 const BACKUP_STORAGE_KEY = 'graduationRoadmapBackup';
-const OLD_BACKUP_STORAGE_KEY = 'd3RoadmapBackup';  // For migration
-const MAX_BACKUPS = 3;
+const OLD_BACKUP_STORAGE_KEY = 'd3RoadmapBackup';
+
+// Checkpoint cache — checkpoints are stored in Firebase only, cached here for UI
+let _cachedCheckpoints = [];
 
 // Conflict detection & local change tracking
 let localChangesSinceLastSync = false;
@@ -394,154 +397,19 @@ function setupConnectionMonitor() {
     });
 }
 
-// ==================== FIX 6: BACKUP SYSTEM ====================
+// ==================== BACKUP SYSTEM (localStorage backups removed — Firebase is the backup) ====================
 
+// createBackup is now a no-op. Safety nets before restore/import use createCheckpoint instead.
 function createBackup(reason = 'manual') {
-    const backup = {
-        id: generateId('backup'),
-        timestamp: Date.now(),
-        reason: reason,
-        data: JSON.parse(JSON.stringify(roadmapData)),
-        version: roadmapData._version || 1
-    };
-
-    // Get existing backups
-    let backups = [];
-    try {
-        const stored = localStorage.getItem(BACKUP_STORAGE_KEY);
-        if (stored) {
-            backups = JSON.parse(stored);
-        }
-    } catch (e) {
-        console.warn('Could not load existing backups:', e);
-    }
-
-    // Add new backup and keep only last MAX_BACKUPS
-    backups.unshift(backup);
-    if (backups.length > MAX_BACKUPS) {
-        backups = backups.slice(0, MAX_BACKUPS);
-    }
-
-    try {
-        safeLocalStorageSet(BACKUP_STORAGE_KEY, JSON.stringify(backups));
-        return backup.id;
-    } catch (e) {
-        console.error('Failed to save backup:', e);
-        // If localStorage is full, remove oldest backups
-        if (e.name === 'QuotaExceededError') {
-            backups = backups.slice(0, 2);
-            try {
-                safeLocalStorageSet(BACKUP_STORAGE_KEY, JSON.stringify(backups));
-                return backup.id;
-            } catch (e2) {
-                console.error('Still cannot save backup:', e2);
-            }
-        }
-        return null;
-    }
+    console.log('[backup] localStorage backups disabled, Firebase is the backup. Reason:', reason);
+    return null;
 }
 
-function getBackups() {
-    try {
-        const stored = localStorage.getItem(BACKUP_STORAGE_KEY);
-        return stored ? JSON.parse(stored) : [];
-    } catch (e) {
-        console.error('Failed to load backups:', e);
-        return [];
-    }
-}
+function getBackups() { return []; }
 
 function restoreBackup(backupId) {
-    const backups = getBackups();
-    const backup = backups.find(b => b.id === backupId);
-
-    if (!backup) {
-        showToast('❌ Backup not found');
-        return false;
-    }
-
-    // Create a backup of current state before restoring
-    createBackup('pre-restore');
-
-    // Restore the data — field-by-field reconstruction so newer fields get defaults
-    // even if the backup predates them (mirrors restoreCheckpoint pattern)
-    const bData = backup.data;
-    const defaults = getDefaultRoadmapData();
-    roadmapData = {
-        pedsLockedIn: bData.pedsLockedIn !== undefined ? bData.pedsLockedIn : defaults.pedsLockedIn,
-        mandatoryItems: bData.mandatoryItems || defaults.mandatoryItems,
-        grades: bData.grades || defaults.grades,
-        editedDeadlines: bData.editedDeadlines || {},
-        completedDeadlines: bData.completedDeadlines || {},
-        customDeadlines: migrateArrayToObject(bData.customDeadlines, 'deadline'),
-        deletedDeadlines: migrateArrayToObject(bData.deletedDeadlines, 'deleted'),
-        examStudyProgress: bData.examStudyProgress || {},
-        monthlyPlanner: {
-            notes: migrateArrayToObject(bData.monthlyPlanner?.notes, 'note'),
-            customTasks: migrateArrayToObject(bData.monthlyPlanner?.customTasks, 'ctask'),
-            overriddenStatic: migrateArrayToObject(bData.monthlyPlanner?.overriddenStatic, 'override'),
-            completedTasks: migrateArrayToObject(bData.monthlyPlanner?.completedTasks, 'completed'),
-            hiddenClinicTasks: bData.monthlyPlanner?.hiddenClinicTasks ?? defaults.monthlyPlanner.hiddenClinicTasks,
-            currentWeekSchedule: bData.monthlyPlanner?.currentWeekSchedule ?? defaults.monthlyPlanner.currentWeekSchedule
-        },
-        clinicalData: {
-            patients: bData.clinicalData?.patients || {},
-            appointments: migrateArrayToObject(bData.clinicalData?.appointments, 'appt'),
-            completedProcedures: migrateArrayToObject(bData.clinicalData?.completedProcedures, 'proc'),
-            competencies: mergeCompetencies(bData.clinicalData?.competencies, defaults.clinicalData?.competencies),
-            patientRecords: bData.clinicalData?.patientRecords || defaults.clinicalData.patientRecords,
-            dashboardSnapshots: mergeDashboardSnapshots(defaults.clinicalData?.dashboardSnapshots, bData.clinicalData?.dashboardSnapshots),
-            missingNotes: bData.clinicalData?.missingNotes ?? defaults.clinicalData.missingNotes,
-            autoLinkReviewQueue: Array.isArray(bData.clinicalData?.autoLinkReviewQueue) ? bData.clinicalData.autoLinkReviewQueue : defaults.clinicalData.autoLinkReviewQueue
-        },
-        todoList: {
-            items: bData.todoList?.items || {},
-            _nextSeq: bData.todoList?._nextSeq ?? 1,
-            lastUpdated: bData.todoList?.lastUpdated ?? null
-        },
-        dailyPlanner: migrateDailyPlannerBlocks(bData.dailyPlanner || defaults.dailyPlanner),
-        exams: migrateArrayToObject(bData.exams, 'exam'),
-        graduationPrep: bData.graduationPrep ?? defaults.graduationPrep,
-        clinicHeadlines: bData.clinicHeadlines ?? defaults.clinicHeadlines,
-        periodicReviews: bData.periodicReviews ? {
-            pr2: {
-                reviewDate: bData.periodicReviews?.pr2?.reviewDate ?? defaults.periodicReviews.pr2.reviewDate,
-                reviewPeriod: bData.periodicReviews?.pr2?.reviewPeriod ?? defaults.periodicReviews.pr2.reviewPeriod,
-                dashboardDiscrepancyNotes: bData.periodicReviews?.pr2?.dashboardDiscrepancyNotes ?? defaults.periodicReviews.pr2.dashboardDiscrepancyNotes,
-                adminStatsOverrides: bData.periodicReviews?.pr2?.adminStatsOverrides || {},
-                completedProceduresHtml: bData.periodicReviews?.pr2?.completedProceduresHtml ?? defaults.periodicReviews.pr2.completedProceduresHtml,
-                inProgressProcedures: bData.periodicReviews?.pr2?.inProgressProcedures || {},
-                departmentNotes: bData.periodicReviews?.pr2?.departmentNotes || {},
-                subjectiveReport: bData.periodicReviews?.pr2?.subjectiveReport ?? defaults.periodicReviews.pr2.subjectiveReport,
-                patientNotes: bData.periodicReviews?.pr2?.patientNotes || {},
-                removedPatients: bData.periodicReviews?.pr2?.removedPatients || {},
-                lastEdited: bData.periodicReviews?.pr2?.lastEdited ?? defaults.periodicReviews.pr2.lastEdited
-            }
-        } : defaults.periodicReviews,
-        competencyUIState: bData.competencyUIState ?? defaults.competencyUIState,
-        lastSaved: bData.lastSaved || Date.now(),
-        _version: (bData._version ?? 0) + 1,
-        _lastModified: new Date().toISOString(),
-        _dataLoaded: true
-    };
-
-    // Clear migration flags so migrations re-run against restored data
-    localStorage.removeItem('unifiedPatientStoreDone_v1');
-    localStorage.removeItem('competencyEnhancementsDone_v2');
-    localStorage.removeItem('competencyEnhancementsDone_v3');
-
-    migrateInvalidFirebaseKeys(roadmapData);
-    clinicalDataDirty = true;
-    safeLocalStorageSet(STORAGE_KEY, JSON.stringify(roadmapData));
-
-    // Save to localStorage and Firebase
-    saveData();
-
-    // Re-initialize UI
-    initUI();
-
-    showToast('✅ Backup restored from ' + new Date(backup.timestamp).toLocaleString());
-    return true;
+    showToast('Local backups removed — use Checkpoints or Force Pull from Cloud', 'info');
+    return false;
 }
 
 function exportBackup() {
@@ -576,8 +444,8 @@ function importBackup(file) {
                 return;
             }
 
-            // Create backup of current state
-            createBackup('pre-import');
+            // Create checkpoint of current state before import
+            createCheckpoint('pre-import');
 
             // Import the data — field-by-field reconstruction so newer fields get defaults
             // even if the imported backup predates them (mirrors restoreBackup pattern)
@@ -663,48 +531,64 @@ function importBackup(file) {
 }
 
 function showBackupManager() {
-    const backups = getBackups();
-
-    const modal = document.createElement('div');
+    // Local backups removed — redirect to export/import and checkpoints
+    var modal = document.createElement('div');
     modal.id = 'backupManagerModal';
     modal.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.8);display:flex;align-items:center;justify-content:center;z-index:10000;';
 
-    let backupListHtml = backups.length === 0
-        ? '<p style="color:#8b949e;text-align:center;">No backups available</p>'
-        : backups.map(b => `
-            <div style="background:#21262d;padding:12px;border-radius:8px;margin-bottom:8px;display:flex;justify-content:space-between;align-items:center;">
-                <div>
-                    <div style="color:#e6edf3;font-size:0.9em;">${new Date(b.timestamp).toLocaleString()}</div>
-                    <div style="color:#8b949e;font-size:0.75em;">Reason: ${b.reason} | Version: ${b.version || 'N/A'}</div>
-                </div>
-                <button onclick="restoreBackup('${b.id}'); closeBackupManager();" style="padding:6px 12px;background:#238636;border:none;border-radius:6px;color:white;cursor:pointer;font-size:0.8em;">Restore</button>
-            </div>
-        `).join('');
+    // Build modal using DOM methods (no innerHTML with dynamic content)
+    var container = document.createElement('div');
+    container.style.cssText = 'background:#161b22;border-radius:16px;padding:24px;max-width:500px;width:90%;max-height:80vh;overflow-y:auto;border:1px solid #30363d;';
 
-    modal.innerHTML = `
-        <div style="background:#161b22;border-radius:16px;padding:24px;max-width:500px;width:90%;max-height:80vh;overflow-y:auto;border:1px solid #30363d;">
-            <h3 style="color:#e6edf3;margin:0 0 16px 0;font-size:1.2em;">📦 Backup Manager</h3>
-            <div style="margin-bottom:20px;">
-                ${backupListHtml}
-            </div>
-            <div style="display:flex;gap:10px;flex-wrap:wrap;">
-                <button onclick="createBackup('manual'); closeBackupManager(); showBackupManager();" style="flex:1;padding:10px;background:#238636;border:none;border-radius:8px;color:white;font-weight:600;cursor:pointer;">Create Backup</button>
-                <button onclick="exportBackup();" style="flex:1;padding:10px;background:#1f6feb;border:none;border-radius:8px;color:white;font-weight:600;cursor:pointer;">Export JSON</button>
-            </div>
-            <div style="margin-top:12px;">
-                <label style="display:block;padding:10px;background:#30363d;border:1px dashed #484f58;border-radius:8px;color:#8b949e;text-align:center;cursor:pointer;">
-                    📂 Import from file
-                    <input type="file" accept=".json" onchange="importBackup(this.files[0]); closeBackupManager();" style="display:none;">
-                </label>
-            </div>
-            <button onclick="closeBackupManager();" style="width:100%;margin-top:16px;padding:10px;background:#30363d;border:1px solid #484f58;border-radius:8px;color:#8b949e;cursor:pointer;">Close</button>
-        </div>
-    `;
+    var title = document.createElement('h3');
+    title.style.cssText = 'color:#e6edf3;margin:0 0 16px 0;font-size:1.2em;';
+    title.textContent = 'Backup Manager';
 
+    var info = document.createElement('p');
+    info.style.cssText = 'color:#8b949e;font-size:0.85em;margin-bottom:16px;';
+    info.textContent = 'Local backups have been replaced by Firebase cloud sync. Use Checkpoints for point-in-time recovery, or Export/Import for file-based backups.';
+
+    var btnRow = document.createElement('div');
+    btnRow.style.cssText = 'display:flex;gap:10px;flex-wrap:wrap;';
+
+    var cpBtn = document.createElement('button');
+    cpBtn.style.cssText = 'flex:1;padding:10px;background:#238636;border:none;border-radius:8px;color:white;font-weight:600;cursor:pointer;';
+    cpBtn.textContent = 'Checkpoints';
+    cpBtn.onclick = function() { closeBackupManager(); showCheckpointManager(); };
+
+    var exportBtn = document.createElement('button');
+    exportBtn.style.cssText = 'flex:1;padding:10px;background:#1f6feb;border:none;border-radius:8px;color:white;font-weight:600;cursor:pointer;';
+    exportBtn.textContent = 'Export JSON';
+    exportBtn.onclick = function() { exportBackup(); };
+
+    btnRow.appendChild(cpBtn);
+    btnRow.appendChild(exportBtn);
+
+    var importLabel = document.createElement('label');
+    importLabel.style.cssText = 'display:block;padding:10px;background:#30363d;border:1px dashed #484f58;border-radius:8px;color:#8b949e;text-align:center;cursor:pointer;margin-top:12px;';
+    importLabel.textContent = 'Import from file';
+    var importInput = document.createElement('input');
+    importInput.type = 'file';
+    importInput.accept = '.json';
+    importInput.style.display = 'none';
+    importInput.onchange = function() { importBackup(this.files[0]); closeBackupManager(); };
+    importLabel.appendChild(importInput);
+
+    var closeBtn = document.createElement('button');
+    closeBtn.style.cssText = 'width:100%;margin-top:16px;padding:10px;background:#30363d;border:1px solid #484f58;border-radius:8px;color:#8b949e;cursor:pointer;';
+    closeBtn.textContent = 'Close';
+    closeBtn.onclick = function() { closeBackupManager(); };
+
+    container.appendChild(title);
+    container.appendChild(info);
+    container.appendChild(btnRow);
+    container.appendChild(importLabel);
+    container.appendChild(closeBtn);
+    modal.appendChild(container);
     document.body.appendChild(modal);
 
     window.closeBackupManager = function() {
-        const m = document.getElementById('backupManagerModal');
+        var m = document.getElementById('backupManagerModal');
         if (m) document.body.removeChild(m);
     };
 }
@@ -1777,10 +1661,9 @@ function createCheckpoint(customName = null) {
     }
 
     // 60s dedup: skip if last checkpoint with same name was created < 60s ago
-    var existingCheckpoints = JSON.parse(localStorage.getItem(getCheckpointKey()) || '[]');
     var dedupName = customName || 'Manual';
-    if (existingCheckpoints.length > 0) {
-        var last = existingCheckpoints[0];
+    if (_cachedCheckpoints.length > 0) {
+        var last = _cachedCheckpoints[0];
         var elapsed = Date.now() - (last.timestamp || 0);
         if (elapsed < 60000 && last.name === dedupName) {
             console.log('[CHECKPOINT] Skipping dedup — last checkpoint was ' + Math.round(elapsed/1000) + 's ago');
@@ -1801,20 +1684,15 @@ function createCheckpoint(customName = null) {
         data: JSON.parse(JSON.stringify(roadmapData))
     };
 
-    let checkpoints = JSON.parse(localStorage.getItem(getCheckpointKey()) || '[]');
-    checkpoints.unshift(checkpoint);
-
-    // Keep max 5 checkpoints
-    if (checkpoints.length > 5) {
-        checkpoints.splice(5);
+    // Add to in-memory cache (keep max 10)
+    _cachedCheckpoints.unshift(checkpoint);
+    if (_cachedCheckpoints.length > 10) {
+        _cachedCheckpoints.splice(10);
     }
 
-    safeLocalStorageSet(getCheckpointKey(), JSON.stringify(checkpoints));
-
-    // FIXED: Also save to Firebase for cross-device access
+    // Save to Firebase only (no localStorage — saves ~1MB+ per checkpoint)
     if (firebaseSyncEnabled && database && userPath) {
         const cloudCheckpointPath = userPath + '/checkpoints/' + checkpoint.id;
-        // Clean checkpoint data before saving
         const cleanCheckpoint = JSON.parse(JSON.stringify(checkpoint));
         if (cleanCheckpoint.data) {
             delete cleanCheckpoint.data._dataLoaded;
@@ -1823,40 +1701,40 @@ function createCheckpoint(customName = null) {
             .catch(err => {
                 console.error('Failed to save checkpoint to cloud:', err);
             });
+    } else {
+        console.warn('[CHECKPOINT] Firebase unavailable — checkpoint exists in memory only this session');
     }
 
-    showToast(`✅ Checkpoint created: ${name}`);
+    showToast('Checkpoint created: ' + name);
 
     return checkpoint;
 }
 
 async function showCheckpointManager() {
-    // Get local checkpoints
-    let checkpoints = JSON.parse(localStorage.getItem(getCheckpointKey()) || '[]');
-
-    // FIXED: Also get cloud checkpoints for cross-device access
+    // Load checkpoints from Firebase (no localStorage — saves space)
+    let checkpoints = [];
     if (firebaseSyncEnabled && database && userPath) {
         try {
             const snapshot = await database.ref(userPath + '/checkpoints').once('value');
             const cloudCheckpoints = snapshot.val();
             if (cloudCheckpoints) {
-                const cloudList = Object.values(cloudCheckpoints);
-                // Merge: add cloud checkpoints not in local (by ID)
-                const localIds = new Set(checkpoints.map(c => c.id));
-                cloudList.forEach(cc => {
-                    if (cc && cc.id && !localIds.has(cc.id)) {
-                        checkpoints.push(cc);
-                    }
-                });
-                // Sort by timestamp descending
+                checkpoints = Object.values(cloudCheckpoints).filter(c => c && c.id);
                 checkpoints.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
-                // Save merged list back to localStorage (keep max 50)
-                safeLocalStorageSet(getCheckpointKey(), JSON.stringify(checkpoints.slice(0, 5)));
             }
         } catch (err) {
             console.error('Failed to load cloud checkpoints:', err);
         }
     }
+    // Merge any in-memory checkpoints not yet in Firebase (created this session while offline)
+    const cloudIds = new Set(checkpoints.map(c => c.id));
+    _cachedCheckpoints.forEach(cc => {
+        if (cc && cc.id && !cloudIds.has(cc.id)) {
+            checkpoints.push(cc);
+        }
+    });
+    checkpoints.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
+    // Update cache
+    _cachedCheckpoints = checkpoints;
 
     // Remove existing modal if any
     document.querySelector('.checkpoint-modal-overlay')?.remove();
@@ -1914,8 +1792,7 @@ function escapeHtmlForCheckpoint(text) {
 }
 
 function restoreCheckpoint(index) {
-    const checkpoints = JSON.parse(localStorage.getItem(getCheckpointKey()) || '[]');
-    const checkpoint = checkpoints[index];
+    const checkpoint = _cachedCheckpoints[index];
 
     if (!checkpoint) {
         showToast('Checkpoint not found');
@@ -2019,12 +1896,10 @@ function deleteCheckpoint(index) {
     showCustomConfirm(
         'Delete this checkpoint?',
         function() {
-            const checkpoints = JSON.parse(localStorage.getItem(getCheckpointKey()) || '[]');
-            const checkpoint = checkpoints[index];
-            checkpoints.splice(index, 1);
-            safeLocalStorageSet(getCheckpointKey(), JSON.stringify(checkpoints));
+            const checkpoint = _cachedCheckpoints[index];
+            _cachedCheckpoints.splice(index, 1);
 
-            // Also delete from Firebase
+            // Delete from Firebase
             if (checkpoint && checkpoint.id && firebaseSyncEnabled && database && userPath) {
                 database.ref(userPath + '/checkpoints/' + checkpoint.id).remove()
                     .catch(err => console.error('Failed to delete cloud checkpoint:', err));
@@ -2042,8 +1917,7 @@ function deleteCheckpoint(index) {
 }
 
 function exportCheckpoint(index) {
-    const checkpoints = JSON.parse(localStorage.getItem(getCheckpointKey()) || '[]');
-    const checkpoint = checkpoints[index];
+    const checkpoint = _cachedCheckpoints[index];
 
     if (!checkpoint) return;
 
@@ -2059,7 +1933,7 @@ function exportCheckpoint(index) {
 }
 
 function exportAllCheckpoints() {
-    const checkpoints = JSON.parse(localStorage.getItem(getCheckpointKey()) || '[]');
+    const checkpoints = _cachedCheckpoints;
 
     if (checkpoints.length === 0) {
         showToast('No checkpoints to export');
@@ -2115,7 +1989,7 @@ function importCheckpoint() {
         reader.onload = (event) => {
             try {
                 const imported = JSON.parse(event.target.result);
-                let checkpoints = JSON.parse(localStorage.getItem(getCheckpointKey()) || '[]');
+                let checkpoints = _cachedCheckpoints.slice();
 
                 // ============================================
                 // FLEXIBLE FORMAT DETECTION
@@ -2197,9 +2071,21 @@ function importCheckpoint() {
                     throw new Error('Unrecognized file format. Check console for details.');
                 }
 
-                // Keep max 5 checkpoints
-                checkpoints = checkpoints.slice(0, 5);
-                safeLocalStorageSet(getCheckpointKey(), JSON.stringify(checkpoints));
+                // Keep max 10 checkpoints in cache
+                checkpoints = checkpoints.slice(0, 10);
+                _cachedCheckpoints = checkpoints;
+
+                // Save imported checkpoints to Firebase
+                if (firebaseSyncEnabled && database && userPath) {
+                    checkpoints.forEach(function(cp) {
+                        if (cp && cp.id) {
+                            var cleanCp = JSON.parse(JSON.stringify(cp));
+                            if (cleanCp.data) delete cleanCp.data._dataLoaded;
+                            database.ref(userPath + '/checkpoints/' + cp.id).set(cleanCp)
+                                .catch(function(err) { console.error('Failed to save imported checkpoint:', err); });
+                        }
+                    });
+                }
 
                 document.querySelector('.checkpoint-modal-overlay')?.remove();
                 showCheckpointManager();

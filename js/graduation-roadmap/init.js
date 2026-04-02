@@ -1002,6 +1002,17 @@ function init() {
 // Initialize on DOMContentLoaded to ensure all scripts and DOM are ready.
 // init() calls initFirebase() which handles async data loading.
 document.addEventListener('DOMContentLoaded', () => {
+    // One-time cleanup of legacy localStorage backup + checkpoint data to reclaim space
+    try {
+        localStorage.removeItem('graduationRoadmapBackup');
+        localStorage.removeItem('d3RoadmapBackup');
+        // Checkpoints now live in Firebase only — clean localStorage copies
+        var _pin = localStorage.getItem('dentalQuestPin') || 'default';
+        var _pinHash = btoa(_pin).replace(/[^a-zA-Z0-9]/g, '');
+        localStorage.removeItem('gradRoadmap_checkpoints_' + _pinHash);
+        localStorage.removeItem('d3roadmap_checkpoints_' + _pinHash);
+    } catch(e) {}
+
     init();
 
     // FALLBACK: If Firebase hangs after 3s, load from localStorage and set ALL sync flags

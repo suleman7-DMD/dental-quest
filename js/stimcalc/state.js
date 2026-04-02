@@ -172,22 +172,36 @@ function getCount(obj) {
     return Object.keys(obj).length;
 }
 
-// Safe localStorage wrapper with quota handling
+// Safe localStorage wrapper with quota handling (cross-app cleanup)
 function safeLocalStorageSet(key, value) {
     try {
         localStorage.setItem(key, value);
         return true;
     } catch (e) {
         if (e.name === 'QuotaExceededError' || e.code === 22) {
-            console.error('localStorage quota exceeded - clearing old backups');
-            // Try to free space by clearing old backups
+            console.warn('localStorage quota exceeded, running cross-app cleanup...');
+            var expendableKeys = [
+                'dentalquest_backups', 'graduationRoadmapBackup', 'd3RoadmapBackup',
+                'bodycomp_backups', 'stimcalc_backups', 'd3RoadmapData',
+                'bodyCompCheckpoints', 'stimCalcCheckpoints'
+            ];
+            var pinHash = localStorage.getItem('dentalQuestPin');
+            if (pinHash) {
+                expendableKeys.push(
+                    'dentalQuest_checkpoints_' + pinHash,
+                    'gradRoadmap_checkpoints_' + pinHash,
+                    'd3roadmap_checkpoints_' + pinHash
+                );
+            }
+            expendableKeys.forEach(function(k) {
+                try { localStorage.removeItem(k); } catch(ignore) {}
+            });
             try {
-                localStorage.removeItem('stimcalc_backups');
                 localStorage.setItem(key, value);
                 return true;
             } catch (e2) {
-                console.error('Still cannot save after clearing backups:', e2);
-                showToast('⚠️ Storage full - data may not persist');
+                console.error('Storage full even after cross-app cleanup');
+                showToast('Storage full - saved to cloud only', 'warning');
                 return false;
             }
         }
@@ -203,27 +217,10 @@ function escapeHtml(str) {
     return div.innerHTML;
 }
 
-// Backup Manager with export/import
+// Backup Manager (localStorage backups removed — Firebase is the backup. Export/import preserved.)
 var BackupManager = {
-    maxBackups: 3,
-    createBackup() {
-        try {
-            const backups = JSON.parse(localStorage.getItem('stimcalc_backups') || '[]');
-            const currentData = localStorage.getItem('stimulantCalculatorState');
-            if (!currentData) return;
-            backups.unshift({ timestamp: Date.now(), data: currentData });
-            while (backups.length > this.maxBackups) backups.pop();
-            safeLocalStorageSet('stimcalc_backups', JSON.stringify(backups));
-        } catch (e) { console.error('Backup failed:', e); }
-    },
-    restoreBackup(timestamp) {
-        const backups = JSON.parse(localStorage.getItem('stimcalc_backups') || '[]');
-        const backup = backups.find(b => b.timestamp === timestamp);
-        if (backup && confirm(`Restore backup from ${new Date(timestamp).toLocaleString()}?`)) {
-            safeLocalStorageSet('stimulantCalculatorState', backup.data);
-            location.reload();
-        }
-    },
+    createBackup() { /* no-op: Firebase sync replaces localStorage backups */ },
+    restoreBackup() { showToast('Use Force Pull from Cloud to restore', 'info'); },
     exportData() {
         const data = {
             exportDate: new Date().toISOString(),

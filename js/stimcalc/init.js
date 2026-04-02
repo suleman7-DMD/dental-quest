@@ -1341,4 +1341,11 @@ function initFocusMode() {}
 // EVENT REGISTRATION — MUST BE LAST
 // ============================================
 
-document.addEventListener('DOMContentLoaded', init);
+document.addEventListener('DOMContentLoaded', function() {
+    // One-time cleanup of legacy backup + checkpoint data to reclaim localStorage space
+    try {
+        localStorage.removeItem('stimcalc_backups');
+        localStorage.removeItem('stimCalcCheckpoints');
+    } catch(e) {}
+    init();
+});
