@@ -1633,24 +1633,24 @@ function openCompQuickRecord(itemId) {
         }
     });
 
-    var modalHtml = '<div id="compQuickRecordOverlay" style="position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.6); z-index:10000; display:flex; align-items:center; justify-content:center;">'
-        + '<div style="background:#1e293b; border:1px solid #334155; border-radius:12px; padding:24px; max-width:400px; width:90%;">'
-        + '<h3 style="color:#e2e8f0; margin:0 0 16px;">Quick Record: ' + escapeHtml(item.text.substring(0, 40)) + '</h3>'
-        + '<div style="color:#94a3b8; font-size:0.85em; margin-bottom:12px;">' + item.completed + '/' + item.required + ' completed</div>'
+    var modalHtml = '<div id="compQuickRecordOverlay" style="position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.3); z-index:10000; display:flex; align-items:center; justify-content:center;">'
+        + '<div style="background:#FFFFFF; border:1px solid rgba(0,0,0,0.12); border-radius:12px; padding:24px; max-width:400px; width:90%; box-shadow:0 8px 32px rgba(0,0,0,0.12);">'
+        + '<h3 style="color:#2C2825; margin:0 0 16px;">Quick Record: ' + escapeHtml(item.text.substring(0, 40)) + '</h3>'
+        + '<div style="color:#9C948B; font-size:0.85em; margin-bottom:12px;">' + item.completed + '/' + item.required + ' completed</div>'
         + '<div style="margin-bottom:12px;">'
-        + '<label style="color:#94a3b8; font-size:0.85em; display:block; margin-bottom:4px;">Patient</label>'
-        + '<select id="compQR_patient" style="width:100%; padding:8px; background:#0f172a; border:1px solid #334155; border-radius:6px; color:#e2e8f0;">'
+        + '<label style="color:#9C948B; font-size:0.85em; display:block; margin-bottom:4px;">Patient</label>'
+        + '<select id="compQR_patient" style="width:100%; padding:8px; background:#F5F2ED; border:1px solid rgba(0,0,0,0.12); border-radius:6px; color:#2C2825;">'
         + patientOptions + '</select></div>'
         + '<div style="margin-bottom:12px;">'
-        + '<label style="color:#94a3b8; font-size:0.85em; display:block; margin-bottom:4px;">Date</label>'
-        + '<input type="date" id="compQR_date" value="' + getLocalDateString() + '" style="width:100%; padding:8px; background:#0f172a; border:1px solid #334155; border-radius:6px; color:#e2e8f0;"></div>'
+        + '<label style="color:#9C948B; font-size:0.85em; display:block; margin-bottom:4px;">Date</label>'
+        + '<input type="date" id="compQR_date" value="' + getLocalDateString() + '" style="width:100%; padding:8px; background:#F5F2ED; border:1px solid rgba(0,0,0,0.12); border-radius:6px; color:#2C2825;"></div>'
         + '<div style="margin-bottom:16px;">'
-        + '<label style="color:#94a3b8; font-size:0.85em; display:block; margin-bottom:4px;">Notes</label>'
-        + '<textarea id="compQR_notes" rows="2" placeholder="Optional notes..." style="width:100%; padding:8px; background:#0f172a; border:1px solid #334155; border-radius:6px; color:#e2e8f0; resize:vertical;"></textarea></div>'
+        + '<label style="color:#9C948B; font-size:0.85em; display:block; margin-bottom:4px;">Notes</label>'
+        + '<textarea id="compQR_notes" rows="2" placeholder="Optional notes..." style="width:100%; padding:8px; background:#F5F2ED; border:1px solid rgba(0,0,0,0.12); border-radius:6px; color:#2C2825; resize:vertical;"></textarea></div>'
         + '<div style="display:flex; gap:8px; justify-content:flex-end;">'
-        + '<button onclick="closeCompQuickRecord()" style="padding:8px 16px; background:#334155; border:none; border-radius:6px; color:#e2e8f0; cursor:pointer;">Cancel</button>'
+        + '<button onclick="closeCompQuickRecord()" style="padding:8px 16px; background:#F5F2ED; border:none; border-radius:6px; color:#2C2825; cursor:pointer;">Cancel</button>'
         + '<button onclick="submitCompQuickRecord(\'' + (itemId || '').replace(/['"\\]/g, '') + '\', \'' + (result.catKey || '').replace(/['"\\]/g, '') + '\')" '
-        + 'style="padding:8px 16px; background:#10b981; border:none; border-radius:6px; color:white; cursor:pointer; font-weight:600;">Record</button>'
+        + 'style="padding:8px 16px; background:#5E8A5E; border:none; border-radius:6px; color:white; cursor:pointer; font-weight:600;">Record</button>'
         + '</div></div></div>';
 
     var overlay = document.createElement('div');
