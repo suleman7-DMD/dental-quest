@@ -1242,6 +1242,7 @@ function addNewPatientRecord() {
         lastCBCT: '',
         lastPANO: '',
         notes: '',
+        phone: '',
         allergies: '',
         txCompletedByMe: '',
         recallHistory: '',
@@ -2371,7 +2372,7 @@ function confirmUnifiedImport() {
                 lastVisit: '', nextVisit: '', nextVisitManual: false,
                 lastFMX: '', lastBW: '', lastCBCT: '', lastPANO: '',
                 recallHistory: '', activeStatus: 'Active',
-                notes: '', reliability: 'yellow', lastUpdated: new Date().toISOString()
+                phone: '', notes: '', reliability: 'yellow', lastUpdated: new Date().toISOString()
             };
             Object.keys(rec).forEach(function(key) {
                 if (key !== '_notesAppend' && key !== '_medicalHxAppend' && rec[key]) {
@@ -2399,7 +2400,7 @@ function confirmUnifiedImport() {
                 lastVisit: '', nextVisit: '', nextVisitManual: false,
                 lastFMX: '', lastBW: '', lastCBCT: '', lastPANO: '',
                 recallHistory: '', activeStatus: 'Active',
-                notes: '', reliability: 'yellow', lastUpdated: new Date().toISOString()
+                phone: '', notes: '', reliability: 'yellow', lastUpdated: new Date().toISOString()
             };
             created++;
             wasAutoCreated = true;
@@ -2506,7 +2507,7 @@ function confirmUnifiedImport() {
                     type: '', reliability: '', provider: '',
                     medicalHx: '', medications: '', allergies: '',
                     dentalHx: '', txSummaryBU: '', txCompletedByMe: '',
-                    txPlan: '', notes: '',
+                    txPlan: '', phone: '', notes: '',
                     lastVisit: '', nextVisit: '',
                     lastFMX: '', lastBW: '', lastCBCT: '', lastPANO: '',
                     perioStatus: '', recallHistory: '', activeStatus: 'Active',
