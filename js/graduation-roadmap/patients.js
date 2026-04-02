@@ -3,6 +3,28 @@
 // requirement matching, countdown radar, and Claude import system.
 // All functions are global (vanilla JS, no modules).
 
+// ==================== SECTION 0: PATIENT RECORD FACTORY ====================
+// Single source of truth for new patient record shape. All creation sites use this.
+function createPatientRecord(overrides) {
+    var record = {
+        id: '', name: '', chartNumber: '', type: '',
+        medicalHx: '', medications: '', allergies: '',
+        dentalHx: '', txSummaryBU: '', txCompletedByMe: '',
+        poeLast: '', poeNext: '', txPlan: '',
+        lastVisit: '', nextVisit: '', nextVisitManual: false,
+        lastFMX: '', lastBW: '', lastCBCT: '', lastPANO: '',
+        phone: '', notes: '',
+        recallHistory: '', activeStatus: 'Active',
+        reliability: 'yellow', lastUpdated: new Date().toISOString()
+    };
+    if (overrides) {
+        Object.keys(overrides).forEach(function(k) {
+            record[k] = overrides[k];
+        });
+    }
+    return record;
+}
+
 // ==================== SECTION 1: DEFAULT PATIENT RECORDS ====================
 
 const DEFAULT_PATIENT_RECORDS = {
@@ -1222,34 +1244,7 @@ function addNewPatientRecord() {
     }
     var id = chartNumber ? 'pt_' + chartNumber : generateId('pt');
 
-    records[id] = {
-        id: id,
-        name: name,
-        chartNumber: chartNumber,
-        type: '',
-        medicalHx: '',
-        medications: '',
-        dentalHx: '',
-        txSummaryBU: '',
-        poeLast: '',
-        poeNext: '',
-        txPlan: '',
-        lastVisit: '',
-        nextVisit: '',
-        nextVisitManual: false,
-        lastFMX: '',
-        lastBW: '',
-        lastCBCT: '',
-        lastPANO: '',
-        notes: '',
-        phone: '',
-        allergies: '',
-        txCompletedByMe: '',
-        recallHistory: '',
-        activeStatus: '',
-        reliability: 'yellow',
-        lastUpdated: new Date().toISOString()
-    };
+    records[id] = createPatientRecord({ id: id, name: name, chartNumber: chartNumber });
 
     clinicalDataDirty = true;
     safeLocalStorageSet(STORAGE_KEY, JSON.stringify(roadmapData));
@@ -2364,16 +2359,7 @@ function confirmUnifiedImport() {
             updated++;
         } else {
             // Create new
-            records[id] = {
-                id: id, name: '', chartNumber: chartNumber, type: '',
-                medicalHx: '', medications: '', allergies: '',
-                dentalHx: '', txSummaryBU: '', txCompletedByMe: '',
-                poeLast: '', poeNext: '', txPlan: '',
-                lastVisit: '', nextVisit: '', nextVisitManual: false,
-                lastFMX: '', lastBW: '', lastCBCT: '', lastPANO: '',
-                recallHistory: '', activeStatus: 'Active',
-                phone: '', notes: '', reliability: 'yellow', lastUpdated: new Date().toISOString()
-            };
+            records[id] = createPatientRecord({ id: id, chartNumber: chartNumber });
             Object.keys(rec).forEach(function(key) {
                 if (key !== '_notesAppend' && key !== '_medicalHxAppend' && rec[key]) {
                     records[id][key] = rec[key];
@@ -2392,16 +2378,7 @@ function confirmUnifiedImport() {
         if (!id || !records[id]) {
             // Auto-create record if chart number doesn't exist yet
             id = 'pt_' + chartNumber;
-            records[id] = {
-                id: id, name: upd.name || '', chartNumber: chartNumber, type: '',
-                medicalHx: '', medications: '', allergies: '',
-                dentalHx: '', txSummaryBU: '', txCompletedByMe: '',
-                poeLast: '', poeNext: '', txPlan: '',
-                lastVisit: '', nextVisit: '', nextVisitManual: false,
-                lastFMX: '', lastBW: '', lastCBCT: '', lastPANO: '',
-                recallHistory: '', activeStatus: 'Active',
-                phone: '', notes: '', reliability: 'yellow', lastUpdated: new Date().toISOString()
-            };
+            records[id] = createPatientRecord({ id: id, name: upd.name || '', chartNumber: chartNumber });
             created++;
             wasAutoCreated = true;
         }
@@ -2502,18 +2479,12 @@ function confirmUnifiedImport() {
             if (!patientId) {
                 patientId = apt.chartNumber ? ('pt_' + apt.chartNumber) : ('patient_' + Date.now() + '_' + Math.random().toString(36).substr(2, 6));
                 if (!roadmapData.clinicalData.patientRecords) roadmapData.clinicalData.patientRecords = {};
-                roadmapData.clinicalData.patientRecords[patientId] = {
+                roadmapData.clinicalData.patientRecords[patientId] = createPatientRecord({
                     id: patientId, name: apt.patientName, chartNumber: apt.chartNumber || '',
-                    type: '', reliability: '', provider: '',
-                    medicalHx: '', medications: '', allergies: '',
-                    dentalHx: '', txSummaryBU: '', txCompletedByMe: '',
-                    txPlan: '', phone: '', notes: '',
-                    lastVisit: '', nextVisit: '',
-                    lastFMX: '', lastBW: '', lastCBCT: '', lastPANO: '',
-                    perioStatus: '', recallHistory: '', activeStatus: 'Active',
+                    provider: '', perioStatus: '',
                     importedRequirements: [], priorityNotes: '', highValue: false,
                     createdAt: new Date().toISOString()
-                };
+                });
             }
 
             // Dedup: skip if same patient+date+time already exists (by ID or name)
