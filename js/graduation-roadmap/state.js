@@ -1251,8 +1251,8 @@ function calculatePaceProjection(currentCount, targetCount, dataStartDate) {
                 if (d && (!earliest || d < earliest)) earliest = d;
             }
         });
-        var snaps = roadmapData.clinicalData?.dashboardSnapshots;
-        if (snaps && snaps.length > 0) {
+        var snaps = getValues(roadmapData.clinicalData?.dashboardSnapshots);
+        if (snaps.length > 0) {
             var snapDateStr = (snaps[0]?.capturedAt || '').substring(0, 10);
             if (snapDateStr) {
                 var sd = parseLocalDate(snapDateStr);
@@ -1385,6 +1385,7 @@ function propagateClinicalChanges({ appointments = false, procedures = false, co
         if (typeof syncClinicalToMonthlyPlanner === 'function') syncClinicalToMonthlyPlanner();
         if (typeof buildCurrentWeekSchedule === 'function') buildCurrentWeekSchedule();
         if (typeof rebuildUpcomingDeadlines === 'function') rebuildUpcomingDeadlines();
+        if (typeof dpSyncAppointmentsToTimeline === 'function') dpSyncAppointmentsToTimeline();
     }
     if (procedures || competencies) {
         if (typeof renderCompetencies === 'function') renderCompetencies();

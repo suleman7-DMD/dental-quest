@@ -519,7 +519,7 @@ function migrateToUnifiedPatientStore() {
         });
 
         // Remap autoLinkReviewQueue[].patientId
-        (roadmapData.clinicalData.autoLinkReviewQueue || []).forEach(function(q) {
+        getValues(roadmapData.clinicalData.autoLinkReviewQueue).forEach(function(q) {
             if (q.patientId && idRemapTable[q.patientId]) {
                 q.patientId = idRemapTable[q.patientId];
             }
@@ -1203,54 +1203,11 @@ function deletePatientRecord(id) {
     showCustomConfirm(
         'Delete patient record for "' + (patient.name || id) + '"?\n\nThis cannot be undone.',
         function() {
-            delete roadmapData.clinicalData.patientRecords[id];
-
-            // Cascade: also remove from clinicalData.patients
-            if (roadmapData.clinicalData.patients && roadmapData.clinicalData.patients[id]) {
-                delete roadmapData.clinicalData.patients[id];
-            }
-
-            // Cascade: delete appointments for this patient + hide planner tasks
-            var deletedAptIds = [];
-            if (roadmapData.clinicalData.appointments) {
-                Object.keys(roadmapData.clinicalData.appointments).forEach(function(aptId) {
-                    if (roadmapData.clinicalData.appointments[aptId]?.patientId === id) {
-                        deletedAptIds.push(aptId);
-                        delete roadmapData.clinicalData.appointments[aptId];
-                    }
-                });
-            }
-
-            // Cascade: delete procedure records + unlink from competencies
-            if (roadmapData.clinicalData.completedProcedures) {
-                Object.keys(roadmapData.clinicalData.completedProcedures).forEach(function(procId) {
-                    var proc = roadmapData.clinicalData.completedProcedures[procId];
-                    if (proc && proc.patientId === id) {
-                        if (typeof unlinkProcedureFromCompetencies === 'function') {
-                            unlinkProcedureFromCompetencies(procId);
-                        }
-                        delete roadmapData.clinicalData.completedProcedures[procId];
-                    }
-                });
-            }
-
-            // Cascade: hide planner tasks for deleted appointments
-            if (roadmapData.monthlyPlanner && deletedAptIds.length > 0) {
-                if (!roadmapData.monthlyPlanner.hiddenClinicTasks) roadmapData.monthlyPlanner.hiddenClinicTasks = {};
-                deletedAptIds.forEach(function(aptId) {
-                    roadmapData.monthlyPlanner.hiddenClinicTasks[aptId] = { hiddenAt: new Date().toISOString(), taskId: 'clinic_' + aptId };
-                    if (roadmapData.monthlyPlanner.customTasks) {
-                        Object.keys(roadmapData.monthlyPlanner.customTasks).forEach(function(ctId) {
-                            var ct = roadmapData.monthlyPlanner.customTasks[ctId];
-                            if (ct && ct.clinicalAppointmentId === aptId) {
-                                delete roadmapData.monthlyPlanner.customTasks[ctId];
-                            }
-                        });
-                    }
-                });
-            }
-
+            // CIS v2: Delegate to centralized cascade function
+            // Handles: appointments (with linked procedures, custom deadlines, planner tasks),
+            // orphan procedures, competency unlinking, review queue, and propagation
             clinicalDataDirty = true;
+            cascadeDeletePatient(id);
             safeLocalStorageSet(STORAGE_KEY, JSON.stringify(roadmapData));
             saveData();
 
@@ -1263,17 +1220,14 @@ function deletePatientRecord(id) {
                 } else {
                     renderPatientsSidebar();
                     var view = document.getElementById('patientRecordView');
-                    if (view) view.innerHTML = '<div style="padding:40px; text-align:center; color:#94a3b8;">No patients. Click "+ Add Patient" to get started.</div>';
+                    if (view) view.textContent = 'No patients. Click "+ Add Patient" to get started.';
+                    if (view) view.style.cssText = 'padding:40px; text-align:center; color:#94a3b8;';
                 }
             } else {
                 renderPatientsSidebar();
             }
-            // Re-render affected tabs after cascade
-            if (typeof renderDashboard === 'function') try { renderDashboard(); } catch(e) {}
-            if (typeof renderCompetencies === 'function') try { renderCompetencies(); } catch(e) {}
+            // renderAppointmentsList not covered by propagateClinicalChanges
             if (typeof renderAppointmentsList === 'function') try { renderAppointmentsList(); } catch(e) {}
-            if (typeof syncClinicalToMonthlyPlanner === 'function') { clinicalDataDirty = true; syncClinicalToMonthlyPlanner(); }
-            if (typeof buildCurrentWeekSchedule === 'function') buildCurrentWeekSchedule();
             showToast('Patient deleted');
         }
     );
@@ -2493,7 +2447,12 @@ function confirmUnifiedImport() {
             if (isPast) {
                 newApt.completedAt = apt.date + 'T17:00:00.000Z';
                 var ptEntry = (roadmapData.clinicalData.patientRecords || {})[patientId];
-                if (ptEntry && (!ptEntry.lastVisit || ptEntry.lastVisit < apt.date)) ptEntry.lastVisit = apt.date;
+                if (ptEntry) {
+                    var existingDate = (ptEntry.lastVisit || '').split('|')[0].trim();
+                    if (!existingDate || existingDate < apt.date) {
+                        ptEntry.lastVisit = apt.date;
+                    }
+                }
             }
             roadmapData.clinicalData.appointments[appointmentId] = newApt;
             aptsCreated++;
@@ -2697,12 +2656,13 @@ function migratePerioNoiseCleanup() {
     var cleaned = 0;
     Object.keys(records).forEach(function(id) {
         var p = records[id];
-        if (!p || !Array.isArray(p.importedRequirements) || p.importedRequirements.length === 0) return;
+        var irArray = getValues(p.importedRequirements);
+        if (!p || irArray.length === 0) return;
 
-        var origLen = p.importedRequirements.length;
+        var origLen = irArray.length;
         var hasPerio = perioKeywords.test(p.txPlan || '') || perioKeywords.test(p.medicalHx || '') || perioKeywords.test(p.notes || '');
 
-        p.importedRequirements = p.importedRequirements.filter(function(req) {
+        p.importedRequirements = irArray.filter(function(req) {
             var reqId = (req.reqId || req).toString();
             if (alwaysStrip.indexOf(reqId) !== -1) return false;
             if (!hasPerio && conditionalStrip.indexOf(reqId) !== -1) return false;
@@ -3402,7 +3362,7 @@ function renderMiniReview() {
 
         // High value
         var isHV = p.highValue || false;
-        if (!isHV && p.importedRequirements && p.importedRequirements.length >= 3) isHV = true;
+        if (!isHV && getValues(p.importedRequirements).length >= 3) isHV = true;
 
         html += '<div class="mr-card">';
         html += '<div class="mr-card-header">';
