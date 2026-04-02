@@ -206,6 +206,18 @@ if (neither has lastVerified) → Math.max of completed counts
 note: local.note || cloud.note (keep whichever non-empty)
 ```
 
+### V2 Post-Overhaul Audit (commit 219620b, Apr 2 2026)
+11-agent audit found and fixed 13 bugs across 4 files. Key fixes:
+- **CSS/JS mismatch**: 35 cv2-* classes had no CSS (D3 Alert, What's Next, category notes). 49 CSS rules added. Root cause: CSS and JS rendering written with different class names.
+- **resetCompetencies()**: Now clears `competencyV2Migrated` + 5 other migration flags so V2 migration re-runs after reset.
+- **saveCompItem()**: Fixed V2 item shape — removed `completionEntries`, `unlockedBy`, `unlockEmailTo`; added `lastVerified: null`.
+- **COMPLETED_TODAY dedup**: Changed from `competencyItemIds.some()` (always empty in V2) to `procedure + date + patient` match.
+- **COMPLETED_TODAY note isolation**: Both note write paths gated by `!item.isDelta`.
+- **getPatientsFulfilling()**: Dead `completedPatientIds` removed. Pipeline badges always 'planned' in V2.
+- **tsCheckCompetencies()**: Rewritten for V2 — checks over-counted, unverified. No completionEntries refs.
+- **tsFixResyncCompCounts()**: Rewritten — clamps [0, required], derives status.
+- **Milestone toast + comp-modal**: CSS added for both (were completely unstyled).
+
 ### Deleted Functions (14 total, commit f496565)
 `renderEvidenceCards`, `removeEvidenceEntry`, `undoRemoveEvidence`, `renderUnlockChain`, `linkProcedureToCompetencies`, `unlinkProcedureFromCompetencies`, `renderByPatientView`, `openReviewQueuePanel`, `acceptReviewSuggestion`, `rejectReviewSuggestion`, `dismissReviewItem`, `renderReviewQueue`, `autoLinkProcedureToCompetencies`, `matchProcedureToCompetencies`, `addToReviewQueue`, `isItemUnlocked`
 
