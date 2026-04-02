@@ -102,110 +102,112 @@ roadmapData.clinicalData = {
 
 ---
 
-## Competencies System
+## Competencies System V2 (Manual-Count Model — Apr 2 2026)
 
 ### Architecture
 
-Competencies track graduation requirements for BU dental school. They use a nested structure:
+Competencies track graduation requirements for BU dental school. Nested structure:
 ```
 competencies -> categories -> sections -> items
 ```
 
-Each item has `required` (count needed) and `completed` (count done) fields, making it a quantity-based system (NOT a binary signed/unsigned system).
+**V2 Model (Apr 2 2026)**: Each item has `completed` (number), `required` (number), `note` (string), `lastVerified` (date|null). No evidence arrays. Counts change ONLY via REQUIREMENTS_STATUS import or inline manual edits (+/- buttons).
 
-### DEFAULT_COMPETENCIES (clinical.js ~line 408)
+**Old model (DELETED)**: `completionEntries[]`, `linkProcedureToCompetencies`, `unlinkProcedureFromCompetencies`, `autoLinkReviewQueue`, review queue, unlock chain visualization — all removed in commit `f496565`.
 
-**Ground Truth:** `docs/GROUND_TRUTH_REQUIREMENTS.md` — the SINGLE source of truth for all requirement IDs, counts, deadlines, and completion status.
+### DEFAULT_COMPETENCIES (clinical.js ~line 420)
 
-15 categories of real BU dental school clinical requirements:
+**Ground Truth:** `docs/GROUND_TRUTH_REQUIREMENTS.md` — the SINGLE source of truth for all requirement IDs, counts, deadlines, and completion status. Last updated 2026-04-02.
 
-| Key | Name | Color | Focus |
-|-----|------|-------|-------|
-| `fixed` | Fixed Prosthodontics | `#3b82f6` | Aggregate trackers (10 units, 1 FPD, 1 implant crown, 3 CEREC) + formatives + summatives |
-| `operative` | Operative | `#10b981` | Composites (Class V, multisurface), mock board |
-| `dentures` | Complete Dentures | `#8b5cf6` | cd-units-total (4 arches) + formatives, summatives, overdenture |
-| `rpd` | RPDs | `#f59e0b` | 3 tracks (cast metal, flexible, interim) |
-| `srp` | SRPs / Calculus Removal | `#ef4444` | srp-calc-1/2/3, srp-reeval. NO perio-sum-calc. srp-reeval = perio-sum-reeval-srp alias |
-| `endo` | Endodontics | `#06b6d4` | RCTs, pulpectomies, mock board |
-| `oralsurg` | Oral Surgery | `#ec4899` | 3rd/4th year rotations, extractions |
-| `peds` | Pediatric Dentistry | `#84cc16` | PD 530 course, rotations, log sheet |
-| `perio` | Periodontology | `#f472b6` | Surgical assists, formatives, summatives |
-| `grouppractice` | Group Practice — D3 (GD 640) | `#0ea5e9` | D3 reviews, analyses, comm (workshop/form-txplan/sum-txplan), PMS, meetings, OHRA |
-| `grouppractice4` | Group Practice — D4 (GD 642) & Leadership | `#7c3aed` | D4 summatives, PTEs, aux assessments, leading rounds |
-| `txplanning` | Treatment Planning (RS 545) | `#6366f1` | Seminar presentation, OHRA, caries detection |
-| `geriatrics` | Geriatric Dental Medicine | `#8b5cf6` | PH 541 course, rotation, assignment |
-| `externship` | Externship & SPS | `#059669` | Case presentation, community outreach, SPS log |
+14 categories of real BU dental school clinical requirements:
 
-### Category Shape
+| Key | Name | Focus |
+|-----|------|-------|
+| `fixed` | Fixed Prosthodontics | 10 units, 1 FPD, 1 implant crown, 3 CEREC + formatives + summatives |
+| `operative` | Operative | Class V, multisurface composites, mock board |
+| `dentures` | Complete Dentures | 4 arches + formatives, summatives, overdenture |
+| `rpd` | RPDs | 3 tracks (cast metal, flexible, interim) |
+| `srp` | SRPs / Calculus Removal | srp-calc-1/2/3, srp-reeval |
+| `endo` | Endodontics | RCTs, pulpectomies, mock board |
+| `oralsurg` | Oral Surgery | 3rd/4th year rotations, extractions |
+| `peds` | Pediatric Dentistry | PD 530 course, rotations, log sheet |
+| `perio` | Periodontology | Surgical assists, formatives, summatives |
+| `grouppractice` | Group Practice D3 | Reviews, analyses, comm, PMS, meetings, OHRA |
+| `grouppractice4` | Group Practice D4 | Summatives, PTEs, aux, leading rounds |
+| `txplanning` | Treatment Planning | Seminar, OHRA, caries detection |
+| `geriatrics` | Geriatric Dental Medicine | PH 541 course, rotation, assignment |
+| `externship` | Externship & SPS | Case presentation, outreach, SPS log |
+
+### V2 Item Shape
 ```javascript
 {
-    name: 'Fixed Prosthodontics',
-    icon: '...',
-    color: '#3b82f6',
-    summary: { completed: 0, inProgress: 0, planned: 2, required: 10, unit: 'units' },
-    notes: '2 planned. Must include 1 FPD, 1 Implant Crown, 3 CEREC restorations.',
-    sections: [
-        {
-            title: 'Fixed Formatives (to qualify for summatives)',
-            items: [
-                { id: 'fixed-form-prov', text: '6 Provisional Restoration', required: 6, completed: 0 },
-                { id: 'fixed-form-prep', text: '6 Tooth Preparation', required: 6, completed: 0 },
-                // ...
-            ]
-        },
-        {
-            title: 'Fixed Summatives',
-            items: [ /* ... */ ]
-        }
-    ]
-}
-```
-
-### Item Shape
-```javascript
-{
-    id: 'fixed-form-prov',         // Stable ID
+    id: 'fixed-form-prov',         // Stable ID from GROUND_TRUTH_REQUIREMENTS.md
     text: '6 Provisional Restoration',
     required: 6,                   // How many needed
-    completed: 0,                  // How many done
-    note: 'Optional note',        // Optional
-    status: 'planned'             // Optional manual override: pending | in_progress | planned | completed
+    completed: 0,                  // How many done (manual-only)
+    note: '',                      // Free text
+    lastVerified: '2026-04-01',   // Date of last manual audit/edit (null if never verified)
+    d3Deadline: null,             // Date string or null (synced from DEFAULT_COMPETENCIES by syncSchemaFields)
+    isSummative: false,           // Schema field
+    status: 'pending'             // Derived: completed >= required → 'completed', > 0 → 'in_progress', else 'pending'
 }
 ```
 
-### Status Logic (`getItemStatus()` ~line 14396)
+**Fields DELETED from saved state by V2 migration**: `completionEntries`, `rules`, `custom`, `unlockedBy`, `unlockEmailTo`. Note: `syncSchemaFields()` re-adds `rules` from DEFAULT_COMPETENCIES on every init (harmless).
+
+### V2 Migration (`migrateToCompetencyV2()` in clinical.js)
+One-time migration gated by `competencyV2Migrated` localStorage flag. Runs after `syncSchemaFields()` in `initUI()`. Steps:
+1. Strips old fields from all items
+2. Wipes all counts to 0
+3. Seeds 25 verified values from Apr 1 ground truth audit
+4. Clears `autoLinkReviewQueue`
+
+### Key Competency Functions (V2)
+
+| Function | Module | Description |
+|----------|--------|-------------|
+| `getCompetenciesData()` | clinical.js | Read-only accessor, returns mutable reference |
+| `ensureCompetenciesInitialized()` | clinical.js | Init from DEFAULT_COMPETENCIES (call from init paths only) |
+| `getItemStatus(item)` | clinical.js | Derive status from completed/required |
+| `calculateCategoryStats(cat)` | clinical.js | {completed, inProgress, planned, pending, totalUnits, completedUnits, percent} |
+| `calculateOverallStats(comp)` | clinical.js | Aggregate stats across all categories |
+| `renderCompetencies()` | clinical.js | V2 3-panel UI with cv2-* classes |
+| `cv2ToggleCategory(catKey)` | clinical.js | Expand/collapse category accordion |
+| `cv2EditCount(catKey, itemId, el)` | clinical.js | Inline number input on count click |
+| `cv2ToggleNote(catKey, itemId, el)` | clinical.js | Toggle inline note editor |
+| `cv2ShowPipeline(itemId)` | clinical.js | Show pipeline patients (DOM popup) |
+| `cv2FilterCompetencies(query)` | clinical.js | Search filter |
+| `cv2AddRequirement(catKey)` | clinical.js | Add custom requirement via prompt |
+| `cv2BuildMilestoneStrip(comp, stats)` | clinical.js | KPI milestone cards (apts/procs/summatives) |
+| `cv2BuildD3Alert(comp, daysLeft)` | clinical.js | D3 deadline alert bar |
+| `cv2BuildWhatsNext(comp)` | clinical.js | What's next panel |
+| `adjustCompItem(catKey, itemId, delta)` | clinical.js | +/- count, sets lastVerified, saves |
+| `setCompItemStatus(catKey, itemId, status)` | clinical.js | Toggle status, sets lastVerified, saves |
+| `saveCompItemNote(catKey, itemId, note)` | clinical.js | Save inline note |
+| `resetCompetencies()` | clinical.js | Reset all to defaults, force upload |
+| `saveCompItem()` | clinical.js | Save competency item |
+| `deleteCompItem(catKey, itemId)` | clinical.js | Delete competency item |
+| `mergeCompetencies(local, cloud)` | state.js | Timestamp-based merge (most recent lastVerified wins) |
+| `getSmartProcedureCount()` | state.js | V2: sums item.completed, SPS snapshot authoritative |
+
+### V2 UI Design System
+- CSS: `cv2-*` classes (Atlas Console adapted, light theme #f7f5ef)
+- 3 panels: milestone strip (sticky), D3 alert + category accordion, What's Next
+- Mobile-first: 44px touch targets, responsive grid
+- Design tokens: `--cv2-done` (#1a7f79 teal), `--cv2-wip` (#d8a357 amber), `--cv2-critical` (#c86b4b clay)
+- Pipeline data from `patient.importedRequirements[]` (NOT on competency items)
+
+### V2 Merge Strategy
 ```javascript
-if (item.completed >= item.required) return 'completed';
-if (item.completed > 0) return 'in_progress';
-if (item.status && item.status !== 'pending') return item.status;  // Manual override
-return 'pending';
+// In mergeCompetencies(): timestamp-based, most recent lastVerified wins
+if (both have lastVerified) → newer date takes the count
+if (only cloud has lastVerified) → cloud wins
+if (neither has lastVerified) → Math.max of completed counts
+note: local.note || cloud.note (keep whichever non-empty)
 ```
 
-### Data Access
-`getCompetenciesData()` at ~line 14372 initializes competencies from DEFAULT_COMPETENCIES if null, handles migration from array-based to object-based storage.
-
-Competencies are stored in `roadmapData.clinicalData.competencies` and migrated via `migrateCompetencies()` at ~line 9637 to use object keys instead of arrays (for Firebase safety).
-
-### Key Competency Functions
-
-| Function | Line | Description |
-|----------|------|-------------|
-| `getCompetenciesData()` | ~14372 | Get/initialize competencies |
-| `getItemStatus(item)` | ~14396 | Determine item status |
-| `calculateCategoryStats(cat)` | ~14405 | Stats for one category |
-| `calculateOverallStats(competencies)` | ~14429 | Stats across all categories |
-| `getWhatsNextItems(competencies)` | ~14456 | Top 5 in-progress/planned items |
-| `renderCompetencies()` | ~14480 | Full competencies UI with progress ring |
-| `toggleCompCategory(key)` | ~14639 | Expand/collapse category |
-| `setCompItemStatus(catKey, itemId, newStatus)` | ~14658 | Set item status manually |
-| `adjustCompItem(catKey, itemId, delta)` | ~14706 | Increment/decrement completed count |
-| `updateCompNotes(catKey, notes)` | ~14751 | Update category notes |
-| `showCompMilestone(itemText)` | ~14760 | Show celebration modal |
-| `resetCompetencies()` | ~14777 | Reset all to defaults |
-| `openAddCompItemModal(catKey, sectionId)` | ~14799 | Add custom competency item |
-| `openEditCompItemModal(catKey, itemId)` | ~14816 | Edit competency item |
-| `saveCompItem()` | ~14859 | Save competency item |
-| `deleteCompItem(catKey, itemId)` | ~14945 | Delete competency item |
+### Deleted Functions (14 total, commit f496565)
+`renderEvidenceCards`, `removeEvidenceEntry`, `undoRemoveEvidence`, `renderUnlockChain`, `linkProcedureToCompetencies`, `unlinkProcedureFromCompetencies`, `renderByPatientView`, `openReviewQueuePanel`, `acceptReviewSuggestion`, `rejectReviewSuggestion`, `dismissReviewItem`, `renderReviewQueue`, `autoLinkProcedureToCompetencies`, `matchProcedureToCompetencies`, `addToReviewQueue`, `isItemUnlocked`
 
 ### Lecture Import System
 

@@ -615,41 +615,23 @@ avgNeeded = remainingWeight > 0 ? (pointsNeeded / remainingWeight) * 100 : 0;
 
 ---
 
-## COMPETENCIES SYSTEM
+## COMPETENCIES SYSTEM V2 (Manual-Count Model — Apr 2 2026)
 
 Competencies live at `roadmapData.clinicalData.competencies` and are initialized from `DEFAULT_COMPETENCIES` (in clinical.js).
 
-**Ground Truth:** `docs/GROUND_TRUTH_REQUIREMENTS.md` — the SINGLE source of truth for all requirement IDs, counts, deadlines, and completion status.
+**Ground Truth:** `docs/GROUND_TRUTH_REQUIREMENTS.md` — the SINGLE source of truth for all requirement IDs, counts, deadlines, and completion status. Last updated 2026-04-02.
 
-**15 Categories (real BU DMD 2027 graduation requirements):**
-| Key | Name | Focus |
-|-----|------|-------|
-| `fixed` | Fixed Prosthodontics | Aggregate trackers (10 units, 1 FPD, 1 implant crown, 3 CEREC) + formatives + summatives |
-| `operative` | Operative | Class V, multisurface composites, mock board |
-| `dentures` | Complete Dentures | cd-units-total (4 arches) + formatives, summatives, overdenture |
-| `rpd` | RPDs | 3 track options (cast metal, flexible, interim) |
-| `srp` | SRPs / Calculus Removal | Canonical IDs: srp-calc-1/2/3, srp-reeval. NO perio-sum-calc. srp-reeval = perio-sum-reeval-srp alias |
-| `endo` | Endodontics | RCTs, pulpectomies, mock board |
-| `oralsurg` | Oral Surgery | 3rd/4th year rotations, extractions |
-| `peds` | Pediatric Dentistry | PD 530 course, rotations, log sheet |
-| `perio` | Periodontology | Surgical assists, formatives, summatives |
-| `grouppractice` | Group Practice — D3 (GD 640) | D3 reviews, analyses, comm (gp-comm-workshop/form-txplan/sum-txplan), PMS, meetings, OHRA |
-| `grouppractice4` | Group Practice — D4 (GD 642) & Leadership | D4 summatives, PTEs, aux assessments, leading rounds |
-| `txplanning` | Treatment Planning (RS 545) | Seminar presentation, OHRA, caries detection |
-| `geriatrics` | Geriatric Dental Medicine | PH 541 course, rotation, assignment |
-| `externship` | Externship & SPS | Case presentation, community outreach, SPS log |
+**V2 Model**: Flat manual counts. Each item: `{ id, text, required, completed, note, lastVerified, d3Deadline, isSummative }`. No evidence arrays. Counts change ONLY via REQUIREMENTS_STATUS import or inline +/- edits. COMPLETED_TODAY creates procedure records but does NOT touch competency counts.
 
-**Each category has:** `{ name, icon, color, summary, notes, sections: [{ title, items: [{ id, text, required, completed, completionEntries[] }] }] }`
+**V2 UI**: Atlas Console design system (`cv2-*` CSS classes). Light theme (#f7f5ef). 3 panels: milestone KPI strip (sticky), D3 deadline alert + category accordion with +/- editing, What's Next. Mobile-first (44px touch targets).
 
-**Competency items now have `completionEntries[]`** (evidence trail):
-```javascript
-completionEntries: [
-    { procedureId: 'proc_123', patientId: 'pt-456', patientName: 'Carmen M.', date: '2026-03-15', note: 'MOD Composite #30' }
-]
-```
-When procedures are linked via `recordProcedure()`, entries are auto-added. `item.completed` is synced from `completionEntries.length`. Deleting a procedure via `deleteProcedure()` calls `unlinkProcedureFromCompetencies()` to remove entries and adjust counts.
+**V2 Merge**: Timestamp-based — most recent `lastVerified` wins. Fallback: `Math.max` of counts.
 
-**Key functions:** `getCompetenciesData()`, `calculateCategoryStats()`, `calculateOverallStats()`, `getWhatsNextItems()`, `renderCompetencies()`, `setCompItemStatus()`, `adjustCompItem()`, `recordProcedure()`, `linkProcedureToCompetencies()`, `unlinkProcedureFromCompetencies()`
+**14 Categories:** fixed, operative, dentures, rpd, srp, endo, oralsurg, peds, perio, grouppractice (D3), grouppractice4 (D4), txplanning, geriatrics, externship. See `docs/GROUND_TRUTH_REQUIREMENTS.md` for all ~140 requirement IDs.
+
+**Key functions:** `getCompetenciesData()`, `calculateCategoryStats()`, `calculateOverallStats()`, `renderCompetencies()` (V2 3-panel), `adjustCompItem()`, `setCompItemStatus()`, `cv2ToggleCategory()`, `cv2EditCount()`, `cv2ShowPipeline()`, `mergeCompetencies()` (timestamp-based), `getSmartProcedureCount()` (V2: no completionEntries)
+
+**Deleted in V2** (commit `f496565`): `completionEntries[]`, `linkProcedureToCompetencies`, `unlinkProcedureFromCompetencies`, `autoLinkReviewQueue`, `renderEvidenceCards`, `renderUnlockChain`, `renderByPatientView`, `openReviewQueuePanel`, `acceptReviewSuggestion`, `rejectReviewSuggestion`, `dismissReviewItem`, `autoLinkProcedureToCompetencies`, `matchProcedureToCompetencies`, `addToReviewQueue`, `isItemUnlocked` — 14 functions, ~623 lines
 
 ---
 
