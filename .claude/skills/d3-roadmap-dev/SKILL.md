@@ -606,8 +606,9 @@ avgNeeded = remainingWeight > 0 ? (pointsNeeded / remainingWeight) * 100 : 0;
 | `getLastCompletedVisit(patient, patientId)` | patients.js | Returns `{ date, procedures, provider }` from most recent completed appointment. 3-way patient matching (id, normalized chart, name). Returns null if none found. Used by renderMiniReview() for rich last-visit display. |
 | `renderMiniReview()` | patients.js | Mini Review tab — read-only summary of all patients. Uses getAllPatientRecords() + getLastCompletedVisit() + getNextScheduledVisit(). Sorted by reliability then alpha. Shows: reliability dot, name, chart#, phone, HIGH VALUE, last/next visit with procedure details, clinical brief snapshot, tx completed, tx plan. No state mutation. |
 | `migratePerioNoiseCleanup()` | patients.js | One-time migration: strips routine perio IDs from importedRequirements on non-periodontitis patients. Gated by `perioNoiseCleanupDone_v1` localStorage flag |
+| `createPatientRecord(overrides)` | patients.js | Single factory for new patient record shape. All 4 creation sites use it. New fields (like `phone`) only added here. |
 | `parsePatientRecord(text)` | patients.js | Parse PATIENT_RECORD block — continuation lines: any non-key line appends to current field (no 2-space indent required) |
-| `parsePatientUpdate(text)` | patients.js | Parse PATIENT_UPDATE block — same lenient continuation logic as parsePatientRecord |
+| `parsePatientUpdate(text)` | patients.js | Parse PATIENT_UPDATE block — same lenient continuation logic as parsePatientRecord. Supports NOTES_APPEND and MEDICAL_HX_APPEND special fields. PATIENT_UPDATE auto-creates records for unknown chart numbers. |
 | `parseRequirementsMatch(text)` | patients.js | Parse REQUIREMENTS_MATCH block — now captures HIGH_VALUE, PRIORITY_NOTES, stores canFulfill on patient |
 | `computeRequirementMatches(patient)` | patients.js | Uses patient.importedRequirements[] (authoritative) with keyword fallback for pre-import patients |
 | `initUI()` | init.js | Main UI initialization (merges deadlines, restores state) |
@@ -688,6 +689,7 @@ If you see ANY of these in code you're writing:
 - Adding user-editable fields to `periodicReviews.pr2` without adding them to `hasPeriodicReview` check in `isEmptyState()` — Guard C blocks Firebase saves when only those fields have data
 - Inline editors using `change` + `blur` without a `committed` guard flag — both events fire on normal interaction, causing double saves/renders; Escape must also set the flag
 - `parsePatientRecord()` fieldMap missing keys that `renderPRPatientWriteups()` displays — imported patients show "Click to edit" for those fields forever
+- Inline patient record object literal instead of `createPatientRecord(overrides)` — drift between creation sites when fields are added. ALL new patient records MUST use the factory function.
 - Using `!roadmapData.X` as fill guard in `mergeRemoteCollectionsIntoLocal` when X has defaults — defaults always provide the object, so the guard never fires. Use field-level merge instead.
 - Calling `getCompetenciesData()` expecting initialization side-effects — it is now a pure read-only accessor. Call `ensureCompetenciesInitialized()` from init paths (initUI, initClinicalTab) instead.
 - Using full `renderDashboard()` for todo/note status toggles — use `rerenderTodoListSection()` or `rerenderMissingNotesSection()` to preserve scroll position, `<details>` open state, and input focus.
