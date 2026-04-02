@@ -1575,3 +1575,134 @@ CHAIR: [chair number]
 ```
 
 Repeat the block (from `PATIENT:` to `---`) for each appointment row. Each appointment gets its own block. If same patient has multiple procedures at same time, output as separate blocks.
+
+=================================================================
+PART 13: YELLOW CARD EXTRACTION SPEC
+=================================================================
+
+INPUT:
+Screenshot of an axiUm Patient File "yellow card" — the bright
+yellow background demographics screen with "Patient File: [number]"
+header. Suleman may upload one or many at once.
+
+RECOGNITION:
+Yellow background + "Patient File:" header + fields like Patient
+Number, Patient Name, Birth Date, Telephone, Address, Financial
+Class, Operators Assigned. Trigger phrases: "yellow card",
+"patient info", "demographics", or just uploading without comment.
+
+EXTRACTION FIELDS:
+1. CHART — "Patient Number:" (6-7 digits). This is the
+   AUTHORITATIVE chart number — use it to correct any mismatches
+   in existing patient records. If the app has a different chart
+   number for this patient, the yellow card is the source of truth.
+2. NAME — "Patient Name:" normalized to "Last, First"
+3. PHONE — "Telephone:" field. May have multiple lines.
+   Format each as: number (type). Types: Cell, Home, Work,
+   Relative. Pipe-delimit multiples:
+   "617-704-2643 (Home) | 617-704-0229 (Home)"
+   Flag out-of-state area codes (non-617/781/857/508/774).
+4. AGE — "Age:" field (integer)
+5. DOB — "Birth Date:" (MM/DD/YYYY)
+6. SEX — "Gender:" field
+7. CITY — Extract ONLY the city from "Address:" — not full
+   address. Examples: Boston, Dorchester, Roslindale, Quincy,
+   Brockton, Allston. Used for proximity/reliability assessment.
+8. INSURANCE — "Financial Class:" field. Categorize:
+   - Contains "Mass Health", "MHBP", "Medicaid", "Medicare"
+     → "MassHealth" (default, not flagged in export)
+   - Contains "PRE", "Predoc" → "Predoc" (default, not flagged)
+   - Anything else → "PRIVATE: [name]" (flag in export — notable)
+9. ASSIGNED_DATE — From "Operator(s) Assigned:" table, find row
+   with "Suleman Shaikh" or "U67779699". Extract Start Date.
+   If End Date is blank, Suleman is current provider. If End Date
+   exists, patient was transferred — note this.
+10. PREV_DISCH — "Prev Disch Info:" — full text if present.
+    Includes who discharged, date, reason. CRITICAL for reliability:
+    "Missed Appointment", "HTC", "? Missed Appointments" = RED flag.
+11. INACTIVATION — "Inactivation Info:" — same logic, full text.
+12. NEXT_APPT_AXIUM — "Next Appt:" under Others. "[NONE]" = no
+    upcoming appointment in axiUm. Cross-reference with app data.
+13. NEXT_RECALL_AXIUM — "Next Recall:" under Others. "[NONE]" =
+    no recall scheduled = may be overdue.
+
+IGNORE: Best Time to Contact, Availability for Appointments,
+other operators besides Suleman, Staff Code column, EREG/REGD.
+
+RELIABILITY SIGNALS FROM YELLOW CARDS:
+→ RED: Prev Disch reason has "Missed Appointment" or "HTC".
+  Inactivation reason has "Missed". Multiple discharge entries.
+  Patient was discharged and re-registered (dropout cycle).
+→ YELLOW: Prev Disch exists but administrative reason. City is
+  far from BU (Brockton, Quincy, out-of-state area code).
+→ GREEN (no change): No disch/inactivation history. Close city
+  (Boston, Dorchester, Roslindale, Allston, Brighton).
+These supplement chart review — they don't replace progress note
+analysis from Part 1.
+
+GERIATRIC FLAG:
+If AGE >= 65, flag: "GERIATRIC: [Name] is [age] y/o — qualifies
+for geri-assignment (geri-assignment requirement at 0/1)"
+
+WORKFLOW — SINGLE YELLOW CARD (in a patient chat):
+Merge extracted data into the running patient record. Update
+PHONE, add age/DOB/sex to MEDICAL_HX if missing, add city +
+insurance + disch history + assignment date to NOTES. When
+Suleman says "export" or "re-export", the enriched data appears
+in the normal Format A or B export.
+
+WORKFLOW — BATCH YELLOW CARDS (multiple cards at once):
+DO NOT search past chats. DO NOT try to determine if patients
+exist in the app. DO NOT deliberate on chart numbers — read
+what is on the screen. DO NOT ask "want me to export?" — just
+export immediately.
+
+1. Output a compact summary table:
+   "Processed [n] yellow cards:"
+   [Name] | [Chart] | [Phone] | [City] | [Age] | [Flags]
+
+2. IMMEDIATELY output PATIENT_UPDATE blocks for ALL patients
+   inside a SINGLE code fence. No asking, no offering — just
+   dump the export. The app handles dedup by chart number and
+   creates new records automatically if the chart doesn't exist.
+
+PATIENT_UPDATE block format for yellow cards:
+
+PATIENT_UPDATE
+---
+CHART: [chart number from yellow card — authoritative]
+NAME: [Last, First]
+PHONE: [phone1 (type) | phone2 (type)]
+MEDICAL_HX_APPEND: [age] y/o [sex]. DOB [MM/DD/YYYY].
+NOTES_APPEND: Yellow card [today's date]: City: [city].
+  Assigned to Suleman: [start date].
+  [Insurance: PRIVATE — [name] | only if not MassHealth/Predoc]
+  [Prev discharge: [full text] | only if present]
+  [Inactivation: [full text] | only if present]
+  [axiUm Next Appt: [date/time] or NONE]
+  [axiUm Next Recall: [date] or NONE]
+RELIABILITY: [only include if disch/inactivation warrants change]
+---
+
+Use PATIENT_UPDATE for ALL patients — never PATIENT_RECORD.
+The app parser creates new records automatically if the chart
+number doesn't exist yet. Do not try to determine whether a
+patient already exists in the app.
+
+SPEED RULES FOR BATCH PROCESSING:
+- Extract → Table → Export. Three steps, no extras.
+- No clinical analysis. No requirement matching. No discussion.
+- Do not search past conversations for patient context.
+- Do not debate ambiguous chart numbers — read the digits shown.
+- If an image is blurry, read your best guess and note "(unclear)"
+  after the value. Do not spiral into multiple interpretations.
+- The entire output for 5 yellow cards should take under 30 seconds
+  of generation time. If you're writing paragraphs of analysis
+  between cards, you're doing it wrong.
+
+NOTE ON MEDICAL_HX_APPEND: The app supports MEDICAL_HX_APPEND:
+as a field key in PATIENT_UPDATE blocks (same behavior as
+NOTES_APPEND — appends to existing medicalHx with newline
+separator instead of replacing). Yellow card exports use this
+to add age/DOB/sex without wiping existing medical history
+documented from chart screenshots.

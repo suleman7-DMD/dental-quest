@@ -124,8 +124,14 @@ function renderActiveRoster() {
             var nextAptStr = item.nextApt
                 ? escapeHtml(item.nextApt.date) + (item.nextApt.procedures ? ' - ' + escapeHtml(item.nextApt.procedures) : '')
                 : '<span style="color:#64748b">No upcoming apt</span>';
+            var phoneSnippet = '';
+            if (p.phone) {
+                var phoneParts = p.phone.split('|');
+                var primaryPhone = phoneParts[0].trim();
+                phoneSnippet = ' <span style="color:#64748b;font-size:0.85em;" title="' + escapeHtml(p.phone) + '">\uD83D\uDCF1 ' + escapeHtml(primaryPhone) + (phoneParts.length > 1 ? ' +' + (phoneParts.length - 1) : '') + '</span>';
+            }
             return '<div style="display:flex;align-items:center;justify-content:space-between;padding:8px 12px;border-bottom:1px solid rgba(255,255,255,0.06);">'
-                + '<div>' + reliabilityDot + '<strong>' + escapeHtml(p.name) + '</strong> <span style="color:#64748b;font-size:0.85em;">#' + escapeHtml(p.chartNumber || 'N/A') + '</span>'
+                + '<div>' + reliabilityDot + '<strong>' + escapeHtml(p.name) + '</strong> <span style="color:#64748b;font-size:0.85em;">#' + escapeHtml(p.chartNumber || 'N/A') + '</span>' + phoneSnippet
                 + '<div style="font-size:0.8em;color:#94a3b8;margin-top:2px;">Next: ' + nextAptStr + (p.lastVisit ? ' | Last: ' + escapeHtml(p.lastVisit.split('|')[0].trim()) : '') + '</div></div>'
                 + '<button onclick="navigateToEntity(\'patient\',\'' + safeId + '\')" style="padding:4px 10px;background:#334155;border:none;border-radius:4px;color:#93c5fd;cursor:pointer;font-size:0.8em;">View</button>'
                 + '</div>';

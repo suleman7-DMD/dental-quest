@@ -664,12 +664,19 @@ function renderPatientsSidebar() {
         var chart = p.chartNumber ? '#' + escapeHtml(p.chartNumber) : '';
         var safeId = escapeHtml(item.id).replace(/'/g, "\\'");
 
+        var phoneTitle = '';
+        if (p.phone) {
+            var phoneParts = p.phone.split('|');
+            phoneTitle = phoneParts[0].trim() + (phoneParts.length > 1 ? ' +' + (phoneParts.length - 1) + ' more' : '');
+        }
+
         return '<div class="pts-sidebar-row' + (isActive ? ' active' : '') + '" onclick="selectPatient(\'' + safeId + '\')" '
             + 'data-patient-id="' + escapeHtml(item.id) + '">'
             + '<span class="pts-dot" style="background:' + dotColor + ';"></span>'
             + '<div class="pts-row-info">'
             +   '<span class="pts-row-name">' + escapeHtml(p.name || 'Unnamed') + '</span>'
             +   (chart ? '<span class="pts-row-chart">' + chart + '</span>' : '')
+            +   (p.phone ? '<span class="pts-phone-icon" title="' + escapeHtml(phoneTitle) + '">\uD83D\uDCF1</span>' : '')
             +   (p.clinicalBrief && p.clinicalBrief.snapshot ? '<span class="pts-brief-badge" title="Has clinical brief">\uD83D\uDCCB</span>' : '')
             + '</div>'
             + '</div>';
@@ -1763,7 +1770,7 @@ function parsePatientRecord(text) {
 }
 
 function parsePatientUpdate(text) {
-    var update = { _notesAppend: false };
+    var update = { _notesAppend: false, _medicalHxAppend: false };
     var fieldMap = {
         'NAME': 'name', 'CHART': 'chartNumber', 'TYPE': 'type',
         'MEDICAL_HX': 'medicalHx', 'MEDICATIONS': 'medications',
@@ -1793,6 +1800,14 @@ function parsePatientUpdate(text) {
             currentKey = 'notes';
             update._notesAppend = true;
             update.notes = trimmed.substring(trimmed.indexOf(':') + 1).trim();
+            return;
+        }
+
+        // Special: MEDICAL_HX_APPEND
+        if (upperTrimmed.indexOf('MEDICAL_HX_APPEND:') === 0) {
+            currentKey = 'medicalHx';
+            update._medicalHxAppend = true;
+            update.medicalHx = trimmed.substring(trimmed.indexOf(':') + 1).trim();
             return;
         }
 
@@ -2153,7 +2168,7 @@ function previewPatientImport() {
             var records = getPatientRecords();
             var id = rec.chartNumber ? findByNormalizedChart(records, rec.chartNumber) : null;
             var isUpdate = id && records[id];
-            var changedFields = Object.keys(rec).filter(function(k) { return k !== '_notesAppend' && rec[k]; });
+            var changedFields = Object.keys(rec).filter(function(k) { return k !== '_notesAppend' && k !== '_medicalHxAppend' && rec[k]; });
 
             html += '<div style="padding:8px; margin-bottom:6px; background:' + (isUpdate ? '#422006' : '#052e16') + '; border-radius:6px; border-left:3px solid ' + (isUpdate ? '#f59e0b' : '#22c55e') + ';">'
                 + '<div style="color:' + (isUpdate ? '#fbbf24' : '#4ade80') + '; font-weight:600; font-size:0.9em;">'
@@ -2168,10 +2183,18 @@ function previewPatientImport() {
     if (parsed.updates.length > 0) {
         hasContent = true;
         parsed.updates.forEach(function(upd) {
-            var changedFields = Object.keys(upd).filter(function(k) { return k !== '_notesAppend' && k !== 'chartNumber' && upd[k]; });
-            html += '<div style="padding:8px; margin-bottom:6px; background:#422006; border-radius:6px; border-left:3px solid #f59e0b;">'
-                + '<div style="color:#fbbf24; font-weight:600; font-size:0.9em;">UPDATE Chart #' + escapeHtml(upd.chartNumber || '?') + '</div>'
-                + '<div style="color:#94a3b8; font-size:0.8em; margin-top:4px;">Fields: ' + changedFields.join(', ') + (upd._notesAppend ? ' (notes will append)' : '') + '</div>'
+            var records = getPatientRecords();
+            var updId = upd.chartNumber ? findByNormalizedChart(records, upd.chartNumber) : null;
+            var isNew = !updId || !records[updId];
+            var changedFields = Object.keys(upd).filter(function(k) { return k !== '_notesAppend' && k !== '_medicalHxAppend' && k !== 'chartNumber' && upd[k]; });
+            var appendHints = (upd._notesAppend ? ' (notes will append)' : '') + (upd._medicalHxAppend ? ' (medicalHx will append)' : '');
+            var bgColor = isNew ? '#052e16' : '#422006';
+            var borderColor = isNew ? '#22c55e' : '#f59e0b';
+            var textColor = isNew ? '#4ade80' : '#fbbf24';
+            var label = isNew ? 'CREATE (auto)' : 'UPDATE';
+            html += '<div style="padding:8px; margin-bottom:6px; background:' + bgColor + '; border-radius:6px; border-left:3px solid ' + borderColor + ';">'
+                + '<div style="color:' + textColor + '; font-weight:600; font-size:0.9em;">' + label + ': ' + escapeHtml(upd.name || '') + ' Chart #' + escapeHtml(upd.chartNumber || '?') + '</div>'
+                + '<div style="color:#94a3b8; font-size:0.8em; margin-top:4px;">Fields: ' + changedFields.join(', ') + appendHints + '</div>'
                 + '</div>';
         });
     }
@@ -2332,7 +2355,7 @@ function confirmUnifiedImport() {
         if (records[id]) {
             // Update existing
             Object.keys(rec).forEach(function(key) {
-                if (key !== '_notesAppend' && key !== 'id' && rec[key]) {
+                if (key !== '_notesAppend' && key !== '_medicalHxAppend' && key !== 'id' && rec[key]) {
                     records[id][key] = rec[key];
                 }
             });
@@ -2351,7 +2374,7 @@ function confirmUnifiedImport() {
                 notes: '', reliability: 'yellow', lastUpdated: new Date().toISOString()
             };
             Object.keys(rec).forEach(function(key) {
-                if (key !== '_notesAppend' && rec[key]) {
+                if (key !== '_notesAppend' && key !== '_medicalHxAppend' && rec[key]) {
                     records[id][key] = rec[key];
                 }
             });
@@ -2364,23 +2387,38 @@ function confirmUnifiedImport() {
         var chartNumber = (upd.chartNumber || '').trim();
         if (!chartNumber) { showToast('Update skipped: missing chart number', 'error'); return; }
         var id = findByNormalizedChart(records, chartNumber);
+        var wasAutoCreated = false;
         if (!id || !records[id]) {
-            showToast('Update skipped: patient #' + chartNumber + ' not found');
-            return;
+            // Auto-create record if chart number doesn't exist yet
+            id = 'pt_' + chartNumber;
+            records[id] = {
+                id: id, name: upd.name || '', chartNumber: chartNumber, type: '',
+                medicalHx: '', medications: '', allergies: '',
+                dentalHx: '', txSummaryBU: '', txCompletedByMe: '',
+                poeLast: '', poeNext: '', txPlan: '',
+                lastVisit: '', nextVisit: '', nextVisitManual: false,
+                lastFMX: '', lastBW: '', lastCBCT: '', lastPANO: '',
+                recallHistory: '', activeStatus: 'Active',
+                notes: '', reliability: 'yellow', lastUpdated: new Date().toISOString()
+            };
+            created++;
+            wasAutoCreated = true;
         }
         lastImportedId = lastImportedId || id;
         Object.keys(upd).forEach(function(key) {
-            if (key === '_notesAppend' || key === 'chartNumber') return;
+            if (key === '_notesAppend' || key === '_medicalHxAppend' || key === 'chartNumber') return;
             if (!upd[key]) return;
 
             if (key === 'notes' && upd._notesAppend) {
                 records[id].notes = (records[id].notes || '') + '\n\n' + upd.notes;
+            } else if (key === 'medicalHx' && upd._medicalHxAppend) {
+                records[id].medicalHx = (records[id].medicalHx || '') + '\n\n' + upd.medicalHx;
             } else {
                 records[id][key] = upd[key];
             }
         });
         records[id].lastUpdated = new Date().toISOString();
-        updated++;
+        if (!wasAutoCreated) updated++;
     });
 
     // Store imported requirements, priorityNotes, highValue on patient records
