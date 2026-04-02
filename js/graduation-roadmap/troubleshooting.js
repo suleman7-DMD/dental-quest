@@ -170,45 +170,40 @@ function tsCheckCompetencies() {
     if (catKeys.length === 0) return [tsCheck('Competencies initialized', 'fail', 'No competency data found.')];
     checks.push(tsCheck('Competencies initialized', 'pass', catKeys.length + ' categories loaded.'));
 
-    // Completed vs entries divergence
-    var divergences = [], spsInfoItems = [], totalItems = 0, matched = 0;
-    var linkedProcIds = {};
+    // V2 competency count validation
+    var overCounted = [], unverified = [], totalItems = 0, completedItems = 0;
     for (var ci = 0; ci < catKeys.length; ci++) {
         var secs = getValues(comp[catKeys[ci]].sections);
         for (var si = 0; si < secs.length; si++) {
             var items = getValues(secs[si].items);
             for (var ii = 0; ii < items.length; ii++) {
                 var item = items[ii]; totalItems++;
-                var ents = getValues(item.completionEntries || []);
-                if (item.completed < ents.length) {
-                    // Under-count: entries exceed completed — real divergence
-                    divergences.push({ id: item.id || '?', completed: item.completed, entries: ents.length });
-                } else if (item.completed > ents.length) {
-                    // Over-count: completed > entries — normal for SPS absolute-set, info only
-                    spsInfoItems.push(item.id || '?');
-                } else {
-                    matched++;
+                var c = item.completed ?? 0;
+                var r = item.required ?? 0;
+                if (c >= r && r > 0) completedItems++;
+                if (c > r) {
+                    overCounted.push({ id: item.id || '?', completed: c, required: r });
                 }
-                for (var ei = 0; ei < ents.length; ei++) if (ents[ei].procedureId) linkedProcIds[ents[ei].procedureId] = true;
+                if (c > 0 && !item.lastVerified) {
+                    unverified.push(item.id || '?');
+                }
             }
         }
     }
-    checks.push(tsCheck('Completed/entries sync (' + matched + '/' + totalItems + ')',
-        divergences.length === 0 ? 'pass' : 'warn',
-        divergences.length === 0 ? 'All ' + totalItems + ' items in sync.' + (spsInfoItems.length > 0 ? ' (' + spsInfoItems.length + ' with SPS absolute-set counts)' : '')
-            : divergences.length + ' under-count: ' + divergences.slice(0, 5).map(function(d) {
-                return d.id + '(c=' + d.completed + ' e=' + d.entries + ')'; }).join('; '),
-        divergences.length > 0 ? 'tsFixResyncCompCounts' : null));
-    if (spsInfoItems.length > 0)
-        checks.push(tsCheck('SPS absolute-set counts', 'info',
-            spsInfoItems.length + ' item(s) have completed > entries (normal for SPS imports): ' + spsInfoItems.slice(0, 5).join(', ') + (spsInfoItems.length > 5 ? '...' : '')));
+    checks.push(tsCheck('Competency count validity (' + completedItems + '/' + totalItems + ' done)',
+        overCounted.length === 0 ? 'pass' : 'warn',
+        overCounted.length === 0 ? 'All ' + totalItems + ' items within valid range.'
+            : overCounted.length + ' over-counted: ' + overCounted.slice(0, 5).map(function(d) {
+                return d.id + '(c=' + d.completed + ' r=' + d.required + ')'; }).join('; '),
+        overCounted.length > 0 ? 'tsFixResyncCompCounts' : null));
+    if (unverified.length > 0)
+        checks.push(tsCheck('Unverified counts', 'info',
+            unverified.length + ' item(s) have completed > 0 but no lastVerified date: ' + unverified.slice(0, 5).join(', ') + (unverified.length > 5 ? '...' : '')));
 
-    // Orphaned procedures
+    // Procedure records listing
     var procs = getValues(roadmapData.clinicalData ? roadmapData.clinicalData.completedProcedures : {});
-    var orphaned = 0;
-    for (var pi = 0; pi < procs.length; pi++) if (procs[pi].id && !linkedProcIds[procs[pi].id]) orphaned++;
-    checks.push(tsCheck('Orphaned procedures', orphaned === 0 ? 'pass' : 'warn',
-        orphaned === 0 ? 'All ' + procs.length + ' procedures linked.' : orphaned + ' unlinked procedure record(s).'));
+    checks.push(tsCheck('Procedure records', 'info',
+        procs.length + ' procedure record(s) on file.'));
 
     // d3Deadline check for fixed/operative (info only — formatives legitimately have deadlines)
     var deadlineCount = 0;
@@ -432,18 +427,21 @@ function tsFixResyncCompCounts() {
     Object.keys(comp).forEach(function(ck) {
         getValues(comp[ck].sections).forEach(function(sec) {
             getValues(sec.items).forEach(function(item) {
-                var entries = getValues(item.completionEntries || []);
-                var entriesCount = entries.length;
-                // Only sync upward: if entries exceed completed, increase. Never decrease (preserves SPS absolute-set).
-                if (entriesCount > item.completed) {
-                    item.completed = Math.min(item.required, entriesCount);
-                    fixCount++;
-                }
+                var c = item.completed ?? 0;
+                var r = item.required ?? 0;
+                var changed = false;
+                // Clamp completed to valid range [0, required]
+                if (c > r) { item.completed = r; changed = true; }
+                if (c < 0) { item.completed = 0; changed = true; }
+                // Derive correct status
+                var expected = (item.completed ?? 0) >= r && r > 0 ? 'completed' : (item.completed ?? 0) > 0 ? 'in_progress' : 'pending';
+                if (item.status !== expected) { item.status = expected; changed = true; }
+                if (changed) fixCount++;
             });
         });
     });
     if (fixCount > 0) { clinicalDataDirty = true; safeLocalStorageSet(STORAGE_KEY, JSON.stringify(roadmapData)); saveData(); }
-    showToast(fixCount > 0 ? 'Fixed ' + fixCount + ' under-count(s)' : 'All counts in sync', 'warning');
+    showToast(fixCount > 0 ? 'Fixed ' + fixCount + ' item(s) (clamped counts + derived status)' : 'All counts valid', 'warning');
     renderTroubleshooting();
 }
 

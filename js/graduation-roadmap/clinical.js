@@ -1210,11 +1210,11 @@ function getPatientsFulfilling(itemId) {
     var records = typeof getAllPatientRecords === 'function' ? getAllPatientRecords() : (roadmapData.clinicalData?.patientRecords || {});
     var matching = [];
 
-    // Build set of patientIds that have COMPLETED procedure records for this item
-    var completedPatientIds = {};
-    var competencies = getCompetenciesData();
+    // V2: Pipeline badges show planned fulfillment from importedRequirements.
+    // completedPatientIds removed — V2 disconnected procedures from competencies,
+    // so all pipeline badges are 'planned' (yellow). Green badges require re-linking
+    // procedures to competency items, which V2 intentionally does not do.
     var itemIdLower = (itemId || '').toLowerCase();
-    // V2: completionEntries removed — completed patients tracked via procedure records only
 
     Object.entries(records).forEach(function(entry) {
         var ptId = entry[0], pt = entry[1];
@@ -1229,7 +1229,7 @@ function getPatientsFulfilling(itemId) {
                     id: ptId,
                     name: pt.name,
                     chartNumber: pt.chartNumber || '',
-                    fulfillmentStatus: completedPatientIds[ptId] ? 'completed' : 'planned'
+                    fulfillmentStatus: 'planned'
                 });
             }
         }
@@ -2386,6 +2386,13 @@ function resetCompetencies() {
         roadmapData.clinicalData.competencies = migrateCompetencies(
             JSON.parse(JSON.stringify(DEFAULT_COMPETENCIES))
         );
+        // Clear migration flags so migrateToCompetencyV2() re-seeds verified counts on next init
+        localStorage.removeItem('competencyV2Migrated');
+        localStorage.removeItem('unifiedPatientStoreDone_v1');
+        localStorage.removeItem('competencyEnhancementsDone_v2');
+        localStorage.removeItem('competencyEnhancementsDone_v3');
+        localStorage.removeItem('leadingZeroDedupDone_v2');
+        localStorage.removeItem('perioNoiseCleanupDone_v1');
         expandedCompCategories.clear();
         clinicalDataDirty = true;
         safeLocalStorageSet(STORAGE_KEY, JSON.stringify(roadmapData));
@@ -2517,11 +2524,9 @@ function saveCompItem() {
             completed: clampedCompleted,
             note: notes || null,
             custom: true, // Mark as custom so it can be deleted
-            completionEntries: [],
+            lastVerified: null,
             status: clampedCompleted >= required ? 'completed' : (clampedCompleted > 0 ? 'in_progress' : 'pending'),
             d3Deadline: null,
-            unlockedBy: null,
-            unlockEmailTo: null,
             isSummative: false,
             rules: null
         };

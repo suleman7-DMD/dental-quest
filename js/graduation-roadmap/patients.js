@@ -2926,7 +2926,7 @@ function applyRequirementCheckoffs(items, importContext) {
                         if (!item.isDelta && typeof item.completed === 'number') {
                             itemList[i].completed = item.completed;
                         }
-                        if (item.note) {
+                        if (item.note && !item.isDelta) {
                             itemList[i].note = item.note;
                         }
 
@@ -2951,7 +2951,7 @@ function applyRequirementCheckoffs(items, importContext) {
                                             sec.items[key].status = 'pending';
                                         }
                                     }
-                                    if (item.note) sec.items[key].note = item.note;
+                                    if (item.note && !item.isDelta) sec.items[key].note = item.note;
 
                                     // COMPLETED_TODAY (isDelta): create procedure record but do NOT touch competency counts
                                     if (item.isDelta && typeof recordProcedure === 'function') {
@@ -2962,10 +2962,12 @@ function applyRequirementCheckoffs(items, importContext) {
                                         // Dedup: check if procedure already recorded for same req+date+patient
                                         var procs = getValues(roadmapData.clinicalData?.completedProcedures);
                                         var reqIdLower = (resolvedId || '').toLowerCase();
+                                        // V2: dedup by procedure description + date + patient, since competencyItemIds is empty
+                                        var procDesc = item.note || sec.items[key].text || 'Imported procedure';
                                         var isDupe = procs.some(function(p) {
-                                            return p.competencyItemIds && p.competencyItemIds.some(function(cid) { return (cid || '').toLowerCase() === reqIdLower; })
+                                            return p.procedure === procDesc
                                                 && p.date === procDate
-                                                && p.patientName === patientName;
+                                                && (p.patientId === patientId || p.patientName === patientName);
                                         });
 
                                         if (!isDupe && (patientName || item.note)) {

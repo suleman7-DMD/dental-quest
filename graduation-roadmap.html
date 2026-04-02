@@ -4368,6 +4368,374 @@
             .cv2-req-name { font-size: 0.8em; }
         }
 
+        /* ============================================================
+           CV2 Missing Styles - Fix for audit bugs
+           ============================================================ */
+
+        /* Group 1: Category Accordion Missing Classes */
+        .cv2-cat-notes {
+            background: var(--cv2-surface-alt);
+            font-size: 0.8em;
+            font-style: italic;
+            color: var(--cv2-muted);
+            padding: 8px 12px;
+            border-left: 3px solid var(--cv2-accent);
+            border-radius: 0 var(--cv2-radius-sm) var(--cv2-radius-sm) 0;
+            margin: 6px 0;
+        }
+        .cv2-pipeline-empty {
+            opacity: 0.4;
+            cursor: default;
+            pointer-events: none;
+        }
+        .cv2-quick-record {
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            background: var(--cv2-done);
+            color: #fff;
+            border: none;
+            cursor: pointer;
+            margin-left: 4px;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            transition: opacity 0.15s;
+        }
+        .cv2-quick-record:hover { opacity: 0.85; }
+        .cv2-delete-btn {
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            background: transparent;
+            color: var(--cv2-critical);
+            border: none;
+            cursor: pointer;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            transition: background 0.15s;
+        }
+        .cv2-delete-btn:hover { background: var(--cv2-critical-bg); }
+        .cv2-add-req-btn {
+            background: transparent;
+            border: 1px dashed var(--cv2-border-strong);
+            border-radius: var(--cv2-radius-sm);
+            padding: 8px 16px;
+            cursor: pointer;
+            width: 100%;
+            color: var(--cv2-muted);
+            font-family: var(--cv2-font);
+            font-size: 0.8em;
+            margin-top: 8px;
+            transition: border-color 0.15s, color 0.15s;
+        }
+        .cv2-add-req-btn:hover { border-color: var(--cv2-accent); color: var(--cv2-accent); }
+        .cv2-cat-notes-edit {
+            padding: 8px 0;
+        }
+        .cv2-cat-notes-label {
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            color: var(--cv2-muted);
+            margin-bottom: 4px;
+            letter-spacing: 0.04em;
+        }
+        .cv2-cat-notes-textarea {
+            width: 100%;
+            min-height: 60px;
+            border: 1px solid var(--cv2-border);
+            border-radius: var(--cv2-radius-sm);
+            padding: 8px;
+            font-size: 13px;
+            font-family: var(--cv2-font);
+            resize: vertical;
+            color: var(--cv2-ink);
+            outline: none;
+            box-sizing: border-box;
+        }
+        .cv2-cat-notes-textarea:focus { border-color: var(--cv2-accent); }
+
+        /* Group 2: KPI Color Utility Classes (fix mismatch) */
+        .cv2-color-on-track { color: var(--cv2-done); }
+        .cv2-color-behind { color: var(--cv2-wip); }
+
+        /* Group 3: Notes Icon Active State (fix mismatch) */
+        .cv2-has-note { opacity: 1 !important; }
+
+        /* Group 4: D3 Alert Missing Classes */
+        .cv2-d3-alert-header {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+            padding: 12px 16px;
+        }
+        .cv2-d3-alert-icon {
+            font-size: 20px;
+            flex-shrink: 0;
+        }
+        .cv2-d3-alert-toggle {
+            transform: rotate(0deg);
+            transition: transform 0.2s ease;
+            flex-shrink: 0;
+        }
+        .cv2-d3-alert.expanded .cv2-d3-alert-toggle { transform: rotate(180deg); }
+        .cv2-d3-alert-list {
+            display: none;
+            padding: 0 16px 12px;
+        }
+        .cv2-d3-alert.expanded .cv2-d3-alert-list { display: block; }
+        .cv2-d3-overdue { color: var(--cv2-critical); }
+        .cv2-d3-soon { color: var(--cv2-wip); }
+        .cv2-d3-upcoming { color: #457b9d; }
+        .cv2-d3-ok { color: var(--cv2-done); }
+        .cv2-d3-cat {
+            font-size: 11px;
+            color: var(--cv2-dim);
+            margin-right: 4px;
+        }
+        .cv2-d3-name { font-weight: 500; }
+        .cv2-d3-countdown {
+            font-size: 12px;
+            font-weight: 600;
+            white-space: nowrap;
+        }
+        .cv2-d3-progress {
+            font-size: 12px;
+            color: var(--cv2-muted);
+        }
+
+        /* Group 5: What's Next Missing Classes */
+        .cv2-whatsnext-section {
+            margin-bottom: 16px;
+        }
+        .cv2-whatsnext-section h4 {
+            font-size: 13px;
+            font-weight: 600;
+            text-transform: uppercase;
+            color: var(--cv2-muted);
+            margin: 0 0 8px;
+            letter-spacing: 0.5px;
+        }
+        .cv2-wn-card {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 12px;
+            background: var(--cv2-surface);
+            border-radius: 8px;
+            margin-bottom: 6px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+        }
+        .cv2-wn-badge {
+            font-size: 10px;
+            padding: 2px 8px;
+            border-radius: 10px;
+            background: var(--cv2-border);
+            color: var(--cv2-ink-soft);
+            font-weight: 600;
+            white-space: nowrap;
+            flex-shrink: 0;
+        }
+        .cv2-wn-name {
+            flex: 1;
+            font-size: 13px;
+            font-weight: 500;
+        }
+        .cv2-wn-bar-container {
+            flex: 0 0 80px;
+            height: 6px;
+            background: var(--cv2-border);
+            border-radius: 3px;
+            overflow: hidden;
+        }
+        .cv2-wn-bar-fill {
+            height: 100%;
+            border-radius: 3px;
+            background: var(--cv2-done);
+            transition: width 0.3s ease;
+        }
+        .cv2-wn-count {
+            font-size: 12px;
+            color: var(--cv2-dim);
+            min-width: 40px;
+            text-align: right;
+            font-family: var(--cv2-mono);
+        }
+        .cv2-wn-record-btn {
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            background: var(--cv2-done);
+            color: #fff;
+            border: none;
+            cursor: pointer;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            transition: opacity 0.15s;
+        }
+        .cv2-wn-record-btn:hover { opacity: 0.85; }
+        .cv2-wn-apt {
+            display: flex;
+            gap: 8px;
+            padding: 8px 12px;
+            background: var(--cv2-surface-alt);
+            border-radius: var(--cv2-radius-sm);
+            margin-bottom: 4px;
+            font-size: 13px;
+            align-items: center;
+        }
+        .cv2-wn-apt-date {
+            font-weight: 600;
+            min-width: 80px;
+            color: #457b9d;
+        }
+        .cv2-wn-apt-patient {
+            font-weight: 500;
+            flex: 1;
+        }
+        .cv2-wn-apt-proc {
+            color: var(--cv2-muted);
+            font-size: 12px;
+        }
+
+        /* Group 6: Milestone Toast */
+        .comp-milestone-toast {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: var(--cv2-done);
+            color: #fff;
+            padding: 12px 24px;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+            z-index: 10000;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            animation: cv2-toast-in 0.4s ease;
+            font-size: 14px;
+            font-weight: 500;
+            font-family: var(--cv2-font);
+        }
+        .milestone-icon { font-size: 24px; }
+        .milestone-text { white-space: nowrap; }
+        @keyframes cv2-toast-in {
+            from { opacity: 0; transform: translateX(-50%) translateY(-20px); }
+            to { opacity: 1; transform: translateX(-50%) translateY(0); }
+        }
+
+        /* Group 7: Comp Item Modal */
+        .comp-modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.5);
+            z-index: 9999;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .comp-modal {
+            background: var(--cv2-surface);
+            border-radius: 12px;
+            width: 90%;
+            max-width: 420px;
+            max-height: 80vh;
+            overflow-y: auto;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.2);
+            font-family: var(--cv2-font);
+        }
+        .comp-modal-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 16px 20px;
+            border-bottom: 1px solid var(--cv2-border);
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--cv2-ink);
+        }
+        .comp-modal-close {
+            background: none;
+            border: none;
+            font-size: 20px;
+            cursor: pointer;
+            padding: 4px 8px;
+            color: var(--cv2-muted);
+            border-radius: var(--cv2-radius-sm);
+            transition: background 0.15s;
+        }
+        .comp-modal-close:hover { background: var(--cv2-surface-alt); }
+        .comp-modal-body {
+            padding: 16px 20px;
+        }
+        .comp-modal-field {
+            margin-bottom: 12px;
+        }
+        .comp-modal-field label {
+            display: block;
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--cv2-muted);
+            margin-bottom: 4px;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+        }
+        .comp-modal-field input,
+        .comp-modal-field select,
+        .comp-modal-field textarea {
+            width: 100%;
+            padding: 8px 12px;
+            border: 1px solid var(--cv2-border);
+            border-radius: var(--cv2-radius-sm);
+            font-size: 14px;
+            font-family: var(--cv2-font);
+            color: var(--cv2-ink);
+            outline: none;
+            box-sizing: border-box;
+        }
+        .comp-modal-field input:focus,
+        .comp-modal-field select:focus,
+        .comp-modal-field textarea:focus {
+            border-color: var(--cv2-accent);
+        }
+        .comp-modal-footer {
+            display: flex;
+            gap: 8px;
+            justify-content: flex-end;
+            padding: 12px 20px;
+            border-top: 1px solid var(--cv2-border);
+        }
+        .comp-modal-btn {
+            padding: 8px 20px;
+            border-radius: var(--cv2-radius-sm);
+            border: 1px solid var(--cv2-border);
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            font-family: var(--cv2-font);
+            background: var(--cv2-surface);
+            color: var(--cv2-ink);
+            transition: background 0.15s;
+        }
+        .comp-modal-btn:hover { background: var(--cv2-surface-alt); }
+        .comp-modal-btn:last-child {
+            background: var(--cv2-done);
+            color: #fff;
+            border-color: var(--cv2-done);
+        }
+        .comp-modal-btn:last-child:hover { opacity: 0.9; }
+
         /* Patient task in modal */
         .patient-task-row {
             display: grid;
