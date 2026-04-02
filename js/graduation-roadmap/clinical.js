@@ -1572,6 +1572,12 @@ function showPatientCompPreview(patientId, itemId) {
         chartEl.textContent = '#' + pt.chartNumber;
         headerLeft.appendChild(chartEl);
     }
+    if (pt.phone) {
+        var phoneEl = document.createElement('div');
+        phoneEl.style.cssText = 'color:#94a3b8; font-size:0.85em; margin-top:2px;';
+        phoneEl.textContent = '\u260E ' + pt.phone;
+        headerLeft.appendChild(phoneEl);
+    }
     if (pt.highValue) {
         var hvBadge = document.createElement('span');
         hvBadge.style.cssText = 'background:rgba(245,158,11,0.2); color:#f59e0b; padding:1px 6px; border-radius:4px; font-size:0.75em; margin-left:6px;';

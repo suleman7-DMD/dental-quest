@@ -808,7 +808,60 @@ function renderClinicalBrief(patient, patientId) {
         + '</div>';
 }
 
-// Cross-reference appointments to find a patient's next scheduled visit
+// Cross-reference appointments to find a patient's last completed visit details
+// Returns { date, procedures, provider } or null
+function getLastCompletedVisit(patient, patientId) {
+    var appointments = roadmapData.clinicalData?.appointments;
+    if (!appointments) return null;
+
+    var patientChart = normalizeChartNumber(patient.chartNumber);
+    var patientName = (patient.name || '').toLowerCase().trim();
+    var clinicalPatients = roadmapData.clinicalData?.patientRecords || {};
+
+    var completedApts = [];
+    var aptKeys = Object.keys(appointments);
+    for (var i = 0; i < aptKeys.length; i++) {
+        var apt = appointments[aptKeys[i]];
+        if (!apt || apt.status !== 'completed') continue;
+        if (!apt.date) continue;
+
+        var matched = false;
+        if (apt.patientId === patientId) matched = true;
+        if (!matched && patientChart) {
+            var aptPt = clinicalPatients[apt.patientId];
+            if (aptPt && normalizeChartNumber(aptPt.chartNumber) === patientChart) matched = true;
+        }
+        if (!matched && patientName) {
+            var aptPt2 = clinicalPatients[apt.patientId];
+            var aptName = (aptPt2?.name || '').toLowerCase().trim();
+            if (aptName && aptName === patientName) matched = true;
+        }
+        if (matched) completedApts.push(apt);
+    }
+
+    if (completedApts.length === 0) return null;
+
+    // Sort by date descending (most recent first), then time descending
+    completedApts.sort(function(a, b) {
+        if (a.date !== b.date) return a.date > b.date ? -1 : 1;
+        return (a.time || '') > (b.time || '') ? -1 : 1;
+    });
+
+    var last = completedApts[0];
+    var parts = last.date.split('-').map(Number);
+    var dateObj = new Date(parts[0], parts[1] - 1, parts[2]);
+    var months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+    var dateFormatted = months[dateObj.getMonth()] + ' ' + dateObj.getDate();
+
+    return {
+        date: dateFormatted,
+        procedures: last.procedures || '',
+        provider: last.provider || ''
+    };
+}
+
+// Cross-reference appointments to find a patient's next scheduled visit (with procedure detail)
+// Returns { date, procedures } or null when called as getNextScheduledVisitDetails
 function getNextScheduledVisit(patient, patientId) {
     var appointments = roadmapData.clinicalData?.appointments;
     if (!appointments) return null;
@@ -1021,6 +1074,7 @@ function renderPatientRecord(patientId) {
         +   '<div class="ptr-summary-meta">'
         +     '<span>#' + escapeHtml(patient.chartNumber || 'N/A') + '</span>'
         +     (patient.type ? '<span>\u00b7</span><span>' + escapeHtml(patient.type) + '</span>' : '')
+        +     (patient.phone ? '<span>\u00b7</span><span>\u260E ' + escapeHtml(patient.phone) + '</span>' : '')
         +   '</div>'
         +   '<div class="ptr-summary-badges">'
         +     '<span class="ptr-summary-badge ' + (relBadgeClass[currentRel] || 'ptr-summary-badge-yellow') + '">' + escapeHtml(relBadgeText[currentRel] || 'Attention') + '</span>'
@@ -1063,7 +1117,8 @@ function renderPatientRecord(patientId) {
     } else {
         contentHtml = ''
             + section('info', 'Patient Information', '\uD83C\uDFE5',
-                fld('medicalHx', 'Medical History', '#ef4444')
+                fld('phone', 'Phone', '#6366f1')
+                + fld('medicalHx', 'Medical History', '#ef4444')
                 + fld('medications', 'Medications & Allergies', '#f87171')
                 + fld('allergies', 'Allergies', '#dc2626'))
             + section('clinical', 'Clinical History', '\uD83E\uDDB7',
@@ -1677,7 +1732,8 @@ function parsePatientRecord(text) {
         'LAST_PANO': 'lastPANO', 'NOTES': 'notes',
         'RECALL_HISTORY': 'recallHistory',
         'ACTIVE_STATUS': 'activeStatus',
-        'RELIABILITY': 'reliability'
+        'RELIABILITY': 'reliability',
+        'PHONE': 'phone'
     };
 
     var lines = text.split('\n');
@@ -1721,7 +1777,8 @@ function parsePatientUpdate(text) {
         'LAST_PANO': 'lastPANO', 'NOTES': 'notes',
         'RECALL_HISTORY': 'recallHistory',
         'ACTIVE_STATUS': 'activeStatus',
-        'RELIABILITY': 'reliability'
+        'RELIABILITY': 'reliability',
+        'PHONE': 'phone'
     };
 
     var lines = text.split('\n');
@@ -3338,17 +3395,28 @@ function renderMiniReview() {
         var p = allPatients[pid];
         var rel = p.reliability || 'yellow';
 
-        // Last visit — parse full details from LAST_VISIT field: "date | procedure | provider"
+        // Last visit — try appointment data first, fall back to LAST_VISIT field
+        var lastCompleted = getLastCompletedVisit(p, pid);
         var lastVisitRaw = p.lastVisit || '';
         var lastVisitParts = lastVisitRaw.split('|').map(function(s) { return s.trim(); });
-        var lastVisitDate = lastVisitParts[0] || '';
-        var lastVisitProc = lastVisitParts[1] || '';
-        var lastVisitProvider = lastVisitParts[2] || '';
+        var lastVisitDate = lastCompleted ? lastCompleted.date : (lastVisitParts[0] || '');
+        var lastVisitProc = lastCompleted ? lastCompleted.procedures : (lastVisitParts[1] || '');
+        var lastVisitProvider = lastCompleted ? lastCompleted.provider : (lastVisitParts[2] || '');
 
-        // Next visit (auto from schedule or manual)
+        // Next visit (auto from schedule or manual) — keep procedure detail after em-dash
         var autoNext = getNextScheduledVisit(p, pid);
         var effectiveNext = p.nextVisitManual ? (p.nextVisit || '') : (autoNext || '');
-        var nextVisitShort = effectiveNext ? effectiveNext.split('|')[0].split('\u2014')[0].trim() : '';
+        var nextVisitDate = '';
+        var nextVisitProc = '';
+        if (effectiveNext) {
+            var dashIdx = effectiveNext.indexOf('\u2014');
+            if (dashIdx !== -1) {
+                nextVisitDate = effectiveNext.substring(0, dashIdx).trim();
+                nextVisitProc = effectiveNext.substring(dashIdx + 1).trim();
+            } else {
+                nextVisitDate = effectiveNext.split('|')[0].trim();
+            }
+        }
 
         // Tx plan and completed work
         var txPlan = (p.txPlan || '').trim();
@@ -3370,6 +3438,7 @@ function renderMiniReview() {
         html += '<span class="mr-name">' + escapeHtml(p.name || 'Unnamed') + '</span>';
         if (isHV) html += '<span class="mr-hv">HIGH VALUE</span>';
         html += '<span class="mr-chart">#' + escapeHtml(p.chartNumber || 'N/A') + '</span>';
+        if (p.phone) html += '<span class="mr-phone">' + escapeHtml(p.phone) + '</span>';
         html += '</div>';
 
         // Visit dates row — show full details for last visit
@@ -3387,9 +3456,16 @@ function renderMiniReview() {
             html += '<div class="mr-visit-value mr-none">None recorded</div>';
         }
         html += '</div>';
-        html += '<div class="mr-visit-box"><div class="mr-visit-label">Next Visit</div>'
-            + '<div class="mr-visit-value' + (nextVisitShort ? '' : ' mr-none') + '">'
-            + escapeHtml(nextVisitShort || 'Not scheduled') + '</div></div>';
+        html += '<div class="mr-visit-box"><div class="mr-visit-label">Next Visit</div>';
+        if (nextVisitDate) {
+            html += '<div class="mr-visit-value">' + escapeHtml(nextVisitDate) + '</div>';
+            if (nextVisitProc) {
+                html += '<div class="mr-visit-detail">' + escapeHtml(nextVisitProc) + '</div>';
+            }
+        } else {
+            html += '<div class="mr-visit-value mr-none">Not scheduled</div>';
+        }
+        html += '</div>';
         html += '</div>';
 
         // Brief snapshot (if available)

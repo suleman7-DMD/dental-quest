@@ -1159,6 +1159,7 @@ function renderPRPatientRoster(pr2, patients) {
     html += '<th>#</th>';
     html += '<th>Chart #</th>';
     html += '<th>Patient Name</th>';
+    html += '<th>Phone</th>';
     html += '<th style="text-align:center;">Reliability</th>';
     html += '<th>Next Appointment</th>';
     html += '<th>Status</th>';
@@ -1189,6 +1190,7 @@ function renderPRPatientRoster(pr2, patients) {
             html += ' <span class="pr-badge pr-badge-new">NEW</span>';
         }
         html += '</td>';
+        html += '<td style="font-size:0.85rem; color:#475569;">' + escapeHtml(pt.phone ?? '') + '</td>';
         html += '<td style="text-align:center;">';
         if (dotClass) {
             html += '<span class="pr-dot ' + dotClass + '"></span>';
@@ -1366,6 +1368,7 @@ function renderPRPatientWriteups(pr2, patients) {
         // Build field definitions
         var fields = [
             { label: 'Patient', key: 'type', value: pt.type ?? '' },
+            { label: 'Phone', key: 'phone', value: pt.phone ?? '' },
             { label: 'PMH / RMH', key: 'medicalHx', value: pt.medicalHx ?? '' },
             { label: 'Medications', key: 'medications', value: pt.medications ?? '' },
             { label: 'Allergies', key: 'allergies', value: pt.allergies ?? '' },
