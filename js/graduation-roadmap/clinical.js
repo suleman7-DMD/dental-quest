@@ -1296,7 +1296,7 @@ function showPatientCompPreview(patientId, itemId) {
     overlay.onclick = function(e) { if (e.target === overlay) overlay.remove(); };
 
     var modal = document.createElement('div');
-    modal.style.cssText = 'background:#1e293b; border:1px solid #334155; border-radius:12px; padding:20px; max-width:500px; width:90%; max-height:80vh; overflow-y:auto;';
+    modal.style.cssText = 'background:#fff; border:1px solid #ddd; border-radius:12px; padding:20px; max-width:500px; width:90%; max-height:80vh; overflow-y:auto; box-shadow:0 8px 32px rgba(0,0,0,0.15);';
 
     // Header
     var header = document.createElement('div');
@@ -1306,18 +1306,18 @@ function showPatientCompPreview(patientId, itemId) {
     dot.style.cssText = 'display:inline-block; width:10px; height:10px; border-radius:50%; background:' + reliabilityColor + '; margin-right:8px;';
     headerLeft.appendChild(dot);
     var nameEl = document.createElement('strong');
-    nameEl.style.cssText = 'color:#e2e8f0; font-size:1.1em;';
+    nameEl.style.cssText = 'color:#1a1a2e; font-size:1.1em;';
     nameEl.textContent = pt.name || 'Unknown';
     headerLeft.appendChild(nameEl);
     if (pt.chartNumber) {
         var chartEl = document.createElement('span');
-        chartEl.style.cssText = 'color:#64748b; margin-left:6px;';
+        chartEl.style.cssText = 'color:#888; margin-left:6px;';
         chartEl.textContent = '#' + pt.chartNumber;
         headerLeft.appendChild(chartEl);
     }
     if (pt.phone) {
         var phoneEl = document.createElement('div');
-        phoneEl.style.cssText = 'color:#94a3b8; font-size:0.85em; margin-top:2px;';
+        phoneEl.style.cssText = 'color:#666; font-size:0.85em; margin-top:2px;';
         phoneEl.textContent = '\u260E ' + pt.phone;
         headerLeft.appendChild(phoneEl);
     }
@@ -1329,7 +1329,7 @@ function showPatientCompPreview(patientId, itemId) {
     }
     header.appendChild(headerLeft);
     var closeBtn = document.createElement('button');
-    closeBtn.style.cssText = 'background:none; border:none; color:#94a3b8; cursor:pointer; font-size:1.2em;';
+    closeBtn.style.cssText = 'background:none; border:none; color:#999; cursor:pointer; font-size:1.2em;';
     closeBtn.textContent = '\u00D7';
     closeBtn.onclick = function() { overlay.remove(); };
     header.appendChild(closeBtn);
@@ -1343,18 +1343,18 @@ function showPatientCompPreview(patientId, itemId) {
     statusEl.textContent = statusText;
     matchBox.appendChild(statusEl);
     var compTextEl = document.createElement('div');
-    compTextEl.style.cssText = 'color:#e2e8f0; font-weight:600;';
+    compTextEl.style.cssText = 'color:#1a1a2e; font-weight:600;';
     compTextEl.textContent = compCatName + ' \u2192 ' + compText;
     matchBox.appendChild(compTextEl);
     if (matchedReq && matchedReq.description) {
         var descEl = document.createElement('div');
-        descEl.style.cssText = 'color:#94a3b8; font-size:0.85em; margin-top:4px;';
+        descEl.style.cssText = 'color:#666; font-size:0.85em; margin-top:4px;';
         descEl.textContent = matchedReq.description;
         matchBox.appendChild(descEl);
     }
     if (matchedReq && matchedReq.procedure) {
         var procEl = document.createElement('div');
-        procEl.style.cssText = 'color:#94a3b8; font-size:0.85em;';
+        procEl.style.cssText = 'color:#666; font-size:0.85em;';
         procEl.textContent = 'Procedure: ' + matchedReq.procedure;
         matchBox.appendChild(procEl);
     }
@@ -1369,7 +1369,7 @@ function showPatientCompPreview(patientId, itemId) {
         briefLabel.textContent = 'CLINICAL BRIEF';
         briefSection.appendChild(briefLabel);
         var briefText = document.createElement('div');
-        briefText.style.cssText = 'color:#cbd5e1; font-size:0.85em;';
+        briefText.style.cssText = 'color:#333; font-size:0.85em;';
         briefText.textContent = pt.clinicalBrief.snapshot;
         briefSection.appendChild(briefText);
         modal.appendChild(briefSection);
@@ -1384,7 +1384,7 @@ function showPatientCompPreview(patientId, itemId) {
         txLabel.textContent = 'TREATMENT PLAN';
         txSection.appendChild(txLabel);
         var txText = document.createElement('div');
-        txText.style.cssText = 'color:#cbd5e1; font-size:0.85em; white-space:pre-line;';
+        txText.style.cssText = 'color:#333; font-size:0.85em; white-space:pre-line;';
         txText.textContent = pt.txPlan.length > 300 ? pt.txPlan.substring(0, 300) + '...' : pt.txPlan;
         txSection.appendChild(txText);
         modal.appendChild(txSection);
@@ -1395,11 +1395,11 @@ function showPatientCompPreview(patientId, itemId) {
         var visitSection = document.createElement('div');
         visitSection.style.marginBottom = '10px';
         var visitLabel = document.createElement('div');
-        visitLabel.style.cssText = 'color:#94a3b8; font-weight:600; font-size:0.8em; margin-bottom:2px;';
+        visitLabel.style.cssText = 'color:#888; font-weight:600; font-size:0.8em; margin-bottom:2px;';
         visitLabel.textContent = 'LAST VISIT';
         visitSection.appendChild(visitLabel);
         var visitText = document.createElement('div');
-        visitText.style.cssText = 'color:#cbd5e1; font-size:0.85em;';
+        visitText.style.cssText = 'color:#333; font-size:0.85em;';
         visitText.textContent = pt.lastVisit;
         visitSection.appendChild(visitText);
         modal.appendChild(visitSection);
@@ -1409,7 +1409,7 @@ function showPatientCompPreview(patientId, itemId) {
     var footer = document.createElement('div');
     footer.style.cssText = 'text-align:right; margin-top:8px;';
     var viewBtn = document.createElement('button');
-    viewBtn.style.cssText = 'background:rgba(59,130,246,0.15); border:1px solid rgba(59,130,246,0.3); color:#60a5fa; border-radius:6px; padding:6px 14px; cursor:pointer; font-size:0.85em;';
+    viewBtn.style.cssText = 'background:#2d6a4f; border:1px solid #2d6a4f; color:#fff; border-radius:6px; padding:6px 14px; cursor:pointer; font-size:0.85em;';
     viewBtn.textContent = 'View Full Record \u2192';
     viewBtn.onclick = function() { overlay.remove(); navigateToEntity('patient', safePatientId); };
     footer.appendChild(viewBtn);
@@ -2192,7 +2192,7 @@ function cv2ShowPipeline(itemId) {
         return;
     }
     if (patients.length === 1) {
-        showPatientCompPreview(patients[0].id || patients[0].patientId);
+        showPatientCompPreview(patients[0].id || patients[0].patientId, itemId);
         return;
     }
     // Multi-patient popup using DOM construction (XSS safe)
@@ -2212,7 +2212,7 @@ function cv2ShowPipeline(itemId) {
         row.onmouseleave = function() { row.style.background = 'transparent'; };
         row.onclick = function() {
             overlay.remove();
-            showPatientCompPreview(p.id || p.patientId);
+            showPatientCompPreview(p.id || p.patientId, itemId);
         };
         card.appendChild(row);
     });
