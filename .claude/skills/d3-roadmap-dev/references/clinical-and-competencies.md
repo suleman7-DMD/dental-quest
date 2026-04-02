@@ -190,12 +190,17 @@ One-time migration gated by `competencyV2Migrated` localStorage flag. Runs after
 | `mergeCompetencies(local, cloud)` | state.js | Timestamp-based merge (most recent lastVerified wins) |
 | `getSmartProcedureCount()` | state.js | V2: sums item.completed, SPS snapshot authoritative |
 
-### V2 UI Design System
-- CSS: `cv2-*` classes (Atlas Console adapted, light theme #f7f5ef)
+### V2 UI Design System (Warm Atlas Console — commit b0640fa, Apr 2 2026)
+- CSS: `cv2-*` classes — unified 1220-line block in graduation-roadmap.html (lines 3895-5115)
+- Warm parchment palette matching index.html: `#FAF8F5` canvas, `#FFFFFF` surface, `#2C2825` ink
+- Typography: `Source Serif 4` headings, `Inter` body, `SF Mono` counters
+- Design tokens: `--cv2-done` (#5E8A5E warm green), `--cv2-wip` (#C4923A amber), `--cv2-critical` (#B85C5C clay), `--cv2-accent` (#6B7C5E olive/sage)
+- Shadows: warm-tinted `rgba(44, 40, 37, ...)` not cold gray
 - 3 panels: milestone strip (sticky), D3 alert + category accordion, What's Next
-- Mobile-first: 44px touch targets, responsive grid
-- Design tokens: `--cv2-done` (#1a7f79 teal), `--cv2-wip` (#d8a357 amber), `--cv2-critical` (#c86b4b clay)
+- Mobile: 40px touch targets on counters, flex-wrap on req rows, hidden cat-bar, responsive D3 items
+- 100 cv2-* classes + 9 comp-* classes (modal, toast)
 - Pipeline data from `patient.importedRequirements[]` (NOT on competency items)
+- Quick-record modal: light theme (#FFFFFF bg, #5E8A5E record button) — dark theme removed in b0640fa
 
 ### V2 Merge Strategy
 ```javascript
