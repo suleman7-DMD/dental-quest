@@ -1259,22 +1259,17 @@ function renderPatientBadges(itemId) {
 }
 
 // --- Patient Competency Preview Popup ---
-// Shows a mini patient card when clicking a patient chip on a competency item.
-// All user text is sanitized with escapeHtml() before insertion.
+// Uses mr-* CSS classes from Mini Review for consistent card styling.
+// All user text sanitized via escapeHtml() or formatClinicalDisplay() (which escapes internally).
 function showPatientCompPreview(patientId, itemId) {
     var records = typeof getAllPatientRecords === 'function' ? getAllPatientRecords() : (roadmapData.clinicalData?.patientRecords || {});
     var pt = records[patientId];
     if (!pt) { showToast('Patient not found'); return; }
 
     var compResult = findCompetencyItem(itemId);
-    var compText = compResult ? compResult.item.text : itemId;
+    var compText = compResult ? compResult.item.text : (itemId || '');
     var compCatName = compResult ? (getCompetenciesData()[compResult.catKey]?.name || '') : '';
-
-    var isCompleted = false;
-    if (compResult) {
-        // V2: Check completion from item.completed count (no completionEntries)
-        isCompleted = compResult.item.completed >= (compResult.item.required || 1);
-    }
+    var isCompleted = compResult ? compResult.item.completed >= (compResult.item.required || 1) : false;
 
     var matchedReq = null;
     var ptReqsPreview = getValues(pt.importedRequirements);
@@ -1284,134 +1279,211 @@ function showPatientCompPreview(patientId, itemId) {
         });
     }
 
-    var statusColor = isCompleted ? '#10b981' : '#f59e0b';
-    var statusText = isCompleted ? 'COMPLETED' : 'PLANNED / POTENTIAL';
-    var reliabilityColor = pt.reliability === 'green' ? '#10b981' : pt.reliability === 'red' ? '#ef4444' : '#f59e0b';
+    var rel = pt.reliability || 'yellow';
     var safePatientId = (patientId || '').replace(/['"\\]/g, '');
 
-    // Build popup via DOM (all text content uses escapeHtml or textContent)
+    // Last visit — from appointment data first, fall back to field
+    var lastCompleted = typeof getLastCompletedVisit === 'function' ? getLastCompletedVisit(pt, patientId) : null;
+    var lastVisitRaw = pt.lastVisit || '';
+    var lastVisitParts = lastVisitRaw.split('|').map(function(s) { return s.trim(); });
+    var lastVisitDate = lastCompleted ? lastCompleted.date : (lastVisitParts[0] || '');
+    var lastVisitProc = lastCompleted ? lastCompleted.procedures : (lastVisitParts[1] || '');
+    var lastVisitProvider = lastCompleted ? lastCompleted.provider : (lastVisitParts[2] || '');
+
+    // Next visit
+    var autoNext = typeof getNextScheduledVisit === 'function' ? getNextScheduledVisit(pt, patientId) : '';
+    var effectiveNext = pt.nextVisitManual ? (pt.nextVisit || '') : (autoNext || '');
+    var nextVisitDate = '';
+    var nextVisitProc = '';
+    if (effectiveNext) {
+        var dashIdx = effectiveNext.indexOf('\u2014');
+        if (dashIdx !== -1) {
+            nextVisitDate = effectiveNext.substring(0, dashIdx).trim();
+            nextVisitProc = effectiveNext.substring(dashIdx + 1).trim();
+        } else {
+            nextVisitDate = effectiveNext.split('|')[0].trim();
+        }
+    }
+
+    var isHV = pt.highValue || false;
+    if (!isHV && ptReqsPreview.length >= 3) isHV = true;
+    var statusColor = isCompleted ? '#22c55e' : '#f59e0b';
+    var statusText = isCompleted ? 'COMPLETED' : 'PLANNED / POTENTIAL';
+    var statusBg = isCompleted ? '#f0fdf4' : '#fef9ee';
+
+    // Build entire popup via DOM (XSS safe — all text via escapeHtml or textContent)
     var overlay = document.createElement('div');
-    overlay.className = 'mp-modal-overlay';
-    overlay.style.cssText = 'position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.6); z-index:10001; display:flex; align-items:center; justify-content:center;';
+    overlay.style.cssText = 'position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:10001; display:flex; align-items:center; justify-content:center; padding:20px;';
     overlay.onclick = function(e) { if (e.target === overlay) overlay.remove(); };
 
     var modal = document.createElement('div');
-    modal.style.cssText = 'background:#fff; border:1px solid #ddd; border-radius:12px; padding:20px; max-width:500px; width:90%; max-height:80vh; overflow-y:auto; box-shadow:0 8px 32px rgba(0,0,0,0.15);';
+    modal.className = 'mr-card';
+    modal.style.cssText = 'max-width:440px; width:100%; max-height:80vh; overflow-y:auto; box-shadow:0 8px 32px rgba(0,0,0,0.15); border-color:#e2e0d8;';
 
-    // Header
+    // Header (mr-card-header)
     var header = document.createElement('div');
-    header.style.cssText = 'display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:12px;';
-    var headerLeft = document.createElement('div');
+    header.className = 'mr-card-header';
     var dot = document.createElement('span');
-    dot.style.cssText = 'display:inline-block; width:10px; height:10px; border-radius:50%; background:' + reliabilityColor + '; margin-right:8px;';
-    headerLeft.appendChild(dot);
-    var nameEl = document.createElement('strong');
-    nameEl.style.cssText = 'color:#1a1a2e; font-size:1.1em;';
-    nameEl.textContent = pt.name || 'Unknown';
-    headerLeft.appendChild(nameEl);
-    if (pt.chartNumber) {
-        var chartEl = document.createElement('span');
-        chartEl.style.cssText = 'color:#888; margin-left:6px;';
-        chartEl.textContent = '#' + pt.chartNumber;
-        headerLeft.appendChild(chartEl);
-    }
-    if (pt.phone) {
-        var phoneEl = document.createElement('div');
-        phoneEl.style.cssText = 'color:#666; font-size:0.85em; margin-top:2px;';
-        phoneEl.textContent = '\u260E ' + pt.phone;
-        headerLeft.appendChild(phoneEl);
-    }
-    if (pt.highValue) {
+    dot.className = 'mr-rel-dot mr-rel-' + rel;
+    header.appendChild(dot);
+    var nameEl = document.createElement('span');
+    nameEl.className = 'mr-name';
+    nameEl.textContent = pt.name || 'Unnamed';
+    header.appendChild(nameEl);
+    if (isHV) {
         var hvBadge = document.createElement('span');
-        hvBadge.style.cssText = 'background:rgba(245,158,11,0.2); color:#f59e0b; padding:1px 6px; border-radius:4px; font-size:0.75em; margin-left:6px;';
+        hvBadge.className = 'mr-hv';
         hvBadge.textContent = 'HIGH VALUE';
-        headerLeft.appendChild(hvBadge);
+        header.appendChild(hvBadge);
     }
-    header.appendChild(headerLeft);
-    var closeBtn = document.createElement('button');
-    closeBtn.style.cssText = 'background:none; border:none; color:#999; cursor:pointer; font-size:1.2em;';
-    closeBtn.textContent = '\u00D7';
-    closeBtn.onclick = function() { overlay.remove(); };
-    header.appendChild(closeBtn);
+    var chartEl = document.createElement('span');
+    chartEl.className = 'mr-chart';
+    chartEl.textContent = '#' + (pt.chartNumber || 'N/A');
+    header.appendChild(chartEl);
     modal.appendChild(header);
 
-    // Highlighted requirement match
-    var matchBox = document.createElement('div');
-    matchBox.style.cssText = 'background:rgba(' + (isCompleted ? '16,185,129' : '245,158,11') + ',0.1); border-left:3px solid ' + statusColor + '; padding:10px; border-radius:6px; margin-bottom:12px;';
-    var statusEl = document.createElement('div');
-    statusEl.style.cssText = 'font-size:0.8em; font-weight:600; color:' + statusColor + '; margin-bottom:4px;';
-    statusEl.textContent = statusText;
-    matchBox.appendChild(statusEl);
-    var compTextEl = document.createElement('div');
-    compTextEl.style.cssText = 'color:#1a1a2e; font-weight:600;';
-    compTextEl.textContent = compCatName + ' \u2192 ' + compText;
-    matchBox.appendChild(compTextEl);
-    if (matchedReq && matchedReq.description) {
-        var descEl = document.createElement('div');
-        descEl.style.cssText = 'color:#666; font-size:0.85em; margin-top:4px;';
-        descEl.textContent = matchedReq.description;
-        matchBox.appendChild(descEl);
-    }
-    if (matchedReq && matchedReq.procedure) {
-        var procEl = document.createElement('div');
-        procEl.style.cssText = 'color:#666; font-size:0.85em;';
-        procEl.textContent = 'Procedure: ' + matchedReq.procedure;
-        matchBox.appendChild(procEl);
-    }
-    modal.appendChild(matchBox);
-
-    // Clinical Brief snapshot
-    if (pt.clinicalBrief && pt.clinicalBrief.snapshot) {
-        var briefSection = document.createElement('div');
-        briefSection.style.marginBottom = '10px';
-        var briefLabel = document.createElement('div');
-        briefLabel.style.cssText = 'color:#1a7f79; font-weight:600; font-size:0.8em; margin-bottom:4px;';
-        briefLabel.textContent = 'CLINICAL BRIEF';
-        briefSection.appendChild(briefLabel);
-        var briefText = document.createElement('div');
-        briefText.style.cssText = 'color:#333; font-size:0.85em;';
-        briefText.textContent = pt.clinicalBrief.snapshot;
-        briefSection.appendChild(briefText);
-        modal.appendChild(briefSection);
+    // Competency match box (unique to this popup)
+    if (itemId) {
+        var matchBox = document.createElement('div');
+        matchBox.style.cssText = 'background:' + statusBg + '; border-left:3px solid ' + statusColor + '; padding:8px 12px; border-radius:0 6px 6px 0; margin-bottom:10px;';
+        var statusLabel = document.createElement('div');
+        statusLabel.className = 'mr-visit-label';
+        statusLabel.style.color = statusColor;
+        statusLabel.textContent = statusText;
+        matchBox.appendChild(statusLabel);
+        var compTextEl = document.createElement('div');
+        compTextEl.style.cssText = 'font-size:0.85em; color:#17212b; font-weight:600; margin-top:2px;';
+        compTextEl.textContent = compCatName + ' \u2192 ' + compText;
+        matchBox.appendChild(compTextEl);
+        if (matchedReq && matchedReq.description) {
+            var descEl = document.createElement('div');
+            descEl.style.cssText = 'font-size:0.78em; color:#62707c; margin-top:3px;';
+            descEl.textContent = matchedReq.description;
+            matchBox.appendChild(descEl);
+        }
+        if (matchedReq && matchedReq.procedure) {
+            var procEl = document.createElement('div');
+            procEl.style.cssText = 'font-size:0.78em; color:#62707c;';
+            procEl.textContent = 'Procedure: ' + matchedReq.procedure;
+            matchBox.appendChild(procEl);
+        }
+        modal.appendChild(matchBox);
     }
 
-    // Treatment Plan
-    if (pt.txPlan) {
-        var txSection = document.createElement('div');
-        txSection.style.marginBottom = '10px';
+    // Visit dates row (mr-visits — identical to mini review)
+    var visits = document.createElement('div');
+    visits.className = 'mr-visits';
+    var lastBox = document.createElement('div');
+    lastBox.className = 'mr-visit-box';
+    var lastLabel = document.createElement('div');
+    lastLabel.className = 'mr-visit-label';
+    lastLabel.textContent = 'Last Visit';
+    lastBox.appendChild(lastLabel);
+    if (lastVisitDate) {
+        var lastVal = document.createElement('div');
+        lastVal.className = 'mr-visit-value';
+        lastVal.textContent = lastVisitDate;
+        lastBox.appendChild(lastVal);
+        if (lastVisitProc) {
+            var lastDet = document.createElement('div');
+            lastDet.className = 'mr-visit-detail';
+            lastDet.textContent = lastVisitProc;
+            lastBox.appendChild(lastDet);
+        }
+        if (lastVisitProvider) {
+            var lastProv = document.createElement('div');
+            lastProv.className = 'mr-visit-provider';
+            lastProv.textContent = lastVisitProvider;
+            lastBox.appendChild(lastProv);
+        }
+    } else {
+        var lastNone = document.createElement('div');
+        lastNone.className = 'mr-visit-value mr-none';
+        lastNone.textContent = 'None recorded';
+        lastBox.appendChild(lastNone);
+    }
+    visits.appendChild(lastBox);
+    var nextBox = document.createElement('div');
+    nextBox.className = 'mr-visit-box';
+    var nextLabel = document.createElement('div');
+    nextLabel.className = 'mr-visit-label';
+    nextLabel.textContent = 'Next Visit';
+    nextBox.appendChild(nextLabel);
+    if (nextVisitDate) {
+        var nextVal = document.createElement('div');
+        nextVal.className = 'mr-visit-value';
+        nextVal.textContent = nextVisitDate;
+        nextBox.appendChild(nextVal);
+        if (nextVisitProc) {
+            var nextDet = document.createElement('div');
+            nextDet.className = 'mr-visit-detail';
+            nextDet.textContent = nextVisitProc;
+            nextBox.appendChild(nextDet);
+        }
+    } else {
+        var nextNone = document.createElement('div');
+        nextNone.className = 'mr-visit-value mr-none';
+        nextNone.textContent = 'Not scheduled';
+        nextBox.appendChild(nextNone);
+    }
+    visits.appendChild(nextBox);
+    modal.appendChild(visits);
+
+    // Clinical Brief (uses formatClinicalDisplay — already escapes internally)
+    var briefSnap = (pt.clinicalBrief && pt.clinicalBrief.snapshot) ? pt.clinicalBrief.snapshot.trim() : '';
+    if (briefSnap) {
+        var briefLabel2 = document.createElement('div');
+        briefLabel2.className = 'mr-section-label';
+        briefLabel2.textContent = 'Clinical Brief';
+        modal.appendChild(briefLabel2);
+        var briefDiv = document.createElement('div');
+        briefDiv.className = 'mr-brief-snap';
+        briefDiv.innerHTML = formatClinicalDisplay(briefSnap);
+        modal.appendChild(briefDiv);
+    }
+
+    // Treatment Plan (uses formatClinicalDisplay)
+    var txPlan = (pt.txPlan || '').trim();
+    if (txPlan) {
         var txLabel = document.createElement('div');
-        txLabel.style.cssText = 'color:#10b981; font-weight:600; font-size:0.8em; margin-bottom:4px;';
-        txLabel.textContent = 'TREATMENT PLAN';
-        txSection.appendChild(txLabel);
-        var txText = document.createElement('div');
-        txText.style.cssText = 'color:#333; font-size:0.85em; white-space:pre-line;';
-        txText.textContent = pt.txPlan.length > 300 ? pt.txPlan.substring(0, 300) + '...' : pt.txPlan;
-        txSection.appendChild(txText);
-        modal.appendChild(txSection);
+        txLabel.className = 'mr-section-label';
+        txLabel.textContent = 'Treatment Plan';
+        modal.appendChild(txLabel);
+        var txDiv = document.createElement('div');
+        txDiv.className = 'mr-text';
+        txDiv.innerHTML = formatClinicalDisplay(txPlan);
+        modal.appendChild(txDiv);
     }
 
-    // Last visit
-    if (pt.lastVisit) {
-        var visitSection = document.createElement('div');
-        visitSection.style.marginBottom = '10px';
-        var visitLabel = document.createElement('div');
-        visitLabel.style.cssText = 'color:#888; font-weight:600; font-size:0.8em; margin-bottom:2px;';
-        visitLabel.textContent = 'LAST VISIT';
-        visitSection.appendChild(visitLabel);
-        var visitText = document.createElement('div');
-        visitText.style.cssText = 'color:#333; font-size:0.85em;';
-        visitText.textContent = pt.lastVisit;
-        visitSection.appendChild(visitText);
-        modal.appendChild(visitSection);
+    // Tx completed
+    var txDone = (pt.txCompletedByMe || '').trim();
+    if (txDone) {
+        var doneLabel = document.createElement('div');
+        doneLabel.className = 'mr-section-label';
+        doneLabel.textContent = 'Completed by Me';
+        modal.appendChild(doneLabel);
+        var doneDiv = document.createElement('div');
+        doneDiv.className = 'mr-text';
+        doneDiv.innerHTML = formatClinicalDisplay(txDone);
+        modal.appendChild(doneDiv);
     }
 
-    // Footer: navigate to full record
+    if (!briefSnap && !txPlan && !txDone && !itemId) {
+        var emptyDiv = document.createElement('div');
+        emptyDiv.className = 'mr-text mr-empty';
+        emptyDiv.textContent = 'No treatment data recorded yet';
+        modal.appendChild(emptyDiv);
+    }
+
+    // Footer: View Full Record
     var footer = document.createElement('div');
-    footer.style.cssText = 'text-align:right; margin-top:8px;';
+    footer.style.cssText = 'text-align:center; margin-top:12px; padding-top:10px; border-top:1px solid #f0ede6;';
     var viewBtn = document.createElement('button');
-    viewBtn.style.cssText = 'background:#2d6a4f; border:1px solid #2d6a4f; color:#fff; border-radius:6px; padding:6px 14px; cursor:pointer; font-size:0.85em;';
+    viewBtn.style.cssText = 'background:#fff; border:1px solid #1a7f79; color:#1a7f79; border-radius:6px; padding:7px 18px; cursor:pointer; font-size:0.85em; font-weight:500;';
     viewBtn.textContent = 'View Full Record \u2192';
     viewBtn.onclick = function() { overlay.remove(); navigateToEntity('patient', safePatientId); };
+    viewBtn.onmouseenter = function() { viewBtn.style.background = '#1a7f79'; viewBtn.style.color = '#fff'; };
+    viewBtn.onmouseleave = function() { viewBtn.style.background = '#fff'; viewBtn.style.color = '#1a7f79'; };
     footer.appendChild(viewBtn);
     modal.appendChild(footer);
 
