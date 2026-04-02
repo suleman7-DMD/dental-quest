@@ -1434,7 +1434,7 @@ function cascadeDeleteAppointment(aptId, { skipPropagation = false } = {}) {
 
     // 2. Clean planner state
     if (!roadmapData.monthlyPlanner.hiddenClinicTasks) roadmapData.monthlyPlanner.hiddenClinicTasks = {};
-    roadmapData.monthlyPlanner.hiddenClinicTasks[aptId] = true;
+    roadmapData.monthlyPlanner.hiddenClinicTasks[aptId] = { hiddenAt: new Date().toISOString(), taskId: 'clinic_' + aptId };
     delete roadmapData.monthlyPlanner.customTasks['clinic_' + aptId];
     if (typeof unmarkPlannerTaskDone === 'function') unmarkPlannerTaskDone(aptId);
 

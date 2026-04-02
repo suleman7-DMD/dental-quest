@@ -1319,6 +1319,11 @@ function finishFirebaseLoad(data) {
         console.error('[GRAD-LOAD] initUI error after Firebase load:', e);
     }
 
+    // Post-merge integrity check (console-only)
+    if (typeof runPostMergeIntegrityChecks === 'function') {
+        setTimeout(function() { runPostMergeIntegrityChecks('finishFirebaseLoad'); }, 100);
+    }
+
     // FIX: If local data was newer than Firebase (or Firebase was empty/poisoned),
     // push local data to cloud so other devices (incognito, new phone) get the latest
     if (localWasNewer && !isEmptyState(roadmapData)) {
@@ -1398,6 +1403,11 @@ function setupRealtimeSync() {
 
             updateSyncStatus('connected', 'Synced');
             showToast('📡 Updated from another device');
+
+            // Post-merge integrity check (console-only)
+            if (typeof runPostMergeIntegrityChecks === 'function') {
+                setTimeout(function() { runPostMergeIntegrityChecks('realtimeSync'); }, 200);
+            }
         }
     }, error => {
         // FIXED: Add error handler for realtime sync failures
@@ -1854,6 +1864,11 @@ function restoreCheckpoint(index) {
             initUI();
             document.querySelector('.checkpoint-modal-overlay')?.remove();
             showToast('Restored: ' + checkpoint.name);
+
+            // Post-restore integrity check (console-only)
+            if (typeof runPostMergeIntegrityChecks === 'function') {
+                setTimeout(function() { runPostMergeIntegrityChecks('restoreCheckpoint'); }, 200);
+            }
         },
         null,
         'Restore Checkpoint'
@@ -2120,6 +2135,11 @@ function importAndRestoreDirectly() {
                     showToast('Data restored from file');
                     document.querySelector('.checkpoint-modal-overlay')?.remove();
                     initUI();
+
+                    // Post-restore integrity check (console-only)
+                    if (typeof runPostMergeIntegrityChecks === 'function') {
+                        setTimeout(function() { runPostMergeIntegrityChecks('importAndRestoreDirectly'); }, 200);
+                    }
                 },
                 null,
                 'Restore from File'

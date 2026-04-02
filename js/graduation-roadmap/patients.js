@@ -1238,7 +1238,7 @@ function deletePatientRecord(id) {
             if (roadmapData.monthlyPlanner && deletedAptIds.length > 0) {
                 if (!roadmapData.monthlyPlanner.hiddenClinicTasks) roadmapData.monthlyPlanner.hiddenClinicTasks = {};
                 deletedAptIds.forEach(function(aptId) {
-                    roadmapData.monthlyPlanner.hiddenClinicTasks[aptId] = true;
+                    roadmapData.monthlyPlanner.hiddenClinicTasks[aptId] = { hiddenAt: new Date().toISOString(), taskId: 'clinic_' + aptId };
                     if (roadmapData.monthlyPlanner.customTasks) {
                         Object.keys(roadmapData.monthlyPlanner.customTasks).forEach(function(ctId) {
                             var ct = roadmapData.monthlyPlanner.customTasks[ctId];
@@ -2667,6 +2667,11 @@ function confirmUnifiedImport() {
     if (todosImported > 0) msg += todosImported + ' to-do item(s) imported. ';
     if (briefsImported > 0) msg += briefsImported + ' clinical brief(s) imported. ';
     showToast(msg || 'Import complete');
+
+    // Post-import integrity check (console-only)
+    if (typeof runPostMergeIntegrityChecks === 'function') {
+        setTimeout(function() { runPostMergeIntegrityChecks('confirmUnifiedImport'); }, 200);
+    }
 }
 // Backward-compat alias for any HTML onclick references
 var confirmPatientImport = confirmUnifiedImport;

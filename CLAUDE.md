@@ -172,6 +172,13 @@ const date = new Date(year, month - 1, day);
 | `uncompleteAppointment()` | Remove procedure records, unlink competency evidence, recalc patient `lastVisit` |
 | `backfillClinicalData()` | `createCheckpoint('pre-backfill')` before mutations (dedup within 60s). `_backfillInProgress` guard. |
 | Competency adjustment | `renderDashboard()` |
+| Quick-fix schedule changes | `syncClinicalToMonthlyPlanner()`, `buildCurrentWeekSchedule()` |
+
+### Troubleshooting Module
+- **`hiddenClinicTasks` key format**: Raw `aptId` keys, NOT `clinic_` prefixed. `syncClinicalToMonthlyPlanner` checks `hiddenClinicTasks[apt.id]`.
+- **`hiddenClinicTasks` value format**: Object `{ hiddenAt, taskId }` (not boolean). All writes must use this format.
+- **Quick-fix functions must call BOTH** `syncClinicalToMonthlyPlanner()` AND `buildCurrentWeekSchedule()` when touching schedule data.
+- **`runPostMergeIntegrityChecks(source)`**: Console-only integrity check. Runs automatically after finishFirebaseLoad, confirmUnifiedImport, restoreCheckpoint, importAndRestoreDirectly, and realtime sync handler. No UI alerts, no saves, no state mutations.
 
 ### UI & Rendering
 - **Flex full-width + flex-wrap**: Container needs `flex-wrap: wrap`, full-width item needs `flex: 1 1 100%`.

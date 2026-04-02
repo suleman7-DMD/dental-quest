@@ -253,7 +253,7 @@ function tsCheckSchedule() {
     var missSync = [];
     Object.keys(apts).forEach(function(aid) {
         var a = apts[aid]; if (!a || a.status === 'completed' || a.status === 'cancelled') return;
-        if (hidden['clinic_' + aid]) return;
+        if (hidden[aid]) return;
         if (!scheduledIds[aid]) missSync.push(aid);
     });
     checks.push(tsCheck('Appointment-to-planner sync', missSync.length === 0 ? 'pass' : missSync.length <= 3 ? 'warn' : 'fail',
@@ -261,9 +261,9 @@ function tsCheckSchedule() {
 
     // hiddenClinicTasks format
     var htKeys = Object.keys(hidden), badFmt = 0;
-    for (var h = 0; h < htKeys.length; h++) if (typeof hidden[htKeys[h]] !== 'boolean') badFmt++;
+    for (var h = 0; h < htKeys.length; h++) if (!hidden[htKeys[h]]) badFmt++;
     checks.push(tsCheck('hiddenClinicTasks format', badFmt === 0 ? 'pass' : 'warn',
-        badFmt === 0 ? htKeys.length + ' entries, all boolean.' : badFmt + '/' + htKeys.length + ' non-boolean entries.'));
+        badFmt === 0 ? htKeys.length + ' entries, all truthy.' : badFmt + '/' + htKeys.length + ' falsy entries (should be truthy).'));
 
     // Current week freshness
     var today = new Date(); today.setHours(0, 0, 0, 0);
@@ -490,7 +490,7 @@ function tsFixDedupSchedule() {
         var hasClinic = g.some(function(x) { return x.id.indexOf('clinic_') === 0; });
         if (hasClinic) g.forEach(function(x) { if (x.id.indexOf('clinic_') !== 0) { delete cws[x.key]; removeCount++; } });
     });
-    if (removeCount > 0) { clinicalDataDirty = true; safeLocalStorageSet(STORAGE_KEY, JSON.stringify(roadmapData)); saveData(); if (typeof buildCurrentWeekSchedule === 'function') buildCurrentWeekSchedule(); }
+    if (removeCount > 0) { clinicalDataDirty = true; if (typeof syncClinicalToMonthlyPlanner === 'function') syncClinicalToMonthlyPlanner(); if (typeof buildCurrentWeekSchedule === 'function') buildCurrentWeekSchedule(); safeLocalStorageSet(STORAGE_KEY, JSON.stringify(roadmapData)); saveData(); }
     showToast(removeCount > 0 ? 'Removed ' + removeCount + ' duplicate(s)' : 'No duplicates found', 'warning');
     renderTroubleshooting();
 }
@@ -511,6 +511,47 @@ function tsFixRebuildWeekSchedule() {
     saveData();
     showToast('Week schedule rebuilt', 'warning');
     renderTroubleshooting();
+}
+
+// ==================== AUTOMATIC INTEGRITY CHECKS ====================
+// Lightweight checks that run after external data enters roadmapData.
+// Console-only output — no UI alerts, no state mutations, no saves.
+// Designed to surface corruption immediately instead of waiting for
+// the user to manually navigate to the Troubleshooting tab.
+function runPostMergeIntegrityChecks(source) {
+    try {
+        var start = performance.now();
+        var issues = [];
+
+        // Firebase structure (< 1ms)
+        var fbChecks = tsCheckFirebase();
+        fbChecks.forEach(function(c) {
+            if (c.status === 'fail') issues.push('[firebase] ' + c.name + ': ' + c.detail);
+        });
+
+        // Schedule sync (< 5ms)
+        var schedChecks = tsCheckSchedule();
+        schedChecks.forEach(function(c) {
+            if (c.status === 'fail') issues.push('[schedule] ' + c.name + ': ' + c.detail);
+        });
+
+        // Competency pipeline (< 15ms)
+        var compChecks = tsCheckCompetencies();
+        compChecks.forEach(function(c) {
+            if (c.status === 'fail') issues.push('[competencies] ' + c.name + ': ' + c.detail);
+        });
+
+        var elapsed = Math.round(performance.now() - start);
+
+        if (issues.length > 0) {
+            console.warn('[INTEGRITY] Post-merge check (' + source + ', ' + elapsed + 'ms): ' + issues.length + ' issue(s)');
+            issues.forEach(function(issue) { console.warn('  \u2192 ' + issue); });
+        } else {
+            console.log('[INTEGRITY] Post-merge check (' + source + ', ' + elapsed + 'ms): clean');
+        }
+    } catch (e) {
+        console.error('[INTEGRITY] Check failed:', e);
+    }
 }
 
 // ==================== INTEGRITY SCORE ====================
