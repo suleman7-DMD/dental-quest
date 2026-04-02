@@ -563,7 +563,7 @@ function getPatientRecords() {
     }
     if (!roadmapData.clinicalData.patientRecords || Object.keys(roadmapData.clinicalData.patientRecords).length === 0) {
         roadmapData.clinicalData.patientRecords = JSON.parse(JSON.stringify(DEFAULT_PATIENT_RECORDS));
-        safeLocalStorageSet(STORAGE_KEY, JSON.stringify(roadmapData));
+        // Don't save to localStorage from a read/render path — next CRUD operation persists
     } else {
         // Merge: fill in any missing default patients without overwriting existing ones
         // Use normalized chart matching to prevent re-injecting duplicates with different leading-zero IDs
@@ -584,9 +584,7 @@ function getPatientRecords() {
             existing[id] = JSON.parse(JSON.stringify(defaults[id]));
             added = true;
         });
-        if (added) {
-            safeLocalStorageSet(STORAGE_KEY, JSON.stringify(roadmapData));
-        }
+        // Removed: don't save to localStorage from a read/render path
     }
     return roadmapData.clinicalData.patientRecords;
 }

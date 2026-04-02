@@ -126,6 +126,409 @@ function mergeDashboardSnapshots(localSnaps, remoteSnaps) {
     return merged.slice(0, 20);
 }
 
+// ==================== UNIFIED STATE RECONSTRUCTION ====================
+// Single source of truth for building roadmapData from any external source.
+// Replaces 5 near-identical inline reconstruction blocks.
+//
+// Strategies:
+//   'remote-wins'  — mergeRemoteState: source overwrites scalars, spread-merges collections,
+//                     mergeCompetencies(fallback, source), per-patient field-level merge,
+//                     todoList local wins ({...source, ...fallback})
+//   'stored-wins'  — loadFromLocalStorage: same as remote-wins EXCEPT collections use
+//                     migrateArrayToObject(source) only (no fallback spread), simpler
+//                     patientRecords, todoList stored wins ({...fallback, ...source})
+//   'source-wins'  — restoreCheckpoint/importBackup/importAndRestoreDirectly: source wins
+//                     unconditionally, mergeCompetencies(source, fallback), no per-patient
+//                     field-level merge, _version increments instead of Math.max
+//
+// @param {Object} source - Data to load (Firebase, localStorage, checkpoint, backup)
+// @param {Object} options
+// @param {string} options.strategy - 'remote-wins' | 'stored-wins' | 'source-wins'
+// @param {Object} options.fallback - What to use when source is missing a field
+// @returns {Object} A new roadmapData object
+function reconstructState(source, options) {
+    var s = source || {};
+    var f = options.fallback || {};
+    var strategy = options.strategy || 'source-wins';
+    var isRemoteWins = (strategy === 'remote-wins');
+    var isStoredWins = (strategy === 'stored-wins');
+    var isSourceWins = (strategy === 'source-wins');
+    var isMerge = isRemoteWins || isStoredWins;
+    var defaults = getDefaultRoadmapData();
+
+    // Merge strategies spread fallback to preserve unknown fields;
+    // source-wins starts clean (restore = full replacement)
+    var result = isMerge ? { ...f } : {};
+
+    // --- Scalars ---
+    result.pedsLockedIn = s.pedsLockedIn !== undefined ? s.pedsLockedIn : f.pedsLockedIn;
+
+    // --- Mandatory Items ---
+    result.mandatoryItems = isMerge
+        ? { ...(f.mandatoryItems || {}), ...(s.mandatoryItems || {}) }
+        : (s.mandatoryItems || f.mandatoryItems || {});
+
+    // --- Grades: per-course merge for merge strategies, direct for source-wins ---
+    if (isMerge) {
+        var gradesMerged = {};
+        var allCourses = new Set([
+            ...Object.keys(f.grades || {}),
+            ...Object.keys(s.grades || {})
+        ]);
+        allCourses.forEach(function(courseId) {
+            var base = { ...(f.grades?.[courseId] || {}) };
+            var overlay = s.grades?.[courseId] || {};
+            Object.keys(overlay).forEach(function(k) {
+                if (overlay[k] !== null && overlay[k] !== undefined) base[k] = overlay[k];
+            });
+            gradesMerged[courseId] = base;
+        });
+        result.grades = gradesMerged;
+    } else {
+        result.grades = s.grades || f.grades || {};
+    }
+
+    // --- Simple object fields ---
+    if (isMerge) {
+        result.editedDeadlines = { ...(f.editedDeadlines || {}), ...(s.editedDeadlines || {}) };
+        result.completedDeadlines = { ...(f.completedDeadlines || {}), ...(s.completedDeadlines || {}) };
+        result.examStudyProgress = { ...(f.examStudyProgress || {}), ...(s.examStudyProgress || {}) };
+    } else {
+        result.editedDeadlines = s.editedDeadlines || {};
+        result.completedDeadlines = s.completedDeadlines || {};
+        result.examStudyProgress = s.examStudyProgress || {};
+    }
+
+    // --- Migrated objects (customDeadlines, deletedDeadlines) ---
+    // remote-wins: spread fallback + source; stored-wins & source-wins: source only
+    if (isRemoteWins) {
+        result.customDeadlines = { ...migrateArrayToObject(f.customDeadlines, 'deadline'), ...migrateArrayToObject(s.customDeadlines, 'deadline') };
+        result.deletedDeadlines = { ...migrateArrayToObject(f.deletedDeadlines, 'deleted'), ...migrateArrayToObject(s.deletedDeadlines, 'deleted') };
+    } else {
+        result.customDeadlines = migrateArrayToObject(s.customDeadlines, 'deadline');
+        result.deletedDeadlines = migrateArrayToObject(s.deletedDeadlines, 'deleted');
+    }
+
+    // --- Monthly Planner ---
+    if (isRemoteWins) {
+        result.monthlyPlanner = {
+            notes: { ...migrateArrayToObject(f.monthlyPlanner?.notes, 'note'), ...migrateArrayToObject(s.monthlyPlanner?.notes, 'note') },
+            customTasks: { ...migrateArrayToObject(f.monthlyPlanner?.customTasks, 'ctask'), ...migrateArrayToObject(s.monthlyPlanner?.customTasks, 'ctask') },
+            overriddenStatic: { ...migrateArrayToObject(f.monthlyPlanner?.overriddenStatic, 'override'), ...migrateArrayToObject(s.monthlyPlanner?.overriddenStatic, 'override') },
+            completedTasks: { ...migrateArrayToObject(f.monthlyPlanner?.completedTasks, 'completed'), ...migrateArrayToObject(s.monthlyPlanner?.completedTasks, 'completed') },
+            hiddenClinicTasks: { ...(f.monthlyPlanner?.hiddenClinicTasks || {}), ...(s.monthlyPlanner?.hiddenClinicTasks || {}) },
+            currentWeekSchedule: s.monthlyPlanner?.currentWeekSchedule ?? f.monthlyPlanner?.currentWeekSchedule ?? {}
+        };
+    } else {
+        result.monthlyPlanner = {
+            notes: migrateArrayToObject(s.monthlyPlanner?.notes, 'note'),
+            customTasks: migrateArrayToObject(s.monthlyPlanner?.customTasks, 'ctask'),
+            overriddenStatic: migrateArrayToObject(s.monthlyPlanner?.overriddenStatic, 'override'),
+            completedTasks: migrateArrayToObject(s.monthlyPlanner?.completedTasks, 'completed'),
+            hiddenClinicTasks: s.monthlyPlanner?.hiddenClinicTasks ?? f.monthlyPlanner?.hiddenClinicTasks ?? {},
+            currentWeekSchedule: s.monthlyPlanner?.currentWeekSchedule ?? f.monthlyPlanner?.currentWeekSchedule ?? {}
+        };
+    }
+
+    // --- Clinical Data ---
+    var cd = {};
+
+    // patients
+    if (isMerge) {
+        cd.patients = { ...(f.clinicalData?.patients || {}), ...(s.clinicalData?.patients || {}) };
+    } else {
+        cd.patients = s.clinicalData?.patients || {};
+    }
+
+    // appointments & completedProcedures
+    if (isRemoteWins) {
+        cd.appointments = { ...migrateArrayToObject(f.clinicalData?.appointments, 'appt'), ...migrateArrayToObject(s.clinicalData?.appointments, 'appt') };
+        cd.completedProcedures = { ...migrateArrayToObject(f.clinicalData?.completedProcedures, 'proc'), ...migrateArrayToObject(s.clinicalData?.completedProcedures, 'proc') };
+    } else {
+        cd.appointments = migrateArrayToObject(s.clinicalData?.appointments, 'appt');
+        cd.completedProcedures = migrateArrayToObject(s.clinicalData?.completedProcedures, 'proc');
+    }
+
+    // competencies: first arg to mergeCompetencies wins structure conflicts.
+    // Merge strategies: fallback (local) first — preserves local structure.
+    // Source-wins: source first — restore operation takes precedence.
+    // Note: mergeCompetencies always unions completionEntries and takes MAX of
+    // completed counts regardless of arg order — "wins" refers to section structure.
+    if (isSourceWins) {
+        cd.competencies = mergeCompetencies(s.clinicalData?.competencies, f.clinicalData?.competencies);
+    } else {
+        cd.competencies = mergeCompetencies(f.clinicalData?.competencies, s.clinicalData?.competencies);
+    }
+
+    // patientRecords: strategy-specific merge
+    if (isRemoteWins) {
+        // Full per-patient field-level merge: local base, remote fills empty fields,
+        // clinicalBrief newer-wins, importedRequirements fill, briefHistory longer-wins
+        cd.patientRecords = (function() {
+            var local = f.clinicalData?.patientRecords || {};
+            var remote = s.clinicalData?.patientRecords || {};
+            var merged = {};
+            Object.keys(local).forEach(function(id) { merged[id] = { ...local[id] }; });
+            Object.keys(remote).forEach(function(id) {
+                if (!merged[id]) {
+                    merged[id] = { ...remote[id] };
+                } else {
+                    Object.keys(remote[id]).forEach(function(key) {
+                        if (merged[id][key] === undefined || merged[id][key] === null || merged[id][key] === '') {
+                            merged[id][key] = remote[id][key];
+                        }
+                    });
+                    if (remote[id].clinicalBrief && remote[id].clinicalBrief.dateGenerated) {
+                        if (!merged[id].clinicalBrief || (remote[id].clinicalBrief.dateGenerated > (merged[id].clinicalBrief.dateGenerated || ''))) {
+                            merged[id].clinicalBrief = remote[id].clinicalBrief;
+                        }
+                    }
+                    var localIR = getValues(merged[id].importedRequirements);
+                    var remoteIR = getValues(remote[id].importedRequirements);
+                    if (remoteIR.length > 0 && localIR.length === 0) {
+                        merged[id].importedRequirements = remoteIR;
+                    }
+                    var localBH = getValues(merged[id].briefHistory);
+                    var remoteBH = getValues(remote[id].briefHistory);
+                    if (remoteBH.length > localBH.length) {
+                        merged[id].briefHistory = remoteBH;
+                    }
+                }
+            });
+            return merged;
+        })();
+    } else if (isStoredWins) {
+        // Stored wins: defaults fill gaps, stored data is authoritative
+        cd.patientRecords = (function() {
+            var dflt = f.clinicalData?.patientRecords || {};
+            var stored = s.clinicalData?.patientRecords || {};
+            var merged = {};
+            Object.keys(stored).forEach(function(id) {
+                merged[id] = { ...(dflt[id] || {}), ...stored[id] };
+            });
+            Object.keys(dflt).forEach(function(id) {
+                if (!merged[id]) merged[id] = dflt[id];
+            });
+            return merged;
+        })();
+    } else {
+        // source-wins: take source or fallback wholesale, no per-patient merge
+        cd.patientRecords = s.clinicalData?.patientRecords || f.clinicalData?.patientRecords || {};
+    }
+
+    // dashboardSnapshots: always dedup-merge via mergeDashboardSnapshots
+    cd.dashboardSnapshots = mergeDashboardSnapshots(f.clinicalData?.dashboardSnapshots, s.clinicalData?.dashboardSnapshots);
+
+    // missingNotes
+    if (isMerge) {
+        cd.missingNotes = { ...(f.clinicalData?.missingNotes || {}), ...(s.clinicalData?.missingNotes || {}) };
+    } else {
+        cd.missingNotes = s.clinicalData?.missingNotes ?? f.clinicalData?.missingNotes ?? {};
+    }
+
+    // autoLinkReviewQueue
+    if (isRemoteWins) {
+        // Union by procedureId: keep all local, add remote-only
+        var localQ = getValues(f.clinicalData?.autoLinkReviewQueue);
+        var remoteQ = getValues(s.clinicalData?.autoLinkReviewQueue);
+        var localProcIds = new Set(localQ.map(function(q) { return q.procedureId; }));
+        cd.autoLinkReviewQueue = localQ.concat(remoteQ.filter(function(q) {
+            return q.procedureId && !localProcIds.has(q.procedureId);
+        }));
+    } else {
+        // stored-wins and source-wins: take source array directly
+        cd.autoLinkReviewQueue = Array.isArray(s.clinicalData?.autoLinkReviewQueue)
+            ? s.clinicalData.autoLinkReviewQueue
+            : (f.clinicalData?.autoLinkReviewQueue || []);
+    }
+
+    result.clinicalData = cd;
+
+    // --- Todo List ---
+    // Spread order determines conflict winner:
+    //   remote-wins: {...source, ...fallback} — fallback (local) wins, because local
+    //     edits should not be overwritten by stale remote data during live sync
+    //   stored-wins: {...fallback, ...source} — source (stored) wins, because localStorage
+    //     IS the authoritative local state being loaded at boot
+    if (isRemoteWins) {
+        result.todoList = {
+            items: { ...(s.todoList?.items || {}), ...(f.todoList?.items || {}) },
+            _nextSeq: Math.max(s.todoList?._nextSeq ?? 1, f.todoList?._nextSeq ?? 1),
+            lastUpdated: (f.todoList?.lastUpdated && s.todoList?.lastUpdated)
+                ? (f.todoList.lastUpdated > s.todoList.lastUpdated ? f.todoList.lastUpdated : s.todoList.lastUpdated)
+                : f.todoList?.lastUpdated ?? s.todoList?.lastUpdated ?? null
+        };
+    } else if (isStoredWins) {
+        result.todoList = {
+            items: { ...(f.todoList?.items || {}), ...(s.todoList?.items || {}) },
+            _nextSeq: Math.max(s.todoList?._nextSeq ?? 1, f.todoList?._nextSeq ?? 1),
+            lastUpdated: s.todoList?.lastUpdated ?? f.todoList?.lastUpdated ?? null
+        };
+    } else {
+        result.todoList = {
+            items: s.todoList?.items || {},
+            _nextSeq: s.todoList?._nextSeq || 1,
+            lastUpdated: s.todoList?.lastUpdated ?? null
+        };
+    }
+
+    // --- Daily Planner ---
+    result.dailyPlanner = migrateDailyPlannerBlocks(s.dailyPlanner || f.dailyPlanner);
+
+    // --- Exams ---
+    if (isRemoteWins) {
+        result.exams = { ...migrateArrayToObject(f.exams, 'exam'), ...migrateArrayToObject(s.exams, 'exam') };
+    } else {
+        result.exams = migrateArrayToObject(s.exams, 'exam');
+    }
+
+    // --- Graduation Prep ---
+    if (isMerge && s.graduationPrep) {
+        if (isRemoteWins) {
+            // remote-wins: source ?? fallback ?? default for each sub-field
+            result.graduationPrep = {
+                externship: {
+                    startDate: s.graduationPrep?.externship?.startDate ?? f.graduationPrep?.externship?.startDate ?? null,
+                    endDate: s.graduationPrep?.externship?.endDate ?? f.graduationPrep?.externship?.endDate ?? null,
+                    patients: s.graduationPrep?.externship?.patients ?? f.graduationPrep?.externship?.patients ?? {},
+                    logistics: s.graduationPrep?.externship?.logistics ?? f.graduationPrep?.externship?.logistics ?? '',
+                    notes: s.graduationPrep?.externship?.notes ?? f.graduationPrep?.externship?.notes ?? ''
+                },
+                cdcaAdex: {
+                    sessions: s.graduationPrep?.cdcaAdex?.sessions ?? f.graduationPrep?.cdcaAdex?.sessions ?? {},
+                    notes: s.graduationPrep?.cdcaAdex?.notes ?? f.graduationPrep?.cdcaAdex?.notes ?? ''
+                },
+                inbde: { notes: s.graduationPrep?.inbde?.notes ?? f.graduationPrep?.inbde?.notes ?? '' },
+                jobSearch: { notes: s.graduationPrep?.jobSearch?.notes ?? f.graduationPrep?.jobSearch?.notes ?? '' }
+            };
+        } else {
+            // stored-wins: source ?? default (no fallback chain through roadmapData)
+            result.graduationPrep = {
+                externship: {
+                    startDate: s.graduationPrep?.externship?.startDate ?? null,
+                    endDate: s.graduationPrep?.externship?.endDate ?? null,
+                    patients: s.graduationPrep?.externship?.patients ?? {},
+                    logistics: s.graduationPrep?.externship?.logistics ?? '',
+                    notes: s.graduationPrep?.externship?.notes ?? ''
+                },
+                cdcaAdex: {
+                    sessions: s.graduationPrep?.cdcaAdex?.sessions ?? {},
+                    notes: s.graduationPrep?.cdcaAdex?.notes ?? ''
+                },
+                inbde: { notes: s.graduationPrep?.inbde?.notes ?? '' },
+                jobSearch: { notes: s.graduationPrep?.jobSearch?.notes ?? '' }
+            };
+        }
+    } else if (isSourceWins) {
+        result.graduationPrep = s.graduationPrep ?? f.graduationPrep ?? defaults.graduationPrep;
+    } else {
+        // isMerge but source doesn't have graduationPrep
+        result.graduationPrep = f.graduationPrep || defaults.graduationPrep;
+    }
+
+    // --- Clinic Headlines ---
+    if (isMerge && s.clinicHeadlines) {
+        if (isRemoteWins) {
+            result.clinicHeadlines = {
+                appointments: {
+                    completed: s.clinicHeadlines?.appointments?.completed ?? f.clinicHeadlines?.appointments?.completed ?? 0,
+                    target: s.clinicHeadlines?.appointments?.target ?? f.clinicHeadlines?.appointments?.target ?? 90
+                },
+                procedures: {
+                    completed: s.clinicHeadlines?.procedures?.completed ?? f.clinicHeadlines?.procedures?.completed ?? 0,
+                    target: s.clinicHeadlines?.procedures?.target ?? f.clinicHeadlines?.procedures?.target ?? 116
+                }
+            };
+        } else {
+            // stored-wins: source ?? default (no fallback through roadmapData)
+            result.clinicHeadlines = {
+                appointments: {
+                    completed: s.clinicHeadlines?.appointments?.completed ?? 0,
+                    target: s.clinicHeadlines?.appointments?.target ?? 90
+                },
+                procedures: {
+                    completed: s.clinicHeadlines?.procedures?.completed ?? 0,
+                    target: s.clinicHeadlines?.procedures?.target ?? 116
+                }
+            };
+        }
+    } else if (isSourceWins) {
+        result.clinicHeadlines = s.clinicHeadlines ?? f.clinicHeadlines ?? defaults.clinicHeadlines;
+    } else {
+        result.clinicHeadlines = f.clinicHeadlines || defaults.clinicHeadlines;
+    }
+
+    // --- Periodic Reviews (same destructure pattern across all strategies) ---
+    if (s.periodicReviews) {
+        var sPr2 = s.periodicReviews?.pr2 || {};
+        var fPr2 = f.periodicReviews?.pr2 || {};
+        var dPr2 = defaults.periodicReviews?.pr2 || {};
+        result.periodicReviews = {
+            pr2: {
+                reviewDate: sPr2.reviewDate ?? fPr2.reviewDate ?? dPr2.reviewDate ?? null,
+                reviewPeriod: sPr2.reviewPeriod ?? fPr2.reviewPeriod ?? dPr2.reviewPeriod ?? '',
+                dashboardDiscrepancyNotes: sPr2.dashboardDiscrepancyNotes ?? fPr2.dashboardDiscrepancyNotes ?? dPr2.dashboardDiscrepancyNotes ?? '',
+                adminStatsOverrides: { ...(fPr2.adminStatsOverrides || {}), ...(sPr2.adminStatsOverrides || {}) },
+                completedProceduresHtml: sPr2.completedProceduresHtml ?? fPr2.completedProceduresHtml ?? dPr2.completedProceduresHtml ?? '',
+                inProgressProcedures: { ...(fPr2.inProgressProcedures || {}), ...(sPr2.inProgressProcedures || {}) },
+                departmentNotes: { ...(fPr2.departmentNotes || {}), ...(sPr2.departmentNotes || {}) },
+                subjectiveReport: sPr2.subjectiveReport ?? fPr2.subjectiveReport ?? dPr2.subjectiveReport ?? '',
+                patientNotes: { ...(fPr2.patientNotes || {}), ...(sPr2.patientNotes || {}) },
+                removedPatients: { ...(fPr2.removedPatients || {}), ...(sPr2.removedPatients || {}) },
+                lastEdited: sPr2.lastEdited ?? fPr2.lastEdited ?? dPr2.lastEdited ?? null
+            }
+        };
+    } else {
+        result.periodicReviews = f.periodicReviews || defaults.periodicReviews;
+    }
+
+    // --- Competency UI State ---
+    if (isMerge) {
+        if (s.competencyUIState) {
+            if (isRemoteWins) {
+                result.competencyUIState = {
+                    expandedCategories: Array.isArray(s.competencyUIState.expandedCategories)
+                        ? s.competencyUIState.expandedCategories
+                        : (f.competencyUIState?.expandedCategories || []),
+                    viewMode: s.competencyUIState.viewMode ?? f.competencyUIState?.viewMode ?? 'department'
+                };
+            } else {
+                // stored-wins: no fallback through roadmapData for expandedCategories
+                result.competencyUIState = {
+                    expandedCategories: Array.isArray(s.competencyUIState.expandedCategories)
+                        ? s.competencyUIState.expandedCategories
+                        : [],
+                    viewMode: s.competencyUIState.viewMode ?? 'department'
+                };
+            }
+        } else {
+            result.competencyUIState = f.competencyUIState || { expandedCategories: [], viewMode: 'department' };
+        }
+    } else {
+        result.competencyUIState = s.competencyUIState ?? f.competencyUIState ?? { expandedCategories: [], viewMode: 'department' };
+    }
+
+    // --- Metadata ---
+    if (isSourceWins) {
+        result.lastSaved = s.lastSaved || Date.now();
+        result._version = (s._version ?? 0) + 1;
+        result._lastModified = new Date().toISOString();
+    } else if (isRemoteWins) {
+        result.lastSaved = s.lastSaved;
+        result._version = Math.max(s._version || 0, f._version || 0);
+        result._lastModified = s._lastModified || f._lastModified;
+    } else {
+        // stored-wins
+        result.lastSaved = s.lastSaved || f.lastSaved;
+        result._version = s._version ?? f._version ?? 0;
+        result._lastModified = s._lastModified ?? f._lastModified ?? null;
+    }
+
+    result._dataLoaded = true;
+
+    return result;
+}
+
 // ==================== MERGE REMOTE-ONLY INTO LOCAL ====================
 // When local is newer, we keep all local data but ADD entries from Firebase
 // that don't exist locally. This prevents losing data imported on another device.
@@ -447,71 +850,15 @@ function importBackup(file) {
             // Create checkpoint of current state before import
             createCheckpoint('pre-import');
 
-            // Import the data — field-by-field reconstruction so newer fields get defaults
-            // even if the imported backup predates them (mirrors restoreBackup pattern)
             const bData = imported.data;
-            const defaults = getDefaultRoadmapData();
-            roadmapData = {
-                pedsLockedIn: bData.pedsLockedIn !== undefined ? bData.pedsLockedIn : defaults.pedsLockedIn,
-                mandatoryItems: bData.mandatoryItems || defaults.mandatoryItems,
-                grades: bData.grades || defaults.grades,
-                editedDeadlines: bData.editedDeadlines || {},
-                completedDeadlines: bData.completedDeadlines || {},
-                customDeadlines: migrateArrayToObject(bData.customDeadlines, 'deadline'),
-                deletedDeadlines: migrateArrayToObject(bData.deletedDeadlines, 'deleted'),
-                examStudyProgress: bData.examStudyProgress || {},
-                monthlyPlanner: {
-                    notes: migrateArrayToObject(bData.monthlyPlanner?.notes, 'note'),
-                    customTasks: migrateArrayToObject(bData.monthlyPlanner?.customTasks, 'ctask'),
-                    overriddenStatic: migrateArrayToObject(bData.monthlyPlanner?.overriddenStatic, 'override'),
-                    completedTasks: migrateArrayToObject(bData.monthlyPlanner?.completedTasks, 'completed'),
-                    hiddenClinicTasks: bData.monthlyPlanner?.hiddenClinicTasks ?? defaults.monthlyPlanner.hiddenClinicTasks,
-                    currentWeekSchedule: bData.monthlyPlanner?.currentWeekSchedule ?? defaults.monthlyPlanner.currentWeekSchedule
-                },
-                clinicalData: {
-                    patients: bData.clinicalData?.patients || {},
-                    appointments: migrateArrayToObject(bData.clinicalData?.appointments, 'appt'),
-                    completedProcedures: migrateArrayToObject(bData.clinicalData?.completedProcedures, 'proc'),
-                    competencies: mergeCompetencies(bData.clinicalData?.competencies, defaults.clinicalData?.competencies),
-                    patientRecords: bData.clinicalData?.patientRecords || defaults.clinicalData.patientRecords,
-                    dashboardSnapshots: mergeDashboardSnapshots(defaults.clinicalData?.dashboardSnapshots, bData.clinicalData?.dashboardSnapshots),
-                    missingNotes: bData.clinicalData?.missingNotes ?? defaults.clinicalData.missingNotes,
-                    autoLinkReviewQueue: Array.isArray(bData.clinicalData?.autoLinkReviewQueue) ? bData.clinicalData.autoLinkReviewQueue : []
-                },
-                todoList: {
-                    items: bData.todoList?.items || {},
-                    _nextSeq: bData.todoList?._nextSeq ?? 1,
-                    lastUpdated: bData.todoList?.lastUpdated ?? null
-                },
-                dailyPlanner: migrateDailyPlannerBlocks(bData.dailyPlanner || defaults.dailyPlanner),
-                exams: migrateArrayToObject(bData.exams, 'exam'),
-                graduationPrep: bData.graduationPrep ?? defaults.graduationPrep,
-                clinicHeadlines: bData.clinicHeadlines ?? defaults.clinicHeadlines,
-                periodicReviews: bData.periodicReviews ? {
-                    pr2: {
-                        reviewDate: bData.periodicReviews?.pr2?.reviewDate ?? defaults.periodicReviews.pr2.reviewDate,
-                        reviewPeriod: bData.periodicReviews?.pr2?.reviewPeriod ?? defaults.periodicReviews.pr2.reviewPeriod,
-                        dashboardDiscrepancyNotes: bData.periodicReviews?.pr2?.dashboardDiscrepancyNotes ?? defaults.periodicReviews.pr2.dashboardDiscrepancyNotes,
-                        adminStatsOverrides: bData.periodicReviews?.pr2?.adminStatsOverrides || {},
-                        completedProceduresHtml: bData.periodicReviews?.pr2?.completedProceduresHtml ?? defaults.periodicReviews.pr2.completedProceduresHtml,
-                        inProgressProcedures: bData.periodicReviews?.pr2?.inProgressProcedures || {},
-                        departmentNotes: bData.periodicReviews?.pr2?.departmentNotes || {},
-                        subjectiveReport: bData.periodicReviews?.pr2?.subjectiveReport ?? defaults.periodicReviews.pr2.subjectiveReport,
-                        patientNotes: bData.periodicReviews?.pr2?.patientNotes || {},
-                        removedPatients: bData.periodicReviews?.pr2?.removedPatients || {},
-                        lastEdited: bData.periodicReviews?.pr2?.lastEdited ?? defaults.periodicReviews.pr2.lastEdited
-                    }
-                } : defaults.periodicReviews,
-                lastSaved: bData.lastSaved || Date.now(),
-                _version: (bData._version ?? 0) + 1,
-                _lastModified: new Date().toISOString(),
-                _dataLoaded: true
-            };
+            roadmapData = reconstructState(bData, { strategy: 'source-wins', fallback: getDefaultRoadmapData() });
 
             // Clear migration flags so migrations re-run against imported data
             localStorage.removeItem('unifiedPatientStoreDone_v1');
             localStorage.removeItem('competencyEnhancementsDone_v2');
             localStorage.removeItem('competencyEnhancementsDone_v3');
+            localStorage.removeItem('leadingZeroDedupDone_v2');
+            localStorage.removeItem('perioNoiseCleanupDone_v1');
 
             migrateInvalidFirebaseKeys(roadmapData);
             clinicalDataDirty = true;
@@ -788,202 +1135,7 @@ function promptForPin() {
 function mergeRemoteState(data) {
     if (!data) return;
 
-    roadmapData = {
-        ...roadmapData,
-        pedsLockedIn: data.pedsLockedIn !== undefined ? data.pedsLockedIn : roadmapData.pedsLockedIn,
-        mandatoryItems: { ...roadmapData.mandatoryItems, ...(data.mandatoryItems || {}) },
-        grades: (() => {
-            const merged = {};
-            const allCourses = new Set([
-                ...Object.keys(roadmapData.grades || {}),
-                ...Object.keys(data.grades || {})
-            ]);
-            allCourses.forEach(courseId => {
-                merged[courseId] = (function() {
-                    var local = roadmapData.grades?.[courseId] || {};
-                    var remote = data.grades?.[courseId] || {};
-                    var result = { ...local };
-                    // Remote wins for actual values, but null/undefined in remote doesn't wipe local
-                    Object.keys(remote).forEach(function(key) {
-                        if (remote[key] !== null && remote[key] !== undefined) {
-                            result[key] = remote[key];
-                        }
-                    });
-                    return result;
-                })();
-            });
-            return merged;
-        })(),
-        editedDeadlines: { ...roadmapData.editedDeadlines, ...(data.editedDeadlines || {}) },
-        completedDeadlines: { ...roadmapData.completedDeadlines, ...(data.completedDeadlines || {}) },
-        customDeadlines: {
-            ...migrateArrayToObject(roadmapData.customDeadlines, 'deadline'),
-            ...migrateArrayToObject(data.customDeadlines, 'deadline')
-        },
-        deletedDeadlines: {
-            ...migrateArrayToObject(roadmapData.deletedDeadlines, 'deleted'),
-            ...migrateArrayToObject(data.deletedDeadlines, 'deleted')
-        },
-        examStudyProgress: { ...roadmapData.examStudyProgress, ...(data.examStudyProgress || {}) },
-        monthlyPlanner: {
-            notes: {
-                ...migrateArrayToObject(roadmapData.monthlyPlanner?.notes, 'note'),
-                ...migrateArrayToObject(data.monthlyPlanner?.notes, 'note')
-            },
-            customTasks: {
-                ...migrateArrayToObject(roadmapData.monthlyPlanner?.customTasks, 'ctask'),
-                ...migrateArrayToObject(data.monthlyPlanner?.customTasks, 'ctask')
-            },
-            overriddenStatic: {
-                ...migrateArrayToObject(roadmapData.monthlyPlanner?.overriddenStatic, 'override'),
-                ...migrateArrayToObject(data.monthlyPlanner?.overriddenStatic, 'override')
-            },
-            completedTasks: {
-                ...migrateArrayToObject(roadmapData.monthlyPlanner?.completedTasks, 'completed'),
-                ...migrateArrayToObject(data.monthlyPlanner?.completedTasks, 'completed')
-            },
-            hiddenClinicTasks: {
-                ...(roadmapData.monthlyPlanner?.hiddenClinicTasks || {}),
-                ...(data.monthlyPlanner?.hiddenClinicTasks || {})
-            },
-            currentWeekSchedule: data.monthlyPlanner?.currentWeekSchedule ?? roadmapData.monthlyPlanner?.currentWeekSchedule ?? {}
-        },
-        clinicalData: {
-            patients: { ...roadmapData.clinicalData?.patients, ...(data.clinicalData?.patients || {}) },
-            appointments: {
-                ...migrateArrayToObject(roadmapData.clinicalData?.appointments, 'appt'),
-                ...migrateArrayToObject(data.clinicalData?.appointments, 'appt')
-            },
-            completedProcedures: {
-                ...migrateArrayToObject(roadmapData.clinicalData?.completedProcedures, 'proc'),
-                ...migrateArrayToObject(data.clinicalData?.completedProcedures, 'proc')
-            },
-            competencies: mergeCompetencies(
-                roadmapData.clinicalData?.competencies,
-                data.clinicalData?.competencies
-            ),
-            patientRecords: (function() {
-                var local = roadmapData.clinicalData?.patientRecords || {};
-                var remote = data.clinicalData?.patientRecords || {};
-                var merged = {};
-                // Start with all local records
-                Object.keys(local).forEach(function(id) { merged[id] = { ...local[id] }; });
-                // Add remote records, field-level merge for existing (local wins for conflicts)
-                Object.keys(remote).forEach(function(id) {
-                    if (!merged[id]) {
-                        merged[id] = { ...remote[id] };
-                    } else {
-                        // Fill missing fields from remote, local wins for conflicts
-                        Object.keys(remote[id]).forEach(function(key) {
-                            if (merged[id][key] === undefined || merged[id][key] === null || merged[id][key] === '') {
-                                merged[id][key] = remote[id][key];
-                            }
-                        });
-                        // clinicalBrief: newer dateGenerated wins
-                        if (remote[id].clinicalBrief && remote[id].clinicalBrief.dateGenerated) {
-                            if (!merged[id].clinicalBrief || (remote[id].clinicalBrief.dateGenerated > (merged[id].clinicalBrief.dateGenerated || ''))) {
-                                merged[id].clinicalBrief = remote[id].clinicalBrief;
-                            }
-                        }
-                        // importedRequirements: remote fills if local is empty/missing
-                        var localIR = getValues(merged[id].importedRequirements);
-                        var remoteIR = getValues(remote[id].importedRequirements);
-                        if (remoteIR.length > 0 && localIR.length === 0) {
-                            merged[id].importedRequirements = remoteIR;
-                        }
-                        // briefHistory: longer array wins
-                        var localBH = getValues(merged[id].briefHistory);
-                        var remoteBH = getValues(remote[id].briefHistory);
-                        if (remoteBH.length > localBH.length) {
-                            merged[id].briefHistory = remoteBH;
-                        }
-                    }
-                });
-                return merged;
-            })(),
-            dashboardSnapshots: mergeDashboardSnapshots(roadmapData.clinicalData?.dashboardSnapshots, data.clinicalData?.dashboardSnapshots),
-            missingNotes: { ...(roadmapData.clinicalData?.missingNotes || {}), ...(data.clinicalData?.missingNotes || {}) },
-            autoLinkReviewQueue: (() => {
-                var local = getValues(roadmapData.clinicalData?.autoLinkReviewQueue);
-                var remote = getValues(data.clinicalData?.autoLinkReviewQueue);
-                var localIds = new Set(local.map(function(q) { return q.procedureId; }));
-                return local.concat(remote.filter(function(q) { return q.procedureId && !localIds.has(q.procedureId); }));
-            })()
-        },
-        todoList: {
-            items: (function() {
-                var local = roadmapData.todoList?.items || {};
-                var remote = data.todoList?.items || {};
-                var merged = { ...remote, ...local };  // local wins on conflict
-                return merged;
-            })(),
-            _nextSeq: Math.max(data.todoList?._nextSeq ?? 1, roadmapData.todoList?._nextSeq ?? 1),
-            lastUpdated: (roadmapData.todoList?.lastUpdated && data.todoList?.lastUpdated)
-                ? (roadmapData.todoList.lastUpdated > data.todoList.lastUpdated ? roadmapData.todoList.lastUpdated : data.todoList.lastUpdated)
-                : roadmapData.todoList?.lastUpdated ?? data.todoList?.lastUpdated ?? null
-        },
-        dailyPlanner: migrateDailyPlannerBlocks(data.dailyPlanner || roadmapData.dailyPlanner),
-        exams: {
-            ...migrateArrayToObject(roadmapData.exams, 'exam'),
-            ...migrateArrayToObject(data.exams, 'exam')
-        },
-        graduationPrep: data.graduationPrep ? {
-            externship: {
-                startDate: data.graduationPrep?.externship?.startDate ?? roadmapData.graduationPrep?.externship?.startDate ?? null,
-                endDate: data.graduationPrep?.externship?.endDate ?? roadmapData.graduationPrep?.externship?.endDate ?? null,
-                patients: data.graduationPrep?.externship?.patients ?? roadmapData.graduationPrep?.externship?.patients ?? {},
-                logistics: data.graduationPrep?.externship?.logistics ?? roadmapData.graduationPrep?.externship?.logistics ?? '',
-                notes: data.graduationPrep?.externship?.notes ?? roadmapData.graduationPrep?.externship?.notes ?? ''
-            },
-            cdcaAdex: {
-                sessions: data.graduationPrep?.cdcaAdex?.sessions ?? roadmapData.graduationPrep?.cdcaAdex?.sessions ?? {},
-                notes: data.graduationPrep?.cdcaAdex?.notes ?? roadmapData.graduationPrep?.cdcaAdex?.notes ?? ''
-            },
-            inbde: { notes: data.graduationPrep?.inbde?.notes ?? roadmapData.graduationPrep?.inbde?.notes ?? '' },
-            jobSearch: { notes: data.graduationPrep?.jobSearch?.notes ?? roadmapData.graduationPrep?.jobSearch?.notes ?? '' }
-        } : (roadmapData.graduationPrep || {
-            externship: { startDate: null, endDate: null, patients: {}, logistics: '', notes: '' },
-            cdcaAdex: { sessions: {}, notes: '' },
-            inbde: { notes: '' },
-            jobSearch: { notes: '' }
-        }),
-        clinicHeadlines: data.clinicHeadlines ? {
-            appointments: {
-                completed: data.clinicHeadlines?.appointments?.completed ?? roadmapData.clinicHeadlines?.appointments?.completed ?? 0,
-                target: data.clinicHeadlines?.appointments?.target ?? roadmapData.clinicHeadlines?.appointments?.target ?? 90
-            },
-            procedures: {
-                completed: data.clinicHeadlines?.procedures?.completed ?? roadmapData.clinicHeadlines?.procedures?.completed ?? 0,
-                target: data.clinicHeadlines?.procedures?.target ?? roadmapData.clinicHeadlines?.procedures?.target ?? 116
-            }
-        } : (roadmapData.clinicHeadlines || {
-            appointments: { completed: 0, target: 90 },
-            procedures: { completed: 0, target: 116 }
-        }),
-        periodicReviews: data.periodicReviews ? {
-            pr2: {
-                reviewDate: data.periodicReviews?.pr2?.reviewDate ?? roadmapData.periodicReviews?.pr2?.reviewDate ?? null,
-                reviewPeriod: data.periodicReviews?.pr2?.reviewPeriod ?? roadmapData.periodicReviews?.pr2?.reviewPeriod ?? '',
-                dashboardDiscrepancyNotes: data.periodicReviews?.pr2?.dashboardDiscrepancyNotes ?? roadmapData.periodicReviews?.pr2?.dashboardDiscrepancyNotes ?? '',
-                adminStatsOverrides: { ...(roadmapData.periodicReviews?.pr2?.adminStatsOverrides || {}), ...(data.periodicReviews?.pr2?.adminStatsOverrides || {}) },
-                completedProceduresHtml: data.periodicReviews?.pr2?.completedProceduresHtml ?? roadmapData.periodicReviews?.pr2?.completedProceduresHtml ?? '',
-                inProgressProcedures: { ...(roadmapData.periodicReviews?.pr2?.inProgressProcedures || {}), ...(data.periodicReviews?.pr2?.inProgressProcedures || {}) },
-                departmentNotes: { ...(roadmapData.periodicReviews?.pr2?.departmentNotes || {}), ...(data.periodicReviews?.pr2?.departmentNotes || {}) },
-                subjectiveReport: data.periodicReviews?.pr2?.subjectiveReport ?? roadmapData.periodicReviews?.pr2?.subjectiveReport ?? '',
-                patientNotes: { ...(roadmapData.periodicReviews?.pr2?.patientNotes || {}), ...(data.periodicReviews?.pr2?.patientNotes || {}) },
-                removedPatients: { ...(roadmapData.periodicReviews?.pr2?.removedPatients || {}), ...(data.periodicReviews?.pr2?.removedPatients || {}) },
-                lastEdited: data.periodicReviews?.pr2?.lastEdited ?? roadmapData.periodicReviews?.pr2?.lastEdited ?? null
-            }
-        } : (roadmapData.periodicReviews || getDefaultRoadmapData().periodicReviews),
-        competencyUIState: data.competencyUIState ? {
-            expandedCategories: Array.isArray(data.competencyUIState.expandedCategories) ? data.competencyUIState.expandedCategories : (roadmapData.competencyUIState?.expandedCategories || []),
-            viewMode: data.competencyUIState.viewMode ?? roadmapData.competencyUIState?.viewMode ?? 'department'
-        } : (roadmapData.competencyUIState || { expandedCategories: [], viewMode: 'department' }),
-        lastSaved: data.lastSaved,
-        _version: Math.max(data._version || 0, roadmapData._version || 0),
-        _lastModified: data._lastModified || roadmapData._lastModified,
-        _dataLoaded: true  // CRITICAL: Always true after merge
-    };
+    roadmapData = reconstructState(data, { strategy: 'remote-wins', fallback: roadmapData });
 
     migrateInvalidFirebaseKeys(roadmapData);
 
@@ -1013,130 +1165,7 @@ function loadFromLocalStorage(finalize = true) {
     if (saved) {
         try {
             const data = JSON.parse(saved);
-            // FIX: Use explicit field merges (matching loadFromFirebase pattern)
-            // Avoids raw spread which can propagate localStorage corruption
-            roadmapData = {
-                ...roadmapData,
-                // Explicit field merges for safety (not raw ...data spread)
-                pedsLockedIn: data.pedsLockedIn !== undefined ? data.pedsLockedIn : roadmapData.pedsLockedIn,
-                mandatoryItems: { ...roadmapData.mandatoryItems, ...(data.mandatoryItems || {}) },
-                grades: (() => {
-                    const merged = {};
-                    const allCourses = new Set([
-                        ...Object.keys(roadmapData.grades || {}),
-                        ...Object.keys(data.grades || {})
-                    ]);
-                    allCourses.forEach(courseId => {
-                        merged[courseId] = (function() {
-                            var base = { ...(roadmapData.grades?.[courseId] || {}) };
-                            var stored = data.grades?.[courseId] || {};
-                            Object.keys(stored).forEach(function(k) {
-                                if (stored[k] !== null && stored[k] !== undefined) base[k] = stored[k];
-                            });
-                            return base;
-                        })();
-                    });
-                    return merged;
-                })(),
-                editedDeadlines: { ...roadmapData.editedDeadlines, ...(data.editedDeadlines || {}) },
-                completedDeadlines: { ...roadmapData.completedDeadlines, ...(data.completedDeadlines || {}) },
-                customDeadlines: migrateArrayToObject(data.customDeadlines, 'deadline'),
-                deletedDeadlines: migrateArrayToObject(data.deletedDeadlines, 'deleted'),
-                examStudyProgress: { ...roadmapData.examStudyProgress, ...(data.examStudyProgress || {}) },
-                monthlyPlanner: {
-                    notes: migrateArrayToObject(data.monthlyPlanner?.notes, 'note'),
-                    customTasks: migrateArrayToObject(data.monthlyPlanner?.customTasks, 'ctask'),
-                    overriddenStatic: migrateArrayToObject(data.monthlyPlanner?.overriddenStatic, 'override'),
-                    completedTasks: migrateArrayToObject(data.monthlyPlanner?.completedTasks, 'completed'),
-                    hiddenClinicTasks: data.monthlyPlanner?.hiddenClinicTasks ?? roadmapData.monthlyPlanner?.hiddenClinicTasks ?? {},
-                    currentWeekSchedule: data.monthlyPlanner?.currentWeekSchedule ?? roadmapData.monthlyPlanner?.currentWeekSchedule ?? {}
-                },
-                clinicalData: {
-                    patients: { ...roadmapData.clinicalData?.patients, ...(data.clinicalData?.patients || {}) },
-                    appointments: migrateArrayToObject(data.clinicalData?.appointments, 'appt'),
-                    completedProcedures: migrateArrayToObject(data.clinicalData?.completedProcedures, 'proc'),
-                    competencies: mergeCompetencies(roadmapData.clinicalData?.competencies, data.clinicalData?.competencies),
-                    patientRecords: (function() {
-                        var defaults = roadmapData.clinicalData?.patientRecords || {};
-                        var stored = data.clinicalData?.patientRecords || {};
-                        var merged = {};
-                        // Start with stored data (localStorage is authoritative)
-                        Object.keys(stored).forEach(function(id) {
-                            merged[id] = { ...(defaults[id] || {}), ...stored[id] };
-                        });
-                        // Add any defaults that don't exist in stored
-                        Object.keys(defaults).forEach(function(id) {
-                            if (!merged[id]) merged[id] = defaults[id];
-                        });
-                        return merged;
-                    })(),
-                    dashboardSnapshots: mergeDashboardSnapshots(roadmapData.clinicalData?.dashboardSnapshots, data.clinicalData?.dashboardSnapshots),
-                    missingNotes: { ...(roadmapData.clinicalData?.missingNotes || {}), ...(data.clinicalData?.missingNotes || {}) },
-                    autoLinkReviewQueue: Array.isArray(data.clinicalData?.autoLinkReviewQueue) ? data.clinicalData.autoLinkReviewQueue : (roadmapData.clinicalData?.autoLinkReviewQueue || [])
-                },
-                todoList: {
-                    items: { ...(roadmapData.todoList?.items || {}), ...(data.todoList?.items || {}) },
-                    _nextSeq: Math.max(data.todoList?._nextSeq ?? 1, roadmapData.todoList?._nextSeq ?? 1),
-                    lastUpdated: data.todoList?.lastUpdated ?? roadmapData.todoList?.lastUpdated ?? null
-                },
-                dailyPlanner: migrateDailyPlannerBlocks(data.dailyPlanner || roadmapData.dailyPlanner),
-                exams: migrateArrayToObject(data.exams, 'exam'),
-                graduationPrep: data.graduationPrep ? {
-                    externship: {
-                        startDate: data.graduationPrep?.externship?.startDate ?? null,
-                        endDate: data.graduationPrep?.externship?.endDate ?? null,
-                        patients: data.graduationPrep?.externship?.patients ?? {},
-                        logistics: data.graduationPrep?.externship?.logistics ?? '',
-                        notes: data.graduationPrep?.externship?.notes ?? ''
-                    },
-                    cdcaAdex: {
-                        sessions: data.graduationPrep?.cdcaAdex?.sessions ?? {},
-                        notes: data.graduationPrep?.cdcaAdex?.notes ?? ''
-                    },
-                    inbde: { notes: data.graduationPrep?.inbde?.notes ?? '' },
-                    jobSearch: { notes: data.graduationPrep?.jobSearch?.notes ?? '' }
-                } : (roadmapData.graduationPrep || {
-                    externship: { startDate: null, endDate: null, patients: {}, logistics: '', notes: '' },
-                    cdcaAdex: { sessions: {}, notes: '' },
-                    inbde: { notes: '' },
-                    jobSearch: { notes: '' }
-                }),
-                clinicHeadlines: data.clinicHeadlines ? {
-                    appointments: {
-                        completed: data.clinicHeadlines?.appointments?.completed ?? 0,
-                        target: data.clinicHeadlines?.appointments?.target ?? 90
-                    },
-                    procedures: {
-                        completed: data.clinicHeadlines?.procedures?.completed ?? 0,
-                        target: data.clinicHeadlines?.procedures?.target ?? 116
-                    }
-                } : (roadmapData.clinicHeadlines || {
-                    appointments: { completed: 0, target: 90 },
-                    procedures: { completed: 0, target: 116 }
-                }),
-                periodicReviews: data.periodicReviews ? {
-                    pr2: {
-                        reviewDate: data.periodicReviews?.pr2?.reviewDate ?? roadmapData.periodicReviews?.pr2?.reviewDate ?? null,
-                        reviewPeriod: data.periodicReviews?.pr2?.reviewPeriod ?? roadmapData.periodicReviews?.pr2?.reviewPeriod ?? '',
-                        dashboardDiscrepancyNotes: data.periodicReviews?.pr2?.dashboardDiscrepancyNotes ?? roadmapData.periodicReviews?.pr2?.dashboardDiscrepancyNotes ?? '',
-                        adminStatsOverrides: { ...(roadmapData.periodicReviews?.pr2?.adminStatsOverrides || {}), ...(data.periodicReviews?.pr2?.adminStatsOverrides || {}) },
-                        completedProceduresHtml: data.periodicReviews?.pr2?.completedProceduresHtml ?? roadmapData.periodicReviews?.pr2?.completedProceduresHtml ?? '',
-                        inProgressProcedures: { ...(roadmapData.periodicReviews?.pr2?.inProgressProcedures || {}), ...(data.periodicReviews?.pr2?.inProgressProcedures || {}) },
-                        departmentNotes: { ...(roadmapData.periodicReviews?.pr2?.departmentNotes || {}), ...(data.periodicReviews?.pr2?.departmentNotes || {}) },
-                        subjectiveReport: data.periodicReviews?.pr2?.subjectiveReport ?? roadmapData.periodicReviews?.pr2?.subjectiveReport ?? '',
-                        patientNotes: { ...(roadmapData.periodicReviews?.pr2?.patientNotes || {}), ...(data.periodicReviews?.pr2?.patientNotes || {}) },
-                        removedPatients: { ...(roadmapData.periodicReviews?.pr2?.removedPatients || {}), ...(data.periodicReviews?.pr2?.removedPatients || {}) },
-                        lastEdited: data.periodicReviews?.pr2?.lastEdited ?? roadmapData.periodicReviews?.pr2?.lastEdited ?? null
-                    }
-                } : (roadmapData.periodicReviews || getDefaultRoadmapData().periodicReviews),
-                competencyUIState: data.competencyUIState ? {
-                    expandedCategories: Array.isArray(data.competencyUIState.expandedCategories) ? data.competencyUIState.expandedCategories : [],
-                    viewMode: data.competencyUIState.viewMode ?? 'department'
-                } : (roadmapData.competencyUIState || { expandedCategories: [], viewMode: 'department' }),
-                lastSaved: data.lastSaved || roadmapData.lastSaved,
-                _version: data._version ?? roadmapData._version ?? 0,
-                _lastModified: data._lastModified ?? roadmapData._lastModified ?? null
-            };
+            roadmapData = reconstructState(data, { strategy: 'stored-wins', fallback: roadmapData });
         } catch (e) {
             console.error('❌ Failed to parse localStorage data:', e);
             // Don't crash - continue with defaults
@@ -1594,12 +1623,14 @@ function forceCloudSync() {
                         applyRemoteData(remoteData);
                         showToast('✅ Synced from cloud');
                     } else if (choice === 'merge') {
-                        const merged = deepMerge(remoteData, roadmapData);
-                        merged.lastSaved = Date.now();
+                        // Use mergeRemoteState (not deepMerge) so competencies get
+                        // item-level merge and dashboardSnapshots get dedup-merge
                         lastKeepLocalTime = Date.now();
-                        // Sanitize merged data
-                        migrateInvalidFirebaseKeys(merged);
-                        applyRemoteData(merged);
+                        mergeRemoteState(remoteData);
+                        roadmapData.lastSaved = Date.now();
+                        migrateInvalidFirebaseKeys(roadmapData);
+                        safeLocalStorageSet(STORAGE_KEY, JSON.stringify(roadmapData));
+                        initUI();
                         saveData();
                         showToast('✅ Merged data from both devices');
                     }
@@ -1805,78 +1836,15 @@ function restoreCheckpoint(index) {
             // Backup current state first
             createCheckpoint(`Pre-restore backup (${new Date().toLocaleString()})`);
 
-            // Restore checkpoint - explicitly restore each field (no raw spread)
             const cpData = checkpoint.data;
-            roadmapData = {
-                pedsLockedIn: cpData.pedsLockedIn !== undefined ? cpData.pedsLockedIn : roadmapData.pedsLockedIn,
-                mandatoryItems: cpData.mandatoryItems || roadmapData.mandatoryItems || {},
-                grades: cpData.grades || roadmapData.grades || {},
-                editedDeadlines: cpData.editedDeadlines || {},
-                completedDeadlines: cpData.completedDeadlines || {},
-                customDeadlines: migrateArrayToObject(cpData.customDeadlines, 'deadline'),
-                deletedDeadlines: migrateArrayToObject(cpData.deletedDeadlines, 'deleted'),
-                examStudyProgress: cpData.examStudyProgress || {},
-                monthlyPlanner: {
-                    notes: migrateArrayToObject(cpData.monthlyPlanner?.notes, 'note'),
-                    customTasks: migrateArrayToObject(cpData.monthlyPlanner?.customTasks, 'ctask'),
-                    overriddenStatic: migrateArrayToObject(cpData.monthlyPlanner?.overriddenStatic, 'override'),
-                    completedTasks: migrateArrayToObject(cpData.monthlyPlanner?.completedTasks, 'completed'),
-                    hiddenClinicTasks: cpData.monthlyPlanner?.hiddenClinicTasks ?? roadmapData.monthlyPlanner?.hiddenClinicTasks ?? {},
-                    currentWeekSchedule: cpData.monthlyPlanner?.currentWeekSchedule ?? roadmapData.monthlyPlanner?.currentWeekSchedule ?? {}
-                },
-                clinicalData: {
-                    patients: cpData.clinicalData?.patients || {},
-                    appointments: migrateArrayToObject(cpData.clinicalData?.appointments, 'appt'),
-                    completedProcedures: migrateArrayToObject(cpData.clinicalData?.completedProcedures, 'proc'),
-                    competencies: mergeCompetencies(cpData.clinicalData?.competencies, roadmapData.clinicalData?.competencies),
-                    patientRecords: cpData.clinicalData?.patientRecords || roadmapData.clinicalData?.patientRecords || {},
-                    dashboardSnapshots: mergeDashboardSnapshots(roadmapData.clinicalData?.dashboardSnapshots, cpData.clinicalData?.dashboardSnapshots),
-                    missingNotes: cpData.clinicalData?.missingNotes ?? roadmapData.clinicalData?.missingNotes ?? {},
-                    autoLinkReviewQueue: Array.isArray(cpData.clinicalData?.autoLinkReviewQueue) ? cpData.clinicalData.autoLinkReviewQueue : (roadmapData.clinicalData?.autoLinkReviewQueue || [])
-                },
-                todoList: {
-                    items: cpData.todoList?.items || {},
-                    _nextSeq: cpData.todoList?._nextSeq || 1,
-                    lastUpdated: cpData.todoList?.lastUpdated ?? null
-                },
-                dailyPlanner: migrateDailyPlannerBlocks(cpData.dailyPlanner || roadmapData.dailyPlanner),
-                exams: migrateArrayToObject(cpData.exams, 'exam'),
-                graduationPrep: cpData.graduationPrep ?? roadmapData.graduationPrep ?? {
-                    externship: { startDate: null, endDate: null, patients: {}, logistics: '', notes: '' },
-                    cdcaAdex: { sessions: {}, notes: '' },
-                    inbde: { notes: '' },
-                    jobSearch: { notes: '' }
-                },
-                clinicHeadlines: cpData.clinicHeadlines ?? roadmapData.clinicHeadlines ?? {
-                    appointments: { completed: 0, target: 90 },
-                    procedures: { completed: 0, target: 116 }
-                },
-                periodicReviews: cpData.periodicReviews ? {
-                    pr2: {
-                        reviewDate: cpData.periodicReviews?.pr2?.reviewDate ?? roadmapData.periodicReviews?.pr2?.reviewDate ?? null,
-                        reviewPeriod: cpData.periodicReviews?.pr2?.reviewPeriod ?? roadmapData.periodicReviews?.pr2?.reviewPeriod ?? '',
-                        dashboardDiscrepancyNotes: cpData.periodicReviews?.pr2?.dashboardDiscrepancyNotes ?? roadmapData.periodicReviews?.pr2?.dashboardDiscrepancyNotes ?? '',
-                        adminStatsOverrides: { ...(roadmapData.periodicReviews?.pr2?.adminStatsOverrides || {}), ...(cpData.periodicReviews?.pr2?.adminStatsOverrides || {}) },
-                        completedProceduresHtml: cpData.periodicReviews?.pr2?.completedProceduresHtml ?? roadmapData.periodicReviews?.pr2?.completedProceduresHtml ?? '',
-                        inProgressProcedures: { ...(roadmapData.periodicReviews?.pr2?.inProgressProcedures || {}), ...(cpData.periodicReviews?.pr2?.inProgressProcedures || {}) },
-                        departmentNotes: { ...(roadmapData.periodicReviews?.pr2?.departmentNotes || {}), ...(cpData.periodicReviews?.pr2?.departmentNotes || {}) },
-                        subjectiveReport: cpData.periodicReviews?.pr2?.subjectiveReport ?? roadmapData.periodicReviews?.pr2?.subjectiveReport ?? '',
-                        patientNotes: { ...(roadmapData.periodicReviews?.pr2?.patientNotes || {}), ...(cpData.periodicReviews?.pr2?.patientNotes || {}) },
-                        removedPatients: { ...(roadmapData.periodicReviews?.pr2?.removedPatients || {}), ...(cpData.periodicReviews?.pr2?.removedPatients || {}) },
-                        lastEdited: cpData.periodicReviews?.pr2?.lastEdited ?? roadmapData.periodicReviews?.pr2?.lastEdited ?? null
-                    }
-                } : (roadmapData.periodicReviews || getDefaultRoadmapData().periodicReviews),
-                competencyUIState: cpData.competencyUIState ?? roadmapData.competencyUIState ?? { expandedCategories: [], viewMode: 'department' },
-                lastSaved: cpData.lastSaved || Date.now(),
-                _version: (cpData._version ?? 0) + 1,
-                _lastModified: new Date().toISOString(),
-                _dataLoaded: true
-            };
+            roadmapData = reconstructState(cpData, { strategy: 'source-wins', fallback: roadmapData });
 
             // Clear migration flags so migrations re-run against restored data
             localStorage.removeItem('unifiedPatientStoreDone_v1');
             localStorage.removeItem('competencyEnhancementsDone_v2');
             localStorage.removeItem('competencyEnhancementsDone_v3');
+            localStorage.removeItem('leadingZeroDedupDone_v2');
+            localStorage.removeItem('perioNoiseCleanupDone_v1');
 
             migrateInvalidFirebaseKeys(roadmapData);
             clinicalDataDirty = true;
@@ -2134,76 +2102,14 @@ function importAndRestoreDirectly() {
                 function() {
                     createCheckpoint('Auto-backup before direct restore');
 
-                    roadmapData = {
-                        pedsLockedIn: data.pedsLockedIn !== undefined ? data.pedsLockedIn : 33.3,
-                        mandatoryItems: data.mandatoryItems || getDefaultRoadmapData().mandatoryItems,
-                        grades: data.grades || getDefaultRoadmapData().grades,
-                        editedDeadlines: data.editedDeadlines || {},
-                        completedDeadlines: data.completedDeadlines || {},
-                        customDeadlines: migrateArrayToObject(data.customDeadlines, 'deadline'),
-                        deletedDeadlines: migrateArrayToObject(data.deletedDeadlines, 'deleted'),
-                        examStudyProgress: data.examStudyProgress || {},
-                        monthlyPlanner: {
-                            notes: migrateArrayToObject(data.monthlyPlanner?.notes, 'note'),
-                            customTasks: migrateArrayToObject(data.monthlyPlanner?.customTasks, 'ctask'),
-                            overriddenStatic: migrateArrayToObject(data.monthlyPlanner?.overriddenStatic, 'override'),
-                            completedTasks: migrateArrayToObject(data.monthlyPlanner?.completedTasks, 'completed'),
-                            hiddenClinicTasks: data.monthlyPlanner?.hiddenClinicTasks ?? roadmapData.monthlyPlanner?.hiddenClinicTasks ?? {},
-                            currentWeekSchedule: data.monthlyPlanner?.currentWeekSchedule ?? roadmapData.monthlyPlanner?.currentWeekSchedule ?? {}
-                        },
-                        clinicalData: {
-                            patients: data.clinicalData?.patients || {},
-                            appointments: migrateArrayToObject(data.clinicalData?.appointments, 'appt'),
-                            completedProcedures: migrateArrayToObject(data.clinicalData?.completedProcedures, 'proc'),
-                            competencies: mergeCompetencies(data.clinicalData?.competencies, roadmapData.clinicalData?.competencies),
-                            patientRecords: data.clinicalData?.patientRecords || roadmapData.clinicalData?.patientRecords || {},
-                            dashboardSnapshots: mergeDashboardSnapshots(roadmapData.clinicalData?.dashboardSnapshots, data.clinicalData?.dashboardSnapshots),
-                            missingNotes: data.clinicalData?.missingNotes ?? roadmapData.clinicalData?.missingNotes ?? {},
-                            autoLinkReviewQueue: Array.isArray(data.clinicalData?.autoLinkReviewQueue) ? data.clinicalData.autoLinkReviewQueue : (roadmapData.clinicalData?.autoLinkReviewQueue || [])
-                        },
-                        todoList: {
-                            items: data.todoList?.items || {},
-                            _nextSeq: data.todoList?._nextSeq || 1,
-                            lastUpdated: data.todoList?.lastUpdated ?? null
-                        },
-                        dailyPlanner: migrateDailyPlannerBlocks(data.dailyPlanner || getDefaultRoadmapData().dailyPlanner),
-                        exams: migrateArrayToObject(data.exams, 'exam'),
-                        graduationPrep: data.graduationPrep ?? roadmapData.graduationPrep ?? {
-                            externship: { startDate: null, endDate: null, patients: {}, logistics: '', notes: '' },
-                            cdcaAdex: { sessions: {}, notes: '' },
-                            inbde: { notes: '' },
-                            jobSearch: { notes: '' }
-                        },
-                        clinicHeadlines: data.clinicHeadlines ?? roadmapData.clinicHeadlines ?? {
-                            appointments: { completed: 0, target: 90 },
-                            procedures: { completed: 0, target: 116 }
-                        },
-                        periodicReviews: data.periodicReviews ? {
-                            pr2: {
-                                reviewDate: data.periodicReviews?.pr2?.reviewDate ?? roadmapData.periodicReviews?.pr2?.reviewDate ?? null,
-                                reviewPeriod: data.periodicReviews?.pr2?.reviewPeriod ?? roadmapData.periodicReviews?.pr2?.reviewPeriod ?? '',
-                                dashboardDiscrepancyNotes: data.periodicReviews?.pr2?.dashboardDiscrepancyNotes ?? roadmapData.periodicReviews?.pr2?.dashboardDiscrepancyNotes ?? '',
-                                adminStatsOverrides: { ...(roadmapData.periodicReviews?.pr2?.adminStatsOverrides || {}), ...(data.periodicReviews?.pr2?.adminStatsOverrides || {}) },
-                                completedProceduresHtml: data.periodicReviews?.pr2?.completedProceduresHtml ?? roadmapData.periodicReviews?.pr2?.completedProceduresHtml ?? '',
-                                inProgressProcedures: { ...(roadmapData.periodicReviews?.pr2?.inProgressProcedures || {}), ...(data.periodicReviews?.pr2?.inProgressProcedures || {}) },
-                                departmentNotes: { ...(roadmapData.periodicReviews?.pr2?.departmentNotes || {}), ...(data.periodicReviews?.pr2?.departmentNotes || {}) },
-                                subjectiveReport: data.periodicReviews?.pr2?.subjectiveReport ?? roadmapData.periodicReviews?.pr2?.subjectiveReport ?? '',
-                                patientNotes: { ...(roadmapData.periodicReviews?.pr2?.patientNotes || {}), ...(data.periodicReviews?.pr2?.patientNotes || {}) },
-                                removedPatients: { ...(roadmapData.periodicReviews?.pr2?.removedPatients || {}), ...(data.periodicReviews?.pr2?.removedPatients || {}) },
-                                lastEdited: data.periodicReviews?.pr2?.lastEdited ?? roadmapData.periodicReviews?.pr2?.lastEdited ?? null
-                            }
-                        } : (roadmapData.periodicReviews || getDefaultRoadmapData().periodicReviews),
-                        competencyUIState: data.competencyUIState ?? roadmapData.competencyUIState ?? { expandedCategories: [], viewMode: 'department' },
-                        lastSaved: data.lastSaved || Date.now(),
-                        _version: (data._version ?? 0) + 1,
-                        _lastModified: new Date().toISOString(),
-                        _dataLoaded: true
-                    };
+                    roadmapData = reconstructState(data, { strategy: 'source-wins', fallback: roadmapData });
 
                     // Clear migration flags so migrations re-run against restored data
                     localStorage.removeItem('unifiedPatientStoreDone_v1');
                     localStorage.removeItem('competencyEnhancementsDone_v2');
                     localStorage.removeItem('competencyEnhancementsDone_v3');
+                    localStorage.removeItem('leadingZeroDedupDone_v2');
+                    localStorage.removeItem('perioNoiseCleanupDone_v1');
 
                     migrateInvalidFirebaseKeys(roadmapData);
                     clinicalDataDirty = true;
@@ -2597,6 +2503,7 @@ function saveData() {
                 database.ref(userPath).set(cleanData)
                     .then(() => {
                         updateSyncStatus('connected', 'Synced');
+                        localChangesSinceLastSync = false;
                         if (pendingSaveToast) {
                             pendingSaveToast = false;
                             showToast('Saved to cloud');

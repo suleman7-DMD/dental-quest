@@ -383,6 +383,7 @@ function saveAppointment() {
     updateClinicalStats();
     if (typeof renderDeadlines === 'function') renderDeadlines();
     if (typeof extendWeeksIfNeeded === 'function') extendWeeksIfNeeded();
+    if (typeof dpSyncAppointmentsToTimeline === 'function') dpSyncAppointmentsToTimeline();
     showToast('Appointment saved!');
 }
 
