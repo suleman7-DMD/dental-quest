@@ -171,6 +171,13 @@ No retry mechanism exists in any app. Force upload/pull are the manual recovery 
 
 ## Data Merge Strategies
 
+### graduation-roadmap: Unified `reconstructState()` (Apr 2 2026)
+All 5 merge/restore/import paths call `reconstructState(source, {strategy, fallback})`:
+- **`remote-wins`** (mergeRemoteState): Source overwrites scalars; collections spread-merge `{...fallback, ...source}`; per-course grades (non-null wins); per-patient patientRecords (clinicalBrief newer-wins); `mergeCompetencies(fallback, source)`; todoList local wins; `_version = Math.max`
+- **`stored-wins`** (loadFromLocalStorage): Same EXCEPT collections use `migrateArrayToObject(source)` only (no fallback spread); simpler patientRecords `{...defaults, ...stored}`; todoList stored wins; `_version = source ?? fallback ?? 0`
+- **`source-wins`** (restoreCheckpoint/importBackup/importAndRestoreDirectly): Source unconditionally wins; `mergeCompetencies(source, fallback)`; no per-patient merge; `_version = (source._version ?? 0) + 1`
+- `mergeRemoteCollectionsIntoLocal` stays separate (fill-only, mutates in place)
+
 ### On Initial Load (cloud vs local)
 - If local `_version === 0` or `isEmptyState(local)` → cloud wins completely
 - If cloud is empty → keep local
@@ -178,7 +185,7 @@ No retry mechanism exists in any app. Force upload/pull are the manual recovery 
 
 ### On Realtime Update
 - **index.html:** Shows conflict dialog if local has pending changes
-- **d3-roadmap:** 5-second grace period — skips remote if local save was recent
+- **graduation-roadmap:** 5-second grace period — skips remote if local save was recent. `localChangesSinceLastSync` cleared after successful Firebase write.
 - **stim-calc:** `lastUpdated` timestamp comparison
 - **body-comp:** `_version` number comparison (higher wins), then field-level merge with `migrateArrayToObject()` for collections
 

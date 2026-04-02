@@ -79,37 +79,52 @@ App starts
         -> If no PIN: promptForPin()
 ```
 
-### loadFromLocalStorage(finalize = true) (~line 9757)
+### reconstructState(source, options) — UNIFIED STATE RECONSTRUCTION (firebase-sync.js ~line 149)
+All 5 merge/restore/import paths now call this single function. Three strategies:
+
+| Strategy | Used By | Who Wins | `_version` |
+|----------|---------|----------|------------|
+| `remote-wins` | `mergeRemoteState` | Source overwrites scalars; collections spread-merge; local wins todoList | `Math.max(source, fallback)` |
+| `stored-wins` | `loadFromLocalStorage` | Same as remote-wins EXCEPT: collections use `migrateArrayToObject(source)` only; stored wins todoList | `source ?? fallback ?? 0` |
+| `source-wins` | `restoreCheckpoint`, `importBackup`, `importAndRestoreDirectly` | Source unconditionally; fallback fills gaps only | `(source._version ?? 0) + 1` |
+
+Key behavioral differences:
+- **todoList spread order**: remote-wins `{...source, ...fallback}` (local wins); stored-wins `{...fallback, ...source}` (stored wins)
+- **competencies arg order**: merge strategies `mergeCompetencies(fallback, source)`; source-wins `mergeCompetencies(source, fallback)` — first arg wins structure
+- **patientRecords**: remote-wins has full per-patient field-level merge (clinicalBrief newer-wins, importedRequirements fill, briefHistory longer-wins); stored-wins has simple `{...defaults, ...stored}`; source-wins takes wholesale
+
+### loadFromLocalStorage(finalize = true) (firebase-sync.js)
 ```javascript
 function loadFromLocalStorage(finalize = true) {
-    const saved = localStorage.getItem('d3RoadmapData');
+    const saved = localStorage.getItem(STORAGE_KEY);
     if (saved) {
-        // Parse and merge with defaults
-        roadmapData = { ...getDefaultRoadmapData(), ...parsed };
-        roadmapData._dataLoaded = true;
+        try {
+            const data = JSON.parse(saved);
+            roadmapData = reconstructState(data, { strategy: 'stored-wins', fallback: roadmapData });
+        } catch (e) { /* continue with defaults */ }
     }
+    roadmapData._dataLoaded = true;
+    migrateInvalidFirebaseKeys(roadmapData);
+    clinicalDataDirty = true;
     if (finalize) {
         hasLoadedFromCloud = true;
         isInitialLoad = false;
+        lastSyncTimestamp = Date.now();
         initUI();
     }
 }
 ```
-- `finalize=true`: Terminal path (no Firebase) — sets all flags, calls initUI()
-- `finalize=false`: Called from loadFromFirebase, caller handles flags
 
-### loadFromFirebase() (~line 9817)
+### loadFromFirebase() → finishFirebaseLoad(data)
 ```
 loadFromFirebase()
     -> loadFromLocalStorage(finalize=false)  // Get local data first
     -> database.ref(userPath).once('value')
-    -> If cloud data exists:
-        -> Deep merge with local data
-        -> roadmapData._dataLoaded = true
-    -> If no cloud data:
-        -> Use local data as-is
-    -> hasLoadedFromCloud = true
-    -> isInitialLoad = false
+    -> finishFirebaseLoad(data):
+        -> If cloud empty/poisoned: keep local, push if real data exists
+        -> If local newer: mergeRemoteCollectionsIntoLocal(data) — fill-only
+        -> If cloud newer: mergeRemoteState(data) → reconstructState(data, {strategy: 'remote-wins'})
+    -> Set flags: hasLoadedFromCloud, isInitialLoad, _dataLoaded
     -> initUI()
     -> setupRealtimeSync()
 ```
@@ -135,7 +150,7 @@ database.ref(userPath).on('value', snapshot => {
 
 ## Checkpoint System
 
-Checkpoints stored in **both** localStorage (PIN-specific key) AND Firebase (`userPath/checkpoints/`).
+Checkpoints stored in **Firebase only** (`userPath/checkpoints/`) + in-memory `_cachedCheckpoints` cache. localStorage backups removed (commit `5ab70b1`).
 
 ### Checkpoint Functions
 
