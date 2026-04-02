@@ -1848,7 +1848,7 @@ function renderCompetencies() {
                     var hasNote = item.note && item.note.trim().length > 0;
 
                     html += '<div class="cv2-req-row" data-item="' + escapeHtml(item.id) + '">';
-                    html += '<span class="cv2-req-name" onclick="cv2ShowItemDetail(\'' + safeKey + '\',\'' + safeItemId + '\')">' + escapeHtml(item.text || item.id) + '</span>';
+                    html += '<span class="cv2-req-name" onclick="cv2ShowPipeline(\'' + safeItemId + '\')">' + escapeHtml(item.text || item.id) + '</span>';
                     html += '<div class="cv2-counter">';
                     html += '<button class="cv2-counter-btn" onclick="event.stopPropagation();adjustCompItem(\'' + safeKey + '\',\'' + safeItemId + '\',-1)">\u2212</button>';
                     html += '<span class="cv2-counter-val" onclick="event.stopPropagation();cv2EditCount(\'' + safeKey + '\',\'' + safeItemId + '\',this)">'
@@ -2199,15 +2199,17 @@ function cv2ShowPipeline(itemId) {
     var overlay = document.createElement('div');
     overlay.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.6);z-index:10000;display:flex;align-items:center;justify-content:center;';
     var card = document.createElement('div');
-    card.style.cssText = 'background:#1e293b;border:1px solid #334155;border-radius:12px;padding:20px;max-width:340px;width:90%;';
+    card.style.cssText = 'background:#fff;border:1px solid #ddd;border-radius:12px;padding:20px;max-width:340px;width:90%;box-shadow:0 8px 32px rgba(0,0,0,0.15);';
     var title = document.createElement('h4');
     title.textContent = 'Pipeline Patients';
-    title.style.cssText = 'margin:0 0 12px;color:#e2e8f0;font-size:1em;';
+    title.style.cssText = 'margin:0 0 12px;color:#1a1a2e;font-size:1em;';
     card.appendChild(title);
     patients.forEach(function(p) {
         var row = document.createElement('div');
-        row.style.cssText = 'padding:8px 4px;cursor:pointer;border-bottom:1px solid #334155;color:#e2e8f0;font-size:0.9em;';
+        row.style.cssText = 'padding:10px 8px;cursor:pointer;border-bottom:1px solid #eee;color:#1a1a2e;font-size:0.9em;border-radius:6px;';
         row.textContent = (p.name || 'Unknown') + ' #' + (p.chartNumber || '');
+        row.onmouseenter = function() { row.style.background = '#f0f0f0'; };
+        row.onmouseleave = function() { row.style.background = 'transparent'; };
         row.onclick = function() {
             overlay.remove();
             showPatientCompPreview(p.id || p.patientId);
@@ -2216,7 +2218,7 @@ function cv2ShowPipeline(itemId) {
     });
     var closeBtn = document.createElement('button');
     closeBtn.textContent = 'Close';
-    closeBtn.style.cssText = 'margin-top:12px;padding:8px 20px;border:1px solid #334155;border-radius:6px;background:#0f172a;color:#94a3b8;cursor:pointer;font-size:0.85em;';
+    closeBtn.style.cssText = 'margin-top:12px;padding:8px 20px;border:1px solid #ddd;border-radius:6px;background:#f5f5f5;color:#666;cursor:pointer;font-size:0.85em;';
     closeBtn.onclick = function() { overlay.remove(); };
     card.appendChild(closeBtn);
     overlay.appendChild(card);
