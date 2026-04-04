@@ -47,7 +47,7 @@ const date = new Date(year, month - 1, day);
 - **`initUI` auto-save guards**: Both `setTimeout(() => saveData(), ...)` in initUI MUST check `hasLoadedFromCloud && !awaitingFirebaseLoad`.
 - **Double `loadData()`**: Causes race conditions. Verify orphan calls before adding.
 - **Failsafe timer**: Must set `hasLoadedFromCloud = true`, `isInitialLoad = false`, `roadmapData._dataLoaded = true`. (Flags set manually, no `markInitialLoadComplete()` function.)
-- **`clinicalDataDirty = true` before ALL clinical CRUD**: 25 functions require this — patient CRUD (save/delete/add/field/reliability), appointment CRUD (save/delete/complete/uncomplete), procedures (record/delete/backfill), competencies (adjust/setStatus/delete/save/notes/saveNote/reset), imports (confirmPatient/confirmClinical), `prSavePatientField`, `toggleMissingNoteStatus`, `clearCompletedMissingNotes`.
+- **`clinicalDataDirty = true` before ALL clinical CRUD**: 29 functions require this — patient CRUD (save/delete/add/field/reliability), appointment CRUD (save/delete/complete/uncomplete), procedures (record/delete/backfill), competencies (adjust/setStatus/delete/save/notes/saveNote/reset), imports (confirmPatient/confirmClinical), `prSavePatientField`, `toggleMissingNoteStatus`, `clearCompletedMissingNotes`, cross-sync paths (`submitDeadlineGrade`, `toggleDeadlineDone` uncomplete, `mpToggleTaskComplete` fallback, `tsFixRebuildDeadlines`).
 - **Fallback timers = data wipe**: DOMContentLoaded 3s/6s timers must check BOTH `awaitingPinEntry` AND `awaitingFirebaseLoad`. 15s safety valve.
 - **Guard F**: `validateStateIntegrity()` must validate `periodicReviews`, `competencies`, `missingNotes`.
 - **Firebase array→object corruption**: ALL collection access MUST use `getValues()` for reads. Applies to: `appointments`, `completedProcedures`, `patientRecords`, `completedTasks`, `customTasks`, `customDeadlines`, `dashboardSnapshots`, `briefHistory`, `importedRequirements`, competency `sections`/`items`, any stored collection. NEVER use `Object.values()` on Firebase-stored data.
@@ -185,7 +185,7 @@ const date = new Date(year, month - 1, day);
 - **`mpSaveTask()`**: Must set `userEdited = true` on clinic-synced tasks.
 - **`buildCurrentWeekSchedule()`**: Must filter `convertedStaticIds` and `hiddenClinicTasks[apt.id]`.
 - **`tsCheckCompetencies()` (V2)**: Checks over-counted and unverified items.
-- **`tsFixResyncCompCounts()` (V2)**: Clamps `completed` to `[0, required]`, derives status.
+- **`tsFixResyncCompCounts()` (V2)**: Clamps `completed` to `[0, required]`, derives status. Must set `lastVerified` on changed items (prevents merge revert) and call `renderDashboard()`.
 
 ### UI & Rendering
 - **Flex full-width + flex-wrap**: Container needs `flex-wrap: wrap`, full-width item `flex: 1 1 100%`.
