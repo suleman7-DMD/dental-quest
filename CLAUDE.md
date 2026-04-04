@@ -22,6 +22,7 @@ const [year, month, day] = '2026-02-02'.split('-').map(Number);
 const date = new Date(year, month - 1, day);
 ```
 - Never use `.toISOString().slice(0,10)` — use `getLocalDateString(date)`.
+- **`parseMDYDate()`**: Use for `MM/DD/YYYY` dates (e.g., recall history). `parseLocalDate()` is `YYYY-MM-DD` only.
 - `calculatePaceProjection`: `daysSoFar` must use `Math.floor` (not `Math.ceil`).
 
 ---
@@ -57,7 +58,7 @@ const date = new Date(year, month - 1, day);
 - **`mergeRemoteCollectionsIntoLocal`**: `addMissing(local, remote)` pattern (local wins). Must cover ALL top-level objects. Defaults-provided objects need field-level merge, not `!roadmapData.X` guard. Deep-merge patientRecords fields: `importedRequirements`, `priorityNotes`, `highValue`, `allergies`, `txCompletedByMe`, `recallHistory`, `activeStatus`.
 - **Auto-push when local newer**: `finishFirebaseLoad()` → deferred `saveData()` at 500ms. Also pushes when Firebase empty/poisoned.
 - **Flag ordering**: ALL sync flags MUST be set BEFORE `initUI()`. Wrap `initUI()` in try/catch.
-- **`reconstructState(source, {strategy, fallback})`**: Single function (firebase-sync.js) with 3 strategies: `'remote-wins'`, `'stored-wins'`, `'source-wins'`. **New fields only need adding here.** Key: todoList spread order flips between strategies; competencies arg order flips; patientRecords merge depth varies.
+- **`reconstructState(source, {strategy, fallback})`**: Single function (firebase-sync.js) with 3 strategies: `'remote-wins'`, `'stored-wins'`, `'source-wins'`. **New fields only need adding here.** Key: todoList spread order flips between strategies; competencies arg order flips; patientRecords merge depth varies. **Tombstone filtering**: After merge, purges records present in `deletedAppointmentIds`/`deletedProcedureIds`/`deletedPatientRecordIds` (skipped for `source-wins`).
 - **`mergeRemoteCollectionsIntoLocal`**: Separate from `reconstructState` — mutates roadmapData in place. NOT refactored into it.
 - **`mergeCompetencies()` (V2)**: Timestamp-based — most recent `lastVerified` wins. If neither, `Math.max` of counts. First arg wins STRUCTURE conflicts. `source-wins` passes source first; others pass fallback first.
 - **Cross-section dedup**: Before adding cloud section with unknown key, checks if items exist in ANY local section (by ID). Prevents duplicates.
@@ -87,9 +88,10 @@ const date = new Date(year, month - 1, day);
 
 | Function | Must Also Do |
 |----------|-------------|
-| `deletePatient()` | Delete procedures, unlink competencies, remove planner tasks, add to `hiddenClinicTasks`, set `clinicalDataDirty` |
+| `deletePatient()` | Delete procedures + write tombstones, unlink competencies, remove planner tasks, add to `hiddenClinicTasks`, set `clinicalDataDirty` |
 | `deletePatientRecord()` | Delegate to `cascadeDeletePatient()` — handles all cascade + propagation |
-| `deleteAppointment()` | Unlink+delete procedures, add task to `hiddenClinicTasks`, set `clinicalDataDirty` |
+| `deleteAppointment()` | Unlink+delete procedures + write tombstones, add task to `hiddenClinicTasks`, set `clinicalDataDirty` |
+| `uncompleteAppointment()` | Delete procedures + write tombstones, unmark deadline/planner, recalc lastVisit |
 
 - **CRUD must merge**: `savePatient()`/`saveAppointment()` MUST spread existing record (`{ ...existing, ...formFields }`).
 - **Chart number normalization**: Leading-zero canonical form. `migrateLeadingZeroDedup()` gated by `leadingZeroDedupDone_v1`. FK remapping: `appointments[].patientId`, `completedProcedures[].patientId`, `monthlyPlanner.customTasks[].patientId`.
