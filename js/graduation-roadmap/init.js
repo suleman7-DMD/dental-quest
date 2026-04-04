@@ -4,6 +4,691 @@
 // Only this file may auto-execute initialization code.
 
 // ==================== RENDER FUNCTIONS ====================
+function dashboardCleanText(text) {
+    return String(text || '')
+        .replace(/\r/g, '\n')
+        .replace(/[ \t]+/g, ' ')
+        .replace(/\n{3,}/g, '\n\n')
+        .trim();
+}
+
+function dashboardTrimText(text, maxLen) {
+    var cleaned = dashboardCleanText(text);
+    if (!cleaned) return '';
+    if (!maxLen || cleaned.length <= maxLen) return cleaned;
+    return cleaned.slice(0, maxLen - 1).trim().replace(/[,:;.\-]+$/, '') + '...';
+}
+
+function dashboardFirstSnippet(text, maxLen) {
+    var cleaned = dashboardCleanText(text);
+    if (!cleaned) return '';
+    var firstLine = cleaned.split('\n')[0].trim();
+    if (!firstLine) firstLine = cleaned;
+    var pipeIdx = firstLine.indexOf('|');
+    if (pipeIdx !== -1) firstLine = firstLine.substring(0, pipeIdx).trim();
+    var match = firstLine.match(/^[^.!?]+[.!?]?/);
+    return dashboardTrimText(match ? match[0].trim() : firstLine, maxLen || 160);
+}
+
+function dashboardNormalizeText(text) {
+    return dashboardCleanText(text).toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim();
+}
+
+function dashboardEnsurePeriod(text) {
+    var cleaned = dashboardCleanText(text);
+    if (!cleaned) return '';
+    return /[.!?]$/.test(cleaned) ? cleaned : cleaned + '.';
+}
+
+function dashboardUnique(items) {
+    var seen = {};
+    var result = [];
+    (items || []).forEach(function(item) {
+        if (!item) return;
+        var key = String(item).trim();
+        if (!key || seen[key]) return;
+        seen[key] = true;
+        result.push(key);
+    });
+    return result;
+}
+
+function dashboardFormatShortDate(dateStr) {
+    var date = parseLocalDate(dateStr);
+    if (!date) return dateStr || 'Date TBD';
+    return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+}
+
+function dashboardFormatShortDateTime(dateStr, timeStr) {
+    var label = dashboardFormatShortDate(dateStr);
+    if (!timeStr) return label;
+    if (typeof formatAptTime === 'function') {
+        return label + ' ' + formatAptTime(timeStr);
+    }
+    return label + ' ' + timeStr;
+}
+
+function dashboardFormatTimeRange(startTime, endTime) {
+    if (!startTime) return 'Time TBD';
+    var startLabel = typeof formatAptTime === 'function' ? formatAptTime(startTime) : startTime;
+    if (!endTime) return startLabel;
+    var endLabel = typeof formatAptTime === 'function' ? formatAptTime(endTime) : endTime;
+    return startLabel + ' - ' + endLabel;
+}
+
+function dashboardFormatStatus(status) {
+    var raw = dashboardCleanText(status || 'scheduled').replace(/_/g, ' ');
+    if (!raw) return 'Scheduled';
+    return raw.replace(/\b\w/g, function(ch) { return ch.toUpperCase(); });
+}
+
+function dashboardExtractChair(details) {
+    var explicit = dashboardCleanText(details && details.chair);
+    if (explicit) return explicit;
+    var notes = dashboardCleanText(details && details.notes);
+    if (!notes) return '';
+    var match = notes.match(/chair:\s*([^\n]+)/i);
+    return match ? dashboardTrimText(match[1], 40) : '';
+}
+
+function dashboardGetPatientNameVariants(patient) {
+    var raw = dashboardCleanText(patient && patient.name);
+    var variants = [];
+    if (!raw) return variants;
+    variants.push(raw);
+    variants.push(raw.replace(',', ' '));
+    if (raw.indexOf(',') !== -1) {
+        var parts = raw.split(',');
+        var last = dashboardCleanText(parts[0]);
+        var first = dashboardCleanText(parts.slice(1).join(' '));
+        if (first && last) variants.push(first + ' ' + last);
+    }
+    return dashboardUnique(variants);
+}
+
+function dashboardFindPatientByChart(chartNumber, patients) {
+    if (!chartNumber || typeof normalizeChartNumber !== 'function') return null;
+    var normalized = normalizeChartNumber(chartNumber);
+    var ids = Object.keys(patients || {});
+    for (var i = 0; i < ids.length; i++) {
+        var patientId = ids[i];
+        var patient = patients[patientId];
+        if (!patient || !patient.chartNumber) continue;
+        if (normalizeChartNumber(patient.chartNumber) === normalized) {
+            return { patientId: patientId, patient: patient };
+        }
+    }
+    return null;
+}
+
+function dashboardResolvePatientFromText(text, patients) {
+    var combined = dashboardCleanText(text);
+    if (!combined) return null;
+
+    var chartMatches = combined.match(/\b0*\d{5,}\b/g) || [];
+    for (var i = 0; i < chartMatches.length; i++) {
+        var chartMatch = dashboardFindPatientByChart(chartMatches[i], patients);
+        if (chartMatch) return chartMatch;
+    }
+
+    var normalizedCombined = dashboardNormalizeText(combined);
+    var best = null;
+    Object.keys(patients || {}).forEach(function(patientId) {
+        var patient = patients[patientId];
+        dashboardGetPatientNameVariants(patient).forEach(function(variant) {
+            var normalizedVariant = dashboardNormalizeText(variant);
+            if (!normalizedVariant || normalizedVariant.length < 6) return;
+            if (normalizedCombined.indexOf(normalizedVariant) === -1) return;
+            if (!best || normalizedVariant.length > best.matchLength) {
+                best = { patientId: patientId, patient: patient, matchLength: normalizedVariant.length };
+            }
+        });
+    });
+
+    return best ? { patientId: best.patientId, patient: best.patient } : null;
+}
+
+function dashboardGuessPlannerTitle(item) {
+    var cleaned = dashboardCleanText(item);
+    if (!cleaned) return 'Schedule-only clinic task';
+    var separators = [' — ', ' - '];
+    for (var i = 0; i < separators.length; i++) {
+        var idx = cleaned.indexOf(separators[i]);
+        if (idx > 0) return cleaned.substring(0, idx).trim();
+    }
+    return dashboardTrimText(cleaned, 90);
+}
+
+function dashboardGetCompletedTaskMap() {
+    var map = {};
+    getValues(roadmapData.monthlyPlanner?.completedTasks).forEach(function(entry) {
+        var value = entry && entry.value ? entry.value : entry;
+        if (value != null) map[String(value)] = true;
+    });
+    return map;
+}
+
+function dashboardGetFuturePlannerTasks(todayStr) {
+    var tasks = [];
+    var completed = dashboardGetCompletedTaskMap();
+    var convertedStaticIds = {};
+
+    getValues(roadmapData.monthlyPlanner?.overriddenStatic).forEach(function(entry) {
+        var value = entry && entry.value ? entry.value : entry;
+        if (value) convertedStaticIds[value] = true;
+    });
+
+    var customTasks = getValues(roadmapData.monthlyPlanner?.customTasks);
+    customTasks.forEach(function(task) {
+        if (task && task.convertedFrom) convertedStaticIds[task.convertedFrom] = true;
+    });
+
+    if (typeof MP_STATIC_TASKS !== 'undefined' && Array.isArray(MP_STATIC_TASKS)) {
+        MP_STATIC_TASKS.forEach(function(task) {
+            if (!task || !task.date || task.date < todayStr) return;
+            var staticId = 'static-' + task.date + '-' + (task.item || '').substring(0, 15).replace(/[^a-zA-Z0-9]/g, '');
+            if (convertedStaticIds[staticId] || completed[staticId]) return;
+            tasks.push({ ...task, id: staticId, isStatic: true });
+        });
+    }
+
+    customTasks.forEach(function(task) {
+        if (!task || !task.date || task.date < todayStr) return;
+        if (completed[String(task.id)]) return;
+        tasks.push({ ...task, isStatic: false });
+    });
+
+    tasks.sort(function(a, b) {
+        if ((a.date || '') !== (b.date || '')) return (a.date || '').localeCompare(b.date || '');
+        var timeA = a.time || '23:59';
+        var timeB = b.time || '23:59';
+        return timeA.localeCompare(timeB);
+    });
+
+    return tasks;
+}
+
+function dashboardIsAppointmentLikeTask(task) {
+    if (!task || !task.date) return false;
+    var combined = dashboardNormalizeText([(task.item || ''), (task.notes || '')].join(' '));
+    if (!combined) return false;
+
+    var isClinicType = (task.type || '').toLowerCase() === 'clinic';
+    var appointmentLike = /(tx plan|treatment plan|written analysis| wa\b|loe\b|recall|prophy|crown|composite|consult|reeval|re eval|srp|denture|rpd|implant|extraction|try in|insertion|adjustment|records|impression|limited oral eval|periodic oral exam|delivery|follow up|followup|restorative)/.test(combined);
+    var prepOnly = /(pull up|review chart|progress notes|pre meeting|prep only|study block|call patient|confirm chart)/.test(combined);
+    var clearlyNonClinical = /(lecture|quiz|exam|assignment|module|rotation|rounds)/.test(combined);
+
+    if (isClinicType) {
+        if (!task.time && prepOnly && !appointmentLike) return false;
+        return true;
+    }
+
+    return appointmentLike && !clearlyNonClinical;
+}
+
+function dashboardCreateClinicalEvent(apt, patients) {
+    var patient = patients[apt.patientId] || null;
+    var patientId = patient ? (patient.id || apt.patientId || null) : (apt.patientId || null);
+    var description = dashboardTrimText(apt.procedures || 'Appointment', 150);
+    var endTime = '';
+    if (apt.time && apt.duration && typeof calculateEndTime === 'function') {
+        endTime = calculateEndTime(apt.time, apt.duration);
+    }
+
+    return {
+        id: 'clinical|' + String(apt.id || ''),
+        dedupKey: [apt.date || '', apt.time || '', patientId || '', dashboardNormalizeText(description)].join('|'),
+        source: 'clinical',
+        date: apt.date || '',
+        time: apt.time || '',
+        endTime: endTime,
+        patientId: patientId,
+        patient: patient,
+        title: patient && patient.name ? patient.name : 'Unknown Patient',
+        chartNumber: patient && patient.chartNumber ? patient.chartNumber : '',
+        phone: patient && patient.phone ? patient.phone : '',
+        description: description,
+        notes: apt.notes || '',
+        chair: dashboardExtractChair(apt),
+        status: apt.status || 'scheduled',
+        scheduleOnly: false
+    };
+}
+
+function dashboardCreatePlannerEvent(task, patients) {
+    var resolved = null;
+    if (task.patientId && patients[task.patientId]) {
+        resolved = { patientId: task.patientId, patient: patients[task.patientId] };
+    }
+    if (!resolved) {
+        resolved = dashboardResolvePatientFromText([(task.item || ''), (task.notes || '')].join('\n'), patients);
+    }
+
+    var patient = resolved ? resolved.patient : null;
+    var patientId = resolved ? resolved.patientId : null;
+    var displayTitle = patient && patient.name ? patient.name : dashboardGuessPlannerTitle(task.item);
+    var description = dashboardCleanText(task.item || task.notes || 'Clinic task');
+    if (displayTitle && description.indexOf(displayTitle) === 0) {
+        description = description.substring(displayTitle.length).replace(/^[\s—-]+/, '').trim() || description;
+    }
+
+    return {
+        id: 'planner|' + String(task.id || ''),
+        dedupKey: [task.date || '', task.time || '', patientId || dashboardNormalizeText(displayTitle), dashboardNormalizeText(description || displayTitle)].join('|'),
+        source: 'planner',
+        date: task.date || '',
+        time: task.time || '',
+        endTime: task.endTime || '',
+        patientId: patientId,
+        patient: patient,
+        title: displayTitle,
+        chartNumber: patient && patient.chartNumber ? patient.chartNumber : '',
+        phone: patient && patient.phone ? patient.phone : '',
+        description: dashboardTrimText(description || displayTitle, 170),
+        notes: task.notes || '',
+        chair: dashboardExtractChair(task),
+        status: 'scheduled',
+        scheduleOnly: true
+    };
+}
+
+function dashboardGetUpcomingAppointmentFeed(todayStr) {
+    var patients = (typeof getAllPatientRecords === 'function')
+        ? getAllPatientRecords()
+        : (roadmapData.clinicalData?.patientRecords || {});
+    var feed = [];
+    var seen = {};
+
+    getValues(roadmapData.clinicalData?.appointments).forEach(function(apt) {
+        if (!apt || !apt.date || apt.date < todayStr) return;
+        if (apt.status === 'cancelled' || apt.status === 'completed') return;
+        var event = dashboardCreateClinicalEvent(apt, patients);
+        if (seen[event.dedupKey]) return;
+        seen[event.dedupKey] = true;
+        feed.push(event);
+    });
+
+    dashboardGetFuturePlannerTasks(todayStr).forEach(function(task) {
+        if (!task || task.syncedFromClinical || task.clinicalAppointmentId) return;
+        if (!dashboardIsAppointmentLikeTask(task)) return;
+        var event = dashboardCreatePlannerEvent(task, patients);
+        if (!event || !event.date) return;
+        if (seen[event.dedupKey]) return;
+        seen[event.dedupKey] = true;
+        feed.push(event);
+    });
+
+    feed.sort(function(a, b) {
+        if (a.date !== b.date) return a.date.localeCompare(b.date);
+        var timeA = a.time || '23:59';
+        var timeB = b.time || '23:59';
+        if (timeA !== timeB) return timeA.localeCompare(timeB);
+        if (a.source !== b.source) return a.source === 'clinical' ? -1 : 1;
+        return (a.title || '').localeCompare(b.title || '');
+    });
+
+    return feed;
+}
+
+function dashboardGetWeekBounds(dateStr) {
+    var date = parseLocalDate(dateStr);
+    if (!date) return null;
+    var start = new Date(date);
+    var day = start.getDay();
+    var diffToMonday = day === 0 ? -6 : 1 - day;
+    start.setDate(start.getDate() + diffToMonday);
+    var end = new Date(start);
+    end.setDate(end.getDate() + 6);
+    return {
+        startStr: getLocalDateString(start),
+        endStr: getLocalDateString(end)
+    };
+}
+
+function dashboardGetWorkloadItems(todayStr) {
+    var items = [];
+    var hiddenClinic = roadmapData.monthlyPlanner?.hiddenClinicTasks || {};
+    var customTasks = roadmapData.monthlyPlanner?.customTasks || {};
+
+    dashboardGetFuturePlannerTasks(todayStr).forEach(function(task) {
+        items.push({
+            id: 'planner|' + String(task.id || ''),
+            date: task.date,
+            time: task.time || '',
+            isClinic: (task.type || '').toLowerCase() === 'clinic' || dashboardIsAppointmentLikeTask(task)
+        });
+    });
+
+    getValues(roadmapData.clinicalData?.appointments).forEach(function(apt) {
+        if (!apt || !apt.id || !apt.date || apt.date < todayStr) return;
+        if (apt.status === 'cancelled' || apt.status === 'completed') return;
+        if (hiddenClinic[apt.id] || customTasks['clinic_' + apt.id]) return;
+        items.push({
+            id: 'clinical|' + String(apt.id),
+            date: apt.date,
+            time: apt.time || '',
+            isClinic: true
+        });
+    });
+
+    return items;
+}
+
+function dashboardGetScheduleLoad(dateStr, workloadItems) {
+    var bounds = dashboardGetWeekBounds(dateStr);
+    if (!bounds) return null;
+
+    var target = parseLocalDate(dateStr);
+    var windowStart = new Date(target);
+    var windowEnd = new Date(target);
+    windowStart.setDate(windowStart.getDate() - 1);
+    windowEnd.setDate(windowEnd.getDate() + 1);
+    var windowStartStr = getLocalDateString(windowStart);
+    var windowEndStr = getLocalDateString(windowEnd);
+
+    var sameDayItems = 0;
+    var sameDayClinic = 0;
+    var windowItems = 0;
+    var weekItems = 0;
+    var weekClinic = 0;
+
+    (workloadItems || []).forEach(function(item) {
+        if (!item || !item.date) return;
+        if (item.date === dateStr) {
+            sameDayItems++;
+            if (item.isClinic) sameDayClinic++;
+        }
+        if (item.date >= windowStartStr && item.date <= windowEndStr) windowItems++;
+        if (item.date >= bounds.startStr && item.date <= bounds.endStr) {
+            weekItems++;
+            if (item.isClinic) weekClinic++;
+        }
+    });
+
+    sameDayItems = Math.max(1, sameDayItems);
+    windowItems = Math.max(sameDayItems, windowItems);
+    weekItems = Math.max(sameDayItems, weekItems);
+
+    var weekDeadlines = deadlines.filter(function(deadline) {
+        if (!deadline || deadline.done || !deadline.date || deadline.tbd) return false;
+        return deadline.date >= bounds.startStr && deadline.date <= bounds.endStr;
+    }).length;
+
+    var label = 'light';
+    if (sameDayItems >= 5 || weekItems >= 14 || weekDeadlines >= 4) label = 'packed';
+    else if (sameDayItems >= 3 || weekItems >= 9 || weekDeadlines >= 2) label = 'busy';
+    else if (sameDayItems >= 2 || weekItems >= 6) label = 'moderate';
+
+    return {
+        sameDayItems: sameDayItems,
+        sameDayClinic: sameDayClinic,
+        windowItems: windowItems,
+        weekItems: weekItems,
+        weekClinic: weekClinic,
+        weekDeadlines: weekDeadlines,
+        label: label
+    };
+}
+
+function dashboardBuildLoadSentence(load) {
+    if (!load) return '';
+    var sentence = 'Schedule load is ' + load.label + ': '
+        + load.sameDayItems + ' item' + (load.sameDayItems === 1 ? '' : 's') + ' that day, '
+        + load.windowItems + ' in the 3-day window, and '
+        + load.weekItems + ' this week';
+    if (load.weekClinic > 0) {
+        sentence += ' (' + load.weekClinic + ' clinic-related)';
+    }
+    if (load.weekDeadlines > 0) {
+        sentence += ', with ' + load.weekDeadlines + ' deadline' + (load.weekDeadlines === 1 ? '' : 's') + ' due';
+    }
+    return dashboardEnsurePeriod(sentence);
+}
+
+function dashboardFindNextPatientEvent(currentEvent, feed) {
+    if (!currentEvent || !currentEvent.patientId) return null;
+    for (var i = 0; i < (feed || []).length; i++) {
+        var event = feed[i];
+        if (!event || event.id === currentEvent.id) continue;
+        if (event.patientId !== currentEvent.patientId) continue;
+        if (event.date < currentEvent.date) continue;
+        if (event.date === currentEvent.date && (event.time || '') <= (currentEvent.time || '')) continue;
+        return event;
+    }
+    return null;
+}
+
+function dashboardSnippetsOverlap(a, b) {
+    var first = dashboardNormalizeText(a);
+    var second = dashboardNormalizeText(b);
+    if (!first || !second) return false;
+    return first.indexOf(second) !== -1 || second.indexOf(first) !== -1;
+}
+
+function dashboardGetCurrentPlanSnippet(event) {
+    if (!event || !event.patient) return '';
+    var patient = event.patient;
+    var brief = patient.clinicalBrief || {};
+    var candidates = [
+        brief.txStatus,
+        brief.txSequencing,
+        brief.snapshot,
+        patient.txPlan,
+        patient.txSummaryBU
+    ];
+
+    for (var i = 0; i < candidates.length; i++) {
+        var snippet = dashboardFirstSnippet(candidates[i], 160);
+        if (!snippet) continue;
+        if (!dashboardSnippetsOverlap(snippet, event.description)) return snippet;
+    }
+
+    return '';
+}
+
+function dashboardGetPreviousStepSnippet(event) {
+    if (!event || !event.patient) return '';
+    var patient = event.patient;
+    if (typeof getLastCompletedVisit === 'function') {
+        var lastCompleted = getLastCompletedVisit(patient, event.patientId);
+        if (lastCompleted && (lastCompleted.date || lastCompleted.procedures)) {
+            var label = '';
+            if (lastCompleted.date) label += lastCompleted.date;
+            if (lastCompleted.procedures) {
+                label += (label ? ': ' : '') + dashboardTrimText(lastCompleted.procedures, 110);
+            }
+            if (label) return label;
+        }
+    }
+
+    var txDone = dashboardFirstSnippet(patient.txCompletedByMe, 120);
+    if (txDone) return txDone;
+    return dashboardFirstSnippet(patient.lastVisit, 120);
+}
+
+function dashboardGetNextStepSnippet(event, feed) {
+    if (!event || !event.patient) return '';
+    var nextEvent = dashboardFindNextPatientEvent(event, feed);
+    if (nextEvent) {
+        return dashboardFormatShortDateTime(nextEvent.date, nextEvent.time) + ' — ' + dashboardTrimText(nextEvent.description || nextEvent.title, 110);
+    }
+
+    var patient = event.patient;
+    var brief = patient.clinicalBrief || {};
+    var candidate = dashboardFirstSnippet(brief.nextVisitPlan || patient.nextVisit, 130);
+    if (candidate && !dashboardSnippetsOverlap(candidate, event.description)) return candidate;
+
+    return '';
+}
+
+function dashboardGetConcernSnippet(event) {
+    if (!event || !event.patient) return '';
+    var patient = event.patient;
+    var brief = patient.clinicalBrief || {};
+
+    var directFlag = dashboardFirstSnippet(brief.flaggedConcerns || patient.priorityNotes, 145);
+    if (directFlag) return directFlag;
+
+    var medical = dashboardCleanText(patient.medicalHx);
+    var precautionMatch = medical.match(/precautions?:\s*([^.!?]+)/i);
+    if (precautionMatch && precautionMatch[1]) {
+        return dashboardTrimText(precautionMatch[1], 145);
+    }
+
+    return dashboardFirstSnippet(patient.notes, 145);
+}
+
+function dashboardGetReliabilityNote(patient) {
+    if (!patient) return '';
+    if (patient.reliability === 'red') return 'Reliability is red, so confirm aggressively and lock the next step before the patient leaves';
+    if (patient.reliability === 'yellow') return 'Reliability is yellow, so keep confirmation and next-step closure tight';
+    return '';
+}
+
+function dashboardBuildAppointmentBriefing(event, feed, workloadItems) {
+    var loadSentence = dashboardBuildLoadSentence(dashboardGetScheduleLoad(event.date, workloadItems));
+
+    if (!event.patient) {
+        var scheduleOnlyIntro = 'This is a schedule-only clinic block for ' + (event.description || event.title || 'the booked item');
+        var scheduleOnlyNote = dashboardFirstSnippet(event.notes, 120);
+        if (scheduleOnlyNote && !dashboardSnippetsOverlap(scheduleOnlyNote, scheduleOnlyIntro)) {
+            scheduleOnlyIntro += '. Notes: ' + scheduleOnlyNote;
+        }
+        return dashboardTrimText(
+            dashboardEnsurePeriod(scheduleOnlyIntro) + (loadSentence ? ' ' + loadSentence : ''),
+            520
+        );
+    }
+
+    var sentences = [];
+    var intro = 'Booked for ' + (event.description || 'the scheduled visit');
+    var currentPlan = dashboardGetCurrentPlanSnippet(event);
+    if (currentPlan) intro += '. Current plan: ' + currentPlan;
+    sentences.push(dashboardEnsurePeriod(intro));
+
+    var sequenceBits = [];
+    var previous = dashboardGetPreviousStepSnippet(event);
+    var next = dashboardGetNextStepSnippet(event, feed);
+    if (previous) sequenceBits.push('Before this: ' + previous);
+    if (next) sequenceBits.push('After this: ' + next);
+    if (sequenceBits.length > 0) {
+        sentences.push(dashboardEnsurePeriod(sequenceBits.join('. ')));
+    }
+
+    var cautionBits = [];
+    var concern = dashboardGetConcernSnippet(event);
+    if (concern) cautionBits.push(concern);
+    var reliability = dashboardGetReliabilityNote(event.patient);
+    if (reliability) cautionBits.push(reliability);
+
+    if (cautionBits.length > 0) {
+        var cautionSentence = dashboardEnsurePeriod('Keep in mind: ' + cautionBits.join('. '));
+        if (loadSentence) cautionSentence += ' ' + loadSentence;
+        sentences.push(cautionSentence);
+    } else if (loadSentence) {
+        sentences.push(loadSentence);
+    }
+
+    return dashboardTrimText(sentences.slice(0, 3).join(' '), 700);
+}
+
+function dashboardRenderPhoneChips(phoneRaw) {
+    var phones = dashboardUnique(String(phoneRaw || '').split('|').map(function(part) {
+        return dashboardCleanText(part);
+    }));
+    return phones.map(function(phone) {
+        return '<span style="display:inline-flex; align-items:center; gap:4px; background:rgba(99,102,241,0.12); border:1px solid rgba(99,102,241,0.25); color:#c7d2fe; border-radius:999px; padding:3px 8px; font-size:0.78em;">☎ ' + escapeHtml(phone) + '</span>';
+    }).join('');
+}
+
+function renderUpcomingAppointmentsSection(today) {
+    var todayStr = getLocalDateString(today);
+    var feed = dashboardGetUpcomingAppointmentFeed(todayStr);
+    var workloadItems = dashboardGetWorkloadItems(todayStr);
+    var html = '';
+
+    html += '<div class="mission-card" style="background:linear-gradient(135deg, rgba(15,23,42,0.96), rgba(30,41,59,0.92)); border:1px solid rgba(59,130,246,0.28); border-radius:16px; padding:18px; margin-bottom:16px;">';
+    html += '<div style="display:flex; flex-wrap:wrap; align-items:flex-end; justify-content:space-between; gap:10px; margin-bottom:8px;">';
+    html += '<div>';
+    html += '<h2 style="color:#bfdbfe; margin:0; font-size:1.35em;">📅 Upcoming Appointments</h2>';
+    html += '<div style="color:#94a3b8; font-size:0.88em; margin-top:4px;">Every future clinical appointment on your books, plus planner-only tx plan / written analysis clinic blocks.</div>';
+    html += '</div>';
+    html += '<div style="display:flex; gap:8px; flex-wrap:wrap;">';
+    html += '<span style="background:rgba(59,130,246,0.14); border:1px solid rgba(59,130,246,0.3); color:#93c5fd; border-radius:999px; padding:6px 10px; font-size:0.8em; font-weight:700;">' + feed.length + ' upcoming</span>';
+    html += '<span style="background:rgba(148,163,184,0.12); border:1px solid rgba(148,163,184,0.2); color:#cbd5e1; border-radius:999px; padding:6px 10px; font-size:0.8em;">Grouped by day</span>';
+    html += '</div>';
+    html += '</div>';
+
+    if (feed.length === 0) {
+        html += '<div style="background:rgba(15,23,42,0.55); border:1px dashed rgba(148,163,184,0.25); border-radius:12px; padding:18px; color:#94a3b8; text-align:center;">No upcoming appointments or schedule-only clinic blocks found.</div>';
+        html += '</div>';
+        return html;
+    }
+
+    var currentDate = '';
+    feed.forEach(function(event, index) {
+        if (event.date !== currentDate) {
+            currentDate = event.date;
+            var dayCount = feed.filter(function(item) { return item.date === currentDate; }).length;
+            html += '<div style="' + (index > 0 ? 'border-top:1px solid rgba(148,163,184,0.14); padding-top:14px; margin-top:14px;' : '') + '">';
+            html += '<div style="display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:8px; margin-bottom:10px;">';
+            html += '<div style="font-size:1.02em; font-weight:700; color:#e2e8f0;">' + escapeHtml(dashboardFormatShortDate(event.date)) + ' · ' + escapeHtml(parseLocalDate(event.date).toLocaleDateString('en-US', { weekday: 'long' })) + '</div>';
+            html += '<div style="color:#94a3b8; font-size:0.82em;">' + dayCount + ' appointment' + (dayCount === 1 ? '' : 's') + '</div>';
+            html += '</div>';
+        }
+
+        var countdown = getCountdown(event.date);
+        var statusChip = event.scheduleOnly
+            ? '<span style="display:inline-flex; align-items:center; gap:4px; background:rgba(139,92,246,0.14); border:1px solid rgba(139,92,246,0.28); color:#c4b5fd; border-radius:999px; padding:4px 8px; font-size:0.76em; font-weight:600;">Schedule-only clinic task</span>'
+            : '<span style="display:inline-flex; align-items:center; gap:4px; background:rgba(59,130,246,0.14); border:1px solid rgba(59,130,246,0.28); color:#93c5fd; border-radius:999px; padding:4px 8px; font-size:0.76em; font-weight:600;">' + escapeHtml(dashboardFormatStatus(event.status)) + '</span>';
+        var chartChip = event.chartNumber
+            ? '<span style="display:inline-flex; align-items:center; gap:4px; background:rgba(148,163,184,0.12); border:1px solid rgba(148,163,184,0.2); color:#e2e8f0; border-radius:999px; padding:3px 8px; font-size:0.78em;">#' + escapeHtml(event.chartNumber) + '</span>'
+            : '<span style="display:inline-flex; align-items:center; gap:4px; background:rgba(71,85,105,0.2); border:1px solid rgba(100,116,139,0.24); color:#94a3b8; border-radius:999px; padding:3px 8px; font-size:0.78em;">No chart linked</span>';
+        var chairChip = event.chair
+            ? '<span style="display:inline-flex; align-items:center; gap:4px; background:rgba(251,191,36,0.12); border:1px solid rgba(251,191,36,0.24); color:#fde68a; border-radius:999px; padding:3px 8px; font-size:0.78em;">Chair ' + escapeHtml(event.chair) + '</span>'
+            : '';
+        var reliabilityChip = event.patient
+            ? '<span style="display:inline-flex; align-items:center; gap:4px; background:' + (event.patient.reliability === 'red' ? 'rgba(239,68,68,0.12)' : event.patient.reliability === 'yellow' ? 'rgba(245,158,11,0.12)' : 'rgba(16,185,129,0.12)') + '; border:1px solid ' + (event.patient.reliability === 'red' ? 'rgba(239,68,68,0.24)' : event.patient.reliability === 'yellow' ? 'rgba(245,158,11,0.24)' : 'rgba(16,185,129,0.24)') + '; color:' + (event.patient.reliability === 'red' ? '#fca5a5' : event.patient.reliability === 'yellow' ? '#fcd34d' : '#86efac') + '; border-radius:999px; padding:3px 8px; font-size:0.78em;">' + escapeHtml((event.patient.reliability || 'yellow').toUpperCase()) + ' reliability</span>'
+            : '';
+        var phoneChips = dashboardRenderPhoneChips(event.phone);
+        var briefing = dashboardBuildAppointmentBriefing(event, feed, workloadItems);
+        var safePatientId = (event.patientId || '').replace(/['"\\]/g, '');
+
+        html += '<div style="background:rgba(15,23,42,0.62); border:1px solid rgba(100,116,139,0.22); border-left:4px solid ' + (event.scheduleOnly ? '#8b5cf6' : countdown <= 7 ? '#f59e0b' : '#3b82f6') + '; border-radius:12px; padding:14px; margin-bottom:10px;">';
+        html += '<div style="display:flex; flex-wrap:wrap; align-items:flex-start; justify-content:space-between; gap:12px;">';
+        html += '<div style="flex:1; min-width:260px;">';
+        html += '<div style="display:flex; flex-wrap:wrap; align-items:center; gap:8px; margin-bottom:8px;">';
+        html += getCountdownBadge(countdown);
+        html += '<span style="color:#e2e8f0; font-weight:600; font-size:0.88em;">' + escapeHtml(dashboardFormatTimeRange(event.time, event.endTime)) + '</span>';
+        html += statusChip;
+        html += '</div>';
+        html += '<div style="font-size:1.02em; font-weight:700; color:#f8fafc;">' + escapeHtml(event.title || 'Upcoming appointment') + '</div>';
+        html += '<div style="display:flex; flex-wrap:wrap; gap:6px; margin-top:8px; margin-bottom:10px;">';
+        html += chartChip + chairChip + reliabilityChip + phoneChips;
+        html += '</div>';
+        html += '<div style="color:#fbbf24; font-size:0.92em; font-weight:600; margin-bottom:8px;">' + escapeHtml(event.description || 'Appointment') + '</div>';
+        html += '<div style="color:#cbd5e1; font-size:0.9em; line-height:1.55;">' + escapeHtml(briefing) + '</div>';
+        html += '</div>';
+
+        html += '<div style="display:flex; flex-direction:column; gap:8px; min-width:130px; align-items:stretch;">';
+        if (event.patientId) {
+            html += '<button onclick="navigateToEntity(\'patient\', \'' + safePatientId + '\')" style="background:rgba(59,130,246,0.14); border:1px solid rgba(59,130,246,0.32); color:#bfdbfe; border-radius:8px; padding:8px 10px; font-size:0.82em; cursor:pointer; font-weight:600;">Open Patient</button>';
+        }
+        html += '<button onclick="navigateToEntity(\'appointment\')" style="background:rgba(148,163,184,0.12); border:1px solid rgba(148,163,184,0.22); color:#cbd5e1; border-radius:8px; padding:8px 10px; font-size:0.82em; cursor:pointer; font-weight:600;">Appointments Tab</button>';
+        html += '</div>';
+        html += '</div>';
+        html += '</div>';
+
+        var nextItem = feed[index + 1];
+        if (!nextItem || nextItem.date !== currentDate) {
+            html += '</div>';
+        }
+    });
+
+    html += '</div>';
+    return html;
+}
+
 function renderDashboard() {
     const container = document.getElementById('tab-missioncontrol');
     if (!container) return;
@@ -123,6 +808,9 @@ function renderDashboard() {
 
     // Build the full dashboard HTML
     let html = '';
+
+    // Appointments-first view
+    html += renderUpcomingAppointmentsSection(today);
 
     // Current date display
     html += '<div id="currentDateDisplay" style="text-align:center; color:#94a3b8; font-size:0.9em; margin-bottom:16px;">'
