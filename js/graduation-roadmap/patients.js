@@ -1304,7 +1304,10 @@ function savePatientField(element) {
     var records = getAllPatientRecords();
     if (!records[patientId]) return;
 
-    records[patientId][field] = element.innerText;
+    var newValue = element.innerText;
+    var originalValue = element.dataset.original || '';
+    if (newValue === originalValue) return;  // No change — skip save
+    records[patientId][field] = newValue;
     // When manually editing nextVisit, flag it so auto-compute doesn't overwrite
     if (field === 'nextVisit') {
         records[patientId].nextVisitManual = true;
@@ -1683,13 +1686,35 @@ function parsePatientImportText(text) {
             if (parsed4.source) result.reqStatusSource = parsed4.source;
         } else if (effectiveHeader === 'SPS_DASHBOARD_UPDATE') {
             var parsed5 = parseDashboardUpdate(bodyText);
-            if (parsed5) result.dashboardUpdate = parsed5;
+            if (parsed5) {
+                if (!result.dashboardUpdate || (parsed5.capturedAt && (!result.dashboardUpdate.capturedAt || parsed5.capturedAt > result.dashboardUpdate.capturedAt))) {
+                    result.dashboardUpdate = parsed5;
+                }
+            }
         } else if (effectiveHeader === 'MISSING_NOTES') {
             var parsedNotes = parseMissingNotesBlock(bodyText);
-            if (parsedNotes) result.missingNotes = parsedNotes;
+            if (parsedNotes) {
+                if (!result.missingNotes) {
+                    result.missingNotes = parsedNotes;
+                } else {
+                    // Merge: concat + dedup by ID
+                    var existingIds = {};
+                    result.missingNotes.forEach(function(n) { if (n.id) existingIds[n.id] = true; });
+                    parsedNotes.forEach(function(n) { if (!existingIds[n.id]) result.missingNotes.push(n); });
+                }
+            }
         } else if (effectiveHeader === 'TODO_LIST') {
             var parsedTodo = parseTodoListBlock(bodyText);
-            if (parsedTodo) result.todoList = parsedTodo;
+            if (parsedTodo) {
+                if (!result.todoList) {
+                    result.todoList = parsedTodo;
+                } else {
+                    // Merge: concat + dedup by ID
+                    var existingTodoIds = {};
+                    result.todoList.forEach(function(t) { if (t.id) existingTodoIds[t.id] = true; });
+                    parsedTodo.forEach(function(t) { if (!existingTodoIds[t.id]) result.todoList.push(t); });
+                }
+            }
         } else if (effectiveHeader === 'CLINICAL_BRIEF') {
             var parsedBrief = parseClinicalBrief(bodyText);
             if (parsedBrief && parsedBrief.chartNumber) result.clinicalBriefs.push(parsedBrief);
@@ -2187,13 +2212,14 @@ function previewPatientImport() {
         parsed.updates.forEach(function(upd) {
             var records = getPatientRecords();
             var updId = upd.chartNumber ? findByNormalizedChart(records, upd.chartNumber) : null;
-            var isNew = !updId || !records[updId];
+            var chartMissing = !(upd.chartNumber || '').trim();
+            var isNew = !chartMissing && (!updId || !records[updId]);
             var changedFields = Object.keys(upd).filter(function(k) { return k !== '_notesAppend' && k !== '_medicalHxAppend' && k !== 'chartNumber' && upd[k]; });
             var appendHints = (upd._notesAppend ? ' (notes will append)' : '') + (upd._medicalHxAppend ? ' (medicalHx will append)' : '');
-            var bgColor = isNew ? '#052e16' : '#422006';
-            var borderColor = isNew ? '#22c55e' : '#f59e0b';
-            var textColor = isNew ? '#4ade80' : '#fbbf24';
-            var label = isNew ? 'CREATE (auto)' : 'UPDATE';
+            var label = chartMissing ? 'SKIP (no chart #)' : (isNew ? 'CREATE (auto)' : 'UPDATE');
+            var bgColor = chartMissing ? '#1e1b4b' : (isNew ? '#052e16' : '#422006');
+            var borderColor = chartMissing ? '#6366f1' : (isNew ? '#22c55e' : '#f59e0b');
+            var textColor = chartMissing ? '#a5b4fc' : (isNew ? '#4ade80' : '#fbbf24');
             html += '<div style="padding:8px; margin-bottom:6px; background:' + bgColor + '; border-radius:6px; border-left:3px solid ' + borderColor + ';">'
                 + '<div style="color:' + textColor + '; font-weight:600; font-size:0.9em;">' + label + ': ' + escapeHtml(upd.name || '') + ' Chart #' + escapeHtml(upd.chartNumber || '?') + '</div>'
                 + '<div style="color:#94a3b8; font-size:0.8em; margin-top:4px;">Fields: ' + changedFields.join(', ') + appendHints + '</div>'
@@ -2530,6 +2556,14 @@ function confirmUnifiedImport() {
                 if (apt.chair && !dupeApt.chair) {
                     dupeApt.chair = apt.chair;
                 }
+                // Update existing auto-created procedure records to match merged appointment text
+                if (dupeApt.procedures) {
+                    getValues(roadmapData.clinicalData.completedProcedures || {}).forEach(function(proc) {
+                        if (proc.appointmentId === dupeApt.id && proc.notes === 'Auto-created from import') {
+                            proc.procedure = dupeApt.procedures;
+                        }
+                    });
+                }
                 return;
             }
 
@@ -2708,6 +2742,7 @@ function confirmUnifiedImport() {
     if (typeof propagateClinicalChanges === 'function') {
         propagateClinicalChanges({ appointments: true, procedures: true, competencies: true, patients: true, source: 'confirmUnifiedImport' });
     }
+    safeLocalStorageSet(STORAGE_KEY, JSON.stringify(roadmapData));
     if (typeof initClinicalTab === 'function' && aptsCreated > 0) {
         try { initClinicalTab(); } catch(e) {}
     }
@@ -3431,19 +3466,34 @@ function renderMiniReview() {
     if (!container) return;
 
     var allPatients = getAllPatientRecords();
-    var ids = Object.keys(allPatients);
+    var allIds = Object.keys(allPatients);
 
-    // Sort: green first, then yellow, then red; alphabetical within each group
-    var relOrder = { green: 0, yellow: 1, red: 2 };
+    // Filter: exclude red (inactive/unreliable) patients
+    var ids = allIds.filter(function(id) {
+        return (allPatients[id].reliability || 'yellow') !== 'red';
+    });
+
+    // Sort: patients WITH scheduled appointments first, then green before yellow, then alphabetical
     ids.sort(function(a, b) {
+        var aNext = getNextScheduledVisit(allPatients[a], a);
+        var bNext = getNextScheduledVisit(allPatients[b], b);
+        var aHasApt = aNext ? 0 : 1;
+        var bHasApt = bNext ? 0 : 1;
+        if (aHasApt !== bHasApt) return aHasApt - bHasApt;
+        var relOrder = { green: 0, yellow: 1 };
         var ra = relOrder[allPatients[a].reliability] ?? 1;
         var rb = relOrder[allPatients[b].reliability] ?? 1;
         if (ra !== rb) return ra - rb;
         return (allPatients[a].name || '').localeCompare(allPatients[b].name || '');
     });
 
-    var html = '<div class="mr-header"><h2>Mini Review</h2><span class="mr-count">' + ids.length + ' patients</span></div>';
+    var redCount = allIds.length - ids.length;
+    var html = '<div class="mr-header"><h2>Mini Review</h2><span class="mr-count">' + ids.length + ' of ' + allIds.length + ' patients' + (redCount > 0 ? ' (' + redCount + ' red hidden)' : '') + '</span></div>';
     html += '<div class="mr-grid">';
+
+    if (ids.length === 0) {
+        html += '<div class="mr-empty">No active patients to display</div>';
+    }
 
     for (var i = 0; i < ids.length; i++) {
         var pid = ids[i];

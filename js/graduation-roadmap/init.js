@@ -828,7 +828,7 @@ function renderDashboard() {
     });
 
     // === Row 4: Key Dates Countdown ===
-    const d3End = new Date(2026, 4, 13);       // May 13, 2026
+    const d3End = new Date(2026, 4, 15);       // May 15, 2026
     const extStart = new Date(2026, 4, 19);    // May 19, 2026
     const graduation = new Date(2027, 4, 12);  // May 12, 2027
     const daysTo = function(target) { return Math.max(0, Math.ceil((target - today) / (1000 * 60 * 60 * 24))); };
@@ -997,7 +997,7 @@ function renderDashboard() {
         if ((p.activeStatus || 'Active') === 'Inactive') return false;
         var recallMatch = (p.recallHistory || '').match(/Next due:\s*([0-9]{1,2}\/[0-9]{1,2}\/[0-9]{4})/i);
         if (!recallMatch) return false;
-        var recallDate = parseLocalDate(recallMatch[1]);
+        var recallDate = parseMDYDate(recallMatch[1]);
         var thirtyOut = new Date(today);
         thirtyOut.setDate(thirtyOut.getDate() + 30);
         return recallDate && recallDate <= thirtyOut;
@@ -1738,6 +1738,7 @@ function initUI() {
     // Initialize Clinical tab if data exists
     try { initClinicalTab(); } catch(e) { console.error('initClinicalTab error:', e); }
     try { renderCompetencies(); } catch(e) { console.error('renderCompetencies error:', e); }
+    try { renderMiniReview(); } catch(e) { console.error('renderMiniReview error:', e); }
 
     // One-time perio noise cleanup
     if (typeof migratePerioNoiseCleanup === 'function') {
