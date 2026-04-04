@@ -1345,7 +1345,7 @@ function setPatientReliability(patientId, reliability) {
     safeLocalStorageSet(STORAGE_KEY, JSON.stringify(roadmapData));
     saveData();
     renderPatientRecord(patientId);
-    renderPatientsSidebar();
+    propagateClinicalChanges({ patients: true, source: 'setPatientReliability' });
 }
 
 
