@@ -95,6 +95,7 @@ function parseLectureBlock(block) {
 function parseImportDate(dateStr) {
     // Handle formats: "2026-02-09", "Feb 9, 2026", "February 9, 2026", "02/09/2026"
     if (!dateStr) return null;
+    dateStr = dateStr.trim();
 
     // Already in YYYY-MM-DD format
     if (/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) {

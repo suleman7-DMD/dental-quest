@@ -988,6 +988,7 @@ function getDaysUntil(dateStr) {
 }
 
 function formatExamDate(dateStr) {
+    if (!dateStr) return dateStr || 'Date TBD';
     const date = new Date(dateStr + 'T12:00:00');
     return date.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' });
 }

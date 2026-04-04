@@ -169,6 +169,7 @@ const date = new Date(year, month - 1, day);
 | Competency adjustment / status toggle | `renderDashboard()` |
 | `mpToggleTaskComplete` | `dpSyncAppointmentsToTimeline()` |
 | Quick-fix schedule changes | `syncClinicalToMonthlyPlanner()`, `buildCurrentWeekSchedule()` |
+| Reliability change (`setPatientReliability`) | `propagateClinicalChanges({ patients: true })` |
 
 ### Troubleshooting Module
 - **`hiddenClinicTasks` key**: Raw `aptId`, NOT `clinic_` prefixed. Value: `{ hiddenAt, taskId }` (not boolean).
@@ -188,7 +189,7 @@ const date = new Date(year, month - 1, day);
 - **Duplicate HTML style attributes**: Never pass `style="..."` in extraAttr if element already has `style`.
 - **CSS-only tab theming**: `#tab-[name] .existing-class` specificity override. Additive.
 - **Patients tab**: Light theme via `#tab-patients` prefix. Mobile: hides metrics, sidebar `position: static`.
-- **Mini Review tab**: Read-only. No state mutation, no saves.
+- **Mini Review tab**: Read-only. No state mutation, no saves. Rendered from 3 sites: `switchTab`, `propagateClinicalChanges`, `initUI`. Filters out red patients; sorts scheduled-first.
 - **Partial re-renders**: `rerenderMissingNotesSection()` and `rerenderTodoListSection()` for targeted updates.
 - **Double-fire guard**: Click-to-edit and contenteditable need `committed` boolean. Escape must set flag.
 - **Toast onclick**: NEVER `toastEl.style.display = 'none'`. Use `classList.remove('show')` + `setTimeout` auto-clear.

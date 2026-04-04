@@ -50,6 +50,11 @@ function initDailyPlanner() {
     dpSetTimeToNow();
 }
 
+// Stop clock when leaving daily planner tab (called from switchScheduleSubTab)
+function dpStopClock() {
+    if (dpClockInterval) { clearInterval(dpClockInterval); dpClockInterval = null; }
+}
+
 function dpStartClock() {
     if (dpClockInterval) clearInterval(dpClockInterval);
 
@@ -447,14 +452,15 @@ function dpRenderEvent(block) {
     const endTimeStr = dpFormatTime(`${endH.toString().padStart(2, '0')}:${endM.toString().padStart(2, '0')}`);
 
     // Use block.id for toggle/delete operations (object-based storage)
-    const blockIdEscaped = escapeHtml(block.id);
+    // Sanitize for JS string context inside onclick, not HTML context (escapeHtml encodes ' to &#039; which breaks onclick)
+    const blockIdSafe = (block.id || '').replace(/['\"\\]/g, '');
     return `
         <div class="planner-event ${block.completed ? 'completed' : ''}"
              style="top: ${top}px; height: ${height}px;"
-             onclick="dpToggleEvent('${blockIdEscaped}')"
+             onclick="dpToggleEvent('${blockIdSafe}')"
              title="Click to mark ${block.completed ? 'incomplete' : 'complete'}">
             <div class="planner-event-actions">
-                <button class="planner-event-btn" onclick="event.stopPropagation(); dpDeleteEvent('${blockIdEscaped}')" title="Delete">×</button>
+                <button class="planner-event-btn" onclick="event.stopPropagation(); dpDeleteEvent('${blockIdSafe}')" title="Delete">×</button>
             </div>
             <div class="planner-event-title">${escapeHtml(block.task)}</div>
             ${height >= 40 ? `<div class="planner-event-time">${dpFormatTime(block.startTime)} - ${endTimeStr}</div>` : ''}

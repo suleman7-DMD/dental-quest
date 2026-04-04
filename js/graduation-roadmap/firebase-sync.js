@@ -897,6 +897,8 @@ function importBackup(file) {
 
 function showBackupManager() {
     // Local backups removed — redirect to export/import and checkpoints
+    var existing = document.getElementById('backupManagerModal');
+    if (existing) existing.remove();
     var modal = document.createElement('div');
     modal.id = 'backupManagerModal';
     modal.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.8);display:flex;align-items:center;justify-content:center;z-index:10000;';
@@ -976,6 +978,8 @@ function setLocalUpdateFlag() {
 
 // Show conflict resolution modal
 function showSyncConflictModal(localData, remoteData, onResolve) {
+    var existing = document.getElementById('syncConflictModal');
+    if (existing) existing.remove();
     const modal = document.createElement('div');
     modal.id = 'syncConflictModal';
     modal.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.8);display:flex;align-items:center;justify-content:center;z-index:10000;';
@@ -2190,6 +2194,11 @@ function importAndRestoreDirectly() {
 // ==================== FORCE UPLOAD / FORCE PULL ====================
 
 function forceUploadToCloud() {
+    // Cancel any pending debounced save to prevent it overwriting the force upload
+    if (saveDebounceTimer) {
+        clearTimeout(saveDebounceTimer);
+        saveDebounceTimer = null;
+    }
     if (isEmptyState(roadmapData)) {
         showToast('Cannot force upload - no data');
         return;

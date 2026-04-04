@@ -498,6 +498,9 @@ function renderExamCountdown() {
 
 // ==================== ADD NEW DEADLINE ====================
 function addNewDeadline() {
+    // Prevent modal stacking
+    var existing = document.getElementById('addDeadlineModal');
+    if (existing) existing.remove();
     // Create a modal for better UX
     const modal = document.createElement('div');
     modal.id = 'addDeadlineModal';
@@ -757,6 +760,8 @@ function deleteDeadlineById(deadlineId) {
 }
 
 function showGradeInputModal(index, deadline) {
+    var existing = document.getElementById('gradeInputModal');
+    if (existing) existing.remove();
     const deadlineId = deadline._originalStableId || getDeadlineId(deadline);
     const modal = document.createElement('div');
     modal.id = 'gradeInputModal';

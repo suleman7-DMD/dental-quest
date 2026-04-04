@@ -279,7 +279,12 @@ function isEmptyState(data) {
     // FIX: Check patientRecords, dashboardSnapshots, completedProcedures
     // Without these, imported patient data could be treated as "empty" and saves blocked by Guard C
     const hasPatientRecords = getCount(data.clinicalData?.patientRecords) > 0;
-    const hasDashboardSnapshots = Array.isArray(data.clinicalData?.dashboardSnapshots) && data.clinicalData.dashboardSnapshots.length > 0;
+    const hasDashboardSnapshots = (() => {
+        var s = data.clinicalData?.dashboardSnapshots;
+        if (!s) return false;
+        if (Array.isArray(s)) return s.length > 0;
+        return typeof s === 'object' && Object.keys(s).length > 0;
+    })();
     const hasCompletedProcedures = getCount(data.clinicalData?.completedProcedures) > 0;
     // hasCompetencies: Only count as real data if ANY item has completed > 0.
     // Auto-initialized competencies from DEFAULT_COMPETENCIES all have completed: 0.
@@ -815,9 +820,11 @@ function parseMDYDate(dateStr) {
 }
 
 function getCountdown(dateStr) {
+    if (!dateStr) return null;
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     const target = parseLocalDate(dateStr);
+    if (!target || isNaN(target.getTime())) return null;
     const diff = Math.ceil((target - today) / (1000 * 60 * 60 * 24));
     return diff;
 }
@@ -909,6 +916,7 @@ function switchTab(tabId, evt) {
 
 // ==================== SCHEDULE SUB-TABS ====================
 function switchScheduleSubTab(subTabId) {
+    if (typeof dpStopClock === 'function') dpStopClock();
     document.querySelectorAll('.schedule-subtab-content').forEach(el => el.style.display = 'none');
     document.querySelectorAll('.schedule-subtab-btn').forEach(btn => btn.classList.remove('active'));
     const target = document.getElementById('schedule-' + subTabId);
@@ -1025,6 +1033,8 @@ function showCustomAlert(message, title = 'Notice', callback = null) {
 
 // Custom Confirm Modal (replaces blocking confirm())
 function showCustomConfirm(message, onConfirm, onCancel = null, title = 'Confirm', rawHtml = false) {
+    var existing = document.querySelector('.custom-modal-overlay');
+    if (existing) existing.remove();
     var safeTitle = escapeHtml(title);
     var safeMessage = rawHtml ? message : escapeHtml(message).replace(/\n/g, '<br>');
     const modal = document.createElement('div');
@@ -1060,7 +1070,7 @@ function getSmartAppointmentCount() {
     // Source 2: clinic planner tasks marked complete
     // Keys are random generated IDs (e.g., completed_abc123); the actual task ID
     // (e.g., clinic_appt_xyz) is stored in the entry's value.
-    Object.values(completedTasks).forEach(function(entry) {
+    getValues(completedTasks).forEach(function(entry) {
         var taskId = typeof entry === 'string' ? entry : (entry?.value || entry?.id || '');
         if (typeof taskId === 'string' && taskId.startsWith('clinic_')) {
             var aptId = taskId.replace('clinic_', '');
@@ -1082,7 +1092,7 @@ function getSmartAppointmentCount() {
     var extraVisits = 0;
     // From patient records (canonical store after CIS v2 migration)
     // Fix #6: Normalize legacy pipe-delimited lastVisit format before dedup comparison
-    Object.values(patientRecords).forEach(function(pr) {
+    getValues(patientRecords).forEach(function(pr) {
         var lastVisitDate = (pr.lastVisit || '').split('|')[0].trim();
         if (lastVisitDate && pr.id && !visitKeys.has(pr.id + '|' + lastVisitDate)) {
             extraVisits++;
@@ -1550,6 +1560,15 @@ function cascadeDeletePatient(patientId) {
         });
     }
 
+    // 3c. Clean todoList items referencing this patient
+    if (roadmapData.todoList?.items) {
+        Object.keys(roadmapData.todoList.items).forEach(function(itemId) {
+            if (roadmapData.todoList.items[itemId]?.patientId === patientId) {
+                delete roadmapData.todoList.items[itemId];
+            }
+        });
+    }
+
     // 4. Track deletion for merge protection, then delete patient record
     if (!roadmapData.clinicalData.deletedPatientRecordIds) roadmapData.clinicalData.deletedPatientRecordIds = {};
     roadmapData.clinicalData.deletedPatientRecordIds[patientId] = new Date().toISOString();
@@ -1640,6 +1659,7 @@ function toggleMissingNoteStatus(noteId) {
         note.status = 'pending';
         note.completedAt = null;
     }
+    clinicalDataDirty = true;
     safeLocalStorageSet(STORAGE_KEY, JSON.stringify(roadmapData));
     saveData();
     if (typeof rerenderMissingNotesSection === 'function') rerenderMissingNotesSection(); else renderDashboard();
@@ -1657,6 +1677,7 @@ function clearCompletedMissingNotes() {
         }
     }
     if (cleared > 0) {
+        clinicalDataDirty = true;
         safeLocalStorageSet(STORAGE_KEY, JSON.stringify(roadmapData));
         saveData();
         if (typeof rerenderMissingNotesSection === 'function') rerenderMissingNotesSection(); else renderDashboard();

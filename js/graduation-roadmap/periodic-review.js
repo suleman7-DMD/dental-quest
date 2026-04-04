@@ -1190,7 +1190,9 @@ function renderPRPatientRoster(pr2, patients) {
             html += ' <span class="pr-badge pr-badge-new">NEW</span>';
         }
         html += '</td>';
-        html += '<td style="font-size:0.85rem; color:#475569;">' + escapeHtml(pt.phone ?? '') + '</td>';
+        var phones = (pt.phone ?? '').split('|').filter(Boolean);
+        var phoneDisplay = phones.length > 0 ? escapeHtml(phones[0].trim()) + (phones.length > 1 ? ' +' + (phones.length - 1) + ' more' : '') : '';
+        html += '<td style="font-size:0.85rem; color:#475569;">' + phoneDisplay + '</td>';
         html += '<td style="text-align:center;">';
         if (dotClass) {
             html += '<span class="pr-dot ' + dotClass + '"></span>';
@@ -1368,7 +1370,7 @@ function renderPRPatientWriteups(pr2, patients) {
         // Build field definitions
         var fields = [
             { label: 'Patient', key: 'type', value: pt.type ?? '' },
-            { label: 'Phone', key: 'phone', value: pt.phone ?? '' },
+            { label: 'Phone', key: 'phone', value: (function() { var pp = (pt.phone ?? '').split('|').filter(Boolean); return pp.length > 0 ? pp[0].trim() + (pp.length > 1 ? ' +' + (pp.length - 1) + ' more' : '') : ''; })() },
             { label: 'PMH / RMH', key: 'medicalHx', value: pt.medicalHx ?? '' },
             { label: 'Medications', key: 'medications', value: pt.medications ?? '' },
             { label: 'Allergies', key: 'allergies', value: pt.allergies ?? '' },
@@ -1595,6 +1597,13 @@ function prSavePatientField(patientId, fieldName, value) {
     clinicalDataDirty = true;
     safeLocalStorageSet(STORAGE_KEY, JSON.stringify(roadmapData));
     saveData();
+
+    // Propagate to downstream views (sidebar, mini review, countdown radar)
+    if (['name', 'reliability', 'activeStatus', 'phone', 'lastVisit'].indexOf(fieldName) >= 0) {
+        if (typeof propagateClinicalChanges === 'function') {
+            propagateClinicalChanges({ patients: true });
+        }
+    }
 }
 
 function prAddToRemoveList(chartNumber, patientName) {

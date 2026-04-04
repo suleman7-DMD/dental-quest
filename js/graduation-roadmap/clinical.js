@@ -29,7 +29,7 @@ function updateClinicalStats() {
     const procedures = getValues(roadmapData.clinicalData?.completedProcedures);
 
     // Count active patients
-    const activePatients = Object.values(patients).filter(p => (p.activeStatus || 'Active') !== 'Inactive').length;
+    const activePatients = getValues(patients).filter(p => (p.activeStatus || 'Active') !== 'Inactive').length;
     document.getElementById('clinicalStatPatients').textContent = activePatients;
 
     // Count this week's appointments
@@ -47,7 +47,7 @@ function updateClinicalStats() {
     document.getElementById('clinicalStatProcedures').textContent = procedures.length;
 
     // Count recalls due
-    const recallsDue = Object.values(patients).filter(p => {
+    const recallsDue = getValues(patients).filter(p => {
         if ((p.activeStatus || 'Active') === 'Inactive') return false;
         var recallMatch = (p.recallHistory || '').match(/Next due:\s*([0-9]{1,2}\/[0-9]{1,2}\/[0-9]{4})/i);
         if (!recallMatch) return false;
@@ -89,6 +89,7 @@ function renderActiveRoster() {
     Object.entries(records).forEach(function(entry) {
         var id = entry[0], p = entry[1];
         if (!p || !p.name) return;
+        if ((p.activeStatus || 'Active') === 'Inactive') return;
         var nextApt = patientNextApt[id];
         var item = { id: id, patient: p, nextApt: nextApt };
 
@@ -420,7 +421,6 @@ function saveAppointment() {
     updateClinicalStats();
     if (typeof renderDeadlines === 'function') renderDeadlines();
     if (typeof extendWeeksIfNeeded === 'function') extendWeeksIfNeeded();
-    if (typeof dpSyncAppointmentsToTimeline === 'function') dpSyncAppointmentsToTimeline();
     showToast('Appointment saved!');
 }
 
@@ -859,19 +859,14 @@ function migrateCompetencyEnhancements() {
                     item.text = def.text;
                     item.required = def.required;
                     item.custom = item.custom ?? def.custom ?? false;
-                } else {
+                } else if (!item.custom) {
                     // Orphaned item: exists in saved data but NOT in DEFAULT_COMPETENCIES
-                    // Remove it (e.g., perio-sum-calc, gp-comm)
+                    // Remove it (e.g., perio-sum-calc, gp-comm) — but preserve custom user-added items
                     console.log('[CIS-v3] Removing orphaned competency item: ' + (item.id || itemKey));
                     delete items[itemKey];
                     return;
                 }
-                // Clean phantom progress: completed > 0 but no evidence trail
-                var entries = getValues(item.completionEntries);
-                if (item.completed > 0 && entries.length === 0) {
-                    item.completed = 0;
-                    item.status = 'pending';
-                }
+                // V2: completionEntries deleted — phantom progress check removed (counts are manual-only)
             });
         });
     });
@@ -917,10 +912,9 @@ function migrateToCompetencyV2() {
                 var item = items[itemKey];
                 if (!item) return;
 
-                // Strip old evidence-trail fields
+                // Strip old evidence-trail fields (preserve custom flag)
                 delete item.completionEntries;
                 delete item.rules;
-                delete item.custom;
                 delete item.unlockedBy;
                 delete item.unlockEmailTo;
 
@@ -1086,21 +1080,19 @@ function renderMilestoneDashboard() {
     var aptCount = typeof getSmartAppointmentCount === 'function' ? getSmartAppointmentCount() : { total: 0 };
     var procCount = typeof getSmartProcedureCount === 'function' ? getSmartProcedureCount() : { total: 0 };
 
-    // Count summative items completed
+    // Count summative items completed — ground truth: 7 Clinical Summatives
     var competencies = getCompetenciesData();
     var summativeCompleted = 0;
-    var summativeTotal = 0;
+    var summativeTotal = 7;
     Object.values(competencies).forEach(function(cat) {
         getValues(cat.sections).forEach(function(sec) {
             getValues(sec.items).forEach(function(item) {
-                if (item.isSummative) {
-                    summativeTotal++;
-                    if (item.completed >= item.required) summativeCompleted++;
+                if (item.isSummative && item.completed >= (item.required ?? 1)) {
+                    summativeCompleted++;
                 }
             });
         });
     });
-    if (summativeTotal === 0) summativeTotal = 7; // fallback per spec
 
     var readiness = typeof calculateGraduationReadiness === 'function' ? calculateGraduationReadiness() : { percent: 0 };
 
@@ -1302,7 +1294,7 @@ function showPatientCompPreview(patientId, itemId) {
     var compResult = findCompetencyItem(itemId);
     var compText = compResult ? compResult.item.text : (itemId || '');
     var compCatName = compResult ? (getCompetenciesData()[compResult.catKey]?.name || '') : '';
-    var isCompleted = compResult ? compResult.item.completed >= (compResult.item.required || 1) : false;
+    var isCompleted = compResult ? compResult.item.completed >= (compResult.item.required ?? 1) : false;
 
     var matchedReq = null;
     var ptReqsPreview = getValues(pt.importedRequirements);
@@ -1937,8 +1929,8 @@ function renderCompetencies() {
                 var itemsToRender = (compSearchQuery || compActiveFilters.length > 0) ? visibleItems : getValues(sec.items);
                 itemsToRender.forEach(function(item) {
                     if (!item || !item.id) return;
-                    var completed = item.completed || 0;
-                    var required = item.required || 1;
+                    var completed = item.completed ?? 0;
+                    var required = item.required ?? 1;
                     var safeItemId = (item.id || '').replace(/['"\\]/g, '');
 
                     // Status icon
@@ -2089,7 +2081,7 @@ function cv2BuildD3Alert(comp, daysLeft) {
         var catKey = entry[0], cat = entry[1];
         getValues(cat.sections).forEach(function(sec) {
             getValues(sec.items).forEach(function(item) {
-                if (item.d3Deadline && item.completed < (item.required || 1)) {
+                if (item.d3Deadline && item.completed < (item.required ?? 1)) {
                     var parts = item.d3Deadline.split('-').map(Number);
                     var dlDate = new Date(parts[0], parts[1] - 1, parts[2]);
                     var itemDaysLeft = Math.floor((dlDate - today) / 86400000);
@@ -2108,7 +2100,7 @@ function cv2BuildD3Alert(comp, daysLeft) {
     if (d3Items.length === 0) return '';
 
     d3Items.sort(function(a, b) { return a.daysLeft - b.daysLeft; });
-    var zeroProgress = d3Items.filter(function(d) { return (d.item.completed || 0) === 0; });
+    var zeroProgress = d3Items.filter(function(d) { return (d.item.completed ?? 0) === 0; });
 
     var html = '<div class="cv2-d3-alert" onclick="this.classList.toggle(\'expanded\')">'
         + '<div class="cv2-d3-alert-header">'
@@ -2574,7 +2566,7 @@ function openEditCompItemModal(catKey, itemId) {
     document.getElementById('compModalTitle').textContent = '✏️ Edit Requirement';
     document.getElementById('compItemName').value = foundItem.text;
     document.getElementById('compItemRequired').value = foundItem.required;
-    document.getElementById('compItemCompleted').value = foundItem.completed || 0;
+    document.getElementById('compItemCompleted').value = foundItem.completed ?? 0;
     document.getElementById('compItemNotes').value = foundItem.note || '';
 
     document.getElementById('compItemModal').style.display = 'flex';
@@ -2631,7 +2623,7 @@ function saveCompItem() {
             completed: clampedCompleted,
             note: notes || null,
             custom: true, // Mark as custom so it can be deleted
-            lastVerified: null,
+            lastVerified: clampedCompleted > 0 ? getLocalDateString(new Date()) : null,
             status: clampedCompleted >= required ? 'completed' : (clampedCompleted > 0 ? 'in_progress' : 'pending'),
             d3Deadline: null,
             isSummative: false,
@@ -2650,6 +2642,7 @@ function saveCompItem() {
                 item.required = required;
                 item.completed = Math.max(0, Math.min(completed, required)); // FIXED: Clamp to 0-required range
                 item.note = notes || null;
+                item.lastVerified = getLocalDateString(new Date());
 
                 // Update status based on completed count
                 if (item.completed >= item.required) {
@@ -2833,7 +2826,7 @@ function backfillClinicalData() {
     // === Phase 3: Create procedure records from completed appointments ===
     if (!roadmapData.clinicalData.completedProcedures) roadmapData.clinicalData.completedProcedures = {};
     var existingProcAptIds = new Set();
-    Object.values(roadmapData.clinicalData.completedProcedures).forEach(function(p) {
+    getValues(roadmapData.clinicalData.completedProcedures).forEach(function(p) {
         if (p.appointmentId) existingProcAptIds.add(p.appointmentId);
     });
 
@@ -2924,7 +2917,7 @@ function backfillClinicalData() {
         patient.outstandingTasks.forEach(function(task) {
             if (task.status === 'completed' && task.procedure) {
                 // Check if we already have a procedure for this
-                var alreadyExists = Object.values(roadmapData.clinicalData.completedProcedures).some(function(p) {
+                var alreadyExists = getValues(roadmapData.clinicalData.completedProcedures).some(function(p) {
                     return p.patientId === patient.id && p.procedure === task.procedure;
                 });
                 if (!alreadyExists) {
@@ -2959,7 +2952,6 @@ function backfillClinicalData() {
 
     showToast('Backfill complete: ' + backfillStats.appointmentsCompleted + ' apts, '
         + backfillStats.proceduresCreated + ' procs, '
-        + backfillStats.evidenceCreated + ' evidence, '
         + backfillStats.patientsLinked + ' patients linked');
 
     _backfillInProgress = false;
@@ -3041,7 +3033,6 @@ function completeAppointment(aptId) {
     saveData();
     renderAppointmentsList();
     updateClinicalStats();
-    if (typeof dpSyncAppointmentsToTimeline === 'function') dpSyncAppointmentsToTimeline();
 
     // 7. Open procedure recording modal for refinement
     openProcedureRecordingModal(aptId);
@@ -3099,7 +3090,7 @@ function markPlannerTaskDone(aptId) {
     if (!roadmapData.monthlyPlanner) roadmapData.monthlyPlanner = { completedTasks: {} };
     if (!roadmapData.monthlyPlanner.completedTasks) roadmapData.monthlyPlanner.completedTasks = {};
 
-    var isCompleted = Object.values(roadmapData.monthlyPlanner.completedTasks).some(function(c) {
+    var isCompleted = getValues(roadmapData.monthlyPlanner.completedTasks).some(function(c) {
         return c.value === taskId || c === taskId;
     });
     if (isCompleted) return;
@@ -3146,7 +3137,7 @@ function openProcedureRecordingModal(aptId) {
     document.getElementById('procModalDate').value = (existingProc?.date || apt.date) || getLocalDateString();
     document.getElementById('procModalProcedure').value = existingProc?.procedure || apt.procedures || '';
     document.getElementById('procModalTeeth').value = existingProc?.toothNumbers || '';
-    document.getElementById('procModalGrade').value = existingProc?.grade || '';
+    document.getElementById('procModalGrade').value = existingProc?.grade ?? '';
     document.getElementById('procModalFaculty').value = existingProc?.faculty || '';
     document.getElementById('procModalNotes').value = existingProc?.notes || apt.notes || '';
 

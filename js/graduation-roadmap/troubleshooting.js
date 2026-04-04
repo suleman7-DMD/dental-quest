@@ -260,9 +260,11 @@ function tsCheckSchedule() {
     checks.push(tsCheck('hiddenClinicTasks format', badFmt === 0 ? 'pass' : 'warn',
         badFmt === 0 ? htKeys.length + ' entries, all truthy.' : badFmt + '/' + htKeys.length + ' falsy entries (should be truthy).'));
 
-    // Current week freshness
+    // Current week freshness (Monday-start, matching buildCurrentWeekSchedule)
     var today = new Date(); today.setHours(0, 0, 0, 0);
-    var wkStart = new Date(today); wkStart.setDate(today.getDate() - today.getDay());
+    var dayOfWeek = today.getDay();
+    var mondayOffset = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
+    var wkStart = new Date(today); wkStart.setDate(today.getDate() + mondayOffset);
     var wkEnd = new Date(wkStart); wkEnd.setDate(wkStart.getDate() + 6);
     var hasCurrent = false;
     for (var w = 0; w < cwsArr.length && !hasCurrent; w++) {
@@ -358,7 +360,7 @@ function tsCheckFirebase() {
 function renderDomainCard(domainKey, checks) {
     var dom = TS_DOMAINS[domainKey]; if (!dom) return '';
     var pass = 0, warn = 0, fail = 0;
-    for (var i = 0; i < checks.length; i++) { if (checks[i].status === 'pass') pass++; else if (checks[i].status === 'warn') warn++; else fail++; }
+    for (var i = 0; i < checks.length; i++) { if (checks[i].status === 'pass') pass++; else if (checks[i].status === 'warn') warn++; else if (checks[i].status === 'info') pass++; else fail++; }
     var light = fail > 0 ? '#ef4444' : warn > 0 ? '#f59e0b' : '#10b981';
     var isExp = tsExpandedDomains[domainKey] === true;
     var safeKey = escapeHtml(domainKey).replace(/'/g, "\\'");
@@ -380,8 +382,8 @@ function renderDomainCard(domainKey, checks) {
 }
 
 function renderCheckResult(check) {
-    var icons = { pass: '&#x2705;', warn: '&#x26A0;&#xFE0F;', fail: '&#x274C;' };
-    var colors = { pass: '#10b981', warn: '#f59e0b', fail: '#ef4444' };
+    var icons = { pass: '&#x2705;', warn: '&#x26A0;&#xFE0F;', fail: '&#x274C;', info: '&#x2139;&#xFE0F;' };
+    var colors = { pass: '#10b981', warn: '#f59e0b', fail: '#ef4444', info: '#3b82f6' };
     return '<div style="padding:8px 0;border-bottom:1px solid rgba(51,65,85,0.5);">'
         + '<div style="display:flex;align-items:flex-start;gap:8px;">'
         + '<span style="flex-shrink:0;">' + (icons[check.status] || '&#x2753;') + '</span>'
@@ -494,7 +496,15 @@ function tsFixDedupSchedule() {
 }
 
 function tsFixRebuildDeadlines() {
-    if (typeof rebuildUpcomingDeadlines === 'function') { rebuildUpcomingDeadlines(); showToast('Deadlines rebuilt', 'warning'); }
+    if (typeof rebuildUpcomingDeadlines === 'function') {
+        rebuildUpcomingDeadlines();
+        // Per CLAUDE.md propagation table: deadline mutation requires sync + persistence
+        if (typeof syncClinicalToMonthlyPlanner === 'function') syncClinicalToMonthlyPlanner();
+        if (typeof buildCurrentWeekSchedule === 'function') buildCurrentWeekSchedule();
+        safeLocalStorageSet(STORAGE_KEY, JSON.stringify(roadmapData));
+        saveData();
+        showToast('Deadlines rebuilt', 'warning');
+    }
     else showToast('rebuildUpcomingDeadlines not available', 'error');
     renderTroubleshooting();
 }
@@ -562,7 +572,7 @@ function calculateIntegrityScore(allChecks) {
         totalW += w;
         if (cks.length === 0) { earnedW += w; return; }
         var pass = 0, warn = 0;
-        for (var c = 0; c < cks.length; c++) { if (cks[c].status === 'pass') pass++; else if (cks[c].status === 'warn') warn++; }
+        for (var c = 0; c < cks.length; c++) { if (cks[c].status === 'pass' || cks[c].status === 'info') pass++; else if (cks[c].status === 'warn') warn++; }
         earnedW += w * (pass + warn * 0.5) / cks.length;
     });
     return totalW > 0 ? Math.round((earnedW / totalW) * 100) : 0;

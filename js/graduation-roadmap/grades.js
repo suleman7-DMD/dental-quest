@@ -181,7 +181,7 @@ function updateGrade(courseId, componentId, value) {
     if (!roadmapData.grades[courseId]) {
         roadmapData.grades[courseId] = {};
     }
-    const grade = value === '' ? null : parseFloat(value);
+    const grade = value === '' ? null : Math.max(0, Math.min(100, parseFloat(value) || 0));
     roadmapData.grades[courseId][componentId] = grade;
 
     // Sync back to deadlines - find matching deadline and update
@@ -280,14 +280,7 @@ function syncGradeToDeadline(courseId, componentId, grade) {
         }
     });
 
-    // CRITICAL FIX: Save the updated completion status
-    safeLocalStorageSet(STORAGE_KEY, JSON.stringify(roadmapData));
-    const saved = saveData();
-    if (!saved) {
-        showToast('Save blocked — try refreshing', 'error');
-    }
-
-    // Re-render deadlines to show updated status
+    // Re-render deadlines to show updated status (caller handles persistence)
     renderDeadlines();
     renderDashboard();
 }

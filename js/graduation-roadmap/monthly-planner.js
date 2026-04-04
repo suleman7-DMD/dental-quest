@@ -211,8 +211,8 @@ function mpToggleTaskComplete(taskId) {
     }
 
     const taskIdStr = String(taskId);
-    // Check if this task is already completed
-    const isCompleted = Object.values(roadmapData.monthlyPlanner.completedTasks).some(c => c.value === taskIdStr || c === taskIdStr);
+    // Check if this task is already completed — use getValues() for object-based storage safety
+    const isCompleted = getValues(roadmapData.monthlyPlanner.completedTasks).some(c => (c.value || c) === taskIdStr);
 
     if (!isCompleted) {
         const completedId = generateId('completed');
@@ -223,6 +223,7 @@ function mpToggleTaskComplete(taskId) {
             const aptId = taskIdStr.replace('clinic_', '');
             const apt = roadmapData.clinicalData?.appointments?.[aptId];
             if (apt && apt.status !== 'completed') {
+                clinicalDataDirty = true; // Must set BEFORE clinical mutation per CLAUDE.md
                 apt.status = 'completed';
                 apt.completedAt = new Date().toISOString();
 
@@ -1096,6 +1097,7 @@ function _mpDeleteCurrentTaskConfirmed() {
     safeLocalStorageSet(STORAGE_KEY, JSON.stringify(roadmapData));
     saveData();
     if (typeof buildCurrentWeekSchedule === 'function') buildCurrentWeekSchedule();
+    if (typeof dpSyncAppointmentsToTimeline === 'function') dpSyncAppointmentsToTimeline();
     mpCloseTaskModal();
     mpRenderAllCalendars();
     mpUpdateStats();
@@ -1236,11 +1238,11 @@ function mpEditNote(noteId) {
     const contentEl = noteEl.querySelector('.mp-note-content');
     const currentText = note.text;
 
-    // Replace with editable textarea
+    // Replace with editable textarea — Escape handler doesn't need currentText arg (mpCancelNoteEdit just re-renders)
     contentEl.innerHTML = `
         <textarea class="mp-note-edit-input" id="mpEditInput-${noteId}"
             onkeydown="if(event.key==='Enter' && !event.shiftKey){event.preventDefault();mpSaveNoteEdit('${noteId}');}"
-            onkeyup="if(event.key==='Escape'){mpCancelNoteEdit('${noteId}', '${escapeHtml(currentText).replace(/'/g, "\\'")}');}">${escapeHtml(currentText)}</textarea>
+            onkeyup="if(event.key==='Escape'){mpCancelNoteEdit('${noteId}');}">${escapeHtml(currentText)}</textarea>
         <div class="mp-note-edit-actions">
             <button onclick="mpSaveNoteEdit('${noteId}')" class="mp-note-save-btn">Save</button>
             <button onclick="mpCancelNoteEdit('${noteId}')" class="mp-note-cancel-btn">Cancel</button>

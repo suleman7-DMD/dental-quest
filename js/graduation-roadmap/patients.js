@@ -725,7 +725,7 @@ function renderPatientsSidebar() {
     var listHtml = '';
     listHtml += sectionBlock('ACTIVE', '#1a7f79', greenItems, false);
     listHtml += sectionBlock('NEEDS ATTENTION', '#c86b4b', yellowItems, false);
-    listHtml += sectionBlock('INACTIVE', '#94a3af', redItems, true);
+    listHtml += sectionBlock('UNRELIABLE', '#94a3af', redItems, true);
 
     if (allItems.length === 0 && searchTerm) {
         listHtml = '<div style="padding:20px; text-align:center; color:#64748b; font-size:0.8em;">No patients match search</div>';
@@ -795,6 +795,12 @@ function renderClinicalBrief(patient, patientId) {
                 return (offset > 0 ? '</li>' : '') + '<li>';
             });
             if (rendered.indexOf('<li>') !== -1) {
+                // Wrap any orphaned text before the first <li> in its own <li>
+                var firstLiIdx = rendered.indexOf('<li>');
+                var preamble = rendered.substring(0, firstLiIdx).trim();
+                if (preamble) {
+                    rendered = '<li>' + preamble + '</li>' + rendered.substring(firstLiIdx);
+                }
                 rendered = '<ol class="ptr-brief-ol">' + rendered + '</li></ol>';
             }
             rendered = rendered.replace(/\n/g, '<br>');
@@ -997,7 +1003,7 @@ function renderPatientRecord(patientId) {
         if (!content || content.trim() === '') return '';
         var isCollapsed = collapsedSections[id] || false;
         return '<div class="ptr-section">'
-            + '<div class="ptr-section-header" onclick="collapsedSections[\'' + escapeHtml(id) + '\']=!collapsedSections[\'' + escapeHtml(id) + '\']; renderPatientRecord(\'' + safePatientId + '\')">'
+            + '<div class="ptr-section-header" onclick="collapsedSections[\'' + (id || '').replace(/['"\\]/g, '') + '\']=!collapsedSections[\'' + (id || '').replace(/['"\\]/g, '') + '\']; renderPatientRecord(\'' + safePatientId + '\')">'
             +   '<span class="ptr-section-arrow">' + (isCollapsed ? '\u25B6' : '\u25BC') + '</span>'
             +   '<span class="ptr-section-icon">' + icon + '</span>'
             +   '<span class="ptr-section-title">' + escapeHtml(title) + '</span>'
@@ -1062,7 +1068,7 @@ function renderPatientRecord(patientId) {
 
     // Reliability dots
     var relColors = { green: '#22c55e', yellow: '#eab308', red: '#ef4444' };
-    var relLabels = { green: 'Active', yellow: 'Attention', red: 'Inactive' };
+    var relLabels = { green: 'Active', yellow: 'Attention', red: 'Unreliable' };
     var currentRel = patient.reliability || 'yellow';
     var relHtml = '<div class="ptr-rel-dots">';
     ['green', 'yellow', 'red'].forEach(function(r) {
@@ -1084,7 +1090,7 @@ function renderPatientRecord(patientId) {
 
     // Summary card (light theme) — all user text escaped via escapeHtml()
     var relBadgeClass = { green: 'ptr-summary-badge-active', yellow: 'ptr-summary-badge-yellow', red: 'ptr-summary-badge-red' };
-    var relBadgeText = { green: 'Active', yellow: 'Needs Attention', red: 'Inactive' };
+    var relBadgeText = { green: 'Active', yellow: 'Needs Attention', red: 'Unreliable' };
     var lastVisitShort = patient.lastVisit ? patient.lastVisit.split('|')[0].trim() : 'None';
     // Auto-compute next visit from appointments unless manually overridden
     var autoNextVisit = getNextScheduledVisit(patient, patientId);
@@ -1103,7 +1109,7 @@ function renderPatientRecord(patientId) {
         +   '<div class="ptr-summary-meta">'
         +     '<span>#' + escapeHtml(patient.chartNumber || 'N/A') + '</span>'
         +     (patient.type ? '<span>\u00b7</span><span>' + escapeHtml(patient.type) + '</span>' : '')
-        +     (patient.phone ? '<span>\u00b7</span><span>\u260E ' + escapeHtml(patient.phone) + '</span>' : '')
+        +     (patient.phone ? '<span>\u00b7</span><span>\u260E ' + (function() { var parts = patient.phone.split('|'); var primary = escapeHtml(parts[0].trim()); return parts.length > 1 ? primary + ' +' + (parts.length - 1) + ' more' : primary; })() + '</span>' : '')
         +   '</div>'
         +   '<div class="ptr-summary-badges">'
         +     '<span class="ptr-summary-badge ' + (relBadgeClass[currentRel] || 'ptr-summary-badge-yellow') + '">' + escapeHtml(relBadgeText[currentRel] || 'Attention') + '</span>'
@@ -1213,7 +1219,7 @@ function renderPatientRecord(patientId) {
         +   '</div>'
         +   '<div class="ptr-actions">'
         +     editBtnHtml
-        +     '<button class="ptr-action-btn" onclick="navigator.clipboard.writeText(\'' + escapeHtml(patient.chartNumber || '') + '\');showToast(\'Copied\')" title="Copy chart #">Copy #</button>'
+        +     '<button class="ptr-action-btn" onclick="navigator.clipboard.writeText(\'' + (patient.chartNumber || '').replace(/['"\\]/g, '') + '\');showToast(\'Copied\')" title="Copy chart #">Copy #</button>'
         +     '<button class="ptr-action-btn danger" onclick="deletePatientRecord(\'' + safePatientId + '\')" title="Delete patient">Del</button>'
         +   '</div>'
         + '</div>'
@@ -1305,6 +1311,13 @@ function savePatientField(element) {
     if (!records[patientId]) return;
 
     var newValue = element.innerText;
+
+    // Reject empty chart number — prevents phantom 'pt_' record (CLAUDE.md rule)
+    if (field === 'chartNumber' && !newValue.trim()) {
+        showToast('Chart number cannot be empty', 'error');
+        element.innerText = element.dataset.original || records[patientId].chartNumber || '';
+        return;
+    }
     var originalValue = element.dataset.original || '';
     if (newValue === originalValue) return;  // No change — skip save
     records[patientId][field] = newValue;
@@ -3557,7 +3570,7 @@ function renderMiniReview() {
         html += '<span class="mr-name">' + escapeHtml(p.name || 'Unnamed') + '</span>';
         if (isHV) html += '<span class="mr-hv">HIGH VALUE</span>';
         html += '<span class="mr-chart">#' + escapeHtml(p.chartNumber || 'N/A') + '</span>';
-        if (p.phone) html += '<span class="mr-phone">' + escapeHtml(p.phone) + '</span>';
+        if (p.phone) { var _phoneParts = p.phone.split('|'); var _phoneDisplay = escapeHtml(_phoneParts[0].trim()) + (_phoneParts.length > 1 ? ' +' + (_phoneParts.length - 1) + ' more' : ''); html += '<span class="mr-phone">' + _phoneDisplay + '</span>'; }
         html += '</div>';
 
         // Visit dates row — show full details for last visit

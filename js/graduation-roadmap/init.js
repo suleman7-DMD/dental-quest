@@ -829,7 +829,7 @@ function renderDashboard() {
 
     // === Row 4: Key Dates Countdown ===
     const d3End = new Date(2026, 4, 15);       // May 15, 2026
-    const extStart = new Date(2026, 4, 19);    // May 19, 2026
+    const extStart = new Date(2026, 4, 18);    // May 18, 2026
     const graduation = new Date(2027, 4, 12);  // May 12, 2027
     const daysTo = function(target) { return Math.max(0, Math.ceil((target - today) / (1000 * 60 * 60 * 24))); };
     var useTopRailSplit = dashboardUseSplitTopRail();
@@ -882,7 +882,7 @@ function renderDashboard() {
     html += '<div style="font-size:0.65em; color:#64748b; margin-top:4px;">' + (aptBreakdown.length > 0 ? aptBreakdown.join(' + ') : 'No data yet') + '</div>';
     // Pace projection — red if behind schedule (projected past D3 end)
     if (aptPace) {
-        var aptPaceColor = aptPace.daysToTarget === 0 ? '#10b981' : aptPace.behindSchedule ? '#f87171' : '#93c5fd';
+        var aptPaceColor = aptPace.daysToTarget === 0 ? '#10b981' : aptPace.pastGraduation ? '#dc2626' : aptPace.behindSchedule ? '#f87171' : '#93c5fd';
         var aptPaceText = aptPace.daysToTarget === 0 ? 'Target met!' : aptPace.ratePerWeek + '/wk pace — target by ' + aptPace.projectedDate;
         if (aptPace.behindSchedule && aptPace.daysToTarget > 0) aptPaceText += ' ⚠️';
         html += '<div style="font-size:0.65em; color:' + aptPaceColor + '; margin-top:2px;">' + aptPaceText + '</div>';
@@ -914,7 +914,7 @@ function renderDashboard() {
     html += '<div style="font-size:0.65em; color:#64748b; margin-top:4px;">' + (procBreakdown.length > 0 ? procBreakdown.join(' + ') : 'No data yet') + '</div>';
     // Pace projection — red if behind schedule
     if (procPace) {
-        var procPaceColor = procPace.daysToTarget === 0 ? '#10b981' : procPace.behindSchedule ? '#f87171' : '#6ee7b7';
+        var procPaceColor = procPace.daysToTarget === 0 ? '#10b981' : procPace.pastGraduation ? '#dc2626' : procPace.behindSchedule ? '#f87171' : '#6ee7b7';
         var procPaceText = procPace.daysToTarget === 0 ? 'Target met!' : procPace.ratePerWeek + '/wk pace — target by ' + procPace.projectedDate;
         if (procPace.behindSchedule && procPace.daysToTarget > 0) procPaceText += ' ⚠️';
         html += '<div style="font-size:0.65em; color:' + procPaceColor + '; margin-top:2px;">' + procPaceText + '</div>';
@@ -1103,7 +1103,7 @@ function renderDashboard() {
     html += '<div style="background:rgba(16,185,129,0.1); border:1px solid rgba(16,185,129,0.25); border-radius:10px; padding:12px; text-align:center;">';
     html += '<div style="font-size:1.8em; font-weight:800; color:#34d399;">' + daysTo(extStart) + '</div>';
     html += '<div style="font-size:0.75em; color:#94a3b8; margin-top:2px;">days to Externship</div>';
-    html += '<div style="font-size:0.7em; color:#64748b;">May 19, 2026</div>';
+    html += '<div style="font-size:0.7em; color:#64748b;">May 18, 2026</div>';
     html += '<div style="font-size:0.6em; color:#6ee7b7; margin-top:4px;">' + readiness.percent + '% ready</div>';
     html += '</div>';
 
@@ -1437,6 +1437,7 @@ function renderGraduationPrep() {
 }
 
 function updateGradPrep(category, field, value) {
+    if (category === '__proto__' || category === 'constructor' || category === 'prototype') return;
     roadmapData.graduationPrep = roadmapData.graduationPrep || {};
     roadmapData.graduationPrep[category] = roadmapData.graduationPrep[category] || {};
     roadmapData.graduationPrep[category][field] = value;
