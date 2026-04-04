@@ -29,7 +29,7 @@ function updateClinicalStats() {
     const procedures = getValues(roadmapData.clinicalData?.completedProcedures);
 
     // Count active patients
-    const activePatients = Object.values(patients).filter(p => p.status !== 'inactive').length;
+    const activePatients = Object.values(patients).filter(p => (p.activeStatus || 'Active') !== 'Inactive').length;
     document.getElementById('clinicalStatPatients').textContent = activePatients;
 
     // Count this week's appointments
@@ -48,8 +48,10 @@ function updateClinicalStats() {
 
     // Count recalls due
     const recallsDue = Object.values(patients).filter(p => {
-        if (!p.recallDue || p.status !== 'active') return false;
-        const recallDate = parseLocalDate(p.recallDue);
+        if ((p.activeStatus || 'Active') === 'Inactive') return false;
+        var recallMatch = (p.recallHistory || '').match(/Next due:\s*([0-9]{1,2}\/[0-9]{1,2}\/[0-9]{4})/i);
+        if (!recallMatch) return false;
+        const recallDate = parseLocalDate(recallMatch[1]);
         const thirtyDaysFromNow = new Date();
         thirtyDaysFromNow.setDate(thirtyDaysFromNow.getDate() + 30);
         return recallDate <= thirtyDaysFromNow;
@@ -270,7 +272,7 @@ function openAddAppointmentModal(preselectedPatientId = null) {
     const patientSelect = document.getElementById('appointmentModalPatient');
     patientSelect.innerHTML = '<option value="">Select patient...</option>' +
         Object.values(patients)
-            .filter(p => p.status === 'active')
+            .filter(p => (p.activeStatus || 'Active') !== 'Inactive')
             .sort((a, b) => (a.name || '').localeCompare(b.name || ''))
             .map(p => `<option value="${p.id}" ${p.id === preselectedPatientId ? 'selected' : ''}>${escapeHtml(p.name)}</option>`)
             .join('');
@@ -332,6 +334,18 @@ function saveAppointment() {
     const aptId = document.getElementById('appointmentModalId').value || 'apt-' + Date.now();
     const isNew = !document.getElementById('appointmentModalId').value;
 
+    // Fix #11: Dedup guard for new manual appointments (same patient + date + time)
+    if (isNew) {
+        var newTime = document.getElementById('appointmentModalTime').value;
+        var hasDupe = getValues(roadmapData.clinicalData?.appointments).some(function(ex) {
+            return ex.patientId === patientId && ex.date === date && ex.time === newTime;
+        });
+        if (hasDupe) {
+            showToast('An appointment for this patient at this date/time already exists', 'error');
+            return;
+        }
+    }
+
     const formFields = {
         id: aptId,
         patientId: patientId,
@@ -381,6 +395,19 @@ function saveAppointment() {
             grade: null,
             clinicalAptId: aptId
         };
+    }
+
+    // Fix #12: If editing an existing appointment, update any linked deadline
+    if (!isNew && roadmapData.customDeadlines) {
+        var dlPatient = roadmapData.clinicalData.patientRecords?.[patientId];
+        var dlPatientName = dlPatient?.name || 'Patient';
+        Object.keys(roadmapData.customDeadlines).forEach(function(dlId) {
+            var dl = roadmapData.customDeadlines[dlId];
+            if (dl && dl.clinicalAptId === aptId) {
+                dl.date = date;
+                dl.what = '\u{1F3E5} ' + dlPatientName + ' - ' + (formFields.procedures || 'Clinic Apt');
+            }
+        });
     }
 
     clinicalDataDirty = true;
@@ -1633,7 +1660,7 @@ function openCompQuickRecord(itemId) {
     var patientOptions = '<option value="">-- No Patient --</option>';
     Object.entries(records).forEach(function(entry) {
         var ptId = entry[0], pt = entry[1];
-        if (pt && pt.name && pt.status !== 'inactive') {
+        if (pt && pt.name && (pt.activeStatus || 'Active') !== 'Inactive') {
             patientOptions += '<option value="' + escapeHtml(ptId) + '">' + escapeHtml(pt.name)
                 + (pt.chartNumber ? ' #' + escapeHtml(pt.chartNumber) : '') + '</option>';
         }
@@ -1702,7 +1729,7 @@ function submitCompQuickRecord(itemId, catKey) {
     closeCompQuickRecord();
     renderCompetencies();
     if (typeof renderDashboard === 'function') renderDashboard();
-    showToast('Evidence recorded');
+    showToast('Procedure recorded');
 }
 
 // --- Task 4.14: Persistent Expanded State ---
@@ -2721,7 +2748,7 @@ function recordProcedure(data) {
 function deleteProcedure(procId) {
     if (!roadmapData.clinicalData?.completedProcedures?.[procId]) return;
 
-    showCustomConfirm('Delete this procedure record? Competency counts will be adjusted.', function() {
+    showCustomConfirm('Delete this procedure record?', function() {
         // CIS v2: Delegate to cascade function
         clinicalDataDirty = true;
         cascadeDeleteProcedure(procId);
@@ -2800,32 +2827,8 @@ function backfillClinicalData() {
         }
     });
 
-    // === Phase 2: Create evidence entries for competency items with manual progress ===
-    var competencies = roadmapData.clinicalData.competencies;
-    if (competencies) {
-        Object.entries(competencies).forEach(function(entry) {
-            var catKey = entry[0];
-            var cat = entry[1];
-            getValues(cat.sections).forEach(function(sec) {
-                getValues(sec.items).forEach(function(item) {
-                    if (item.completed > 0) {
-                        if (!Array.isArray(item.completionEntries)) item.completionEntries = getValues(item.completionEntries);
-                        var deficit = item.completed - item.completionEntries.length;
-                        for (var i = 0; i < deficit; i++) {
-                            item.completionEntries.push({
-                                procedureId: null,
-                                patientId: null,
-                                patientName: 'Backfill entry',
-                                date: todayStr,
-                                note: 'Backfilled from existing progress (' + item.text + ')'
-                            });
-                            backfillStats.evidenceCreated++;
-                        }
-                    }
-                });
-            });
-        });
-    }
+    // Phase 2 REMOVED (V2): completionEntries is dead in V2 — competency counts are manual-only.
+    // Old Phase 2 created synthetic completionEntries which polluted state with obsolete V1 data.
 
     // === Phase 3: Create procedure records from completed appointments ===
     if (!roadmapData.clinicalData.completedProcedures) roadmapData.clinicalData.completedProcedures = {};
@@ -3001,10 +3004,13 @@ function completeAppointment(aptId) {
     apt.status = 'completed';
     apt.completedAt = new Date().toISOString();
 
-    // 2. Update patient lastVisit (unified store)
+    // 2. Update patient lastVisit (unified store) — only move forward, never regress
     var patient = roadmapData.clinicalData.patientRecords?.[apt.patientId];
     if (patient) {
-        patient.lastVisit = apt.date;
+        var existingVisitDate = (patient.lastVisit || '').split('|')[0].trim();
+        if (!existingVisitDate || existingVisitDate < apt.date) {
+            patient.lastVisit = apt.date;
+        }
         patient.lastUpdated = new Date().toISOString();
     }
 
@@ -3127,20 +3133,36 @@ function openProcedureRecordingModal(aptId) {
     var patient = roadmapData.clinicalData?.patientRecords?.[apt.patientId];
     var patientName = patient?.name || 'Unknown Patient';
 
+    // Fix #1: Check if a procedure record already exists for this appointment
+    var existingProc = null;
+    var procs = getValues(roadmapData.clinicalData?.completedProcedures);
+    for (var i = 0; i < procs.length; i++) {
+        if (procs[i].appointmentId === aptId) { existingProc = procs[i]; break; }
+    }
+
     document.getElementById('procModalAptId').value = aptId;
     document.getElementById('procModalPatientId').value = apt.patientId || '';
     document.getElementById('procModalPatientName').textContent = patientName;
-    document.getElementById('procModalDate').value = apt.date || getLocalDateString();
-    document.getElementById('procModalProcedure').value = apt.procedures || '';
-    document.getElementById('procModalTeeth').value = '';
-    document.getElementById('procModalGrade').value = '';
-    document.getElementById('procModalFaculty').value = '';
-    document.getElementById('procModalNotes').value = apt.notes || '';
+    document.getElementById('procModalDate').value = (existingProc?.date || apt.date) || getLocalDateString();
+    document.getElementById('procModalProcedure').value = existingProc?.procedure || apt.procedures || '';
+    document.getElementById('procModalTeeth').value = existingProc?.toothNumbers || '';
+    document.getElementById('procModalGrade').value = existingProc?.grade || '';
+    document.getElementById('procModalFaculty').value = existingProc?.faculty || '';
+    document.getElementById('procModalNotes').value = existingProc?.notes || apt.notes || '';
+
+    // Store existing procedure ID so saveProcedureRecord() updates instead of creating duplicate
+    document.getElementById('procModalAptId').dataset.existingProcId = existingProc?.id || '';
 
     var typeSelect = document.getElementById('procModalType');
     typeSelect.innerHTML = Object.entries(PROCEDURE_TYPES).map(function(entry) {
         return '<option value="' + entry[0] + '">' + escapeHtml(entry[1]) + '</option>';
     }).join('');
+
+    // Fix #9: Infer type from procedure text instead of defaulting to first option
+    var inferredType = inferProcedureType(existingProc?.procedure || apt.procedures) || typeSelect.options[0]?.value || 'other';
+    if (typeSelect.querySelector('option[value="' + inferredType + '"]')) {
+        typeSelect.value = inferredType;
+    }
 
     buildCompetencyChecklist(typeSelect.value);
 
@@ -3149,6 +3171,7 @@ function openProcedureRecordingModal(aptId) {
 
 function openStandaloneProcedureModal() {
     document.getElementById('procModalAptId').value = '';
+    document.getElementById('procModalAptId').dataset.existingProcId = '';
     document.getElementById('procModalPatientId').value = '';
     document.getElementById('procModalPatientName').textContent = 'N/A (standalone)';
     document.getElementById('procModalDate').value = getLocalDateString();
@@ -3163,6 +3186,10 @@ function openStandaloneProcedureModal() {
         return '<option value="' + entry[0] + '">' + escapeHtml(entry[1]) + '</option>';
     }).join('');
 
+    // Default to 'other' for standalone procedures (no appointment to infer from)
+    if (typeSelect.querySelector('option[value="other"]')) {
+        typeSelect.value = 'other';
+    }
     buildCompetencyChecklist(typeSelect.value);
 
     document.getElementById('procedureRecordingModal').style.display = 'flex';
@@ -3223,7 +3250,11 @@ function saveProcedureRecord() {
         competencyItemIds.push(cb.value);
     });
 
+    // Fix #1: If a procedure already exists for this appointment, update it instead of creating a new one
+    var existingProcId = document.getElementById('procModalAptId').dataset.existingProcId || '';
+
     recordProcedure({
+        id: existingProcId || undefined,
         patientId: patientId || null,
         patientName: patient?.name || document.getElementById('procModalPatientName').textContent || '',
         appointmentId: aptId || null,

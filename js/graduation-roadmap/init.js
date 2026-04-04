@@ -994,8 +994,10 @@ function renderDashboard() {
     }
     // Recalls due
     var recallsDue = getValues(roadmapData.clinicalData?.patientRecords || {}).filter(function(p) {
-        if (!p.recallDue || p.status !== 'active') return false;
-        var recallDate = parseLocalDate(p.recallDue);
+        if ((p.activeStatus || 'Active') === 'Inactive') return false;
+        var recallMatch = (p.recallHistory || '').match(/Next due:\s*([0-9]{1,2}\/[0-9]{1,2}\/[0-9]{4})/i);
+        if (!recallMatch) return false;
+        var recallDate = parseLocalDate(recallMatch[1]);
         var thirtyOut = new Date(today);
         thirtyOut.setDate(thirtyOut.getDate() + 30);
         return recallDate && recallDate <= thirtyOut;

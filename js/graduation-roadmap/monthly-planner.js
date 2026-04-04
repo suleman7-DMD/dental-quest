@@ -226,10 +226,13 @@ function mpToggleTaskComplete(taskId) {
                 apt.status = 'completed';
                 apt.completedAt = new Date().toISOString();
 
-                // Update patient lastVisit
+                // Update patient lastVisit — only move forward, never regress
                 const patient = roadmapData.clinicalData?.patientRecords?.[apt.patientId];
                 if (patient) {
-                    patient.lastVisit = apt.date;
+                    var existingVisitDate = (patient.lastVisit || '').split('|')[0].trim();
+                    if (!existingVisitDate || existingVisitDate < apt.date) {
+                        patient.lastVisit = apt.date;
+                    }
                     patient.lastUpdated = new Date().toISOString();
                 }
 

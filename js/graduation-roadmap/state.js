@@ -196,7 +196,10 @@ function getDefaultRoadmapData() {
             patientRecords: {},
             dashboardSnapshots: [],
             missingNotes: {},
-            autoLinkReviewQueue: []
+            autoLinkReviewQueue: [],
+            deletedAppointmentIds: {},
+            deletedProcedureIds: {},
+            deletedPatientRecordIds: {}
         },
         todoList: {
             items: {},
@@ -330,12 +333,14 @@ function isEmptyState(data) {
         (data.periodicReviews.pr2.dashboardDiscrepancyNotes ?? '') !== ''
     );
 
+    var hasDeletedRecords = getCount(data.clinicalData?.deletedAppointmentIds) > 0 || getCount(data.clinicalData?.deletedProcedureIds) > 0 || getCount(data.clinicalData?.deletedPatientRecordIds) > 0;
+
     // Empty if NONE of these exist
     return !hasDeadlines && !hasTasks && !hasAppointments && !hasBlocks &&
            !hasNotes && !hasPatients && !hasCompletedDeadlines &&
            !hasExamStudyProgress && !hasGrades && !hasEditedDeadlines &&
            !hasPatientRecords && !hasDashboardSnapshots && !hasCompletedProcedures && !hasCompetencies &&
-           !hasMissingNotes && !hasTodoItems && !hasDailyPlannerContent && !hasPeriodicReview && !hasGraduationPrep && !hasClinicHeadlines;
+           !hasMissingNotes && !hasTodoItems && !hasDailyPlannerContent && !hasPeriodicReview && !hasGraduationPrep && !hasClinicHeadlines && !hasDeletedRecords;
 }
 
 function hasRealData(data) {
@@ -1064,10 +1069,12 @@ function getSmartAppointmentCount() {
 
     var extraVisits = 0;
     // From patient records (canonical store after CIS v2 migration)
+    // Fix #6: Normalize legacy pipe-delimited lastVisit format before dedup comparison
     Object.values(patientRecords).forEach(function(pr) {
-        if (pr.lastVisit && pr.id && !visitKeys.has(pr.id + '|' + pr.lastVisit)) {
+        var lastVisitDate = (pr.lastVisit || '').split('|')[0].trim();
+        if (lastVisitDate && pr.id && !visitKeys.has(pr.id + '|' + lastVisitDate)) {
             extraVisits++;
-            visitKeys.add(pr.id + '|' + pr.lastVisit);
+            visitKeys.add(pr.id + '|' + lastVisitDate);
         }
     });
 
@@ -1109,6 +1116,16 @@ function getSmartProcedureCount() {
     var competencyDerivedCount = 0;
     var procedureCategories = { fixed: 1, operative: 1, dentures: 1, rpd: 1, srp: 1, endo: 1, oralsurg: 1, perio: 1 };
 
+    // Fix #10: Exclude non-procedure items (simulations, mock boards, case presentations,
+    // analyses, assists, approvals, assignments, exams) from fallback procedure count
+    var NON_PROCEDURE_IDS = {
+        'fixed-occlusal-cr': 1, 'fixed-occlusal-mi': 1, 'fixed-mock': 1,
+        'fixed-sim-1': 1, 'fixed-sim-2': 1, 'fixed-sim-fpd': 1, 'fixed-case-pres': 1,
+        'op-approval': 1, 'op-assignment': 1, 'op-license': 1,
+        'endo-postdoc': 1, 'endo-predoc': 1, 'endo-mock': 1,
+        'perio-surg-assist': 1, 'perio-sum-mock': 1
+    };
+
     if (competencies) {
         Object.entries(competencies).forEach(function(entry) {
             var catKey = entry[0];
@@ -1116,7 +1133,7 @@ function getSmartProcedureCount() {
             if (!procedureCategories[catKey]) return;
             getValues(cat.sections).forEach(function(sec) {
                 getValues(sec.items).forEach(function(item) {
-                    if (item.completed > 0) {
+                    if (item.completed > 0 && !NON_PROCEDURE_IDS[item.id]) {
                         competencyDerivedCount += item.completed;
                     }
                 });
@@ -1435,6 +1452,8 @@ function recalculatePatientLastVisit(patientId) {
 }
 
 function cascadeDeleteProcedure(procId) {
+    if (!roadmapData.clinicalData.deletedProcedureIds) roadmapData.clinicalData.deletedProcedureIds = {};
+    roadmapData.clinicalData.deletedProcedureIds[procId] = new Date().toISOString();
     delete roadmapData.clinicalData.completedProcedures[procId];
     propagateClinicalChanges({ procedures: true, competencies: true, source: 'cascadeDeleteProcedure' });
 }
@@ -1443,10 +1462,12 @@ function cascadeDeleteAppointment(aptId, { skipPropagation = false } = {}) {
     var apt = roadmapData.clinicalData.appointments[aptId];
     if (!apt) return;
 
-    // 1. Find + delete linked procedures
+    // 1. Find + delete linked procedures (track deletions for merge protection)
+    if (!roadmapData.clinicalData.deletedProcedureIds) roadmapData.clinicalData.deletedProcedureIds = {};
     getValues(roadmapData.clinicalData.completedProcedures)
         .filter(function(p) { return p.appointmentId === aptId; })
         .forEach(function(p) {
+            roadmapData.clinicalData.deletedProcedureIds[p.id] = new Date().toISOString();
             delete roadmapData.clinicalData.completedProcedures[p.id];
         });
 
@@ -1464,7 +1485,9 @@ function cascadeDeleteAppointment(aptId, { skipPropagation = false } = {}) {
         }
     });
 
-    // 4. Delete appointment
+    // 4. Track deletion for merge protection, then delete appointment
+    if (!roadmapData.clinicalData.deletedAppointmentIds) roadmapData.clinicalData.deletedAppointmentIds = {};
+    roadmapData.clinicalData.deletedAppointmentIds[aptId] = new Date().toISOString();
     delete roadmapData.clinicalData.appointments[aptId];
 
     // 5. Recalculate patient lastVisit
@@ -1493,7 +1516,24 @@ function cascadeDeletePatient(patientId) {
         delete roadmapData.clinicalData.completedProcedures[p.id];
     });
 
-    // 4. Delete patient record
+    // 3b. Clean missing notes referencing this patient (by chart number or name)
+    var deletedPt = roadmapData.clinicalData.patientRecords[patientId];
+    if (deletedPt && roadmapData.clinicalData.missingNotes) {
+        var ptChart = (deletedPt.chartNumber || '').trim();
+        var ptNameLower = (deletedPt.name || '').toLowerCase().trim();
+        Object.keys(roadmapData.clinicalData.missingNotes).forEach(function(noteId) {
+            var note = roadmapData.clinicalData.missingNotes[noteId];
+            var noteChart = (note.chartNumber || '').trim();
+            var noteNameLower = (note.patientName || '').toLowerCase().trim();
+            if ((ptChart && noteChart && noteChart === ptChart) || (ptNameLower && noteNameLower && noteNameLower === ptNameLower)) {
+                delete roadmapData.clinicalData.missingNotes[noteId];
+            }
+        });
+    }
+
+    // 4. Track deletion for merge protection, then delete patient record
+    if (!roadmapData.clinicalData.deletedPatientRecordIds) roadmapData.clinicalData.deletedPatientRecordIds = {};
+    roadmapData.clinicalData.deletedPatientRecordIds[patientId] = new Date().toISOString();
     delete roadmapData.clinicalData.patientRecords[patientId];
     if (roadmapData.clinicalData?.patients?.[patientId]) delete roadmapData.clinicalData.patients[patientId];
 

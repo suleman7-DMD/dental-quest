@@ -1313,6 +1313,12 @@ function savePatientField(element) {
     clinicalDataDirty = true;
     safeLocalStorageSet(STORAGE_KEY, JSON.stringify(roadmapData));
     saveData();
+    // Propagate for fields that affect downstream views (sidebar, roster, dashboard)
+    if (field === 'name' || field === 'activeStatus' || field === 'lastVisit' || field === 'phone' || field === 'reliability') {
+        if (typeof propagateClinicalChanges === 'function') {
+            propagateClinicalChanges({ patients: true, dashboard: true, calendars: false, source: 'savePatientField' });
+        }
+    }
 }
 
 function resetNextVisitToAuto(patientId) {
@@ -2330,7 +2336,9 @@ function previewPatientImport() {
 }
 
 function confirmUnifiedImport() {
-    var parsed = window._patientImportParsed;
+    // Re-parse current textarea to avoid stale cache if user edited after preview
+    var textarea = document.getElementById('patientImportText');
+    var parsed = textarea ? parsePatientImportText(textarea.value) : window._patientImportParsed;
     if (!parsed) return;
 
     var records = getPatientRecords();
@@ -2388,9 +2396,15 @@ function confirmUnifiedImport() {
             if (!upd[key]) return;
 
             if (key === 'notes' && upd._notesAppend) {
-                records[id].notes = (records[id].notes || '') + '\n\n' + upd.notes;
+                var existingNotes = records[id].notes || '';
+                if (existingNotes.indexOf(upd.notes.trim()) === -1) {
+                    records[id].notes = existingNotes + '\n\n' + upd.notes;
+                }
             } else if (key === 'medicalHx' && upd._medicalHxAppend) {
-                records[id].medicalHx = (records[id].medicalHx || '') + '\n\n' + upd.medicalHx;
+                var existingHx = records[id].medicalHx || '';
+                if (existingHx.indexOf(upd.medicalHx.trim()) === -1) {
+                    records[id].medicalHx = existingHx + '\n\n' + upd.medicalHx;
+                }
             } else {
                 records[id][key] = upd[key];
             }
@@ -2400,6 +2414,7 @@ function confirmUnifiedImport() {
     });
 
     // Store imported requirements, priorityNotes, highValue on patient records
+    var reqMatchSkipped = 0;
     parsed.reqMatches.forEach(function(rm) {
         var chartNumber = (rm.chartNumber || '').trim();
         var id = chartNumber ? findByNormalizedChart(records, chartNumber) : null;
@@ -2415,6 +2430,9 @@ function confirmUnifiedImport() {
             records[id].importedRequirements = rm.canFulfill || [];
             if (rm.priorityNotes) records[id].priorityNotes = rm.priorityNotes;
             if (rm.highValue !== undefined) records[id].highValue = rm.highValue;
+        } else {
+            reqMatchSkipped++;
+            console.warn('[IMPORT] REQUIREMENTS_MATCH skipped — no patient found for chart: ' + (rm.chartNumber || '?') + ', name: ' + (rm.name || '?'));
         }
     });
 
@@ -2488,26 +2506,40 @@ function confirmUnifiedImport() {
             }
 
             // Dedup: skip if same patient+date+time already exists (by ID or name)
+            // Fix #13: If procedure text differs, merge into existing instead of silently dropping
             var aptTime = apt.time || '09:00';
-            var isDupe = getValues(roadmapData.clinicalData.appointments).some(function(ex) {
-                // Primary: match by patientId + date + time
-                if (ex.patientId === patientId && ex.date === apt.date && ex.time === aptTime) return true;
-                // Secondary: match by patientName + date + time (catches mismatched patientIds)
+            var dupeApt = null;
+            getValues(roadmapData.clinicalData.appointments).some(function(ex) {
+                if (ex.patientId === patientId && ex.date === apt.date && ex.time === aptTime) { dupeApt = ex; return true; }
                 var exPatient = (roadmapData.clinicalData.patientRecords || {})[ex.patientId];
                 if (exPatient &&
                     (exPatient.name || '').toLowerCase().trim() === aptNameLower &&
                     ex.date === apt.date &&
-                    ex.time === aptTime) return true;
+                    ex.time === aptTime) { dupeApt = ex; return true; }
                 return false;
             });
-            if (isDupe) return;
+            if (dupeApt) {
+                // Merge procedure text if the incoming appointment has different/additional procedure info
+                var incomingProc = (apt.procedure || '').trim();
+                var existingProc = (dupeApt.procedures || '').trim();
+                if (incomingProc && existingProc && existingProc.toLowerCase() !== incomingProc.toLowerCase() && existingProc.indexOf(incomingProc) === -1) {
+                    dupeApt.procedures = existingProc + ' + ' + incomingProc;
+                } else if (incomingProc && !existingProc) {
+                    dupeApt.procedures = incomingProc;
+                }
+                if (apt.chair && !dupeApt.chair) {
+                    dupeApt.chair = apt.chair;
+                }
+                return;
+            }
 
             var isPast = apt.date < todayStr;
             var appointmentId = generateId('appt');
             var newApt = {
                 id: appointmentId, patientId: patientId,
                 date: apt.date, time: apt.time || '09:00', duration: 60,
-                procedures: apt.procedure || '', notes: apt.chair ? 'Chair: ' + apt.chair : '',
+                procedures: apt.procedure || '', chair: apt.chair || '',
+                notes: '',
                 status: isPast ? 'completed' : 'scheduled', imported: true,
                 createdAt: new Date().toISOString()
             };
@@ -2538,13 +2570,8 @@ function confirmUnifiedImport() {
             }
         });
 
-        // Sync to monthly planner + rebuild weekly schedule for cross-app
-        if (typeof syncClinicalToMonthlyPlanner === 'function') {
-            syncClinicalToMonthlyPlanner();
-        }
-        if (typeof buildCurrentWeekSchedule === 'function') {
-            buildCurrentWeekSchedule();
-        }
+        // Fix #17: Removed direct sync calls — propagateClinicalChanges() handles schedule sync.
+        // Direct calls here caused double schedule rebuild per import.
     }
 
     // Save dashboard snapshot
@@ -2620,6 +2647,7 @@ function confirmUnifiedImport() {
 
     // Import clinical briefs (overwrite per patient by chart number)
     var briefsImported = 0;
+    var briefsSkipped = 0;
     if (parsed.clinicalBriefs && parsed.clinicalBriefs.length > 0) {
         parsed.clinicalBriefs.forEach(function(brief) {
             var chartNumber = (brief.chartNumber || '').trim();
@@ -2650,6 +2678,9 @@ function confirmUnifiedImport() {
                 };
                 records[id].lastUpdated = new Date().toISOString();
                 briefsImported++;
+            } else {
+                briefsSkipped++;
+                console.warn('[IMPORT] CLINICAL_BRIEF skipped — no patient found for chart: ' + (brief.chartNumber || '?') + ', name: ' + (brief.name || '?'));
             }
         });
     }
@@ -2690,7 +2721,9 @@ function confirmUnifiedImport() {
     if (notesImported > 0) msg += notesImported + ' missing note(s) imported. ';
     if (todosImported > 0) msg += todosImported + ' to-do item(s) imported. ';
     if (briefsImported > 0) msg += briefsImported + ' clinical brief(s) imported. ';
-    showToast(msg || 'Import complete');
+    var skipped = (reqMatchSkipped || 0) + (briefsSkipped || 0);
+    if (skipped > 0) msg += skipped + ' item(s) skipped (no matching patient). ';
+    showToast(msg || 'Import complete', skipped > 0 ? 'warning' : undefined);
 
     // Post-import integrity check (console-only)
     if (typeof runPostMergeIntegrityChecks === 'function') {
@@ -2908,6 +2941,12 @@ function applyRequirementCheckoffs(items, importContext) {
         'perio-sum-reeval-srp': 'srp-reeval'
     };
 
+    // IDs removed/split in Apr 2026 — no single alias target, warn user
+    var REMOVED_COMPETENCY_IDS = {
+        'perio-sum-calc': 'Replaced by srp-calc-1, srp-calc-2, srp-calc-3',
+        'gp-comm': 'Split into gp-comm-workshop, gp-comm-form-txplan, gp-comm-sum-txplan'
+    };
+
     items.forEach(function(item) {
         // Resolve aliased IDs before matching
         var resolvedId = COMPETENCY_ALIASES[(item.reqId || '').toLowerCase()] || item.reqId;
@@ -3000,6 +3039,13 @@ function applyRequirementCheckoffs(items, importContext) {
                     }
                 }
             }
+        }
+        // Fix #5: Warn about unmatched or removed IDs
+        var rawId = (item.reqId || '').toLowerCase();
+        if (REMOVED_COMPETENCY_IDS[rawId]) {
+            console.warn('[IMPORT] Removed competency ID "' + rawId + '": ' + REMOVED_COMPETENCY_IDS[rawId]);
+        } else if (resolvedId) {
+            console.warn('[IMPORT] Unmatched competency ID "' + resolvedId + '" — not found in DEFAULT_COMPETENCIES');
         }
     });
 

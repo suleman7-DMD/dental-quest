@@ -341,6 +341,11 @@ function reconstructState(source, options) {
     // autoLinkReviewQueue — dead feature, always empty
     cd.autoLinkReviewQueue = [];
 
+    // Fix #2: Deletion tracking — merge from both sides so deletions propagate across devices
+    cd.deletedAppointmentIds = { ...(s.clinicalData?.deletedAppointmentIds || {}), ...(f.clinicalData?.deletedAppointmentIds || {}) };
+    cd.deletedProcedureIds = { ...(s.clinicalData?.deletedProcedureIds || {}), ...(f.clinicalData?.deletedProcedureIds || {}) };
+    cd.deletedPatientRecordIds = { ...(s.clinicalData?.deletedPatientRecordIds || {}), ...(f.clinicalData?.deletedPatientRecordIds || {}) };
+
     result.clinicalData = cd;
 
     // --- Todo List ---
@@ -536,12 +541,19 @@ function reconstructState(source, options) {
 function mergeRemoteCollectionsIntoLocal(data) {
     if (!data) return;
 
+    // Fix #2: Collect locally-deleted IDs so addMissing won't resurrect them
+    var deletedApts = roadmapData.clinicalData?.deletedAppointmentIds || {};
+    var deletedProcs = roadmapData.clinicalData?.deletedProcedureIds || {};
+    var deletedPRs = roadmapData.clinicalData?.deletedPatientRecordIds || {};
+
     // Helper: add remote entries that don't exist locally (local wins for conflicts)
-    function addMissing(localObj, remoteObj) {
+    // Optional 3rd param: set of deleted IDs to skip (prevents resurrection of deleted records)
+    function addMissing(localObj, remoteObj, deletedIds) {
         if (!remoteObj || typeof remoteObj !== 'object' || Array.isArray(remoteObj)) return;
         if (!localObj || typeof localObj !== 'object') return;
         Object.keys(remoteObj).forEach(key => {
             if (!(key in localObj) && remoteObj[key] != null) {
+                if (deletedIds && deletedIds[key]) return;
                 localObj[key] = remoteObj[key];
             }
         });
@@ -555,10 +567,10 @@ function mergeRemoteCollectionsIntoLocal(data) {
         if (!roadmapData.clinicalData.completedProcedures) roadmapData.clinicalData.completedProcedures = {};
         if (!roadmapData.clinicalData.patientRecords) roadmapData.clinicalData.patientRecords = {};
         if (!roadmapData.clinicalData.missingNotes) roadmapData.clinicalData.missingNotes = {};
-        addMissing(roadmapData.clinicalData.patients, data.clinicalData.patients);
-        addMissing(roadmapData.clinicalData.appointments, data.clinicalData.appointments);
-        addMissing(roadmapData.clinicalData.completedProcedures, data.clinicalData.completedProcedures);
-        addMissing(roadmapData.clinicalData.patientRecords, data.clinicalData.patientRecords);
+        addMissing(roadmapData.clinicalData.patients, data.clinicalData.patients, deletedPRs);
+        addMissing(roadmapData.clinicalData.appointments, data.clinicalData.appointments, deletedApts);
+        addMissing(roadmapData.clinicalData.completedProcedures, data.clinicalData.completedProcedures, deletedProcs);
+        addMissing(roadmapData.clinicalData.patientRecords, data.clinicalData.patientRecords, deletedPRs);
         // Patient records: field-level merge for existing patients (addMissing only fills new keys)
         if (data.clinicalData.patientRecords) {
             Object.keys(data.clinicalData.patientRecords).forEach(function(ptId) {
@@ -579,7 +591,7 @@ function mergeRemoteCollectionsIntoLocal(data) {
                     }
                 }
                 // Fill import-enriched fields from remote if local doesn't have them
-                if (!local.importedRequirements && remote.importedRequirements) local.importedRequirements = remote.importedRequirements;
+                if (getValues(local.importedRequirements).length === 0 && getValues(remote.importedRequirements).length > 0) local.importedRequirements = remote.importedRequirements;
                 if (!local.priorityNotes && remote.priorityNotes) local.priorityNotes = remote.priorityNotes;
                 if (local.highValue === undefined && remote.highValue !== undefined) local.highValue = remote.highValue;
                 if (!local.allergies && remote.allergies) local.allergies = remote.allergies;
@@ -589,6 +601,13 @@ function mergeRemoteCollectionsIntoLocal(data) {
             });
         }
         addMissing(roadmapData.clinicalData.missingNotes, data.clinicalData.missingNotes);
+        // Merge deletion tracking from remote (deletions propagate across devices)
+        if (!roadmapData.clinicalData.deletedAppointmentIds) roadmapData.clinicalData.deletedAppointmentIds = {};
+        if (!roadmapData.clinicalData.deletedProcedureIds) roadmapData.clinicalData.deletedProcedureIds = {};
+        if (!roadmapData.clinicalData.deletedPatientRecordIds) roadmapData.clinicalData.deletedPatientRecordIds = {};
+        addMissing(roadmapData.clinicalData.deletedAppointmentIds, data.clinicalData?.deletedAppointmentIds);
+        addMissing(roadmapData.clinicalData.deletedProcedureIds, data.clinicalData?.deletedProcedureIds);
+        addMissing(roadmapData.clinicalData.deletedPatientRecordIds, data.clinicalData?.deletedPatientRecordIds);
         // dashboardSnapshots: merge arrays
         if (data.clinicalData.dashboardSnapshots) {
             roadmapData.clinicalData.dashboardSnapshots = mergeDashboardSnapshots(
@@ -1665,7 +1684,10 @@ function forceCloudSync() {
 // Helper to apply remote data to local state
 // FIXED: Use explicit merge pattern (matching other merge locations) instead of deepMerge
 function applyRemoteData(data) {
-    mergeRemoteState(data);
+    // Force pull = true overwrite. Use source-wins (not remote-wins merge).
+    roadmapData = reconstructState(data, { strategy: 'source-wins', fallback: roadmapData });
+    migrateInvalidFirebaseKeys(roadmapData);
+    clinicalDataDirty = true;
     safeLocalStorageSet(STORAGE_KEY, JSON.stringify(roadmapData));
     initUI();
 }

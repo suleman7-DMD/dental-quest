@@ -9701,22 +9701,15 @@
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; flex-wrap: wrap; gap: 10px;">
                     <h3 style="color: #10b981; margin: 0;">📋 Active Roster</h3>
                     <div style="display: flex; gap: 10px; align-items: center;">
-                        <input type="text" id="patientSearchInput" placeholder="Search patients..." aria-label="Search patients"
-                               style="padding: 8px 12px; background: #0f172a; border: 1px solid #334155; border-radius: 6px; color: #e2e8f0; width: 180px; display:none;"
-                               oninput="renderActiveRoster()">
-                        <select id="patientFilterStatus" onchange="renderActiveRoster()" aria-label="Filter patients by status" style="padding: 8px; background: #0f172a; border: 1px solid #334155; border-radius: 6px; color: #e2e8f0; display:none;">
-                            <option value="all">All Patients</option>
-                            <option value="active">Active</option>
-                            <option value="needsAttention">Needs Attention</option>
-                            <option value="inactive">Inactive</option>
-                        </select>
+                        <!-- Search/filter controls removed — Active Roster is read-only quick-reference.
+                             Patient management (search, filter, CRUD) lives on the Patients tab. -->
                         <button class="btn btn-success" onclick="switchTab('patients')" style="padding: 8px 16px;">Open Patients &rarr;</button>
                     </div>
                 </div>
                 <div id="patientsList" style="display: grid; gap: 12px;">
                     <div class="empty-state" style="text-align: center; padding: 40px; color: #94a3b8;">
                         <div style="font-size: 3em; margin-bottom: 10px;">👤</div>
-                        <p>No patients yet. Click "Add Patient" to get started.</p>
+                        <p>No patients yet. Add patients from the Patients tab, then schedule appointments here.</p>
                     </div>
                 </div>
             </div>

@@ -283,13 +283,14 @@ function syncClinicalToMonthlyPlanner() {
     // Build set of current appointment IDs for orphan detection
     const currentAptIds = new Set(getValues(appointments).map(a => a.id));
 
-    // Remove orphaned clinic tasks (appointment was deleted) — but NOT user-edited ones
+    // Remove orphaned clinic tasks (appointment deleted or cancelled) — but NOT user-edited ones
     Object.keys(customTasks).forEach(id => {
         const task = customTasks[id];
         if (!task?.clinicalAppointmentId) return; // Not a clinic task
         if (task.userEdited) return; // User edited — preserve
-        if (!currentAptIds.has(task.clinicalAppointmentId)) {
-            // Appointment no longer exists — remove orphan
+        var linkedApt = appointments[task.clinicalAppointmentId];
+        if (!currentAptIds.has(task.clinicalAppointmentId) || (linkedApt && linkedApt.status === 'cancelled')) {
+            // Appointment deleted or cancelled — remove orphan
             delete customTasks[id];
         }
     });

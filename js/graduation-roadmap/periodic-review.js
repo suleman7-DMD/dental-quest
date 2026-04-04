@@ -1583,14 +1583,12 @@ function prSavePatientField(patientId, fieldName, value) {
     if (!roadmapData.clinicalData) roadmapData.clinicalData = {};
     if (!roadmapData.clinicalData.patientRecords) roadmapData.clinicalData.patientRecords = {};
     if (!roadmapData.clinicalData.patientRecords[patientId]) {
-        // Look up name/chart from merged records or legacy patients store (NOT from patientRecords which we just confirmed is null)
+        // Look up name/chart from merged records or legacy patients store
         var allRecords = (typeof getAllPatientRecords === 'function') ? getAllPatientRecords() : {};
         var sourcePt = allRecords[patientId] || roadmapData.clinicalData?.patients?.[patientId] || {};
-        roadmapData.clinicalData.patientRecords[patientId] = {
-            id: patientId,
-            name: sourcePt.name ?? '',
-            chartNumber: sourcePt.chartNumber ?? ''
-        };
+        roadmapData.clinicalData.patientRecords[patientId] = (typeof createPatientRecord === 'function')
+            ? createPatientRecord({ id: patientId, name: sourcePt.name ?? '', chartNumber: sourcePt.chartNumber ?? '' })
+            : { id: patientId, name: sourcePt.name ?? '', chartNumber: sourcePt.chartNumber ?? '' };
     }
     roadmapData.clinicalData.patientRecords[patientId][fieldName] = value;
     roadmapData.clinicalData.patientRecords[patientId].lastUpdated = new Date().toISOString();
