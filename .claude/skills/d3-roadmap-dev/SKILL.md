@@ -1,9 +1,9 @@
 ---
 name: d3-roadmap-dev
 description: |
-  Develop and debug the Graduation Roadmap app (d3-roadmap.html) — a clinical/academic tracker for a D3/D4 dental student with graduation requirements, competencies, grades, deadlines, planners, and exam content.
-  Use this skill when the user asks to modify, fix, or add features to d3-roadmap.html. Trigger phrases: "d3 roadmap", "graduation roadmap", "d3-roadmap.html", "roadmap app", "deadlines", "clinical tracking", "competencies", "dental school", "academic tracker", "grade calculator", "monthly planner", "daily planner", "exam content", "mandatory items", "checkpoint", "course grades", "roadmap", "grades", "GPA", "courses", "classes", "school", "academic", "clinic", "patients", "appointments", "exams", "studying", "schedule", "planner", "tabs", "dashboard", "mission control", "clinic requirements", "graduation prep", "CDCA", "ADEX", "INBDE", "externship", "competency", "formative", "summative", "do today", "always remember".
-  Do NOT use this skill for dental quest index.html, body-comp-tracker.html, stimulant-elimination-calculator.html, or lecture-prompt-transformer.html — those are separate apps with their own skills.
+  Historical skill for the old d3-roadmap app architecture. Use only for migration debugging or legacy references related to d3-roadmap.html and the pre-split roadmap code.
+  Trigger phrases: "d3 roadmap", "d3-roadmap.html", "legacy roadmap", "old roadmap", "migration debugging", "redirect shim", "historical roadmap".
+  Do NOT use this skill for the current Graduation Roadmap app, Dental Quest, Body Comp Tracker, Stim Calc, or Lecture Prompt Transformer.
 globs:
   - "graduation-roadmap.html"
   - "js/graduation-roadmap/*.js"

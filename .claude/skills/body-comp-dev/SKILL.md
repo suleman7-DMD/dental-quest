@@ -2,8 +2,8 @@
 name: body-comp-dev
 description: |
   Develop and debug the Body Comp Tracker app (body-comp-tracker.html) — a calorie/protein tracking app with cross-app Firebase integration, mode system, and V3 analytics.
-  Use this skill when the user asks to modify, fix, or add features to body-comp-tracker.html. Trigger phrases: "body comp", "body comp tracker", "body-comp-tracker.html", "calorie tracking", "protein tracking", "meal logging", "workout tracking", "weigh-in", "TDEE", "deficit", "mode system", "gym streak", "eating nudge", "weekly export", "logic log", "refeed", "body fat", "frequent foods", "Navy method", "progress tab", "calendar heatmap", "calories", "protein", "macros", "food", "eating", "weight", "scale", "BMR", "bulk", "cut", "maintenance", "surplus", "meals", "workout log", "gym", "exercise", "nutrition", "diet", "fitness", "weight loss", "training volume", "achievements", "heatmap", "day log", "simple view", "import from claude".
-  Do NOT use this skill for dental quest index.html, d3-roadmap.html, stimulant-elimination-calculator.html, or lecture-prompt-transformer.html — those are separate apps with their own skills.
+  Use this skill when the user asks to modify, fix, or add features to body-comp-tracker.html. Trigger phrases: "body comp", "body comp tracker", "body-comp-tracker.html", "calorie tracking", "protein tracking", "meal logging", "workout tracking", "weigh-in", "TDEE", "deficit", "mode system", "gym streak", "refeed", "body fat", "frequent foods", "Navy method", "progress tab", "calories", "protein", "macros", "weight", "bulk", "cut", "maintenance", "nutrition", "diet", "fitness", "weight loss", "training volume".
+  Do NOT use this skill for Dental Quest, Graduation Roadmap, Stim Calc, or Lecture Prompt Transformer.
 globs:
   - "body-comp-tracker.html"
 compatibility: Claude Code CLI. Requires file system access (Read, Edit, Write, Grep, Glob, Bash).
