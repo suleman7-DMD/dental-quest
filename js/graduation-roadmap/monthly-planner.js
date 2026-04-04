@@ -267,6 +267,7 @@ function mpToggleTaskComplete(taskId) {
                 // Fallback: just reset status
                 const apt = roadmapData.clinicalData?.appointments?.[aptId];
                 if (apt && apt.status === 'completed') {
+                    clinicalDataDirty = true;
                     apt.status = 'scheduled';
                     delete apt.completedAt;
                 }

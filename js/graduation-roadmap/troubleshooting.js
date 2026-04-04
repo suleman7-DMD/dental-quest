@@ -438,12 +438,13 @@ function tsFixResyncCompCounts() {
                 // Derive correct status
                 var expected = (item.completed ?? 0) >= r && r > 0 ? 'completed' : (item.completed ?? 0) > 0 ? 'in_progress' : 'pending';
                 if (item.status !== expected) { item.status = expected; changed = true; }
-                if (changed) fixCount++;
+                if (changed) { item.lastVerified = getLocalDateString(new Date()); fixCount++; }
             });
         });
     });
     if (fixCount > 0) { clinicalDataDirty = true; safeLocalStorageSet(STORAGE_KEY, JSON.stringify(roadmapData)); saveData(); }
     showToast(fixCount > 0 ? 'Fixed ' + fixCount + ' item(s) (clamped counts + derived status)' : 'All counts valid', 'warning');
+    if (fixCount > 0 && typeof renderDashboard === 'function') renderDashboard();
     renderTroubleshooting();
 }
 
@@ -499,6 +500,7 @@ function tsFixRebuildDeadlines() {
     if (typeof rebuildUpcomingDeadlines === 'function') {
         rebuildUpcomingDeadlines();
         // Per CLAUDE.md propagation table: deadline mutation requires sync + persistence
+        clinicalDataDirty = true;
         if (typeof syncClinicalToMonthlyPlanner === 'function') syncClinicalToMonthlyPlanner();
         if (typeof buildCurrentWeekSchedule === 'function') buildCurrentWeekSchedule();
         safeLocalStorageSet(STORAGE_KEY, JSON.stringify(roadmapData));

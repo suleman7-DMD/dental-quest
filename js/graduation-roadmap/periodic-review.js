@@ -516,7 +516,8 @@ function renderPRInProgressProcedures(pr2) {
 
 function prAddInProgressRow() {
     var pr2 = getPR2Data();
-    var procs = getInProgressProcedures(pr2);
+    if (!pr2.inProgressProcedures) pr2.inProgressProcedures = {};
+    var procs = pr2.inProgressProcedures;
     var newId = generateId('iproc');
     procs[newId] = {
         patientName: '',
@@ -542,7 +543,8 @@ function prAddInProgressRow() {
 
 function prDeleteInProgressRow(rowId) {
     var pr2 = getPR2Data();
-    var procs = getInProgressProcedures(pr2);
+    if (!pr2.inProgressProcedures) pr2.inProgressProcedures = {};
+    var procs = pr2.inProgressProcedures;
     if (procs[rowId]) {
         delete procs[rowId];
         safeLocalStorageSet(STORAGE_KEY, JSON.stringify(roadmapData));
@@ -561,7 +563,8 @@ function prDeleteInProgressRow(rowId) {
 
 function prSaveInProgressRow(rowId) {
     var pr2 = getPR2Data();
-    var procs = getInProgressProcedures(pr2);
+    if (!pr2.inProgressProcedures) pr2.inProgressProcedures = {};
+    var procs = pr2.inProgressProcedures;
     if (!procs[rowId]) return;
 
     // Read values from DOM inputs for this row
@@ -607,13 +610,13 @@ function renderPRDepartmentAudit(pr2, competencies) {
         var pr1Dept = PR1_BASELINE.departments[cfg.key] ?? {};
 
         // Count items from sections
-        var sectionsList = Array.isArray(cat.sections) ? cat.sections : Object.values(cat.sections || {});
+        var sectionsList = getValues(cat.sections);
         var totalCompleted = 0;
         var totalInProgress = 0;
         var totalPlanned = 0;
 
         for (var s = 0; s < sectionsList.length; s++) {
-            var itemsList = Array.isArray(sectionsList[s].items) ? sectionsList[s].items : Object.values(sectionsList[s].items || {});
+            var itemsList = getValues(sectionsList[s].items);
             for (var i = 0; i < itemsList.length; i++) {
                 var item = itemsList[i];
                 var comp = item.completed ?? 0;
@@ -652,7 +655,7 @@ function renderPRDepartmentAudit(pr2, competencies) {
             var sec = sectionsList[s2];
             html += '<div style="margin-bottom:12px;">';
             html += '<div style="font-weight:600; font-size:0.82rem; color:#62707c; margin-bottom:6px; text-transform:uppercase; letter-spacing:0.04em;">' + escapeHtml(sec.title ?? '') + '</div>';
-            var items2 = Array.isArray(sec.items) ? sec.items : Object.values(sec.items || {});
+            var items2 = getValues(sec.items);
             for (var j = 0; j < items2.length; j++) {
                 var it = items2[j];
                 var itComp = it.completed ?? 0;
@@ -719,12 +722,12 @@ function renderPRNeededTable(competencies) {
         var cat = competencies[cfg.key];
         if (!cat) continue;
 
-        var sectionsList = Array.isArray(cat.sections) ? cat.sections : Object.values(cat.sections || {});
+        var sectionsList = getValues(cat.sections);
         var totalRequired = 0;
         var totalCompleted = 0;
 
         for (var s = 0; s < sectionsList.length; s++) {
-            var itemsList = Array.isArray(sectionsList[s].items) ? sectionsList[s].items : Object.values(sectionsList[s].items || {});
+            var itemsList = getValues(sectionsList[s].items);
             for (var i = 0; i < itemsList.length; i++) {
                 totalRequired += itemsList[i].required ?? 0;
                 totalCompleted += itemsList[i].completed ?? 0;
@@ -815,13 +818,13 @@ function renderPROtherRequirements(pr2, competencies) {
         html += '</div>';
 
         // Items grouped by section title
-        var sectionsList = Array.isArray(cat.sections) ? cat.sections : Object.values(cat.sections || {});
+        var sectionsList = getValues(cat.sections);
         for (var s = 0; s < sectionsList.length; s++) {
             var sec = sectionsList[s];
             if (sec.title) {
                 html += '<div style="font-weight:600; font-size:0.82rem; color:#62707c; margin-bottom:6px; margin-top:10px; text-transform:uppercase; letter-spacing:0.04em;">' + escapeHtml(sec.title) + '</div>';
             }
-            var itemsList = Array.isArray(sec.items) ? sec.items : Object.values(sec.items || {});
+            var itemsList = getValues(sec.items);
             for (var i = 0; i < itemsList.length; i++) {
                 var it = itemsList[i];
                 var comp = it.completed ?? 0;
@@ -958,9 +961,9 @@ function renderPRSubjectiveReport(pr2) {
         // Count current completed items in this category
         var currentCompleted = 0;
         if (cat && cat.sections) {
-            var sectionsList = Array.isArray(cat.sections) ? cat.sections : Object.values(cat.sections || {});
+            var sectionsList = getValues(cat.sections);
             for (var si = 0; si < sectionsList.length; si++) {
-                var itemsList = Array.isArray(sectionsList[si].items) ? sectionsList[si].items : Object.values(sectionsList[si].items || {});
+                var itemsList = getValues(sectionsList[si].items);
                 for (var ii = 0; ii < itemsList.length; ii++) {
                     var item = itemsList[ii];
                     var comp = item.completed ?? 0;

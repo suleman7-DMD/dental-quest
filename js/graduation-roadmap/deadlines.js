@@ -694,6 +694,7 @@ function toggleDeadlineDone(index) {
         if (deadline.clinicalAptId && typeof uncompleteAppointment === 'function') {
             const apt = roadmapData.clinicalData?.appointments?.[deadline.clinicalAptId];
             if (apt && apt.status === 'completed') {
+                clinicalDataDirty = true;
                 apt.status = 'scheduled';
                 delete apt.completedAt;
                 // Also unmark the planner task
@@ -870,6 +871,7 @@ function submitDeadlineGrade(index) {
     if (deadline.clinicalAptId) {
         const apt = roadmapData.clinicalData?.appointments?.[deadline.clinicalAptId];
         if (apt && apt.status !== 'completed') {
+            clinicalDataDirty = true;
             apt.status = 'completed';
             apt.completedAt = new Date().toISOString();
 
@@ -1049,7 +1051,7 @@ function deleteDeadline(index) {
     console.log('[D3-DELETE] Deadline delete requested:', stableId, deadline.what);
 
     showCustomConfirm(
-        `Delete this deadline?\n\n"${escapeHtml(deadline.what)}"\n${deadline.date} - ${deadline.course}`,
+        `Delete this deadline?\n\n"${deadline.what}"\n${deadline.date} - ${deadline.course}`,
         function() {
             // FIX: Re-lookup by stable ID inside callback to prevent stale index
             let currentIndex = deadlines.findIndex(d => (d._originalStableId || getDeadlineId(d)) === stableId);

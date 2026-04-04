@@ -272,7 +272,7 @@ function openAddAppointmentModal(preselectedPatientId = null) {
     const patients = typeof getAllPatientRecords === 'function' ? getAllPatientRecords() : (roadmapData.clinicalData?.patientRecords || {});
     const patientSelect = document.getElementById('appointmentModalPatient');
     patientSelect.innerHTML = '<option value="">Select patient...</option>' +
-        Object.values(patients)
+        getValues(patients)
             .filter(p => (p.activeStatus || 'Active') !== 'Inactive')
             .sort((a, b) => (a.name || '').localeCompare(b.name || ''))
             .map(p => `<option value="${p.id}" ${p.id === preselectedPatientId ? 'selected' : ''}>${escapeHtml(p.name)}</option>`)
@@ -300,7 +300,7 @@ function editAppointment(aptId) {
     const patients = typeof getAllPatientRecords === 'function' ? getAllPatientRecords() : (roadmapData.clinicalData?.patientRecords || {});
     const patientSelect = document.getElementById('appointmentModalPatient');
     patientSelect.innerHTML = '<option value="">Select patient...</option>' +
-        Object.values(patients)
+        getValues(patients)
             .sort((a, b) => (a.name || '').localeCompare(b.name || ''))
             .map(p => `<option value="${p.id}" ${p.id === apt.patientId ? 'selected' : ''}>${escapeHtml(p.name)}</option>`)
             .join('');
@@ -822,7 +822,7 @@ function migrateCompetencyEnhancements() {
 
     // 2. Remove D4 items from old grouppractice (now in grouppractice4)
     if (comp.grouppractice) {
-        Object.values(comp.grouppractice.sections || {}).forEach(function(sec) {
+        getValues(comp.grouppractice.sections || {}).forEach(function(sec) {
             var items = sec.items || {};
             Object.keys(items).forEach(function(itemKey) {
                 if ((items[itemKey].id || itemKey).indexOf('gp4-') === 0) {
@@ -842,7 +842,7 @@ function migrateCompetencyEnhancements() {
     });
 
     // 4. Force-sync schema fields + clean phantom progress + remove orphans
-    Object.values(comp).forEach(function(cat) {
+    getValues(comp).forEach(function(cat) {
         getValues(cat.sections).forEach(function(sec) {
             var items = sec.items || {};
             Object.keys(items).forEach(function(itemKey) {
@@ -905,7 +905,7 @@ function migrateToCompetencyV2() {
     };
 
     // Iterate ALL items across ALL categories/sections
-    Object.values(comp).forEach(function(cat) {
+    getValues(comp).forEach(function(cat) {
         getValues(cat.sections).forEach(function(sec) {
             var items = sec.items || {};
             Object.keys(items).forEach(function(itemKey) {
@@ -949,10 +949,10 @@ function syncSchemaFields() {
             (sec.items || []).forEach(function(item) { defaults[item.id] = item; });
         });
     });
-    Object.values(comp).forEach(function(cat) {
+    getValues(comp).forEach(function(cat) {
         getValues(cat.sections).forEach(function(sec) {
             var items = sec.items || {};
-            Object.values(items).forEach(function(item) {
+            getValues(items).forEach(function(item) {
                 var def = defaults[item.id];
                 if (def) {
                     item.d3Deadline = def.d3Deadline ?? null;
@@ -1019,7 +1019,7 @@ function calculateOverallStats(competencies) {
     let completedCategories = 0;
     const categoriesCount = Object.keys(competencies).length;
 
-    Object.values(competencies).forEach(cat => {
+    getValues(competencies).forEach(cat => {
         const stats = calculateCategoryStats(cat);
         totalItems += stats.totalItems;
         completedItems += stats.completed;
@@ -1084,7 +1084,7 @@ function renderMilestoneDashboard() {
     var competencies = getCompetenciesData();
     var summativeCompleted = 0;
     var summativeTotal = 7;
-    Object.values(competencies).forEach(function(cat) {
+    getValues(competencies).forEach(function(cat) {
         getValues(cat.sections).forEach(function(sec) {
             getValues(sec.items).forEach(function(item) {
                 if (item.isSummative && item.completed >= (item.required ?? 1)) {
@@ -2012,7 +2012,7 @@ function cv2BuildMilestoneStrip(competencies, stats) {
     // Count summatives
     var summativeCompleted = 0;
     var summativeTotal = 0;
-    Object.values(competencies).forEach(function(cat) {
+    getValues(competencies).forEach(function(cat) {
         getValues(cat.sections).forEach(function(sec) {
             getValues(sec.items).forEach(function(item) {
                 if (item.isSummative) {
@@ -2261,7 +2261,7 @@ function cv2ToggleNote(catKey, itemId, el) {
     if (cat) {
         getValues(cat.sections).forEach(function(sec) {
             if (sec.items) {
-                Object.values(sec.items).forEach(function(it) {
+                getValues(sec.items).forEach(function(it) {
                     if (it.id === itemId) item = it;
                 });
             }
@@ -2792,7 +2792,7 @@ function backfillClinicalData() {
 
     // === Phase 1: Auto-complete past appointments ===
     var appointments = roadmapData.clinicalData.appointments || {};
-    Object.values(appointments).forEach(function(apt) {
+    getValues(appointments).forEach(function(apt) {
         if (apt.status === 'scheduled' && apt.date && apt.date < todayStr) {
             apt.status = 'completed';
             apt.completedAt = apt.date + 'T17:00:00.000Z';
@@ -2802,7 +2802,8 @@ function backfillClinicalData() {
             if (apt.patientId) {
                 var patient = roadmapData.clinicalData.patientRecords?.[apt.patientId];
                 if (patient) {
-                    if (!patient.lastVisit || patient.lastVisit < apt.date) {
+                    var existingVisitDate = (patient.lastVisit || '').split('|')[0].trim();
+                    if (!existingVisitDate || existingVisitDate < apt.date) {
                         patient.lastVisit = apt.date;
                     }
                 }
@@ -2830,7 +2831,7 @@ function backfillClinicalData() {
         if (p.appointmentId) existingProcAptIds.add(p.appointmentId);
     });
 
-    Object.values(appointments).forEach(function(apt) {
+    getValues(appointments).forEach(function(apt) {
         if (apt.status === 'completed' && !existingProcAptIds.has(apt.id)) {
             var procData = {
                 patientId: apt.patientId ?? null,
@@ -2880,11 +2881,11 @@ function backfillClinicalData() {
     var patientRecords = roadmapData.clinicalData.patientRecords || {};
     if (!roadmapData.clinicalData.patientRecords) roadmapData.clinicalData.patientRecords = {};
     var existingNames = new Set();
-    Object.values(roadmapData.clinicalData.patientRecords).forEach(function(p) {
+    getValues(roadmapData.clinicalData.patientRecords).forEach(function(p) {
         if (p.name) existingNames.add(p.name.toLowerCase().trim());
     });
 
-    Object.values(patientRecords).forEach(function(pr) {
+    getValues(patientRecords).forEach(function(pr) {
         if (!pr.name || !pr.name.trim()) return;
         var nameLower = pr.name.toLowerCase().trim();
         if (existingNames.has(nameLower)) return; // Already linked
@@ -2912,7 +2913,7 @@ function backfillClinicalData() {
     });
 
     // === Phase 5: Create procedure records from patient outstanding tasks marked completed ===
-    Object.values(roadmapData.clinicalData.patientRecords).forEach(function(patient) {
+    getValues(roadmapData.clinicalData.patientRecords).forEach(function(patient) {
         if (!patient.outstandingTasks) return;
         patient.outstandingTasks.forEach(function(task) {
             if (task.status === 'completed' && task.procedure) {
@@ -3054,7 +3055,7 @@ function uncompleteAppointment(aptId) {
 function markLinkedDeadlineDone(aptId) {
     if (!roadmapData.customDeadlines) return;
 
-    Object.values(roadmapData.customDeadlines).forEach(function(dl) {
+    getValues(roadmapData.customDeadlines).forEach(function(dl) {
         if (dl.clinicalAptId === aptId && !dl.done) {
             // Compute stable ID BEFORE mutation (per CLAUDE.md)
             var dlId = dl._originalStableId || getDeadlineId(dl);
@@ -3073,7 +3074,7 @@ function markLinkedDeadlineDone(aptId) {
 function unmarkLinkedDeadlineDone(aptId) {
     if (!roadmapData.customDeadlines) return;
 
-    Object.values(roadmapData.customDeadlines).forEach(function(dl) {
+    getValues(roadmapData.customDeadlines).forEach(function(dl) {
         if (dl.clinicalAptId === aptId && dl.done) {
             dl.done = false;
 

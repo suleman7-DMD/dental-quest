@@ -270,7 +270,7 @@ function isEmptyState(data) {
     const hasPatients = getValues(data.clinicalData?.patientRecords).some(function(p) { return p.lastUpdated; });
     const hasCompletedDeadlines = getCount(data.completedDeadlines) > 0;
     const hasExamStudyProgress = getCount(data.examStudyProgress) > 0;
-    const hasGrades = data.grades && Object.values(data.grades).some(course =>
+    const hasGrades = data.grades && getValues(data.grades).some(course =>
         course && Object.keys(course).length > 0
     );
     // NOTE: hasExams intentionally NOT checked — exams are auto-generated from static list in initUI()
@@ -294,10 +294,10 @@ function isEmptyState(data) {
         for (const catKey of Object.keys(comps)) {
             const cat = comps[catKey];
             if (!cat?.sections) continue;
-            const sections = typeof cat.sections === 'object' ? Object.values(cat.sections) : [];
+            const sections = getValues(cat.sections);
             for (const section of sections) {
                 if (!section?.items) continue;
-                const items = typeof section.items === 'object' ? Object.values(section.items) : [];
+                const items = getValues(section.items);
                 for (const item of items) {
                     if (item && item.completed > 0) return true;
                 }
@@ -601,9 +601,9 @@ function mergeCompetencies(localComp, cloudComp) {
 
     // Build flat set of ALL item IDs across ALL local sections (prevents cross-section duplication)
     var allLocalItemIds = {};
-    Object.values(result).forEach(function(cat) {
+    getValues(result).forEach(function(cat) {
         getValues(cat.sections).forEach(function(sec) {
-            Object.values(sec.items || {}).forEach(function(item) {
+            getValues(sec.items || {}).forEach(function(item) {
                 if (item && item.id) allLocalItemIds[item.id] = true;
             });
         });
@@ -623,7 +623,7 @@ function mergeCompetencies(localComp, cloudComp) {
                 // in other local sections (different key, same items = structural mismatch from rebuild).
                 var cloudSecItems = cloudSections[secKey].items || {};
                 var hasNewItems = false;
-                Object.values(cloudSecItems).forEach(function(ci) {
+                getValues(cloudSecItems).forEach(function(ci) {
                     if (ci && ci.id && !allLocalItemIds[ci.id]) hasNewItems = true;
                 });
                 if (!hasNewItems) {
@@ -701,7 +701,7 @@ function migrateDailyPlannerBlocks(dailyPlanner) {
         const keys = Object.keys(dailyPlanner.blocks);
         if (keys.length > 0 && keys.some(k => /^\d+$/.test(k))) {
             const blocksObj = {};
-            Object.values(dailyPlanner.blocks).forEach(block => {
+            getValues(dailyPlanner.blocks).forEach(block => {
                 if (block) {
                     const blockId = block.id ? `block_${block.id}` : generateId('block');
                     blocksObj[blockId] = { ...block, id: blockId };
@@ -1624,7 +1624,7 @@ function findPatientByChartOrName(chartNumber, name) {
     }
     if (name) {
         var nameLower = name.toLowerCase().trim();
-        return Object.values(records).find(function(p) { return (p.name || '').toLowerCase().trim() === nameLower; }) || null;
+        return getValues(records).find(function(p) { return (p.name || '').toLowerCase().trim() === nameLower; }) || null;
     }
     return null;
 }

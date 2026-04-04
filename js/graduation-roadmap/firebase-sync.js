@@ -1794,7 +1794,7 @@ async function showCheckpointManager() {
             const snapshot = await database.ref(userPath + '/checkpoints').once('value');
             const cloudCheckpoints = snapshot.val();
             if (cloudCheckpoints) {
-                checkpoints = Object.values(cloudCheckpoints).filter(c => c && c.id);
+                checkpoints = getValues(cloudCheckpoints).filter(c => c && c.id);
                 checkpoints.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
             }
         } catch (err) {

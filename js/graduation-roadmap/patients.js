@@ -503,14 +503,14 @@ function migrateToUnifiedPatientStore() {
     // Remap ALL foreign key references using idRemapTable
     if (Object.keys(idRemapTable).length > 0) {
         // Remap appointments[].patientId
-        Object.values(roadmapData.clinicalData.appointments || {}).forEach(function(apt) {
+        getValues(roadmapData.clinicalData.appointments || {}).forEach(function(apt) {
             if (apt.patientId && idRemapTable[apt.patientId]) {
                 apt.patientId = idRemapTable[apt.patientId];
             }
         });
 
         // Remap completedProcedures[].patientId
-        Object.values(roadmapData.clinicalData.completedProcedures || {}).forEach(function(proc) {
+        getValues(roadmapData.clinicalData.completedProcedures || {}).forEach(function(proc) {
             if (proc.patientId && idRemapTable[proc.patientId]) {
                 proc.patientId = idRemapTable[proc.patientId];
             }
@@ -519,10 +519,10 @@ function migrateToUnifiedPatientStore() {
         // Remap competency completionEntries[].patientId across ALL categories/sections/items
         var comp = roadmapData.clinicalData.competencies;
         if (comp && typeof comp === 'object') {
-            Object.values(comp).forEach(function(cat) {
+            getValues(comp).forEach(function(cat) {
                 (getValues(cat.sections) || []).forEach(function(sec) {
                     var items = sec.items || {};
-                    Object.values(items).forEach(function(item) {
+                    getValues(items).forEach(function(item) {
                         getValues(item.completionEntries).forEach(function(entry) {
                             if (entry.patientId && idRemapTable[entry.patientId]) {
                                 entry.patientId = idRemapTable[entry.patientId];
@@ -534,7 +534,7 @@ function migrateToUnifiedPatientStore() {
         }
 
         // Remap monthlyPlanner.customTasks clinic task patient references
-        Object.values(roadmapData.monthlyPlanner?.customTasks || {}).forEach(function(task) {
+        getValues(roadmapData.monthlyPlanner?.customTasks || {}).forEach(function(task) {
             if (task.patientId && idRemapTable[task.patientId]) {
                 task.patientId = idRemapTable[task.patientId];
             }
@@ -2907,14 +2907,14 @@ function migrateLeadingZeroDedup() {
         // Remap ALL foreign key references (matches migrateToUnifiedPatientStore pattern)
         if (Object.keys(idRemapTable).length > 0) {
             // Remap appointments[].patientId
-            Object.values(roadmapData.clinicalData.appointments || {}).forEach(function(apt) {
+            getValues(roadmapData.clinicalData.appointments || {}).forEach(function(apt) {
                 if (apt.patientId && idRemapTable[apt.patientId]) {
                     apt.patientId = idRemapTable[apt.patientId];
                 }
             });
 
             // Remap completedProcedures[].patientId
-            Object.values(roadmapData.clinicalData.completedProcedures || {}).forEach(function(proc) {
+            getValues(roadmapData.clinicalData.completedProcedures || {}).forEach(function(proc) {
                 if (proc.patientId && idRemapTable[proc.patientId]) {
                     proc.patientId = idRemapTable[proc.patientId];
                 }
@@ -2923,10 +2923,10 @@ function migrateLeadingZeroDedup() {
             // Remap competency completionEntries[].patientId across ALL categories/sections/items
             var comp = roadmapData.clinicalData.competencies;
             if (comp && typeof comp === 'object') {
-                Object.values(comp).forEach(function(cat) {
+                getValues(comp).forEach(function(cat) {
                     (getValues(cat.sections) || []).forEach(function(sec) {
                         var items = sec.items || {};
-                        Object.values(items).forEach(function(item) {
+                        getValues(items).forEach(function(item) {
                             getValues(item.completionEntries).forEach(function(entry) {
                                 if (entry.patientId && idRemapTable[entry.patientId]) {
                                     entry.patientId = idRemapTable[entry.patientId];
@@ -2938,7 +2938,7 @@ function migrateLeadingZeroDedup() {
             }
 
             // Remap monthlyPlanner.customTasks clinic task patient references
-            Object.values(roadmapData.monthlyPlanner?.customTasks || {}).forEach(function(task) {
+            getValues(roadmapData.monthlyPlanner?.customTasks || {}).forEach(function(task) {
                 if (task.patientId && idRemapTable[task.patientId]) {
                     task.patientId = idRemapTable[task.patientId];
                 }
