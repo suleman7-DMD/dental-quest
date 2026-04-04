@@ -802,6 +802,18 @@ function parseLocalDate(dateStr) {
     return new Date(y, m - 1, d);
 }
 
+// Parse MM/DD/YYYY or M/D/YYYY dates (used by recall history)
+function parseMDYDate(dateStr) {
+    if (!dateStr) return null;
+    var parts = dateStr.split('/');
+    if (parts.length !== 3) return null;
+    var m = parseInt(parts[0], 10);
+    var d = parseInt(parts[1], 10);
+    var y = parseInt(parts[2], 10);
+    if (isNaN(m) || isNaN(d) || isNaN(y)) return null;
+    return new Date(y, m - 1, d);
+}
+
 function getCountdown(dateStr) {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
@@ -1121,8 +1133,10 @@ function getSmartProcedureCount() {
     var NON_PROCEDURE_IDS = {
         'fixed-occlusal-cr': 1, 'fixed-occlusal-mi': 1, 'fixed-mock': 1,
         'fixed-sim-1': 1, 'fixed-sim-2': 1, 'fixed-sim-fpd': 1, 'fixed-case-pres': 1,
+        'fixed-units-total': 1, 'fixed-fpd': 1, 'fixed-implant-crown': 1, 'fixed-cerec': 1,
         'op-approval': 1, 'op-assignment': 1, 'op-license': 1,
         'endo-postdoc': 1, 'endo-predoc': 1, 'endo-mock': 1,
+        'cd-units-total': 1,
         'perio-surg-assist': 1, 'perio-sum-mock': 1
     };
 
@@ -1308,7 +1322,7 @@ function calculatePaceProjection(currentCount, targetCount, dataStartDate) {
     projectedDate.setDate(projectedDate.getDate() + daysToTarget);
 
     // Deadline awareness: flag if projected date exceeds key milestones
-    var d3End = new Date(2026, 4, 13);       // May 13, 2026 — D3 year ends
+    var d3End = new Date(2026, 4, 15);       // May 15, 2026 — D3 year ends
     var graduation = new Date(2027, 4, 12);  // May 12, 2027 — graduation
     var behindSchedule = projectedDate > d3End;
     var pastGraduation = projectedDate > graduation;
@@ -1430,6 +1444,7 @@ function propagateClinicalChanges({ appointments = false, procedures = false, co
         if (typeof renderPatientsSidebar === 'function') renderPatientsSidebar();
         if (typeof renderCountdownRadar === 'function') renderCountdownRadar();
         if (typeof renderActiveRoster === 'function') renderActiveRoster();
+        if (typeof renderMiniReview === 'function') renderMiniReview();
     }
     if (dashboard && typeof renderDashboard === 'function') renderDashboard();
     if (calendars && typeof mpRenderAllCalendars === 'function') mpRenderAllCalendars();
@@ -1512,7 +1527,9 @@ function cascadeDeletePatient(patientId) {
     // 3. Find orphaned procedures (by patientId, not linked to any appointment)
     var orphanedProcs = getValues(roadmapData.clinicalData.completedProcedures)
         .filter(function(p) { return p.patientId === patientId; });
+    if (!roadmapData.clinicalData.deletedProcedureIds) roadmapData.clinicalData.deletedProcedureIds = {};
     orphanedProcs.forEach(function(p) {
+        roadmapData.clinicalData.deletedProcedureIds[p.id] = new Date().toISOString();
         delete roadmapData.clinicalData.completedProcedures[p.id];
     });
 
@@ -1554,9 +1571,11 @@ function cascadeUncompleteAppointment(aptId) {
     delete apt.completedAt;
 
     // 2. Find + cascade delete all procedures for this appointment
+    if (!roadmapData.clinicalData.deletedProcedureIds) roadmapData.clinicalData.deletedProcedureIds = {};
     getValues(roadmapData.clinicalData.completedProcedures)
         .filter(function(p) { return p.appointmentId === aptId; })
         .forEach(function(p) {
+            roadmapData.clinicalData.deletedProcedureIds[p.id] = new Date().toISOString();
             delete roadmapData.clinicalData.completedProcedures[p.id];
         });
 

@@ -51,7 +51,7 @@ function updateClinicalStats() {
         if ((p.activeStatus || 'Active') === 'Inactive') return false;
         var recallMatch = (p.recallHistory || '').match(/Next due:\s*([0-9]{1,2}\/[0-9]{1,2}\/[0-9]{4})/i);
         if (!recallMatch) return false;
-        const recallDate = parseLocalDate(recallMatch[1]);
+        const recallDate = parseMDYDate(recallMatch[1]);
         const thirtyDaysFromNow = new Date();
         thirtyDaysFromNow.setDate(thirtyDaysFromNow.getDate() + 30);
         return recallDate <= thirtyDaysFromNow;
@@ -3279,7 +3279,7 @@ function saveProcedureRecord() {
     renderDashboard();
 
     var linkedMsg = competencyItemIds.length > 0
-        ? ' (' + competencyItemIds.length + ' competency item' + (competencyItemIds.length > 1 ? 's' : '') + ' linked)'
+        ? ' (' + competencyItemIds.length + ' competency item' + (competencyItemIds.length > 1 ? 's' : '') + ' tagged)'
         : '';
     showToast('Procedure recorded!' + linkedMsg);
 }

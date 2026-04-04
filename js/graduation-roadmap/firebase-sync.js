@@ -328,6 +328,16 @@ function reconstructState(source, options) {
         cd.patientRecords = s.clinicalData?.patientRecords || f.clinicalData?.patientRecords || {};
     }
 
+    // Apply tombstone filtering — purge records deleted on either device
+    if (!isSourceWins) {
+        var _delApts = { ...(s.clinicalData?.deletedAppointmentIds || {}), ...(f.clinicalData?.deletedAppointmentIds || {}) };
+        var _delProcs = { ...(s.clinicalData?.deletedProcedureIds || {}), ...(f.clinicalData?.deletedProcedureIds || {}) };
+        var _delPRs = { ...(s.clinicalData?.deletedPatientRecordIds || {}), ...(f.clinicalData?.deletedPatientRecordIds || {}) };
+        Object.keys(cd.appointments || {}).forEach(function(id) { if (_delApts[id]) delete cd.appointments[id]; });
+        Object.keys(cd.completedProcedures || {}).forEach(function(id) { if (_delProcs[id]) delete cd.completedProcedures[id]; });
+        Object.keys(cd.patientRecords || {}).forEach(function(id) { if (_delPRs[id]) delete cd.patientRecords[id]; });
+    }
+
     // dashboardSnapshots: always dedup-merge via mergeDashboardSnapshots
     cd.dashboardSnapshots = mergeDashboardSnapshots(f.clinicalData?.dashboardSnapshots, s.clinicalData?.dashboardSnapshots);
 
