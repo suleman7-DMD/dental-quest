@@ -47,10 +47,12 @@ const date = new Date(year, month - 1, day);
 - **`initUI` auto-save guards**: Both `setTimeout(() => saveData(), ...)` in initUI MUST check `hasLoadedFromCloud && !awaitingFirebaseLoad`.
 - **Double `loadData()`**: Causes race conditions. Verify orphan calls before adding.
 - **Failsafe timer**: Must set `hasLoadedFromCloud = true`, `isInitialLoad = false`, `roadmapData._dataLoaded = true`. (Flags set manually, no `markInitialLoadComplete()` function.)
-- **`clinicalDataDirty = true` before ALL clinical CRUD**: 23 functions require this — patient CRUD (save/delete/add/field/reliability), appointment CRUD (save/delete/complete/uncomplete), procedures (record/delete/backfill), competencies (adjust/setStatus/delete/save/notes/saveNote/reset), imports (confirmPatient/confirmClinical), `prSavePatientField`.
+- **`clinicalDataDirty = true` before ALL clinical CRUD**: 25 functions require this — patient CRUD (save/delete/add/field/reliability), appointment CRUD (save/delete/complete/uncomplete), procedures (record/delete/backfill), competencies (adjust/setStatus/delete/save/notes/saveNote/reset), imports (confirmPatient/confirmClinical), `prSavePatientField`, `toggleMissingNoteStatus`, `clearCompletedMissingNotes`.
 - **Fallback timers = data wipe**: DOMContentLoaded 3s/6s timers must check BOTH `awaitingPinEntry` AND `awaitingFirebaseLoad`. 15s safety valve.
 - **Guard F**: `validateStateIntegrity()` must validate `periodicReviews`, `competencies`, `missingNotes`.
-- **Firebase array→object corruption**: ALL collection access MUST use `getValues()` for reads. Applies to: `dashboardSnapshots`, `briefHistory`, `importedRequirements`, any stored array.
+- **Firebase array→object corruption**: ALL collection access MUST use `getValues()` for reads. Applies to: `appointments`, `completedProcedures`, `patientRecords`, `completedTasks`, `customTasks`, `customDeadlines`, `dashboardSnapshots`, `briefHistory`, `importedRequirements`, competency `sections`/`items`, any stored collection. NEVER use `Object.values()` on Firebase-stored data.
+- **`showCustomConfirm()` already escapes**: Function calls `escapeHtml(message)` internally. Callers must NOT pre-escape — causes double-encoding (`&` → `&amp;amp;`).
+- **`propagateClinicalChanges()` calls dpSync**: Already calls `dpSyncAppointmentsToTimeline()` internally. Do NOT call dpSync separately after propagation — causes duplicate sync.
 
 ### Sync & Merge Rules
 - **`mergeRemoteState`**: Compare `lastSaved` — if local newer, call `mergeRemoteCollectionsIntoLocal(data)` (NOT skip entirely).
@@ -80,6 +82,7 @@ const date = new Date(year, month - 1, day);
 - Defaults MUST be empty: `completed: 0` in DEFAULT_COMPETENCIES, empty grade objects, no hardcoded values.
 - Auto-generated data must NOT trigger: don't check `exams`, check `completed > 0` for competencies.
 - Must check: `graduationPrep`, all 9 PR2 fields, `todoList.items`, `missingNotes`, and all fields in isEmptyState table.
+- **`dashboardSnapshots` dual-shape**: Firebase may store as object (not array). `isEmptyState` must handle both: `Array.isArray(s) ? s.length > 0 : Object.keys(s).length > 0`.
 
 ### Patient Data Integrity
 - **`clinicalData.patients` DEPRECATED**: ALL lookups/renders/edits MUST use `clinicalData.patientRecords` or `getAllPatientRecords()`. Never read `patients` in render or CRUD paths.
@@ -89,7 +92,7 @@ const date = new Date(year, month - 1, day);
 | Function | Must Also Do |
 |----------|-------------|
 | `deletePatient()` | Delete procedures + write tombstones, unlink competencies, remove planner tasks, add to `hiddenClinicTasks`, set `clinicalDataDirty` |
-| `deletePatientRecord()` | Delegate to `cascadeDeletePatient()` — handles all cascade + propagation |
+| `deletePatientRecord()` | Delegate to `cascadeDeletePatient()` — handles all cascade + propagation (incl. todoList cleanup) |
 | `deleteAppointment()` | Unlink+delete procedures + write tombstones, add task to `hiddenClinicTasks`, set `clinicalDataDirty` |
 | `uncompleteAppointment()` | Delete procedures + write tombstones, unmark deadline/planner, recalc lastVisit |
 
@@ -126,11 +129,14 @@ const date = new Date(year, month - 1, day);
 - **`showToast(msg, type, options)`**: `{ html: true }` for HTML. Default is `textContent` (safe).
 
 ### Competencies V2 (Manual-Count Model)
-- **V2 model**: Flat manual counts. Item shape: `{ id, text, required, completed, note, lastVerified, d3Deadline, isSummative, status }`. Old evidence-trail model (completionEntries, review queue, unlock chains) was deleted.
+- **V2 model**: Flat manual counts. Item shape: `{ id, text, required, completed, note, lastVerified, d3Deadline, isSummative, status, custom }`. Old evidence-trail model (completionEntries, review queue, unlock chains) was deleted.
 - **Counts are manual-only**: Change via (a) REQUIREMENTS_STATUS import or (b) inline +/- buttons. COMPLETED_TODAY does NOT touch counts.
 - **`lastVerified`**: Set on every manual edit and REQUIREMENTS_STATUS import. Used by `mergeCompetencies()` for conflict resolution.
-- **`migrateToCompetencyV2()`**: One-time migration gated by `competencyV2Migrated`. Wipes old fields, seeds verified values.
+- **`migrateToCompetencyV2()`**: One-time migration gated by `competencyV2Migrated`. Wipes old fields, seeds verified values. Must NOT delete `item.custom` flag.
+- **V3 orphan removal**: `syncSchemaFields` deletes items missing from DEFAULT_COMPETENCIES — must guard with `!item.custom` to preserve user-added items. V3 must NOT zero manual counts (completionEntries is dead in V2).
+- **Summative ring target**: Hardcoded `7` (per ground truth "7 Clinical Summatives"). Do NOT count `isSummative` items dynamically — there are ~45 formatives flagged `isSummative`.
 - **`adjustCompItem()` / `setCompItemStatus()`**: Simple +/- or toggle. Sets `lastVerified`, derives status.
+- **`saveCompItem()` must set `lastVerified`**: Both add-new (when completed > 0) and edit-existing paths must set `lastVerified = getLocalDateString(new Date())`.
 - **Smart counting**: `getSmartProcedureCount()` sums `item.completed` across categories. SPS snapshot AUTHORITATIVE when exists.
 - **`autoLinkReviewQueue`**: DELETED. Field kept as `[]` for schema compat only.
 - **V2 UI**: Warm Atlas Console design, `cv2-*` CSS classes. 3 panels: milestone KPI strip, D3 alert + category accordion, What's Next.
@@ -340,6 +346,7 @@ Full audit history: `docs/audit-history.md`
 - Cross-app data flow to body-comp-tracker and stim-calc (read paths)
 - `syncSchemaFields()` re-adds dead `rules` field (~2KB per save)
 - DEFAULT_COMPETENCIES still has `completionEntries: []` on templates (stripped by migration)
+- 17 remaining `Object.values()` on Firebase collections in `patients.js` (10 in FK remap blocks) and `clinical.js` (7 in modal/backfill/deadline fns) — see handoff prompt in session history
 
 ---
 
