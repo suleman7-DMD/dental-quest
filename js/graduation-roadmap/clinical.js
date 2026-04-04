@@ -1553,7 +1553,7 @@ function renderCategoryPace(catKey, stats) {
     // Calculate weeks until graduation (May 2027)
     var today = new Date();
     today.setHours(0, 0, 0, 0);
-    var gradDate = new Date(2027, 4, 15); // May 15, 2027
+    var gradDate = new Date(2027, 4, 12); // May 12, 2027
     var weeksLeft = Math.max(1, Math.floor((gradDate - today) / (7 * 86400000)));
     var unitsPerWeek = (remaining / weeksLeft).toFixed(1);
 
@@ -2057,7 +2057,7 @@ function cv2BuildMilestoneStrip(competencies, stats) {
 
     // Readiness card
     var overallPct = stats.overallPercent || 0;
-    var gradDate = new Date(2027, 4, 15); // May 15, 2027
+    var gradDate = new Date(2027, 4, 12); // May 12, 2027
     var today = new Date();
     today.setHours(0, 0, 0, 0);
     var daysLeft = Math.max(0, Math.ceil((gradDate - today) / 86400000));

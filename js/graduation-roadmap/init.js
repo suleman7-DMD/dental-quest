@@ -1091,7 +1091,7 @@ function renderDashboard() {
     html += '<div style="background:rgba(59,130,246,0.1); border:1px solid rgba(59,130,246,0.25); border-radius:10px; padding:12px; text-align:center;">';
     html += '<div style="font-size:1.8em; font-weight:800; color:#60a5fa;">' + daysTo(d3End) + '</div>';
     html += '<div style="font-size:0.75em; color:#94a3b8; margin-top:2px;">days to D3 End</div>';
-    html += '<div style="font-size:0.7em; color:#64748b;">May 13, 2026</div>';
+    html += '<div style="font-size:0.7em; color:#64748b;">May 15, 2026</div>';
     if (d3Remaining > 0) {
         html += '<div style="font-size:0.6em; color:#93c5fd; margin-top:4px;">' + d3Remaining + ' apts remaining</div>';
     } else if (d3Remaining < 0) {

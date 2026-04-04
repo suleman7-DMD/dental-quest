@@ -1233,6 +1233,7 @@ function getCompetencyGaps() {
     var weeksRemaining = Math.max(1, Math.ceil((graduation - today) / (7 * 24 * 60 * 60 * 1000)));
     var totalWeeks = Math.ceil((graduation - new Date(2025, 7, 1)) / (7 * 24 * 60 * 60 * 1000)); // D3 start Aug 1, 2025
     var pastMidpoint = weeksRemaining < totalWeeks / 2;
+    var NON_GAP_IDS = { 'fixed-units-total': 1, 'fixed-fpd': 1, 'fixed-implant-crown': 1, 'fixed-cerec': 1, 'cd-units-total': 1 };
 
     Object.entries(competencies).forEach(function(entry) {
         var catKey = entry[0];
@@ -1240,6 +1241,7 @@ function getCompetencyGaps() {
         getValues(cat.sections).forEach(function(sec) {
             getValues(sec.items).forEach(function(item) {
                 if (item.completed >= item.required) return; // Done
+                if (NON_GAP_IDS[item.id]) return; // Skip aggregate trackers
 
                 var remaining = item.required - item.completed;
 
@@ -1432,22 +1434,22 @@ function navigateToCompetencyItem(catKey, itemId) {
 function propagateClinicalChanges({ appointments = false, procedures = false, competencies = false, patients = false, dashboard = true, calendars = true, source = '' } = {}) {
     clinicalDataDirty = true;
     if (appointments) {
-        if (typeof syncClinicalToMonthlyPlanner === 'function') syncClinicalToMonthlyPlanner();
-        if (typeof buildCurrentWeekSchedule === 'function') buildCurrentWeekSchedule();
-        if (typeof rebuildUpcomingDeadlines === 'function') rebuildUpcomingDeadlines();
-        if (typeof dpSyncAppointmentsToTimeline === 'function') dpSyncAppointmentsToTimeline();
+        if (typeof syncClinicalToMonthlyPlanner === 'function') { try { syncClinicalToMonthlyPlanner(); } catch(e) { console.error('[propagate:' + source + '] syncClinicalToMonthlyPlanner threw:', e); } }
+        if (typeof buildCurrentWeekSchedule === 'function') { try { buildCurrentWeekSchedule(); } catch(e) { console.error('[propagate:' + source + '] buildCurrentWeekSchedule threw:', e); } }
+        if (typeof rebuildUpcomingDeadlines === 'function') { try { rebuildUpcomingDeadlines(); } catch(e) { console.error('[propagate:' + source + '] rebuildUpcomingDeadlines threw:', e); } }
+        if (typeof dpSyncAppointmentsToTimeline === 'function') { try { dpSyncAppointmentsToTimeline(); } catch(e) { console.error('[propagate:' + source + '] dpSyncAppointmentsToTimeline threw:', e); } }
     }
     if (procedures || competencies) {
-        if (typeof renderCompetencies === 'function') renderCompetencies();
+        if (typeof renderCompetencies === 'function') { try { renderCompetencies(); } catch(e) { console.error('[propagate:' + source + '] renderCompetencies threw:', e); } }
     }
     if (patients) {
-        if (typeof renderPatientsSidebar === 'function') renderPatientsSidebar();
-        if (typeof renderCountdownRadar === 'function') renderCountdownRadar();
-        if (typeof renderActiveRoster === 'function') renderActiveRoster();
-        if (typeof renderMiniReview === 'function') renderMiniReview();
+        if (typeof renderPatientsSidebar === 'function') { try { renderPatientsSidebar(); } catch(e) { console.error('[propagate:' + source + '] renderPatientsSidebar threw:', e); } }
+        if (typeof renderCountdownRadar === 'function') { try { renderCountdownRadar(); } catch(e) { console.error('[propagate:' + source + '] renderCountdownRadar threw:', e); } }
+        if (typeof renderActiveRoster === 'function') { try { renderActiveRoster(); } catch(e) { console.error('[propagate:' + source + '] renderActiveRoster threw:', e); } }
+        if (typeof renderMiniReview === 'function') { try { renderMiniReview(); } catch(e) { console.error('[propagate:' + source + '] renderMiniReview threw:', e); } }
     }
-    if (dashboard && typeof renderDashboard === 'function') renderDashboard();
-    if (calendars && typeof mpRenderAllCalendars === 'function') mpRenderAllCalendars();
+    if (dashboard && typeof renderDashboard === 'function') { try { renderDashboard(); } catch(e) { console.error('[propagate:' + source + '] renderDashboard threw:', e); } }
+    if (calendars && typeof mpRenderAllCalendars === 'function') { try { mpRenderAllCalendars(); } catch(e) { console.error('[propagate:' + source + '] mpRenderAllCalendars threw:', e); } }
     // NOTE: Does NOT call saveData(). Caller controls save timing.
 }
 

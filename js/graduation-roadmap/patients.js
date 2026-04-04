@@ -2464,7 +2464,7 @@ function confirmUnifiedImport() {
 
     // Apply requirement statuses
     if (parsed.reqStatuses.length > 0) {
-        applyRequirementCheckoffs(parsed.reqStatuses);
+        var reqResult = applyRequirementCheckoffs(parsed.reqStatuses);
         // Persist metadata about this requirements status import
         roadmapData.lastRequirementsStatusImport = {
             updated: parsed.reqStatusUpdated || null,
@@ -2493,7 +2493,7 @@ function confirmUnifiedImport() {
         });
     });
     if (completedItems.length > 0) {
-        applyRequirementCheckoffs(completedItems);
+        var compResult = applyRequirementCheckoffs(completedItems);
     }
 
     // Process appointments from unified import
@@ -2739,8 +2739,12 @@ function confirmUnifiedImport() {
     _suppressBlurSave = false;
 
     // CIS v2: Centralized propagation replaces ad-hoc render calls
-    if (typeof propagateClinicalChanges === 'function') {
-        propagateClinicalChanges({ appointments: true, procedures: true, competencies: true, patients: true, source: 'confirmUnifiedImport' });
+    try {
+        if (typeof propagateClinicalChanges === 'function') {
+            propagateClinicalChanges({ appointments: true, procedures: true, competencies: true, patients: true, source: 'confirmUnifiedImport' });
+        }
+    } catch (propErr) {
+        console.error('[IMPORT] propagateClinicalChanges threw:', propErr);
     }
     safeLocalStorageSet(STORAGE_KEY, JSON.stringify(roadmapData));
     if (typeof initClinicalTab === 'function' && aptsCreated > 0) {
@@ -2757,8 +2761,13 @@ function confirmUnifiedImport() {
     if (todosImported > 0) msg += todosImported + ' to-do item(s) imported. ';
     if (briefsImported > 0) msg += briefsImported + ' clinical brief(s) imported. ';
     var skipped = (reqMatchSkipped || 0) + (briefsSkipped || 0);
+    var totalRemoved = (reqResult ? reqResult.removedIdCount : 0) + (compResult ? compResult.removedIdCount : 0);
+    var allUnmatched = (reqResult ? reqResult.unmatchedIds : []).concat(compResult ? compResult.unmatchedIds : []);
     if (skipped > 0) msg += skipped + ' item(s) skipped (no matching patient). ';
-    showToast(msg || 'Import complete', skipped > 0 ? 'warning' : undefined);
+    if (totalRemoved > 0) msg += totalRemoved + ' obsolete requirement ID(s) skipped. ';
+    if (allUnmatched.length > 0) msg += allUnmatched.length + ' unrecognized ID(s): ' + allUnmatched.join(', ') + '. ';
+    var hasWarnings = skipped > 0 || totalRemoved > 0 || allUnmatched.length > 0;
+    showToast(msg || 'Import complete', hasWarnings ? 'warning' : undefined);
 
     // Post-import integrity check (console-only)
     if (typeof runPostMergeIntegrityChecks === 'function') {
@@ -2962,13 +2971,15 @@ function migrateLeadingZeroDedup() {
 }
 
 function applyRequirementCheckoffs(items, importContext) {
-    if (!items || items.length === 0) return;
+    if (!items || items.length === 0) return { removedIdCount: 0, unmatchedIds: [] };
 
     var competencies = getCompetenciesData();
     if (!competencies) return;
 
     // importContext may have { patientName, patientId, date } for procedure record creation
     var ctx = importContext || {};
+    var removedIdCount = 0;
+    var unmatchedIds = [];
 
     // Alias map for competency IDs that changed names between webchat export and DEFAULT_COMPETENCIES.
     // Add new aliases here when requirement IDs are renamed or consolidated.
@@ -3079,8 +3090,10 @@ function applyRequirementCheckoffs(items, importContext) {
         var rawId = (item.reqId || '').toLowerCase();
         if (REMOVED_COMPETENCY_IDS[rawId]) {
             console.warn('[IMPORT] Removed competency ID "' + rawId + '": ' + REMOVED_COMPETENCY_IDS[rawId]);
+            removedIdCount++;
         } else if (resolvedId) {
             console.warn('[IMPORT] Unmatched competency ID "' + resolvedId + '" — not found in DEFAULT_COMPETENCIES');
+            unmatchedIds.push(resolvedId);
         }
     });
 
@@ -3091,6 +3104,7 @@ function applyRequirementCheckoffs(items, importContext) {
 
     safeLocalStorageSet(STORAGE_KEY, JSON.stringify(roadmapData));
     saveData();
+    return { removedIdCount: removedIdCount, unmatchedIds: unmatchedIds };
 }
 
 // ==================== SPS DASHBOARD FUNCTIONS ====================
