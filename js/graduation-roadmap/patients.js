@@ -3431,18 +3431,34 @@ function renderMiniReview() {
     if (!container) return;
 
     var allPatients = getAllPatientRecords();
-    var ids = Object.keys(allPatients);
+    var allIds = Object.keys(allPatients);
+    var totalCount = allIds.length;
 
-    // Sort: green first, then yellow, then red; alphabetical within each group
-    var relOrder = { green: 0, yellow: 1, red: 2 };
+    // Filter: only green and yellow patients (default yellow when unset)
+    var ids = allIds.filter(function(id) {
+        var rel = allPatients[id].reliability || 'yellow';
+        return rel === 'green' || rel === 'yellow';
+    });
+
+    // Sort: scheduled first, then green before yellow, then alphabetical
+    var relOrder = { green: 0, yellow: 1 };
     ids.sort(function(a, b) {
+        var aScheduled = getNextScheduledVisit(allPatients[a], a) ? 0 : 1;
+        var bScheduled = getNextScheduledVisit(allPatients[b], b) ? 0 : 1;
+        if (aScheduled !== bScheduled) return aScheduled - bScheduled;
         var ra = relOrder[allPatients[a].reliability] ?? 1;
         var rb = relOrder[allPatients[b].reliability] ?? 1;
         if (ra !== rb) return ra - rb;
         return (allPatients[a].name || '').localeCompare(allPatients[b].name || '');
     });
 
-    var html = '<div class="mr-header"><h2>Mini Review</h2><span class="mr-count">' + ids.length + ' patients</span></div>';
+    if (ids.length === 0) {
+        container.innerHTML = '<div class="mr-header"><h2>Mini Review</h2><span class="mr-count">0 of ' + totalCount + ' patients</span></div>' +
+            '<div style="text-align:center;padding:2rem;color:#8899aa;">No green or yellow patients to review</div>';
+        return;
+    }
+
+    var html = '<div class="mr-header"><h2>Mini Review</h2><span class="mr-count">' + ids.length + ' of ' + totalCount + ' patients</span></div>';
     html += '<div class="mr-grid">';
 
     for (var i = 0; i < ids.length; i++) {

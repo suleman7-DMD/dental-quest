@@ -1430,6 +1430,7 @@ function propagateClinicalChanges({ appointments = false, procedures = false, co
         if (typeof renderPatientsSidebar === 'function') renderPatientsSidebar();
         if (typeof renderCountdownRadar === 'function') renderCountdownRadar();
         if (typeof renderActiveRoster === 'function') renderActiveRoster();
+        if (typeof renderMiniReview === 'function') renderMiniReview();
     }
     if (dashboard && typeof renderDashboard === 'function') renderDashboard();
     if (calendars && typeof mpRenderAllCalendars === 'function') mpRenderAllCalendars();
