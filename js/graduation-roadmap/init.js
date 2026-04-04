@@ -292,15 +292,19 @@ function dashboardCreatePlannerEvent(task, patients) {
     };
 }
 
-function dashboardGetUpcomingAppointmentFeed(todayStr) {
+function dashboardGetUpcomingAppointmentFeed(todayStr, maxDaysAhead) {
     var patients = (typeof getAllPatientRecords === 'function')
         ? getAllPatientRecords()
         : (roadmapData.clinicalData?.patientRecords || {});
     var feed = [];
     var seen = {};
+    var limitDays = maxDaysAhead ?? 30;
+    var cutoffDate = parseLocalDate(todayStr);
+    if (cutoffDate) cutoffDate.setDate(cutoffDate.getDate() + limitDays);
+    var cutoffStr = cutoffDate ? getLocalDateString(cutoffDate) : todayStr;
 
     getValues(roadmapData.clinicalData?.appointments).forEach(function(apt) {
-        if (!apt || !apt.date || apt.date < todayStr) return;
+        if (!apt || !apt.date || apt.date < todayStr || apt.date > cutoffStr) return;
         if (apt.status === 'cancelled' || apt.status === 'completed') return;
         var event = dashboardCreateClinicalEvent(apt, patients);
         if (seen[event.dedupKey]) return;
@@ -310,6 +314,7 @@ function dashboardGetUpcomingAppointmentFeed(todayStr) {
 
     dashboardGetFuturePlannerTasks(todayStr).forEach(function(task) {
         if (!task || task.syncedFromClinical || task.clinicalAppointmentId) return;
+        if (task.date > cutoffStr) return;
         if (!dashboardIsAppointmentLikeTask(task)) return;
         var event = dashboardCreatePlannerEvent(task, patients);
         if (!event || !event.date) return;
@@ -601,28 +606,46 @@ function dashboardRenderPhoneChips(phoneRaw) {
     }).join('');
 }
 
-function renderUpcomingAppointmentsSection(today) {
+function dashboardUseSplitTopRail() {
+    if (typeof window === 'undefined') return true;
+    return window.innerWidth >= 1180;
+}
+
+function dashboardTopRailMaxHeight() {
+    return dashboardUseSplitTopRail() ? '72vh' : '';
+}
+
+function renderUpcomingAppointmentsSection(today, options) {
+    options = options || {};
     var todayStr = getLocalDateString(today);
-    var feed = dashboardGetUpcomingAppointmentFeed(todayStr);
+    var daysAhead = options.daysAhead ?? 30;
+    var feed = dashboardGetUpcomingAppointmentFeed(todayStr, daysAhead);
     var workloadItems = dashboardGetWorkloadItems(todayStr);
+    var useScrollPane = !!options.useScrollPane;
+    var maxHeight = options.maxHeight || '72vh';
     var html = '';
 
-    html += '<div class="mission-card" style="background:linear-gradient(135deg, rgba(15,23,42,0.96), rgba(30,41,59,0.92)); border:1px solid rgba(59,130,246,0.28); border-radius:16px; padding:18px; margin-bottom:16px;">';
+    html += '<div class="mission-card" style="background:linear-gradient(135deg, rgba(15,23,42,0.96), rgba(30,41,59,0.92)); border:1px solid rgba(59,130,246,0.28); border-radius:16px; padding:18px; margin-bottom:' + (useScrollPane ? '0' : '16px') + ';' + (useScrollPane ? ' display:flex; flex-direction:column; min-height:420px; max-height:' + maxHeight + ';' : '') + '">';
     html += '<div style="display:flex; flex-wrap:wrap; align-items:flex-end; justify-content:space-between; gap:10px; margin-bottom:8px;">';
     html += '<div>';
     html += '<h2 style="color:#bfdbfe; margin:0; font-size:1.35em;">📅 Upcoming Appointments</h2>';
-    html += '<div style="color:#94a3b8; font-size:0.88em; margin-top:4px;">Every future clinical appointment on your books, plus planner-only tx plan / written analysis clinic blocks.</div>';
+    html += '<div style="color:#94a3b8; font-size:0.88em; margin-top:4px;">Everything booked in the next ' + daysAhead + ' days, plus planner-only tx plan / written analysis clinic blocks.</div>';
     html += '</div>';
     html += '<div style="display:flex; gap:8px; flex-wrap:wrap;">';
     html += '<span style="background:rgba(59,130,246,0.14); border:1px solid rgba(59,130,246,0.3); color:#93c5fd; border-radius:999px; padding:6px 10px; font-size:0.8em; font-weight:700;">' + feed.length + ' upcoming</span>';
+    html += '<span style="background:rgba(14,165,233,0.12); border:1px solid rgba(14,165,233,0.22); color:#bae6fd; border-radius:999px; padding:6px 10px; font-size:0.8em;">' + daysAhead + '-day window</span>';
     html += '<span style="background:rgba(148,163,184,0.12); border:1px solid rgba(148,163,184,0.2); color:#cbd5e1; border-radius:999px; padding:6px 10px; font-size:0.8em;">Grouped by day</span>';
     html += '</div>';
     html += '</div>';
 
     if (feed.length === 0) {
-        html += '<div style="background:rgba(15,23,42,0.55); border:1px dashed rgba(148,163,184,0.25); border-radius:12px; padding:18px; color:#94a3b8; text-align:center;">No upcoming appointments or schedule-only clinic blocks found.</div>';
+        html += '<div style="background:rgba(15,23,42,0.55); border:1px dashed rgba(148,163,184,0.25); border-radius:12px; padding:18px; color:#94a3b8; text-align:center;' + (useScrollPane ? ' flex:1; display:flex; align-items:center; justify-content:center;' : '') + '">No upcoming appointments or schedule-only clinic blocks found in the next ' + daysAhead + ' days.</div>';
         html += '</div>';
         return html;
+    }
+
+    if (useScrollPane) {
+        html += '<div style="flex:1; min-height:0; overflow-y:auto; padding-right:4px;">';
     }
 
     var currentDate = '';
@@ -684,6 +707,10 @@ function renderUpcomingAppointmentsSection(today) {
             html += '</div>';
         }
     });
+
+    if (useScrollPane) {
+        html += '</div>';
+    }
 
     html += '</div>';
     return html;
@@ -805,12 +832,17 @@ function renderDashboard() {
     const extStart = new Date(2026, 4, 19);    // May 19, 2026
     const graduation = new Date(2027, 4, 12);  // May 12, 2027
     const daysTo = function(target) { return Math.max(0, Math.ceil((target - today) / (1000 * 60 * 60 * 24))); };
+    var useTopRailSplit = dashboardUseSplitTopRail();
+    var topRailHeight = dashboardTopRailMaxHeight();
 
     // Build the full dashboard HTML
     let html = '';
 
-    // Appointments-first view
-    html += renderUpcomingAppointmentsSection(today);
+    // Top rail: appointments + todo side by side
+    html += '<div style="display:grid; grid-template-columns:' + (useTopRailSplit ? 'minmax(0, 1.55fr) minmax(340px, 0.95fr)' : '1fr') + '; gap:16px; align-items:start; margin-bottom:16px;">';
+    html += renderUpcomingAppointmentsSection(today, { daysAhead: 30, useScrollPane: useTopRailSplit, maxHeight: topRailHeight });
+    html += '<div id="dashTodoListContainer">' + renderTodoListSection({ useScrollPane: useTopRailSplit, maxHeight: topRailHeight }) + '</div>';
+    html += '</div>';
 
     // Current date display
     html += '<div id="currentDateDisplay" style="text-align:center; color:#94a3b8; font-size:0.9em; margin-bottom:16px;">'
@@ -998,7 +1030,6 @@ function renderDashboard() {
 
     // === ROW 2: ACTION ITEMS — Missing Notes + To-Do List ===
     html += '<div id="dashMissingNotesContainer">' + renderMissingNotesSection() + '</div>';
-    html += '<div id="dashTodoListContainer">' + renderTodoListSection() + '</div>';
 
     // === ROW 3: Do Today Widget ===
     html += '<div class="mission-card" style="background:rgba(30,41,59,0.8); border:1px solid rgba(245,158,11,0.3); border-radius:14px; padding:16px; margin-bottom:16px;">';
@@ -1200,12 +1231,15 @@ function renderMissingNotesSection() {
 }
 
 // ==================== TODO LIST SECTION ====================
-function renderTodoListSection() {
+function renderTodoListSection(options) {
+    options = options || {};
     var pending = getTodoPending();
     var completed = getTodoCompleted();
+    var useScrollPane = !!options.useScrollPane;
+    var maxHeight = options.maxHeight || '72vh';
     var html = '';
 
-    html += '<div class="mission-card" style="background:rgba(30,41,59,0.8); border:1px solid rgba(139,92,246,0.3); border-radius:14px; padding:16px; margin-bottom:14px;">';
+    html += '<div class="mission-card" style="background:rgba(30,41,59,0.8); border:1px solid rgba(139,92,246,0.3); border-radius:14px; padding:16px; margin-bottom:' + (useScrollPane ? '0' : '14px') + ';' + (useScrollPane ? ' display:flex; flex-direction:column; min-height:420px; max-height:' + maxHeight + ';' : '') + '">';
     html += '<div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:10px;">';
     html += '<h3 style="color:#e2e8f0; margin:0; font-size:1.05em;">To-Do List</h3>';
     html += '<span style="background:#7c3aed; color:#fff; font-weight:700; padding:2px 10px; border-radius:10px; font-size:0.85em;">' + pending.length + '</span>';
@@ -1218,6 +1252,10 @@ function renderTodoListSection() {
         + 'style="flex:1; background:rgba(15,23,42,0.6); border:1px solid rgba(100,116,139,0.2); border-radius:8px; padding:8px 12px; color:#e2e8f0; font-size:0.85em; outline:none;">';
     html += '<button onclick="dashboardAddTodo()" style="background:#7c3aed; color:#fff; border:none; border-radius:8px; padding:8px 14px; font-size:0.85em; cursor:pointer; font-weight:600; white-space:nowrap;">+ Add</button>';
     html += '</div>';
+
+    if (useScrollPane) {
+        html += '<div style="flex:1; min-height:0; overflow-y:auto; padding-right:4px;">';
+    }
 
     if (pending.length === 0) {
         html += '<div style="color:#a78bfa; font-size:0.85em; padding:8px 0; text-align:center;">No pending tasks. Import from Claude or add above.</div>';
@@ -1259,6 +1297,10 @@ function renderTodoListSection() {
         html += '</details>';
     }
 
+    if (useScrollPane) {
+        html += '</div>';
+    }
+
     html += '</div>'; // end card
     return html;
 }
@@ -1286,7 +1328,10 @@ function rerenderTodoListSection() {
     var wasOpen = details ? details.open : false;
     // NOTE: innerHTML is safe here — renderTodoListSection() builds HTML from
     // escapeHtml()-sanitized user data only. No raw user input enters the template.
-    container.innerHTML = renderTodoListSection();
+    container.innerHTML = renderTodoListSection({
+        useScrollPane: dashboardUseSplitTopRail(),
+        maxHeight: dashboardTopRailMaxHeight()
+    });
     if (wasOpen) {
         var newDetails = container.querySelector('details');
         if (newDetails) newDetails.open = true;
