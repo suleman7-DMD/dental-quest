@@ -1,5 +1,15 @@
 // ==================== D3 ROADMAP: FIREBASE SYNC ====================
-// Auth, save/load, sync, checkpoints, backup, conflict resolution, cross-app sync
+// This file owns the persisted-state lifecycle for graduation-roadmap.
+//
+// Read it in four passes:
+// 1. Boot/auth: initFirebase(), promptForPin(), loadFromFirebase(), finishFirebaseLoad()
+// 2. Merge/reconstruction: reconstructState(), mergeRemoteState(), mergeRemoteCollectionsIntoLocal()
+// 3. Realtime/refresh: setupRealtimeSync(), visibilitychange handlers, cross-app task sync
+// 4. Persistence/recovery: saveData(), checkpoints, force upload/pull, backup import/export
+//
+// Core invariant:
+// Never let empty/default state reach Firebase before localStorage + cloud have both been
+// considered. saveData()'s guard suite is the last line of defense against data wipe bugs.
 
 // ==================== MODULE VARIABLES ====================
 
@@ -12,7 +22,8 @@ let connectionMonitorRef = null;
 const BACKUP_STORAGE_KEY = 'graduationRoadmapBackup';
 const OLD_BACKUP_STORAGE_KEY = 'd3RoadmapBackup';
 
-// Checkpoint cache — checkpoints are stored in Firebase only, cached here for UI
+// Checkpoint cache. Canonical storage is Firebase when available; when created offline,
+// checkpoints live here for the rest of the session so restore/export UI still works.
 let _cachedCheckpoints = [];
 
 // Conflict detection & local change tracking
@@ -128,7 +139,8 @@ function mergeDashboardSnapshots(localSnaps, remoteSnaps) {
 
 // ==================== UNIFIED STATE RECONSTRUCTION ====================
 // Single source of truth for building roadmapData from any external source.
-// Replaces 5 near-identical inline reconstruction blocks.
+// Replaces 5 near-identical inline reconstruction blocks, so new persisted fields
+// usually only need to be wired here instead of at every load/restore/import site.
 //
 // Strategies:
 //   'remote-wins'  — mergeRemoteState: source overwrites scalars, spread-merges collections,
@@ -250,10 +262,10 @@ function reconstructState(source, options) {
     }
 
     // competencies: first arg to mergeCompetencies wins structure conflicts.
-    // Merge strategies: fallback (local) first — preserves local structure.
-    // Source-wins: source first — restore operation takes precedence.
-    // Note: mergeCompetencies always unions completionEntries and takes MAX of
-    // completed counts regardless of arg order — "wins" refers to section structure.
+    // Merge strategies: fallback (local) first — preserves local section organization.
+    // Source-wins: source first — restore/import operation takes precedence.
+    // In the V2 manual-count model, mergeCompetencies resolves item counts via
+    // lastVerified timestamps (or Math.max when neither side is verified).
     if (isSourceWins) {
         cd.competencies = mergeCompetencies(s.clinicalData?.competencies, f.clinicalData?.competencies);
     } else {
@@ -517,9 +529,10 @@ function reconstructState(source, options) {
 }
 
 // ==================== MERGE REMOTE-ONLY INTO LOCAL ====================
-// When local is newer, we keep all local data but ADD entries from Firebase
-// that don't exist locally. This prevents losing data imported on another device.
-// Key difference from mergeRemoteState: local wins for all conflicts (same key = keep local).
+// Used only when local lastSaved beats Firebase during boot.
+// We keep all local data, then fill in remote-only collection entries so work done on
+// another device is not lost. Key difference from mergeRemoteState: local wins for every
+// conflict; remote only gets to add missing keys or richer fill-only fields.
 function mergeRemoteCollectionsIntoLocal(data) {
     if (!data) return;
 
@@ -582,7 +595,7 @@ function mergeRemoteCollectionsIntoLocal(data) {
                 roadmapData.clinicalData.dashboardSnapshots, data.clinicalData.dashboardSnapshots
             );
         }
-        // competencies: deep item-level merge (preserves completionEntries from both devices)
+        // competencies: V2-aware item-level merge with local-first structure and timestamp-based counts
         if (data.clinicalData.competencies) {
             roadmapData.clinicalData.competencies = mergeCompetencies(
                 roadmapData.clinicalData.competencies, data.clinicalData.competencies
@@ -1121,9 +1134,9 @@ function mergeRemoteState(data) {
 
 // ==================== LOAD DATA ====================
 
-// Load data from localStorage
-// @param finalize - if true, also set flags and call initUI (for standalone use)
-//                   if false, just load data (caller handles flags/initUI)
+// Load data from localStorage.
+// finalize=true means this function is the terminal loader (offline/local-only path).
+// finalize=false means a higher-level boot flow is still deciding between local and cloud.
 function loadFromLocalStorage(finalize = true) {
     let saved = localStorage.getItem(STORAGE_KEY);
 
@@ -1229,7 +1242,12 @@ function loadFromFirebase() {
         });
 }
 
-// Extracted from loadFromFirebase to avoid duplication with migration path
+// Finalize the initial cloud boot decision.
+// Decision tree:
+// - Firebase empty/poisoned -> keep local and optionally push it up
+// - Firebase newer/equal -> mergeRemoteState()
+// - local newer -> keep local and pull in remote-only collection entries
+// Flags are always set before initUI() so rendering errors cannot permanently block saves.
 function finishFirebaseLoad(data) {
     // CRITICAL: Clear Firebase load flag + cancel timeout timer
     awaitingFirebaseLoad = false;
@@ -1322,7 +1340,12 @@ function finishFirebaseLoad(data) {
 
 // ==================== REALTIME SYNC ====================
 
-// Real-time sync listener for cross-device updates
+// Realtime listener for cross-device writes after boot has already completed.
+// It ignores:
+// - our own writes (isLocalUpdate)
+// - "Keep This Device" grace window echoes
+// - empty/default cloud payloads
+// - remote saves that are not newer than local lastSaved
 function setupRealtimeSync() {
     if (!firebaseSyncEnabled || !database || !userPath) return;
 
@@ -2395,7 +2418,11 @@ function validateStateIntegrity(data) {
     return errors;
 }
 
-// Save data with debounce - BULLETPROOF VERSION
+// Save pipeline:
+// 1. Run Guard A-F to block unsafe writes.
+// 2. Stamp lastSaved/_version/_lastModified on the in-memory state.
+// 3. Persist to localStorage immediately.
+// 4. Debounce Firebase write, stripping _dataLoaded and sanitizing keys first.
 function saveData() {
     // Log all guard values for diagnostics
     debugSaveState();

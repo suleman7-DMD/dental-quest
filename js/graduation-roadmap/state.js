@@ -1,5 +1,15 @@
 // ==================== D3 ROADMAP: STATE & UTILITIES ====================
-// Globals, defaults, validation, data utilities, date helpers, UI helpers
+// This is the canonical shared state layer for graduation-roadmap.
+//
+// Responsibilities:
+// - Defines roadmapData and getDefaultRoadmapData(), the persisted schema every module shares
+// - Defines "is this safe/real data?" helpers used by save guards and sync code
+// - Provides object/array migration utilities for Firebase safety
+// - Hosts cross-module helpers (date parsing, dashboard counters, navigation, propagation)
+//
+// Non-responsibilities:
+// - Boot/load/save orchestration lives in firebase-sync.js
+// - Feature-specific rendering lives in the other graduation-roadmap modules
 
 // ==================== FIREBASE CONFIGURATION ====================
 // Same config as Dental Quest main app
@@ -32,6 +42,9 @@ let mainAppTasksRef = null;
 let mainAppTasks = [];
 
 // ==================== DATA ====================
+// roadmapData is the single in-memory source of truth for the app.
+// If you add a new persisted field, keep this declaration in lockstep with
+// getDefaultRoadmapData() below and reconstructState() in firebase-sync.js.
 let roadmapData = {
     pedsLockedIn: 33.3,
     mandatoryItems: {
@@ -72,16 +85,16 @@ let roadmapData = {
         hiddenClinicTasks: {},
         currentWeekSchedule: {}
     },
-    // Clinical patient tracking
+    // Clinical workspace data
     clinicalData: {
-        patients: {},           // Patient records keyed by ID
+        patients: {},           // Legacy patient store kept for migration/schema compatibility
         appointments: {},       // Object with ID keys for Firebase safety
         completedProcedures: {}, // Object with ID keys for Firebase safety
-        competencies: null,     // Graduation requirements - initialized from DEFAULT_COMPETENCIES
+        competencies: null,     // Graduation requirements, initialized from DEFAULT_COMPETENCIES
         patientRecords: {},     // Detailed patient records (Patients tab — Google Docs style)
         dashboardSnapshots: [],
         missingNotes: {},       // Missing progress notes tracker — keyed by note-{chart}-{dateNoHyphens}
-        autoLinkReviewQueue: [] // Procedures needing competency review [{procedureId, patientId, procedureName, date, suggestedItems[], createdAt}]
+        autoLinkReviewQueue: [] // Deprecated V1 evidence-link feature; kept as [] for schema compatibility
     },
     // To-do list — flat checklist for clinic-related tasks from multiple sources
     todoList: {
@@ -131,8 +144,9 @@ let roadmapData = {
     _dataLoaded: false  // Flag to track if real data was loaded
 };
 
-// Returns a fresh copy of the default roadmap data structure
-// Used by importAndRestoreDirectly() and other reset operations
+// Returns a fresh copy of the default roadmap data structure.
+// Keep this shape-identical with the live roadmapData declaration above.
+// Guard logic, restore flows, and merge code treat missing keys as corruption/drift.
 function getDefaultRoadmapData() {
     return {
         pedsLockedIn: 33.3,
@@ -236,7 +250,10 @@ let awaitingPinEntry = false;   // True while PIN prompt is showing — blocks f
 let awaitingFirebaseLoad = false; // True while loadFromFirebase() is in progress — blocks fallback timers from racing
 let clinicalDataDirty = true;   // True when clinical data changed — gates syncClinicalToMonthlyPlanner(). Starts true for first init.
 
-// Check if state has real user data (not just defaults)
+// Guard C source of truth.
+// This answers "does this state contain any real user-authored data worth protecting?"
+// not merely "does the object exist?" Add new user-editable collections here so empty
+// defaults never get mistaken for legitimate save payloads.
 function isEmptyState(data) {
     if (!data) return true;
 
@@ -555,8 +572,13 @@ function migrateCompetencies(competencies) {
     return result;
 }
 
-// Merge competencies: deep item-level merge preserving completionEntries
-// Shape after migrate: { catKey: { sections: { secId: { items: { itemId: { completed, completionEntries[] } } } } } }
+// Merge competencies for the V2 manual-count model.
+// Shape after migrate:
+// { catKey: { sections: { secId: { items: { itemId: { completed, required, note, lastVerified, status } } } } } }
+// The first argument wins section/category structure conflicts. Per-item counts resolve by:
+// - newer lastVerified wins
+// - if neither side is verified, take Math.max(completed)
+// Notes stay fill-only so existing local notes are not blown away by empty remote values.
 function mergeCompetencies(localComp, cloudComp) {
     var local = migrateCompetencies(localComp);
     var cloud = migrateCompetencies(cloudComp);
@@ -1372,6 +1394,9 @@ function navigateToCompetencyItem(catKey, itemId) {
 }
 
 // ==================== CIS v2: CENTRALIZED PROPAGATION ====================
+// Shared fanout for clinical-side mutations. Feature modules call this after CRUD so the
+// planner, dashboard, calendars, and dependent tabs stay in sync without each caller
+// re-implementing the same render/rebuild cascade.
 
 function propagateClinicalChanges({ appointments = false, procedures = false, competencies = false, patients = false, dashboard = true, calendars = true, source = '' } = {}) {
     clinicalDataDirty = true;
