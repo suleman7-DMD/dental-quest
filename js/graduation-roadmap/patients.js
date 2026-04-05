@@ -805,8 +805,13 @@ function renderClinicalBrief(patient, patientId) {
             }
             rendered = rendered.replace(/\n/g, '<br>');
             rendered = rendered.replace(/#(\d+)/g, '<span class="fc-tooth">#$1</span>');
+            // Condition badges, alert keywords, date highlights
+            rendered = rendered.replace(/\b(ASA\s+I{1,3}V?(?:-I{1,3}V?)?)\b(?![^<]*<\/)/g, '<span class="rf-cond">$1</span>');
+            rendered = rendered.replace(/\b(HTN|COPD|PTSD|GERD|IBS|TMD|CHF|DM|ESRD|OSA|ADHD|CKD|DVT|AFib|HIV|CAD|CVA)\b(?![^<]*<\/)/g, '<span class="rf-cond">$1</span>');
+            rendered = rendered.replace(/\b(\d{1,2}\/\d{1,2}\/\d{2,4})\b(?![^<]*<\/)/g, '<span class="rf-date">$1</span>');
+            rendered = rendered.replace(/\b(STILL NEEDED|NOT YET PRESCRIBED|HIGH VALUE|EXTREMELY HIGH)\b(?![^<]*<\/)/g, '<span class="rf-alert">$1</span>');
         } else {
-            rendered = formatClinicalDisplay(val);
+            rendered = briefBulletize(formatClinicalDisplay(val));
         }
 
         var sectionId = 'brief_' + key;
@@ -3528,21 +3533,25 @@ function rfHighlights(t) {
     return t;
 }
 
-// Split text into sentence-level bullet items
-function rfSentences(t) {
+// Split text into sentence-level bullet items. highlight=true applies rfHighlights per-bullet
+// IMPORTANT: call with raw escaped text (before rfHighlights) so sentence regex isn't broken by HTML tags
+function rfSentences(t, highlight) {
     // Explicit newlines — split into items
     if (t.indexOf('\n') !== -1) {
         return t.split('\n').filter(function(l) { return l.trim(); }).map(function(line) {
-            return '<div class="rf-bullet">' + line.trim() + '</div>';
+            var text = highlight ? rfHighlights(line.trim()) : line.trim();
+            return '<div class="rf-bullet">' + text + '</div>';
         }).join('');
     }
-    // Sentence split: require 2+ lowercase chars or digit or ) before period to avoid Dr./Mr./etc.
-    var marked = t.replace(/([a-z]{2,}|[0-9]|\))\.\s+(?=[A-Z])/g, '$1.\u0000');
+    // Sentence split: require 2+ lowercase chars, digit, or ) before period.
+    // Lookahead allows A-Z or # (tooth numbers at sentence start).
+    var marked = t.replace(/([a-z]{2,}|[0-9]|\))\.\s+(?=[A-Z#])/g, '$1.\u0000');
     var parts = marked.split('\u0000');
-    if (parts.length <= 1) return '<div class="rf-line">' + t + '</div>';
+    if (parts.length <= 1) return '<div class="rf-line">' + (highlight ? rfHighlights(t) : t) + '</div>';
     return parts.map(function(part) {
         var text = part.trim();
-        return text ? '<div class="rf-bullet">' + text + '</div>' : '';
+        if (!text) return '';
+        return '<div class="rf-bullet">' + (highlight ? rfHighlights(text) : text) + '</div>';
     }).join('');
 }
 
@@ -3565,6 +3574,16 @@ function rfSplitMeds(text) {
     return result;
 }
 
+// Convert <br>-separated HTML into rf-bullet items (used for Clinical Brief sections)
+function briefBulletize(html) {
+    var parts = html.split(/<br\s*\/?>/);
+    if (parts.length <= 1) return '<div class="rf-line">' + html + '</div>';
+    return parts.map(function(part) {
+        var text = part.trim();
+        return text ? '<div class="rf-bullet">' + text + '</div>' : '';
+    }).join('');
+}
+
 // Smart field formatter — dispatches to field-specific visual formatting (read-mode only)
 function formatRecordField(text, fieldType) {
     if (!text) return '';
@@ -3573,7 +3592,7 @@ function formatRecordField(text, fieldType) {
 
     switch (fieldType) {
     case 'medicalHx':
-        return rfSentences(rfHighlights(t));
+        return rfSentences(t, true);
 
     case 'medications': {
         var aIdx = t.indexOf('Allergies:');
@@ -3584,7 +3603,7 @@ function formatRecordField(text, fieldType) {
         if (mainText) {
             var meds = rfSplitMeds(mainText);
             if (meds.length <= 1 && mainText.length > 120) {
-                html += rfSentences(rfHighlights(mainText));
+                html += rfSentences(mainText, true);
             } else {
                 html += '<div class="rf-med-list">';
                 meds.forEach(function(med) {
@@ -3604,7 +3623,7 @@ function formatRecordField(text, fieldType) {
                 if (pill) html += '<span class="rf-allergy">' + pill + '</span>';
             });
             html += '</div>';
-            if (trailing) html += rfSentences(rfHighlights(trailing));
+            if (trailing) html += rfSentences(trailing, true);
         }
         return html;
     }
@@ -3617,13 +3636,13 @@ function formatRecordField(text, fieldType) {
                 return item ? '<span class="rf-allergy">' + item + '</span>' : '';
             }).join('') + '</div>';
         }
-        return rfSentences(rfHighlights(t));
+        return rfSentences(t, true);
     }
 
     case 'txPlan': {
-        t = t.replace(/(Phase\s+\d+\s*:)/g, '<div class="rf-label">$1</div>');
-        t = t.replace(/(Phase\s+I{1,3}V?\s*(?:\([^)]*\))?\s*:?)/g, '<div class="rf-label">$1</div>');
-        return rfSentences(rfHighlights(t));
+        var planResult = rfSentences(t, true);
+        planResult = planResult.replace(/(Phase\s+(?:\d+|I{1,3}V?)\s*(?:\([^)]*\))?\s*:?)/g, '<b class="fc-teal">$1</b>');
+        return planResult;
     }
 
     case 'recallHistory': {
@@ -3632,18 +3651,18 @@ function formatRecordField(text, fieldType) {
                 return item.trim() ? '<div class="rf-bullet">' + rfHighlights(item.trim()) + '</div>' : '';
             }).join('');
         }
-        return rfSentences(rfHighlights(t));
+        return rfSentences(t, true);
     }
 
     case 'activeStatus': {
-        t = rfHighlights(t);
-        t = t.replace(/\b(active|Active)\b(?![^<]*<\/)/g, '<span class="rf-status-ok">$1</span>');
-        t = t.replace(/\b(inactive|Inactive|INACTIVE)\b(?![^<]*<\/)/g, '<span class="rf-status-warn">$1</span>');
-        return rfSentences(t);
+        var result = rfSentences(t, true);
+        result = result.replace(/\b(active|Active)\b(?![^<]*<\/)/g, '<span class="rf-status-ok">$1</span>');
+        result = result.replace(/\b(inactive|Inactive|INACTIVE)\b(?![^<]*<\/)/g, '<span class="rf-status-warn">$1</span>');
+        return result;
     }
 
     case 'priorityNotes':
-        return rfSentences(rfHighlights(t));
+        return rfSentences(t, true);
 
     case 'notes':
     default:
