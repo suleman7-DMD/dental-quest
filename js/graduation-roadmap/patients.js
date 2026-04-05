@@ -803,7 +803,8 @@ function renderClinicalBrief(patient, patientId) {
                 }
                 rendered = '<ol class="ptr-brief-ol">' + rendered + '</li></ol>';
             }
-            rendered = rendered.replace(/\n/g, '<br>');
+            rendered = rendered.replace(/([.!?])[ \t]*\n/g, '$1\u0001')
+                .replace(/\n\n+/g, '\u0001').replace(/\n/g, ' ').replace(/  +/g, ' ').replace(/\u0001/g, '<br>');
             rendered = rendered.replace(/#(\d+)/g, '<span class="fc-tooth">#$1</span>');
             // Condition badges, alert keywords, date highlights
             rendered = rendered.replace(/\b(ASA\s+I{1,3}V?(?:-I{1,3}V?)?)\b(?![^<]*<\/)/g, '<span class="rf-cond">$1</span>');
@@ -3488,8 +3489,12 @@ function formatClinicalDisplay(rawText) {
         t = t.replace(/\.\s+([A-Z])/g, '.<br>$1');
     }
 
-    // ── Existing newlines ──
-    t = t.replace(/\n/g, '<br>');
+    // ── Re-flow hard-wrapped text, then convert real breaks to <br> ──
+    t = t.replace(/([.!?])[ \t]*\n/g, '$1\u0001')
+        .replace(/\n\n+/g, '\u0001')
+        .replace(/\n/g, ' ')
+        .replace(/  +/g, ' ')
+        .replace(/\u0001/g, '<br>');
 
     // ── Cleanup ──
     t = t.replace(/^(\s*<br>\s*)+/, '');
@@ -3533,13 +3538,22 @@ function rfHighlights(t) {
     return t;
 }
 
-// Split text at sentence boundaries with <br> line breaks. Compact flowing text, no block bullets.
-// highlight=true applies rfHighlights per-sentence. Call with raw escaped text (before rfHighlights).
+// Re-flow hard-wrapped text: join lines that don't end with sentence punctuation (.!?)
+// Then split at real sentence boundaries with <br>. Compact flowing text.
+function rfReflow(t) {
+    if (t.indexOf('\n') === -1) return t;
+    return t.replace(/([.!?])[ \t]*\n/g, '$1\u0001')
+        .replace(/\n\n+/g, '\u0001')
+        .replace(/\n/g, ' ')
+        .replace(/  +/g, ' ')
+        .replace(/\u0001/g, '\n');
+}
+
 function rfSentences(t, highlight) {
-    // Split on newlines first, then each chunk on sentence boundaries
-    var chunks = t.indexOf('\n') !== -1
-        ? t.split('\n').filter(function(l) { return l.trim(); })
-        : [t];
+    var reflowed = rfReflow(t);
+    var chunks = reflowed.indexOf('\n') !== -1
+        ? reflowed.split('\n').filter(function(l) { return l.trim(); })
+        : [reflowed];
     var lines = [];
     chunks.forEach(function(chunk) {
         chunk = chunk.trim();
