@@ -208,6 +208,16 @@ const date = new Date(year, month - 1, day);
 - **Faculty matching**: `\b` word-boundary for names >= 3 chars; exact match for < 3.
 - **fieldMap parsers**: Use `for`+`break` (not `forEach`). Prevents prefix-collision bugs.
 
+### Smart Text Formatting (patients.js)
+- **`decodeEntities(str)`**: Decodes pre-escaped HTML entities (`&#039;` → `'`). MUST be called before `escapeHtml()` on all display paths. Fixes double-encoding from imports. Used in `fld()` edit mode, `formatClinicalDisplay()`, `formatRecordField()`, flaggedConcerns, notes, perio values.
+- **`formatRecordField(text, fieldType)`**: Read-mode only formatter. Calls `decodeEntities()` → `escapeHtml()` → field-specific formatting. Field types: `medicalHx`, `dentalHx`, `txSummaryBU`, `txCompletedByMe` (sentence breaks + highlights), `medications` (per-med list items + allergy pills), `allergies` (pill badges), `txPlan` (phase headers + sentences), `recallHistory` (pipe-delimited), `activeStatus` (status badges), `priorityNotes` (sentences), `notes`/default (highlights + `<br>`).
+- **`rfReflow(text)`**: Joins hard-wrapped lines (from copy-paste imports) back into flowing text. Only preserves `\n` after `.!?` or at double-newline paragraph breaks. All other `\n` → space. Applied in `rfSentences()`, `formatClinicalDisplay()`, and flaggedConcerns.
+- **`rfSentences(t, highlight)`**: Splits on sentence boundaries (`. ` + capital or `#`). Outputs `<br>`-joined flowing text (NOT block divs). If `highlight=true`, applies `rfHighlights()` per-sentence. MUST receive raw escaped text (before rfHighlights) so HTML tags don't break the sentence regex.
+- **`rfHighlights(t)`**: Inline condition badges (`rf-cond`: ASA, HTN, COPD, etc.), alert badges (`rf-alert`: NEEDED, URGENT, etc.), negative emphasis (`rf-neg`: NOT, NEVER), tooth numbers (`rf-tooth`), arrows (`rf-arrow`), costs (`rf-cost`), dates (`rf-date`). Applied AFTER escapeHtml, per-sentence.
+- **Edit mode flow**: `escapeHtml(decodeEntities(val))` → contenteditable plain text → `innerText` on save → clean text stored. `savePatientField()` untouched — no formatting in save path.
+- **`formatClinicalDisplay()`**: Enhanced with `decodeEntities()`, `rfReflow()`, condition badges (`rf-cond`), and date highlights (`rf-date`) via `(?![^<]*<\/)` negative lookahead to avoid matching inside existing tags.
+- **CSS classes**: `rf-cond` (red condition badge), `rf-alert` (amber alert badge), `rf-neg` (red bold), `rf-med`/`rf-med-list` (medication items), `rf-allergy` (red pill badge), `rf-arrow` (amber), `rf-date` (purple), `rf-tooth` (indigo), `rf-cost` (green), `rf-label` (section divider), `rf-status-ok`/`rf-status-warn`.
+
 ---
 
 ## PROJECT OVERVIEW
