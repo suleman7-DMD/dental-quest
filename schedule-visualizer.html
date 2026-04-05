@@ -387,6 +387,34 @@ body::before {
 .checklist-empty {
   padding: 16px; color: var(--text-dim); font-size: 0.7rem; text-align: center;
 }
+.checklist-section {
+  font-family: 'Orbitron', monospace; font-size: 0.6rem; letter-spacing: 2px;
+  padding: 10px 16px 6px; border-bottom: 1px solid var(--border);
+  display: flex; justify-content: space-between; align-items: center;
+}
+.checklist-section .sec-count { font-family: 'Share Tech Mono', monospace; font-size: 0.6rem; letter-spacing: 0; }
+.sec-must-today { color: var(--red); background: rgba(255,23,68,0.04); }
+.sec-up-next { color: var(--amber); background: rgba(255,179,0,0.04); }
+.sec-this-week { color: var(--cyan); background: rgba(0,229,255,0.04); }
+.sec-this-month { color: var(--green); background: rgba(0,255,65,0.04); }
+.sec-someday { color: var(--purple); background: rgba(179,136,255,0.04); }
+.checklist-add-row select {
+  background: var(--bg-deep); border: 1px solid var(--border-bright); color: var(--amber);
+  font-family: 'Share Tech Mono', monospace; font-size: 0.7rem; padding: 7px 6px;
+  outline: none; border-radius: 2px; color-scheme: dark; min-width: 120px;
+}
+.checklist-add-row select:focus { border-color: var(--green-dim); }
+.checklist-add-row select option { background: var(--bg-deep); color: var(--text); }
+.checklist-item-text { white-space: normal; word-break: break-word; }
+
+/* ── Export mode: kill animations + pseudo-elements for clean capture ── */
+body.export-mode::before, body.export-mode::after { display: none !important; }
+body.export-mode * { animation: none !important; animation-delay: 0s !important; }
+body.export-mode .ev, body.export-mode .blink { opacity: 1 !important; transform: none !important; }
+body.export-mode .ev-x, body.export-mode .beyond-x, body.export-mode .checklist-item-x,
+body.export-mode .day-add-btn, body.export-mode .beyond-add-btn,
+body.export-mode .header-btns, body.export-mode .status-bar,
+body.export-mode .checklist-add-row { display: none !important; }
 </style>
 </head>
 <body>
@@ -488,10 +516,49 @@ body::before {
 // ═══════════════════════════════════════════════
 var HOUR_PX = 52, START_HOUR = 8, END_HOUR = 19, TOTAL_HOURS = END_HOUR - START_HOUR;
 var LS_KEY = 'missionControlEvents_v2';
-var CL_KEY = 'missionControlChecklist_v1';
+var CL_KEY = 'missionControlChecklist_v2';
 var editingId = null;
 var pendingDeleteId = null;
 var checklist = [];
+var SECTION_ORDER = ['MUST TODAY','UP NEXT','THIS WEEK','THIS MONTH','SOMEDAY'];
+var SECTION_CSS = {'MUST TODAY':'sec-must-today','UP NEXT':'sec-up-next','THIS WEEK':'sec-this-week','THIS MONTH':'sec-this-month','SOMEDAY':'sec-someday'};
+
+var DEFAULT_CHECKLIST = [
+  {id:'cl_01',section:'MUST TODAY',text:'Nababi 2568967 \u2014 fixed case status + reschedule: Message Ryann/Maseli on OS consult status, confirm rescheduled after Emily Tomchak SPS thread. If not rescheduled, submit SPS now. Maseli said proceed with authorized tx, no separate impressions apt needed.',done:false},
+  {id:'cl_02',section:'MUST TODAY',text:'Nababi 2568967 \u2014 models + WA: Call Maimouna back ASAP for models. Strong Type 2 case. Must get models before tx plan apt.',done:false},
+  {id:'cl_03',section:'MUST TODAY',text:'Carmen Murillo 2118878 \u2014 Type 2 WA: If Maseli approves Type 2, take models + schedule WA before 4/15. If not approved, find another qualifying pt.',done:false},
+  {id:'cl_04',section:'MUST TODAY',text:'Monicah Muya 2683505 \u2014 models before 4/16: Call to come in BEFORE 4/16. WA is 4/16, no models taken yet.',done:false},
+  {id:'cl_05',section:'MUST TODAY',text:'Kisha Williams 079118 \u2014 baseplate/Suzuki: Take mounting models to Suzuki. Can\'t tx plan yet (low interocclusal space). Talk to Suzuki about distance. Must be done BEFORE Kisha returns. Ask Maseli if confused.',done:false},
+  {id:'cl_06',section:'MUST TODAY',text:'Debra Fuquay 2228237 \u2014 overdenture implant SPS: Sam assigned Feb 5. Was SPS request submitted? If not, submit now. If yes, confirm date + pt is coming.',done:false},
+  {id:'cl_07',section:'MUST TODAY',text:'Kristen \u2014 retention rings: Figure out retention rings.',done:false},
+  {id:'cl_08',section:'MUST TODAY',text:'IL Driver\'s License + ID replacement: License renewal requires in-person at Chicago DMV (Sat 7:30AM-12PM). Bring license, ID, vision test, photo. $30 fee. Plan weekend Chicago trip. Also need replacement ID ($25, ~1 month).',done:false},
+  {id:'cl_09',section:'MUST TODAY',text:'IL Plate Renewal \u2014 full sequence: (1) MA emissions inspection ($35, mavehiclecheck.com). (2) Submit IL Air Team out-of-state compliance at illinoisairteam.net with MA VIR. No duplicate apps. (3) Wait 1 biz day after Air Team clears, then renew plates online at ilsos.gov. Ship to Bolingbrook.',done:false},
+  {id:'cl_10',section:'MUST TODAY',text:'Grad PLUS loan \u2014 Steps 1-7: Pull 3 credit reports. Call BU Financial Aid re: D3 applying for Grad PLUS D4. Have brother create FSA ID as backup endorser. Settle two Credit One accounts ($2,925 + $1,176) \u2014 target 30-40%, try bundling at ~$1,200 total. Get written settlement letters. Pay by money order/cashier\'s check. File disputes with all 3 bureaus ("balance is incorrect") + upload proof.',done:false},
+  {id:'cl_11',section:'MUST TODAY',text:'Grad PLUS loan \u2014 Steps 8-16: Call creditors to expedite reporting. Verify $0 balance on Credit One + remaining balances under $2,085. Apply for Grad PLUS when app opens. If denied: file extenuating circumstances appeal + call 1-800-557-7394. If appeal stalls: pivot to brother as endorser. Complete PLUS Credit Counseling before disbursement. Do NOT settle TBOM/Indigo unless needed. Preserve cash through May 19.',done:false},
+  {id:'cl_12',section:'MUST TODAY',text:'Run python3 ~/dental-quest/scripts/free-stuff-autopilot.py',done:false},
+  {id:'cl_13',section:'UP NEXT',text:'CCs in serious distress: Act on credit accounts (related to Grad PLUS steps \u2014 keep as reminder).',done:false},
+  {id:'cl_14',section:'UP NEXT',text:'Externship \u2014 money planning: Figure out liquidity for gas, food, fun during Fort Myers externship. See notebook.',done:false},
+  {id:'cl_15',section:'UP NEXT',text:'Externship \u2014 spare Acura key: Get a spare key made.',done:false},
+  {id:'cl_16',section:'UP NEXT',text:'Externship \u2014 sublease: Post apartment spot for sublease.',done:false},
+  {id:'cl_17',section:'UP NEXT',text:'Crit Think \u2014 Lit review + presentation: Due 4/6. Your portion.',done:false},
+  {id:'cl_18',section:'UP NEXT',text:'Debra Fuquay 2228237 \u2014 Type 2 WA check: Verify if she qualifies as T1 or T2. Apt 4/14, WA deadline 4/15. Extremely tight window.',done:false},
+  {id:'cl_19',section:'UP NEXT',text:'Food stamps application: Apply with help from Gemini. Update food stamps document.',done:false},
+  {id:'cl_20',section:'THIS WEEK',text:'Big-picture open items: Practice for Fixed Sim, finish Passion Project, create notecards + study for Oral Med final, resolve orientation during Oral Rad conflict, resolve Fixed Sim during Oral Rad conflict.',done:false},
+  {id:'cl_21',section:'THIS WEEK',text:'Jose Rosario 2467990 \u2014 CD case follow-up: Was waiting on tooth try-in from Oral Arts lab at PR. Check status. This is your path to 2-4 CD units.',done:false},
+  {id:'cl_22',section:'THIS WEEK',text:'Anabely Gil \u2014 full mouth prophy + SRP re-eval: Call her back. If SRP re-eval window missed, bring back for recall + prophy, then SRP re-eval 2 weeks later. Follow up with all summ patients.',done:false},
+  {id:'cl_23',section:'THIS MONTH',text:'Ask Admins for more patients: Go to admin office.',done:false},
+  {id:'cl_24',section:'THIS MONTH',text:'April 20 \u2014 new Adderall provider appointment: Bring Rx records, prior provider docs, insurance card, photo ID. Confirm telehealth vs in-person + externship timing.',done:false},
+  {id:'cl_25',section:'THIS MONTH',text:'4 gingivitis re-evals by 5/15: (1) Annette Woods \u2014 secured. (2) Tawana Wright \u2014 call her. (3) Maimouna Nababi \u2014 reliable, needs models. (4) Anabely Gil \u2014 coming in soon. Backups: Sandrine Soivilien, Ailson Carvalho.',done:false},
+  {id:'cl_26',section:'THIS MONTH',text:'TMD analysis summative \u2014 Dr. Maseli: Use Mohamed Krima case. Krima scheduled 4/4 periodic exam. Coordinate with clinic.',done:false},
+  {id:'cl_27',section:'THIS MONTH',text:'PR #2 sign-up: Google Sheet Sam shared 3/18. Use dropdown menus. Don\'t wait.',done:false},
+  {id:'cl_28',section:'THIS MONTH',text:'3 WA summatives by 4/15: Maseli needs for course grade. Ask Sam to schedule time with Maseli to discuss if not started.',done:false},
+  {id:'cl_29',section:'THIS MONTH',text:'Verizon collections issue: Resolve.',done:false},
+  {id:'cl_30',section:'THIS MONTH',text:'Tawana Wright 129657 \u2014 unsigned progress note 2/7/2026: Contact Fuad Tawmeh for faculty signature.',done:false},
+  {id:'cl_31',section:'THIS MONTH',text:'RS 545 Type 2 case presentation \u2014 due 4/24: Check Blackboard for dates/location/signup. Email course director if needed.',done:false},
+  {id:'cl_32',section:'SOMEDAY',text:'Dr. Swati \u2014 unsigned composite MOD from 12/19: Find her and get sign-off.',done:false},
+  {id:'cl_33',section:'SOMEDAY',text:'Maseli re: Nicole Cichon calc summative: If you CAN do a calc summative on this patient, say yes. You need 3 calculus removal summatives and have zero.',done:false},
+  {id:'cl_34',section:'SOMEDAY',text:'Monica \u2014 models + WA: Ask Ryann if Monica has models. Call Monica to see if she can come in before WA.',done:false},
+];
 
 var WEEK_DEFS = [
   { label: 'WEEK 1: ORAL RAD ROTATION', tag: 'APR 6\u201310', mon: '2026-04-06' },
@@ -578,7 +645,7 @@ function saveEvents() {
 
 function resetEvents() {
   events = JSON.parse(JSON.stringify(DEFAULT_EVENTS));
-  checklist = [];
+  checklist = JSON.parse(JSON.stringify(DEFAULT_CHECKLIST));
   saveEvents();
   saveChecklist();
   renderAll();
@@ -589,7 +656,8 @@ function loadChecklist() {
     var raw = localStorage.getItem(CL_KEY);
     if (raw) { checklist = JSON.parse(raw); return; }
   } catch(e) {}
-  checklist = [];
+  checklist = JSON.parse(JSON.stringify(DEFAULT_CHECKLIST));
+  saveChecklist();
 }
 
 function saveChecklist() {
@@ -936,9 +1004,17 @@ function renderChecklist() {
   title.appendChild(tag);
   panel.appendChild(title);
 
-  // Add row
+  // Add row with section selector
   var addRow = document.createElement('div');
   addRow.className = 'checklist-add-row';
+  var addSec = document.createElement('select');
+  addSec.id = 'clAddSection';
+  SECTION_ORDER.forEach(function(s) {
+    var opt = document.createElement('option');
+    opt.value = s; opt.textContent = s;
+    addSec.appendChild(opt);
+  });
+  addRow.appendChild(addSec);
   var addInput = document.createElement('input');
   addInput.type = 'text';
   addInput.placeholder = 'Add task...';
@@ -954,56 +1030,71 @@ function renderChecklist() {
   addRow.appendChild(addBtn);
   panel.appendChild(addRow);
 
-  // Items
-  var itemsDiv = document.createElement('div');
-  itemsDiv.className = 'checklist-items';
-
-  if (checklist.length === 0) {
-    var empty = document.createElement('div');
-    empty.className = 'checklist-empty';
-    empty.textContent = 'NO TASKS \u2014 ADD ONE ABOVE';
-    itemsDiv.appendChild(empty);
-  }
-
+  // Group by section
+  var grouped = {};
+  SECTION_ORDER.forEach(function(s) { grouped[s] = []; });
   checklist.forEach(function(item) {
-    var row = document.createElement('div');
-    row.className = 'checklist-item';
-
-    var check = document.createElement('span');
-    check.className = 'checklist-check' + (item.done ? ' done' : '');
-    check.textContent = item.done ? '\u2713' : '';
-    check.addEventListener('click', (function(id) {
-      return function() { toggleChecklistItem(id); };
-    })(item.id));
-    row.appendChild(check);
-
-    var text = document.createElement('span');
-    text.className = 'checklist-item-text' + (item.done ? ' done' : '');
-    text.textContent = item.text;
-    row.appendChild(text);
-
-    var xBtn = document.createElement('span');
-    xBtn.className = 'checklist-item-x';
-    xBtn.textContent = '\u2715';
-    xBtn.addEventListener('click', (function(id) {
-      return function() { deleteChecklistItem(id); };
-    })(item.id));
-    row.appendChild(xBtn);
-
-    itemsDiv.appendChild(row);
+    var sec = item.section || 'MUST TODAY';
+    if (!grouped[sec]) grouped[sec] = [];
+    grouped[sec].push(item);
   });
 
-  panel.appendChild(itemsDiv);
+  SECTION_ORDER.forEach(function(sec) {
+    var items = grouped[sec];
+    if (items.length === 0) return;
+
+    var secDone = items.filter(function(i) { return i.done; }).length;
+
+    // Section header
+    var secHeader = document.createElement('div');
+    secHeader.className = 'checklist-section ' + (SECTION_CSS[sec] || '');
+    secHeader.textContent = sec;
+    var secCount = document.createElement('span');
+    secCount.className = 'sec-count';
+    secCount.textContent = secDone + '/' + items.length;
+    secHeader.appendChild(secCount);
+    panel.appendChild(secHeader);
+
+    // Items in this section
+    items.forEach(function(item) {
+      var row = document.createElement('div');
+      row.className = 'checklist-item';
+
+      var check = document.createElement('span');
+      check.className = 'checklist-check' + (item.done ? ' done' : '');
+      check.textContent = item.done ? '\u2713' : '';
+      check.addEventListener('click', (function(id) {
+        return function() { toggleChecklistItem(id); };
+      })(item.id));
+      row.appendChild(check);
+
+      var text = document.createElement('span');
+      text.className = 'checklist-item-text' + (item.done ? ' done' : '');
+      text.textContent = item.text;
+      row.appendChild(text);
+
+      var xBtn = document.createElement('span');
+      xBtn.className = 'checklist-item-x';
+      xBtn.textContent = '\u2715';
+      xBtn.addEventListener('click', (function(id) {
+        return function() { deleteChecklistItem(id); };
+      })(item.id));
+      row.appendChild(xBtn);
+
+      panel.appendChild(row);
+    });
+  });
 }
 
 function addChecklistItem() {
   var input = document.getElementById('clAddInput');
+  var secSelect = document.getElementById('clAddSection');
   var text = input.value.trim();
   if (!text) return;
-  checklist.push({ id: genId(), text: text, done: false });
+  var section = secSelect ? secSelect.value : 'MUST TODAY';
+  checklist.push({ id: genId(), section: section, text: text, done: false });
   saveChecklist();
   renderChecklist();
-  // Re-focus the input after render
   setTimeout(function() { document.getElementById('clAddInput').focus(); }, 10);
 }
 
@@ -1029,33 +1120,45 @@ function exportToPNG() {
   btn.classList.add('exporting');
   btn.textContent = 'EXPORTING...';
 
-  // Hide interactive elements during capture
-  var evXBtns = document.querySelectorAll('.ev-x, .beyond-x, .checklist-item-x, .day-add-btn, .beyond-add-btn, .header-btns, .status-bar, .checklist-add-row');
-  evXBtns.forEach(function(el) { el.dataset.prevDisplay = el.style.display; el.style.display = 'none'; });
+  // Export mode kills animations, pseudo-elements, and interactive UI via CSS
+  document.body.classList.add('export-mode');
 
-  var wrapper = document.getElementById('mainContent');
-  html2canvas(wrapper, {
-    backgroundColor: '#050a0e',
-    scale: 2,
-    useCORS: true,
-    logging: false,
-    width: wrapper.scrollWidth,
-    height: wrapper.scrollHeight,
-  }).then(function(canvas) {
-    var link = document.createElement('a');
-    link.download = 'mission-control-schedule.png';
-    link.href = canvas.toDataURL('image/png');
-    link.click();
-
-    // Restore hidden elements
-    evXBtns.forEach(function(el) { el.style.display = el.dataset.prevDisplay || ''; });
-    btn.classList.remove('exporting');
-    btn.textContent = '\u21A1 EXPORT PNG';
-  }).catch(function() {
-    evXBtns.forEach(function(el) { el.style.display = el.dataset.prevDisplay || ''; });
-    btn.classList.remove('exporting');
-    btn.textContent = '\u21A1 EXPORT PNG';
-  });
+  // Small delay to let browser repaint with export-mode styles
+  setTimeout(function() {
+    var wrapper = document.getElementById('mainContent');
+    html2canvas(wrapper, {
+      backgroundColor: '#050a0e',
+      scale: 2,
+      useCORS: true,
+      logging: false,
+      scrollX: 0,
+      scrollY: 0,
+      width: wrapper.scrollWidth,
+      height: wrapper.scrollHeight,
+      onclone: function(clonedDoc) {
+        // Force all events visible in cloned DOM
+        var evs = clonedDoc.querySelectorAll('.ev, .blink');
+        for (var i = 0; i < evs.length; i++) {
+          evs[i].style.opacity = '1';
+          evs[i].style.transform = 'none';
+          evs[i].style.animation = 'none';
+        }
+      }
+    }).then(function(canvas) {
+      var link = document.createElement('a');
+      link.download = 'mission-control-schedule.png';
+      link.href = canvas.toDataURL('image/png');
+      link.click();
+      document.body.classList.remove('export-mode');
+      btn.classList.remove('exporting');
+      btn.textContent = '\u21A1 EXPORT PNG';
+    }).catch(function(err) {
+      console.error('Export failed:', err);
+      document.body.classList.remove('export-mode');
+      btn.classList.remove('exporting');
+      btn.textContent = '\u21A1 EXPORT PNG';
+    });
+  }, 100);
 }
 
 // ═══════════════════════════════════════════════
