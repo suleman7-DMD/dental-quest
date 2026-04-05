@@ -811,7 +811,7 @@ function renderClinicalBrief(patient, patientId) {
             rendered = rendered.replace(/\b(\d{1,2}\/\d{1,2}\/\d{2,4})\b(?![^<]*<\/)/g, '<span class="rf-date">$1</span>');
             rendered = rendered.replace(/\b(STILL NEEDED|NOT YET PRESCRIBED|HIGH VALUE|EXTREMELY HIGH)\b(?![^<]*<\/)/g, '<span class="rf-alert">$1</span>');
         } else {
-            rendered = briefBulletize(formatClinicalDisplay(val));
+            rendered = formatClinicalDisplay(val);
         }
 
         var sectionId = 'brief_' + key;
@@ -3533,27 +3533,24 @@ function rfHighlights(t) {
     return t;
 }
 
-// Split text into sentence-level bullet items. highlight=true applies rfHighlights per-bullet.
-// IMPORTANT: call with raw escaped text (before rfHighlights) so sentence regex isn't broken by HTML tags.
+// Split text at sentence boundaries with <br> line breaks. Compact flowing text, no block bullets.
+// highlight=true applies rfHighlights per-sentence. Call with raw escaped text (before rfHighlights).
 function rfSentences(t, highlight) {
-    // First split on newlines if present, then split each chunk on sentence boundaries
+    // Split on newlines first, then each chunk on sentence boundaries
     var chunks = t.indexOf('\n') !== -1
         ? t.split('\n').filter(function(l) { return l.trim(); })
         : [t];
-    var result = '';
+    var lines = [];
     chunks.forEach(function(chunk) {
         chunk = chunk.trim();
         if (!chunk) return;
-        // Sentence split: require 2+ lowercase chars, digit, or ) before period.
         var marked = chunk.replace(/([a-z]{2,}|[0-9]|\))\.\s+(?=[A-Z#])/g, '$1.\u0000');
-        var parts = marked.split('\u0000');
-        parts.forEach(function(part) {
+        marked.split('\u0000').forEach(function(part) {
             var text = part.trim();
-            if (!text) return;
-            result += '<div class="rf-bullet">' + (highlight ? rfHighlights(text) : text) + '</div>';
+            if (text) lines.push(highlight ? rfHighlights(text) : text);
         });
     });
-    return result || '<div class="rf-line">' + (highlight ? rfHighlights(t) : t) + '</div>';
+    return lines.length > 0 ? lines.join('<br>') : (highlight ? rfHighlights(t) : t);
 }
 
 // Split medication string by ", " respecting parentheses
@@ -3651,9 +3648,8 @@ function formatRecordField(text, fieldType) {
 
     case 'recallHistory': {
         if (t.indexOf('|') !== -1) {
-            return t.split(/\s*\|\s*/).map(function(item) {
-                return item.trim() ? '<div class="rf-bullet">' + rfHighlights(item.trim()) + '</div>' : '';
-            }).join('');
+            return t.split(/\s*\|\s*/).filter(function(item) { return item.trim(); })
+                .map(function(item) { return rfHighlights(item.trim()); }).join('<br>');
         }
         return rfSentences(t, true);
     }
