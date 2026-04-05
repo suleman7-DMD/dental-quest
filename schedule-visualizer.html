@@ -2,7 +2,9 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=5">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <title>MISSION CONTROL // CLINIC OPS APRIL 2026</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Orbitron:wght@400;700;900&display=swap" rel="stylesheet">
@@ -415,6 +417,119 @@ body.export-mode .ev-x, body.export-mode .beyond-x, body.export-mode .checklist-
 body.export-mode .day-add-btn, body.export-mode .beyond-add-btn,
 body.export-mode .header-btns, body.export-mode .status-bar,
 body.export-mode .checklist-add-row { display: none !important; }
+
+/* ═══════════════════════════════════════════════
+   MOBILE — iPhone Safari/Chrome
+   ═══════════════════════════════════════════════ */
+
+/* Prevent iOS zoom on input focus (needs >= 16px) */
+@supports (-webkit-touch-callout: none) {
+  input, select, textarea { font-size: 16px !important; }
+}
+
+/* Tablet and below */
+@media (max-width: 1100px) {
+  .wrapper { padding: 10px 12px 60px; }
+  .header { padding: 12px 16px; }
+  .header-title { font-size: 1.2rem; letter-spacing: 2px; }
+  .header-btns { flex-wrap: wrap; }
+}
+
+/* Phone landscape / small tablet */
+@media (max-width: 768px) {
+  html { font-size: 15px; }
+  .header-title { font-size: 1.1rem; letter-spacing: 1px; }
+  .header-sub { gap: 12px; font-size: 0.75rem; }
+  .btn-new-op, .btn-reset, .btn-export { font-size: 0.55rem; padding: 6px 10px; letter-spacing: 1px; }
+  .week-grid { grid-template-columns: 30px repeat(5,1fr); padding: 0 4px 8px; }
+  .time-label { font-size: 0.55rem; }
+  .day-header { font-size: 0.6rem; padding: 6px 1px; }
+  .day-header .date { font-size: 0.7rem; }
+  .ev { padding: 3px 4px; font-size: 0.62rem; }
+  .ev-time { font-size: 0.46rem; }
+  .ev-detail { font-size: 0.42rem; }
+  .panel-title { font-size: 0.75rem; padding: 10px 12px 8px; }
+  .panel-title .tag { font-size: 0.65rem; }
+  .beyond-item { padding: 8px 12px; font-size: 0.78rem; }
+  .conflict-item { margin: 0 10px 6px; padding: 8px 10px; font-size: 0.75rem; }
+  .checklist-item { padding: 8px 12px; font-size: 0.78rem; }
+  .checklist-section { font-size: 0.62rem; padding: 8px 12px 6px; }
+  .checklist-add-row { padding: 8px 12px; flex-wrap: wrap; }
+  .checklist-add-row select { min-width: 100px; font-size: 0.65rem; }
+  .modal-form { grid-template-columns: 70px 1fr; gap: 8px; padding: 12px; }
+  .confirm-box { max-width: 90vw; padding: 16px; }
+  .status-bar { font-size: 0.55rem; padding: 4px 10px; }
+
+  /* Touch: always show delete buttons (no hover on mobile) */
+  .ev-x { display: flex; }
+  .beyond-x { display: flex; }
+  .checklist-item-x { display: flex; }
+  .day-add-btn { opacity: 1; }
+
+  /* Disable tooltip on touch */
+  .tooltip { display: none !important; }
+}
+
+/* Phone portrait */
+@media (max-width: 480px) {
+  html { font-size: 14px; }
+  .wrapper { padding: 8px 8px 60px; }
+  .header { padding: 10px 12px; margin-bottom: 12px; }
+  .header-title { font-size: 0.95rem; }
+  .header-sub { gap: 8px; font-size: 0.68rem; }
+  .header-btns { gap: 4px; width: 100%; }
+  .btn-new-op, .btn-reset, .btn-export { flex: 1; text-align: center; padding: 8px 6px; font-size: 0.5rem; }
+  .weeks { gap: 12px; }
+  .week-grid { grid-template-columns: 24px repeat(5,1fr); padding: 0 2px 6px; }
+  .time-label { font-size: 0.5rem; right: 2px; }
+  .day-header { font-size: 0.5rem; padding: 5px 1px; letter-spacing: 0; }
+  .day-header .date { font-size: 0.62rem; }
+  .ev { padding: 2px 3px; font-size: 0.55rem; border-left-width: 2px; left: 1px; right: 1px; }
+  .ev-name { padding-right: 12px; }
+  .ev-time { font-size: 0.42rem; }
+  .ev-detail { display: none; }
+  .ev-x { width: 12px; height: 12px; font-size: 7px; top: 1px; right: 1px; }
+  .panel { margin-bottom: 12px; }
+  .panel-title { font-size: 0.68rem; letter-spacing: 1px; padding: 8px 10px 6px; }
+  .bottom-grid { gap: 12px; }
+  .beyond-item { padding: 7px 10px; font-size: 0.72rem; gap: 8px; }
+  .beyond-date { font-size: 0.62rem; min-width: 36px; }
+  .conflict-item { margin: 0 8px 5px; padding: 7px 8px; font-size: 0.7rem; }
+  .conflict-sev { font-size: 0.58rem; }
+  .checklist-item { padding: 8px 10px; font-size: 0.72rem; gap: 8px; }
+  .checklist-check { width: 22px; height: 22px; font-size: 13px; }
+  .checklist-item-x { width: 22px; height: 22px; font-size: 10px; }
+  .checklist-section { font-size: 0.55rem; padding: 7px 10px 5px; letter-spacing: 1px; }
+  .checklist-add-row { padding: 8px 10px; gap: 6px; }
+  .checklist-add-row select { min-width: 80px; font-size: 0.6rem; padding: 8px 4px; }
+  .checklist-add-row input { font-size: 0.7rem; padding: 8px; }
+  .checklist-add-btn { padding: 8px 12px; font-size: 0.65rem; }
+  .legend { gap: 10px; padding: 8px 10px; font-size: 0.62rem; }
+  .modal { max-width: 98vw; }
+  .modal-form { grid-template-columns: 1fr; gap: 6px; padding: 10px; }
+  .modal-form label { font-size: 0.6rem; }
+  .modal-actions { flex-wrap: wrap; padding: 10px; }
+  .modal-actions button { flex: 1; text-align: center; }
+  .status-bar { font-size: 0.5rem; padding: 4px 8px;
+    padding-bottom: calc(4px + env(safe-area-inset-bottom, 0px));
+  }
+  .boot-text { font-size: 0.65rem; padding: 0 20px; }
+}
+
+/* Safe area for notch phones */
+@supports (padding: env(safe-area-inset-bottom)) {
+  .wrapper { padding-bottom: calc(60px + env(safe-area-inset-bottom)); }
+  .status-bar { padding-bottom: calc(4px + env(safe-area-inset-bottom)); }
+}
+
+/* Touch-friendly: bigger tap targets */
+@media (pointer: coarse) {
+  .ev-x { display: flex; width: 20px; height: 20px; font-size: 10px; }
+  .beyond-x { display: flex; width: 20px; height: 20px; font-size: 10px; }
+  .checklist-item-x { display: flex; width: 22px; height: 22px; font-size: 11px; }
+  .checklist-check { width: 22px; height: 22px; font-size: 13px; }
+  .day-add-btn { opacity: 0.7; width: 18px; height: 18px; line-height: 16px; font-size: 14px; }
+}
 </style>
 </head>
 <body>
