@@ -6,7 +6,67 @@ Guides Sully through every free program step-by-step.
 Opens URLs, copies form answers to clipboard, tracks progress.
 Run anytime to pick up where you left off.
 
-Usage: python3 scripts/free-stuff-autopilot.py
+Usage: python3 ~/dental-quest/scripts/free-stuff-autopilot.py
+
+== WHAT THIS SCRIPT DOES (for Claude Code / debugging) ==
+
+PURPOSE: Interactive CLI that walks through 16 free startup programs
+(cloud credits, AI credits, student tools, BU/Boston programs). For each
+program it: opens the signup URL in the browser, copies pre-written form
+answers to the clipboard one at a time, and tells the user what to click.
+Progress is saved to docs/.free-stuff-progress.json so you can quit and
+resume later.
+
+PROGRAMS COVERED (in order):
+  JUST SIGN UP (10 programs):
+    1. GitHub Student Developer Pack ($2K+/yr tools)
+    2. Microsoft for Startups ($1K Azure + $2.5K OpenAI)
+    3. Google Cloud for Startups ($2K Firebase/GCP credits)
+    4. Cloudflare free (CDN, Workers, R2, D1)
+    5. AWS Activate Founders ($1K credits + Bedrock/Claude API)
+    6. NVIDIA Inception (free → unlocks AWS $100K)
+    7. Figma Education (2yr free Pro)
+    8. Notion Education (free Plus)
+    9. YC Startup School (free + $10K grant eligible)
+    10. F6S deal aggregator
+  APPLY THIS WEEK (1 program):
+    11. Anthropic Claude Startup Program ($25K API credits)
+  BU & BOSTON (4 programs):
+    12. BU Innovate / BUild Lab ($10K accelerator)
+    13. Venture Cafe Cambridge (free weekly networking)
+    14. MassChallenge HealthTech (no equity, $100K+ prizes)
+    15. NSF I-Corps through BU ($3K-$50K)
+  UNLOCK CHAIN (1 program):
+    16. AWS Portfolio upgrade via NVIDIA ($100K credits)
+
+HOW IT WORKS:
+  - PROFILE dict at top has pre-filled business info (name, URLs, descriptions)
+  - PROGRAMS list defines each program with id, url, and step-by-step instructions
+  - Steps can be: OPEN (opens URL), DO (instruction), COPY (copies a PROFILE
+    field to clipboard), COPY_TEXT (copies a long pre-written answer), DONE (summary)
+  - Progress saved as JSON: {"completed": ["id1",...], "skipped": ["id2",...]}
+  - Menu: number to run one, 'a' for all remaining, 's' to skip, 'q' to quit
+
+DEBUGGING GUIDE:
+  If a program's URL changed or doesn't work:
+    → Update the "url" field in the PROGRAMS list entry
+  If a form asks different questions than expected:
+    → Update the "steps" list for that program
+  If clipboard copy doesn't work:
+    → The script uses `pbcopy` (macOS only). Check `which pbcopy`.
+  If progress is stuck/corrupted:
+    → Delete docs/.free-stuff-progress.json and re-run
+    → Or press 'r' in the menu to reset
+  If you need to change pre-filled answers:
+    → Edit the PROFILE dict below (business_name, descriptions, etc.)
+  If you want to add a new program:
+    → Add a new dict to the PROGRAMS list following the same format
+
+TO ASK CLAUDE CODE FOR HELP:
+  Open a new Claude Code session in ~/dental-quest and say:
+  "I'm running scripts/free-stuff-autopilot.py and [describe your issue].
+   Read the script and help me fix it."
+  Claude will read the script header and understand everything.
 """
 
 import json
@@ -524,5 +584,83 @@ def main():
             input(f"  {c('>', 'c')} ENTER to exit ")
             break
 
+def show_help():
+    print(f"""
+  {c('Free Stuff Autopilot', 'B')} — RCT Analytics
+
+  {c('Usage:', 'y')}
+    python3 ~/dental-quest/scripts/free-stuff-autopilot.py          Run the tool
+    python3 ~/dental-quest/scripts/free-stuff-autopilot.py --help    Show this help
+    python3 ~/dental-quest/scripts/free-stuff-autopilot.py --debug   Show progress & debug info
+    python3 ~/dental-quest/scripts/free-stuff-autopilot.py --reset   Reset all progress
+
+  {c('Inside the tool:', 'y')}
+    Type a number    Run that program
+    a                Run ALL remaining programs in order
+    s                Skip current program
+    q                Quit (progress auto-saved)
+    r                Reset progress
+
+  {c('If something breaks:', 'y')}
+    Open a new Claude Code session in ~/dental-quest and say:
+    "I'm running scripts/free-stuff-autopilot.py and [describe issue].
+     Read the script and help me fix it."
+
+  {c('Files:', 'y')}
+    Script:    ~/dental-quest/scripts/free-stuff-autopilot.py
+    Progress:  ~/dental-quest/docs/.free-stuff-progress.json
+    Full guide: ~/dental-quest/docs/EASY_FREE_STUFF_GUIDE.md
+    Master ref: ~/dental-quest/docs/RCT_ANALYTICS_MASTER_FUNDING_GUIDE.md
+""")
+
+def show_debug():
+    progress = load_progress()
+    total = len(PROGRAMS)
+    done = len(progress['completed'])
+    skipped = len(progress['skipped'])
+    remaining = total - done
+
+    print(f"\n  {c('Debug Info', 'B')}\n")
+    print(f"  Progress file: {PROGRESS_FILE}")
+    print(f"  File exists: {PROGRESS_FILE.exists()}")
+    print(f"  Started: {progress.get('started_at', 'unknown')}")
+    print(f"  Total programs: {total}")
+    print(f"  Completed: {done}")
+    print(f"  Skipped: {skipped}")
+    print(f"  Remaining: {remaining}")
+
+    if progress['completed']:
+        print(f"\n  {c('Completed:', 'g')}")
+        for pid in progress['completed']:
+            name = next((p['name'] for p in PROGRAMS if p['id'] == pid), pid)
+            print(f"    {pid} ({name})")
+
+    if progress['skipped']:
+        print(f"\n  {c('Skipped:', 'y')}")
+        for pid in progress['skipped']:
+            name = next((p['name'] for p in PROGRAMS if p['id'] == pid), pid)
+            print(f"    {pid} ({name})")
+
+    remaining_programs = [p for p in PROGRAMS if p['id'] not in progress['completed']]
+    if remaining_programs:
+        print(f"\n  {c('Remaining:', 'c')}")
+        for p in remaining_programs:
+            print(f"    {p['id']} ({p['name']}) — {p['value']}")
+
+    print(f"\n  {c('Profile:', 'B')}")
+    for k, v in PROFILE.items():
+        preview = str(v)[:60] + "..." if len(str(v)) > 60 else str(v)
+        print(f"    {k}: {preview}")
+    print()
+
 if __name__ == "__main__":
-    main()
+    if "--help" in sys.argv or "-h" in sys.argv:
+        show_help()
+    elif "--debug" in sys.argv:
+        show_debug()
+    elif "--reset" in sys.argv:
+        progress = {"completed": [], "skipped": [], "started_at": datetime.now().isoformat()}
+        save_progress(progress)
+        print(f"\n  {c('Progress reset!', 'g')} Run the script again to start fresh.\n")
+    else:
+        main()
