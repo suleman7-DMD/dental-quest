@@ -326,6 +326,9 @@ Force sync: `forceUploadToCloud()`, `forcePullFromCloud()`
 ## SULLY CONTEXT
 - **D3 dental student** at BU Goldman, graduating May 2027. ADHD: Adderall XR 50mg max (30mg+20mg).
 - **Physical**: 5'8.5", 190 lbs, goal 170 by June 1 2026, ~27% body fat.
+- **Business**: "RCT Analytics" — registered on Stripe (acct_1T8r9yBSlJEf37g1). Accepted to Stripe Startups.
+- **Startup guide trigger**: When user says "pull up the startup plan", "funding guide", "startup stuff", or "RCT Analytics" → reference `docs/RCT_ANALYTICS_MASTER_FUNDING_GUIDE.md`.
+- **CCMeter**: Installed at `~/.cargo/bin/ccmeter`. Dock app at `~/Applications/CCMeter.app`. tmux session auto-starts via `.zshrc`.
 
 ---
 
