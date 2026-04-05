@@ -115,28 +115,33 @@ competencies -> categories -> sections -> items
 
 **Old model (DELETED)**: `completionEntries[]`, `linkProcedureToCompetencies`, `unlinkProcedureFromCompetencies`, `autoLinkReviewQueue`, review queue, unlock chain visualization — all removed in commit `f496565`.
 
-### DEFAULT_COMPETENCIES (clinical.js ~line 420)
+### DEFAULT_COMPETENCIES (clinical.js ~line 452)
 
-**Ground Truth:** `docs/GROUND_TRUTH_REQUIREMENTS.md` — the SINGLE source of truth for all requirement IDs, counts, deadlines, and completion status. Last updated 2026-04-02.
+**Ground Truth:** `docs/GROUND_TRUTH_REQUIREMENTS.md` — the SINGLE source of truth for all requirement IDs, counts, deadlines, and completion status. Last updated 2026-04-05.
 
-14 categories of real BU dental school clinical requirements:
+13 categories (was 14 — `srp` absorbed into `perio` Apr 2026). Each has `yearTarget: 'd3' | 'd4' | 'both'`:
 
-| Key | Name | Focus |
-|-----|------|-------|
-| `fixed` | Fixed Prosthodontics | 10 units, 1 FPD, 1 implant crown, 3 CEREC + formatives + summatives |
-| `operative` | Operative | Class V, multisurface composites, mock board |
-| `dentures` | Complete Dentures | 4 arches + formatives, summatives, overdenture |
-| `rpd` | RPDs | 3 tracks (cast metal, flexible, interim) |
-| `srp` | SRPs / Calculus Removal | srp-calc-1/2/3, srp-reeval |
-| `endo` | Endodontics | RCTs, pulpectomies, mock board |
-| `oralsurg` | Oral Surgery | 3rd/4th year rotations, extractions |
-| `peds` | Pediatric Dentistry | PD 530 course, rotations, log sheet |
-| `perio` | Periodontology | Surgical assists, formatives, summatives |
-| `grouppractice` | Group Practice D3 | Reviews, analyses, comm, PMS, meetings, OHRA |
-| `grouppractice4` | Group Practice D4 | Summatives, PTEs, aux, leading rounds |
-| `txplanning` | Treatment Planning | Seminar, OHRA, caries detection |
-| `geriatrics` | Geriatric Dental Medicine | PH 541 course, rotation, assignment |
-| `externship` | Externship & SPS | Case presentation, outreach, SPS log |
+| Key | Name | yearTarget | Focus |
+|-----|------|-----------|-------|
+| `grouppractice` | Group Practice D3 (GD 640) | d3 | Reviews, analyses, comm, PMS, leadership, meetings |
+| `grouppractice4` | Group Practice D4 (GD 642) | d4 | Comm TxPlan, periodic reviews, written analyses, PMS (cumulative) |
+| `perio` | Periodontology | both | Surgical assists, formatives, summatives, SRP/calculus removal |
+| `txplanning` | Treatment Planning (RS 545) | both | Seminar presentation, seminar attendance |
+| `peds` | Pediatric Dentistry | both | PD 530 course, rotations, log sheet summatives |
+| `oralsurg` | Oral Surgery | both | 3rd/4th year rotations, extractions |
+| `geriatrics` | Geriatric Dental Medicine | both | PH 541 course, rotation, assignment |
+| `fixed` | Fixed Prosthodontics | d4 | 10 units, FPD, implant crown, CEREC + formatives + summatives |
+| `operative` | Operative | d4 | Class V, multisurface composites, mock board |
+| `dentures` | Complete Dentures | d4 | 4 arches + formatives, summatives, overdenture |
+| `rpd` | RPDs | d4 | 3 tracks (cast metal, flexible, interim) |
+| `endo` | Endodontics | d4 | RCTs, pulpectomies, mock board |
+| `externship` | Externship & SPS | d4 | Case presentation, outreach, SPS log |
+
+**D3/D4 rendering**: D3 tab shows `d3`+`both`(items WITH d3Deadline)+d4Carryover. D4 tab shows `d4`+`both`(items WITHOUT d3Deadline)+d4Carryover from d3. `dentures`+`rpd` grouped under "Removable Prosthodontics" in D4.
+
+**DELETED category**: `srp` — 4 items (srp-calc-1/2/3, srp-reeval) absorbed into `perio` via `migrateCompetencyD3D4Split()`.
+
+**d4Carryover items**: `perio-form-reeval-ging`, `perio-sum-reeval-ging`, `gp4-pms` — rendered in BOTH tabs with badges.
 
 ### V2 Item Shape
 ```javascript
@@ -148,18 +153,40 @@ competencies -> categories -> sections -> items
     note: '',                      // Free text
     lastVerified: '2026-04-01',   // Date of last manual audit/edit (null if never verified)
     d3Deadline: null,             // Date string or null (synced from DEFAULT_COMPETENCIES by syncSchemaFields)
-    isSummative: false,           // Schema field
+    isSummative: false,           // Schema field (synced by syncSchemaFields)
+    d4Carryover: false,           // Schema field (synced by syncSchemaFields) — renders in BOTH D3 and D4 tabs
     status: 'pending'             // Derived: completed >= required → 'completed', > 0 → 'in_progress', else 'pending'
 }
 ```
 
 **Fields DELETED from saved state by V2 migration**: `completionEntries`, `rules`, `custom`, `unlockedBy`, `unlockEmailTo`. Note: `syncSchemaFields()` re-adds `rules` from DEFAULT_COMPETENCIES on every init (harmless).
 
+### Category Shape (V2+)
+```javascript
+{
+    name: 'Periodontology',
+    icon: '🦠',
+    color: '#f472b6',
+    yearTarget: 'both',           // 'd3' | 'd4' | 'both' — determines which sub-tab shows category
+    notes: '...',
+    sections: { ... }
+}
+```
+
+### D3/D4 Split Migration (`migrateCompetencyD3D4Split()` in clinical.js)
+One-time migration gated by `competencyD3D4SplitDone_v1`. Runs BEFORE `migrateCompetencyEnhancements()` and `syncSchemaFields()` in `initUI()`. Steps:
+1. Moves 6 leadership items from `grouppractice4` → `grouppractice` (preserves user progress)
+2. Moves 4 SRP items from `srp` → `perio` (preserves user progress)
+3. Deletes empty `srp` category
+4. Resolves 3 perio duplicate pairs (Math.max progress migration)
+5. Splits `perio-sum-prophy` into `perio-sum-prophy-d3` (req:1) + `perio-sum-prophy-d4` (req:2)
+6. Adds new items: `gp-milestones`, `perio-dc-rotation`
+
 ### V2 Migration (`migrateToCompetencyV2()` in clinical.js)
 One-time migration gated by `competencyV2Migrated` localStorage flag. Runs after `syncSchemaFields()` in `initUI()`. Steps:
 1. Strips old fields from all items
 2. Wipes all counts to 0
-3. Seeds 25 verified values from Apr 1 ground truth audit
+3. Seeds verified values from ground truth audit (updated for prophy split)
 4. Clears `autoLinkReviewQueue`
 
 ### Key Competency Functions (V2)
@@ -178,7 +205,12 @@ One-time migration gated by `competencyV2Migrated` localStorage flag. Runs after
 | `cv2ShowPipeline(itemId)` | clinical.js | Show pipeline patients (DOM popup) |
 | `cv2FilterCompetencies(query)` | clinical.js | Search filter |
 | `cv2AddRequirement(catKey)` | clinical.js | Add custom requirement via prompt |
-| `cv2BuildMilestoneStrip(comp, stats)` | clinical.js | KPI milestone cards (apts/procs/summatives) |
+| `cv2SwitchYearTab(tab)` | clinical.js | Switch D3/D4 sub-tab ('d3' or 'd4') |
+| `cv2CategoryVisibleForTab(catKey, cat, tab)` | clinical.js | Check category visibility for active year tab |
+| `cv2ItemVisibleForTab(item, catYearTarget, tab)` | clinical.js | Filter items in 'both' categories by d3Deadline |
+| `cv2GetCarryoverBadge(item, catYearTarget, tab)` | clinical.js | Returns carryover badge HTML for d4Carryover items |
+| `cv2GetCarryoverItems(competencies, tab)` | clinical.js | Collect d4Carryover items from other year's categories |
+| `cv2BuildMilestoneStrip(comp, stats)` | clinical.js | KPI milestone cards (apts/procs/summatives — dynamic count) |
 | `cv2BuildD3Alert(comp, daysLeft)` | clinical.js | D3 deadline alert bar |
 | `cv2BuildWhatsNext(comp)` | clinical.js | What's next panel |
 | `adjustCompItem(catKey, itemId, delta)` | clinical.js | +/- count, sets lastVerified, saves |

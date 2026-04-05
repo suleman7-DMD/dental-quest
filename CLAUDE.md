@@ -129,25 +129,39 @@ const date = new Date(year, month - 1, day);
 - **`showToast(msg, type, options)`**: `{ html: true }` for HTML. Default is `textContent` (safe).
 
 ### Competencies V2 (Manual-Count Model)
-- **V2 model**: Flat manual counts. Item shape: `{ id, text, required, completed, note, lastVerified, d3Deadline, isSummative, status, custom }`. Old evidence-trail model (completionEntries, review queue, unlock chains) was deleted.
+- **V2 model**: Flat manual counts. Item shape: `{ id, text, required, completed, note, lastVerified, d3Deadline, isSummative, status, custom, d4Carryover }`. Old evidence-trail model (completionEntries, review queue, unlock chains) was deleted.
 - **Counts are manual-only**: Change via (a) REQUIREMENTS_STATUS import or (b) inline +/- buttons. COMPLETED_TODAY does NOT touch counts.
 - **`lastVerified`**: Set on every manual edit and REQUIREMENTS_STATUS import. Used by `mergeCompetencies()` for conflict resolution.
 - **`migrateToCompetencyV2()`**: One-time migration gated by `competencyV2Migrated`. Wipes old fields, seeds verified values. Must NOT delete `item.custom` flag.
 - **V3 orphan removal**: `syncSchemaFields` deletes items missing from DEFAULT_COMPETENCIES — must guard with `!item.custom` to preserve user-added items. V3 must NOT zero manual counts (completionEntries is dead in V2).
-- **Summative ring target**: Hardcoded `7` (per ground truth "7 Clinical Summatives"). Do NOT count `isSummative` items dynamically — there are ~45 formatives flagged `isSummative`.
+- **Summative ring target**: Dynamic count from `isSummative` items (was hardcoded 7, fixed Apr 2026). Fallback to 7 only if zero summatives found.
 - **`adjustCompItem()` / `setCompItemStatus()`**: Simple +/- or toggle. Sets `lastVerified`, derives status.
 - **`saveCompItem()` must set `lastVerified`**: Both add-new (when completed > 0) and edit-existing paths must set `lastVerified = getLocalDateString(new Date())`.
-- **Smart counting**: `getSmartProcedureCount()` sums `item.completed` across categories. SPS snapshot AUTHORITATIVE when exists.
+- **Smart counting**: `getSmartProcedureCount()` sums `item.completed` across categories (no longer includes `srp` — absorbed into `perio`). SPS snapshot AUTHORITATIVE when exists.
 - **`autoLinkReviewQueue`**: DELETED. Field kept as `[]` for schema compat only.
-- **V2 UI**: Warm Atlas Console design, `cv2-*` CSS classes. 3 panels: milestone KPI strip, D3 alert + category accordion, What's Next.
+- **V2 UI**: Warm Atlas Console design, `cv2-*` CSS classes. 4 panels: D3/D4 year tabs, milestone KPI strip, D3 alert + category accordion, What's Next.
 - **Pipeline badges**: `importedRequirements[]` on patient records is source. All `'planned'` (yellow) in V2.
-- **Migration flag versioning**: ALL restore/import paths must clear: `unifiedPatientStoreDone_v1`, `competencyEnhancementsDone_v2`, `competencyEnhancementsDone_v3`, `competencyV2Migrated`, `leadingZeroDedupDone_v2`, `perioNoiseCleanupDone_v1`. Add new flags to ALL 3 sites.
+- **Migration flag versioning**: ALL restore/import paths must clear: `unifiedPatientStoreDone_v1`, `competencyEnhancementsDone_v2`, `competencyEnhancementsDone_v3`, `competencyV2Migrated`, `competencyD3D4SplitDone_v1`, `leadingZeroDedupDone_v2`, `perioNoiseCleanupDone_v1`. Add new flags to ALL 4 sites (importBackup, restoreCheckpoint, importAndRestoreDirectly, resetCompetencies).
 - **Guard F (V2)**: Auto-converts `dashboardSnapshots` objects→arrays. No `autoLinkReviewQueue` check.
 - **`showCustomConfirm()` escapes HTML**: Never pass raw HTML. Use DOM overlays for rich content.
 - **`persistExpandedState()`**: MUST call `safeLocalStorageSet()`.
 - **`getCompetenciesData()`**: Returns MUTABLE reference — render functions must not mutate through it.
 - **`getDashboardSnapshots()` / `saveDashboardSnapshot()`**: Must use `getValues()` before `.findIndex()`, `.unshift()`, `.slice()`.
 - **`briefHistory` array safety**: Use `getValues()` before `.unshift()` / `.slice()`.
+
+### D3/D4 Year Split (Apr 2026)
+- **13 categories** (was 14 — `srp` absorbed into `perio` via migration). Each has `yearTarget: 'd3' | 'd4' | 'both'`.
+- **Category keys NEVER renamed**: `grouppractice`, `grouppractice4`, `perio`, `txplanning`, `peds`, `oralsurg`, `geriatrics` (both), `fixed`, `operative`, `dentures`, `rpd`, `endo`, `externship` (d4), `grouppractice` (d3).
+- **`d4Carryover: true`** on items: renders in BOTH D3 and D4 tabs. D3 shows "Cumulative D3+D4" badge, D4 shows "Should have been completed in D3" badge. Currently on: `perio-form-reeval-ging`, `perio-sum-reeval-ging`, `gp4-pms`.
+- **D3 tab**: Shows `yearTarget === 'd3'` (all items) + `'both'` (only items WITH `d3Deadline`) + d4Carryover items from `'d4'` categories.
+- **D4 tab**: Shows `yearTarget === 'd4'` (all items) + `'both'` (only items WITHOUT `d3Deadline`) + d4Carryover items from `'d3'` categories. `dentures` + `rpd` grouped under "Removable Prosthodontics" visual header.
+- **`cv2ActiveYearTab`**: State variable (`'d3'` or `'d4'`). Switched by `cv2SwitchYearTab(tab)`.
+- **`migrateCompetencyD3D4Split()`**: One-time migration gated by `competencyD3D4SplitDone_v1`. Moves leadership items from `grouppractice4` → `grouppractice`, SRP items from `srp` → `perio`, resolves 3 perio duplicate pairs, adds 4 new items. MUST run before `migrateCompetencyEnhancements()` and `syncSchemaFields()`.
+- **`syncSchemaFields()` syncs**: `d3Deadline`, `rules`, `text`, `required`, `isSummative`, `d4Carryover`. Also removes orphaned categories not in DEFAULT_COMPETENCIES (prevents stale `srp` from cloud merge).
+- **`migrateCompetencyEnhancements()` leadership exclusion**: The gp4-* removal block (line ~1045) has `leadershipInGP` exclusion set for 6 leadership IDs that now correctly live in `grouppractice`. Prevents fresh-install edge case from undoing the D3/D4 migration.
+- **Items moved**: Leadership (gp4-posttreat-eval, gp4-aux-tech/asst, gp4-aux-summatives, gp4-rounds-form/sum) → grouppractice. SRP (srp-calc-1/2/3, srp-reeval) → perio.
+- **Items deleted**: perio-3rd-ohi/prophy/reeval (duplicates), perio-sum-prophy (split), tx-ohra-1, tx-caries-1 (auto-satisfied), gp-comm-form-txplan, gp-comm-sum-txplan, gp-ohra (not in HTML).
+- **Items added**: gp-milestones, perio-sum-prophy-d3, perio-sum-prophy-d4, perio-dc-rotation.
 
 ### Task & Schedule System
 - **`doToday` only for eod**: Only `urgency === 'eod'` sets `doToday: true`.
