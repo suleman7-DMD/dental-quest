@@ -2591,8 +2591,8 @@ function cv2GetCarryoverItems(competencies, tab) {
                 if (tab === 'd3' && yt === 'd4') {
                     // D3 tab: show d4 items with d4Carryover
                     items.push({ item: item, catKey: catKey, cat: cat, badge: '<span class="cv2-carryover-badge cv2-carryover-d4">Cumulative D3+D4</span>' });
-                } else if (tab === 'd4' && (yt === 'd3' || (yt === 'both' && item.d3Deadline))) {
-                    // D4 tab: show d3/both items with d4Carryover
+                } else if (tab === 'd4' && yt === 'd3') {
+                    // D4 tab: show d3-only items with d4Carryover (both-category items already render inline)
                     items.push({ item: item, catKey: catKey, cat: cat, badge: '<span class="cv2-carryover-badge cv2-carryover-warn">Should have been completed in D3</span>' });
                 }
             });
