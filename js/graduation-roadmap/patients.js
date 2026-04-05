@@ -3533,26 +3533,27 @@ function rfHighlights(t) {
     return t;
 }
 
-// Split text into sentence-level bullet items. highlight=true applies rfHighlights per-bullet
-// IMPORTANT: call with raw escaped text (before rfHighlights) so sentence regex isn't broken by HTML tags
+// Split text into sentence-level bullet items. highlight=true applies rfHighlights per-bullet.
+// IMPORTANT: call with raw escaped text (before rfHighlights) so sentence regex isn't broken by HTML tags.
 function rfSentences(t, highlight) {
-    // Explicit newlines — split into items
-    if (t.indexOf('\n') !== -1) {
-        return t.split('\n').filter(function(l) { return l.trim(); }).map(function(line) {
-            var text = highlight ? rfHighlights(line.trim()) : line.trim();
-            return '<div class="rf-bullet">' + text + '</div>';
-        }).join('');
-    }
-    // Sentence split: require 2+ lowercase chars, digit, or ) before period.
-    // Lookahead allows A-Z or # (tooth numbers at sentence start).
-    var marked = t.replace(/([a-z]{2,}|[0-9]|\))\.\s+(?=[A-Z#])/g, '$1.\u0000');
-    var parts = marked.split('\u0000');
-    if (parts.length <= 1) return '<div class="rf-line">' + (highlight ? rfHighlights(t) : t) + '</div>';
-    return parts.map(function(part) {
-        var text = part.trim();
-        if (!text) return '';
-        return '<div class="rf-bullet">' + (highlight ? rfHighlights(text) : text) + '</div>';
-    }).join('');
+    // First split on newlines if present, then split each chunk on sentence boundaries
+    var chunks = t.indexOf('\n') !== -1
+        ? t.split('\n').filter(function(l) { return l.trim(); })
+        : [t];
+    var result = '';
+    chunks.forEach(function(chunk) {
+        chunk = chunk.trim();
+        if (!chunk) return;
+        // Sentence split: require 2+ lowercase chars, digit, or ) before period.
+        var marked = chunk.replace(/([a-z]{2,}|[0-9]|\))\.\s+(?=[A-Z#])/g, '$1.\u0000');
+        var parts = marked.split('\u0000');
+        parts.forEach(function(part) {
+            var text = part.trim();
+            if (!text) return;
+            result += '<div class="rf-bullet">' + (highlight ? rfHighlights(text) : text) + '</div>';
+        });
+    });
+    return result || '<div class="rf-line">' + (highlight ? rfHighlights(t) : t) + '</div>';
 }
 
 // Split medication string by ", " respecting parentheses
@@ -3592,6 +3593,9 @@ function formatRecordField(text, fieldType) {
 
     switch (fieldType) {
     case 'medicalHx':
+    case 'dentalHx':
+    case 'txSummaryBU':
+    case 'txCompletedByMe':
         return rfSentences(t, true);
 
     case 'medications': {
