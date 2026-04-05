@@ -1,0 +1,978 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FREE STUFF AUTOPILOT // MISSION CONTROL</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700;800&display=swap');
+  @import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap');
+
+  :root {
+    --bg: #0a0e14;
+    --bg-panel: #0d1117;
+    --bg-panel-hover: #111820;
+    --border: #1a2332;
+    --border-glow: #00ff8855;
+    --green: #00ff88;
+    --green-dim: #00cc6a;
+    --green-dark: #004d29;
+    --cyan: #00d4ff;
+    --cyan-dim: #0099bb;
+    --amber: #ffaa00;
+    --amber-dim: #cc8800;
+    --red: #ff3355;
+    --magenta: #ff44cc;
+    --text: #c9d1d9;
+    --text-dim: #6b7b8d;
+    --text-bright: #e6edf3;
+    --purple: #b388ff;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'JetBrains Mono', 'SF Mono', 'Fira Code', monospace;
+    font-size: 13px;
+    line-height: 1.6;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* Scanline overlay */
+  body::after {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background: repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 2px,
+      rgba(0, 255, 136, 0.015) 2px,
+      rgba(0, 255, 136, 0.015) 4px
+    );
+    pointer-events: none;
+    z-index: 1000;
+  }
+
+  /* Top status bar */
+  .status-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 20px;
+    background: linear-gradient(90deg, #0d1117 0%, #111820 50%, #0d1117 100%);
+    border-bottom: 1px solid var(--border);
+    font-size: 11px;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+
+  .status-bar .left {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+
+  .status-bar .dots {
+    display: flex;
+    gap: 6px;
+  }
+
+  .status-bar .dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+  }
+
+  .dot-red { background: #ff5f57; }
+  .dot-yellow { background: #ffbd2e; }
+  .dot-green { background: #28c840; }
+
+  .status-bar .title {
+    color: var(--text-dim);
+    letter-spacing: 0.5px;
+  }
+
+  .status-bar .right {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    color: var(--text-dim);
+  }
+
+  .status-bar .live-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--green);
+    box-shadow: 0 0 6px var(--green);
+    animation: pulse 2s infinite;
+  }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 1; box-shadow: 0 0 6px var(--green); }
+    50% { opacity: 0.5; box-shadow: 0 0 2px var(--green); }
+  }
+
+  /* Main container */
+  .container {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 20px;
+  }
+
+  /* Header */
+  .header {
+    text-align: center;
+    padding: 30px 0 20px;
+    position: relative;
+  }
+
+  .header::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 80%;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--green-dark), var(--green), var(--green-dark), transparent);
+  }
+
+  .header h1 {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 28px;
+    font-weight: 400;
+    color: var(--green);
+    letter-spacing: 6px;
+    text-transform: uppercase;
+    text-shadow: 0 0 20px rgba(0, 255, 136, 0.3);
+    margin-bottom: 6px;
+  }
+
+  .header .subtitle {
+    font-size: 11px;
+    color: var(--text-dim);
+    letter-spacing: 4px;
+    text-transform: uppercase;
+  }
+
+  .header .ascii-line {
+    color: var(--border);
+    font-size: 11px;
+    margin-top: 12px;
+    letter-spacing: 2px;
+    overflow: hidden;
+    white-space: nowrap;
+  }
+
+  /* KPI strip */
+  .kpi-strip {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+    margin-bottom: 20px;
+  }
+
+  .kpi-card {
+    background: var(--bg-panel);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 14px 16px;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .kpi-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 2px;
+  }
+
+  .kpi-card:nth-child(1)::before { background: var(--green); box-shadow: 0 0 10px var(--green); }
+  .kpi-card:nth-child(2)::before { background: var(--cyan); box-shadow: 0 0 10px var(--cyan); }
+  .kpi-card:nth-child(3)::before { background: var(--amber); box-shadow: 0 0 10px var(--amber); }
+  .kpi-card:nth-child(4)::before { background: var(--magenta); box-shadow: 0 0 10px var(--magenta); }
+
+  .kpi-label {
+    font-size: 10px;
+    color: var(--text-dim);
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    margin-bottom: 6px;
+  }
+
+  .kpi-value {
+    font-size: 22px;
+    font-weight: 700;
+    letter-spacing: 1px;
+  }
+
+  .kpi-card:nth-child(1) .kpi-value { color: var(--green); }
+  .kpi-card:nth-child(2) .kpi-value { color: var(--cyan); }
+  .kpi-card:nth-child(3) .kpi-value { color: var(--amber); }
+  .kpi-card:nth-child(4) .kpi-value { color: var(--magenta); }
+
+  .kpi-sub {
+    font-size: 10px;
+    color: var(--text-dim);
+    margin-top: 4px;
+  }
+
+  /* Grid layout */
+  .grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin-bottom: 20px;
+  }
+
+  .grid-full {
+    grid-column: 1 / -1;
+  }
+
+  /* Panels */
+  .panel {
+    background: var(--bg-panel);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    overflow: hidden;
+    transition: border-color 0.3s, box-shadow 0.3s;
+  }
+
+  .panel:hover {
+    border-color: var(--border-glow);
+    box-shadow: 0 0 20px rgba(0, 255, 136, 0.05);
+  }
+
+  .panel-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 16px;
+    border-bottom: 1px solid var(--border);
+    background: linear-gradient(90deg, rgba(0, 255, 136, 0.03), transparent);
+  }
+
+  .panel-title {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--green);
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .panel-title .icon {
+    font-size: 14px;
+    opacity: 0.8;
+  }
+
+  .panel-badge {
+    font-size: 9px;
+    padding: 2px 8px;
+    border-radius: 3px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    font-weight: 600;
+  }
+
+  .badge-critical {
+    background: rgba(255, 51, 85, 0.15);
+    color: var(--red);
+    border: 1px solid rgba(255, 51, 85, 0.3);
+  }
+
+  .badge-primary {
+    background: rgba(0, 255, 136, 0.1);
+    color: var(--green);
+    border: 1px solid rgba(0, 255, 136, 0.2);
+  }
+
+  .badge-info {
+    background: rgba(0, 212, 255, 0.1);
+    color: var(--cyan);
+    border: 1px solid rgba(0, 212, 255, 0.2);
+  }
+
+  .badge-warn {
+    background: rgba(255, 170, 0, 0.1);
+    color: var(--amber);
+    border: 1px solid rgba(255, 170, 0, 0.2);
+  }
+
+  .panel-body {
+    padding: 16px;
+  }
+
+  /* Command blocks */
+  .cmd-block {
+    background: #080c10;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 14px 16px;
+    margin-bottom: 12px;
+    position: relative;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .cmd-block:last-child { margin-bottom: 0; }
+
+  .cmd-block:hover {
+    background: #0c1118;
+    border-color: rgba(0, 255, 136, 0.3);
+    transform: translateX(2px);
+  }
+
+  .cmd-block:active {
+    transform: translateX(4px);
+  }
+
+  .cmd-label {
+    font-size: 10px;
+    color: var(--text-dim);
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .cmd-label .arrow {
+    color: var(--green-dim);
+  }
+
+  .cmd-prompt {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+  }
+
+  .cmd-prompt .chevron {
+    color: var(--green);
+    font-weight: 700;
+    flex-shrink: 0;
+    margin-top: 1px;
+  }
+
+  .cmd-text {
+    color: var(--text-bright);
+    font-size: 13px;
+    word-break: break-all;
+    font-weight: 500;
+  }
+
+  .cmd-text .flag {
+    color: var(--cyan);
+  }
+
+  .cmd-text .path {
+    color: var(--amber);
+  }
+
+  .cmd-desc {
+    margin-top: 8px;
+    padding-top: 8px;
+    border-top: 1px solid rgba(26, 35, 50, 0.5);
+    color: var(--text-dim);
+    font-size: 11px;
+    line-height: 1.7;
+  }
+
+  .cmd-desc .highlight {
+    color: var(--green-dim);
+  }
+
+  /* Copy tooltip */
+  .cmd-block .copy-toast {
+    position: absolute;
+    top: 10px;
+    right: 12px;
+    font-size: 9px;
+    color: var(--green);
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    opacity: 0;
+    transition: opacity 0.2s;
+    pointer-events: none;
+  }
+
+  .cmd-block:hover .copy-toast {
+    opacity: 0.5;
+  }
+
+  .cmd-block.copied .copy-toast {
+    opacity: 1 !important;
+  }
+
+  /* Callout / info block */
+  .callout {
+    background: rgba(0, 212, 255, 0.04);
+    border: 1px solid rgba(0, 212, 255, 0.15);
+    border-left: 3px solid var(--cyan);
+    border-radius: 4px;
+    padding: 14px 16px;
+    font-size: 12px;
+    line-height: 1.7;
+    color: var(--text);
+  }
+
+  .callout .callout-title {
+    color: var(--cyan);
+    font-weight: 600;
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    margin-bottom: 6px;
+  }
+
+  .callout code {
+    background: rgba(0, 255, 136, 0.08);
+    border: 1px solid rgba(0, 255, 136, 0.15);
+    padding: 1px 6px;
+    border-radius: 3px;
+    color: var(--green);
+    font-size: 11.5px;
+  }
+
+  .callout.callout-amber {
+    background: rgba(255, 170, 0, 0.04);
+    border-color: rgba(255, 170, 0, 0.15);
+    border-left-color: var(--amber);
+  }
+
+  .callout.callout-amber .callout-title {
+    color: var(--amber);
+  }
+
+  /* Programs list */
+  .program-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+
+  .program-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 12px;
+    background: rgba(0, 0, 0, 0.2);
+    border: 1px solid var(--border);
+    border-radius: 3px;
+    font-size: 11px;
+    transition: all 0.2s;
+  }
+
+  .program-item:hover {
+    background: rgba(0, 255, 136, 0.03);
+    border-color: rgba(0, 255, 136, 0.2);
+  }
+
+  .program-num {
+    font-weight: 700;
+    font-size: 10px;
+    color: var(--bg);
+    background: var(--green-dim);
+    width: 20px;
+    height: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 3px;
+    flex-shrink: 0;
+  }
+
+  .program-num.tier-2 { background: var(--amber); }
+  .program-num.tier-3 { background: var(--cyan); }
+  .program-num.tier-4 { background: var(--magenta); }
+
+  .program-name {
+    color: var(--text);
+    flex: 1;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .program-value {
+    color: var(--green-dim);
+    font-size: 10px;
+    flex-shrink: 0;
+    text-align: right;
+  }
+
+  /* Separator */
+  .tier-label {
+    grid-column: 1 / -1;
+    font-size: 9px;
+    color: var(--text-dim);
+    text-transform: uppercase;
+    letter-spacing: 3px;
+    padding: 8px 0 2px;
+    border-top: 1px solid var(--border);
+    margin-top: 4px;
+  }
+
+  .tier-label:first-child {
+    border-top: none;
+    margin-top: 0;
+    padding-top: 0;
+  }
+
+  /* In-menu commands */
+  .menu-cmd-grid {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 6px 16px;
+    font-size: 12px;
+  }
+
+  .menu-key {
+    font-weight: 700;
+    color: var(--cyan);
+    text-align: right;
+    font-size: 13px;
+  }
+
+  .menu-action {
+    color: var(--text);
+  }
+
+  /* Footer */
+  .footer {
+    text-align: center;
+    padding: 20px 0 30px;
+    position: relative;
+  }
+
+  .footer::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 60%;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--border), transparent);
+  }
+
+  .footer-text {
+    font-size: 10px;
+    color: var(--text-dim);
+    letter-spacing: 3px;
+    text-transform: uppercase;
+  }
+
+  .footer-text .glow {
+    color: var(--green-dim);
+  }
+
+  /* Sparkline animation for decoration */
+  .spark-row {
+    display: flex;
+    gap: 2px;
+    justify-content: center;
+    margin: 12px 0;
+  }
+
+  .spark-bar {
+    width: 3px;
+    background: var(--green);
+    border-radius: 1px;
+    opacity: 0.4;
+    animation: sparkle 3s infinite;
+  }
+
+  @keyframes sparkle {
+    0%, 100% { opacity: 0.2; }
+    50% { opacity: 0.7; }
+  }
+
+  /* Responsive */
+  @media (max-width: 900px) {
+    .grid { grid-template-columns: 1fr; }
+    .kpi-strip { grid-template-columns: repeat(2, 1fr); }
+    .program-grid { grid-template-columns: 1fr; }
+    .header h1 { font-size: 20px; letter-spacing: 3px; }
+  }
+
+  @media (max-width: 500px) {
+    .kpi-strip { grid-template-columns: 1fr; }
+    .container { padding: 10px; }
+  }
+
+  /* Glow effect on hover for the whole page */
+  .panel::after {
+    content: '';
+    position: absolute;
+    inset: -1px;
+    border-radius: 4px;
+    opacity: 0;
+    transition: opacity 0.3s;
+    pointer-events: none;
+  }
+
+  .panel {
+    position: relative;
+  }
+</style>
+</head>
+<body>
+
+<!-- Status bar -->
+<div class="status-bar">
+  <div class="left">
+    <div class="dots">
+      <div class="dot dot-red"></div>
+      <div class="dot dot-yellow"></div>
+      <div class="dot dot-green"></div>
+    </div>
+    <span class="title">suleman &mdash; free-stuff-autopilot.py &mdash; ~/dental-quest</span>
+  </div>
+  <div class="right">
+    <div class="live-dot"></div>
+    <span>RCT Analytics</span>
+    <span id="clock"></span>
+  </div>
+</div>
+
+<div class="container">
+
+  <!-- Header -->
+  <div class="header">
+    <h1>Free Stuff Autopilot</h1>
+    <div class="subtitle">RCT Analytics &bull; Mission Control &bull; Quick Reference</div>
+    <div class="ascii-line">&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9532;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9532;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9532;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9532;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9532;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;</div>
+  </div>
+
+  <!-- KPI Strip -->
+  <div class="kpi-strip">
+    <div class="kpi-card">
+      <div class="kpi-label">Programs</div>
+      <div class="kpi-value">16</div>
+      <div class="kpi-sub">total targets</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label">Total Value</div>
+      <div class="kpi-value">$140K+</div>
+      <div class="kpi-sub">credits &amp; prizes</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label">Tiers</div>
+      <div class="kpi-value">4</div>
+      <div class="kpi-sub">sign up &bull; apply &bull; BU &bull; chain</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label">Est. Time</div>
+      <div class="kpi-value">~3 hrs</div>
+      <div class="kpi-sub">all programs total</div>
+    </div>
+  </div>
+
+  <!-- Main Grid -->
+  <div class="grid">
+
+    <!-- LEFT: Run the Script -->
+    <div class="panel">
+      <div class="panel-header">
+        <div class="panel-title"><span class="icon">&#9654;</span> Run the Script</div>
+        <span class="panel-badge badge-primary">Primary</span>
+      </div>
+      <div class="panel-body">
+        <div class="cmd-block" onclick="copyCmd(this, 'python3 ~/dental-quest/scripts/free-stuff-autopilot.py')">
+          <div class="cmd-label"><span class="arrow">&#9656;</span> Launch Autopilot</div>
+          <div class="cmd-prompt">
+            <span class="chevron">$</span>
+            <span class="cmd-text">python3 <span class="path">~/dental-quest/scripts/free-stuff-autopilot.py</span></span>
+          </div>
+          <div class="cmd-desc">Opens the interactive menu. Pick a program, follow steps, progress auto-saves.</div>
+          <span class="copy-toast">&#x2398; copied</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- RIGHT: Debug Mode -->
+    <div class="panel">
+      <div class="panel-header">
+        <div class="panel-title"><span class="icon">&#9881;</span> Debug Mode</div>
+        <span class="panel-badge badge-warn">Diagnostic</span>
+      </div>
+      <div class="panel-body">
+        <div class="cmd-block" onclick="copyCmd(this, 'python3 ~/dental-quest/scripts/free-stuff-autopilot.py --debug')">
+          <div class="cmd-label"><span class="arrow">&#9656;</span> If Something Breaks</div>
+          <div class="cmd-prompt">
+            <span class="chevron">$</span>
+            <span class="cmd-text">python3 <span class="path">~/dental-quest/scripts/free-stuff-autopilot.py</span> <span class="flag">--debug</span></span>
+          </div>
+          <div class="cmd-desc">
+            Shows: <span class="highlight">completed</span> &bull; <span class="highlight">skipped</span> &bull; <span class="highlight">remaining</span> &bull; <span class="highlight">profile info</span> &bull; <span class="highlight">file paths</span>
+          </div>
+          <span class="copy-toast">&#x2398; copied</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- LEFT: Help -->
+    <div class="panel">
+      <div class="panel-header">
+        <div class="panel-title"><span class="icon">&#63;</span> Help</div>
+        <span class="panel-badge badge-info">Reference</span>
+      </div>
+      <div class="panel-body">
+        <div class="cmd-block" onclick="copyCmd(this, 'python3 ~/dental-quest/scripts/free-stuff-autopilot.py --help')">
+          <div class="cmd-label"><span class="arrow">&#9656;</span> See All Options</div>
+          <div class="cmd-prompt">
+            <span class="chevron">$</span>
+            <span class="cmd-text">python3 <span class="path">~/dental-quest/scripts/free-stuff-autopilot.py</span> <span class="flag">--help</span></span>
+          </div>
+          <div class="cmd-desc">Full usage guide, all flags, file locations, troubleshooting tips.</div>
+          <span class="copy-toast">&#x2398; copied</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- RIGHT: Reset Progress -->
+    <div class="panel">
+      <div class="panel-header">
+        <div class="panel-title"><span class="icon">&#8635;</span> Reset Progress</div>
+        <span class="panel-badge badge-critical">Destructive</span>
+      </div>
+      <div class="panel-body">
+        <div class="cmd-block" onclick="copyCmd(this, 'python3 ~/dental-quest/scripts/free-stuff-autopilot.py --reset')">
+          <div class="cmd-label"><span class="arrow">&#9656;</span> Start Over</div>
+          <div class="cmd-prompt">
+            <span class="chevron">$</span>
+            <span class="cmd-text">python3 <span class="path">~/dental-quest/scripts/free-stuff-autopilot.py</span> <span class="flag">--reset</span></span>
+          </div>
+          <div class="cmd-desc">Wipes all progress. All 16 programs become uncompleted. <span style="color:var(--red);">Cannot be undone.</span></div>
+          <span class="copy-toast">&#x2398; copied</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- FULL WIDTH: Claude Code Help -->
+    <div class="panel grid-full">
+      <div class="panel-header">
+        <div class="panel-title"><span class="icon">&#9733;</span> Claude Code Rescue</div>
+        <span class="panel-badge badge-info">AI Assist</span>
+      </div>
+      <div class="panel-body">
+        <div class="callout">
+          <div class="callout-title">If you need Claude Code help in a new session</div>
+          <div style="margin-top: 8px;">
+            Just say: <code>"I'm running scripts/free-stuff-autopilot.py and [describe your issue]. Read the script and help me fix it."</code>
+          </div>
+          <div style="margin-top: 8px; color: var(--text-dim); font-size: 11px;">
+            Claude will read the script header (70-line docstring) and understand everything &mdash; architecture, programs, progress file, profile, debugging paths.
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- FULL WIDTH: In-Menu Commands -->
+    <div class="panel grid-full">
+      <div class="panel-header">
+        <div class="panel-title"><span class="icon">&#9000;</span> In-Menu Controls</div>
+        <span class="panel-badge badge-primary">Interactive</span>
+      </div>
+      <div class="panel-body">
+        <div class="menu-cmd-grid">
+          <span class="menu-key">1-16</span><span class="menu-action">Run that specific program</span>
+          <span class="menu-key">a</span><span class="menu-action">Run <strong style="color:var(--green)">ALL</strong> remaining programs in sequence</span>
+          <span class="menu-key">s</span><span class="menu-action">Skip current program (saved as skipped)</span>
+          <span class="menu-key">q</span><span class="menu-action">Quit &mdash; progress auto-saved</span>
+          <span class="menu-key">r</span><span class="menu-action">Reset all progress from the menu</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- FULL WIDTH: All 16 Programs -->
+    <div class="panel grid-full">
+      <div class="panel-header">
+        <div class="panel-title"><span class="icon">&#9776;</span> Target Manifest</div>
+        <span class="panel-badge badge-primary">16 Programs</span>
+      </div>
+      <div class="panel-body">
+        <div class="program-grid">
+
+          <div class="tier-label">Tier 1 &mdash; Just Sign Up (5-15 min each)</div>
+
+          <div class="program-item">
+            <span class="program-num">1</span>
+            <span class="program-name">GitHub Student Developer Pack</span>
+            <span class="program-value">$2K+/yr</span>
+          </div>
+          <div class="program-item">
+            <span class="program-num">2</span>
+            <span class="program-name">Microsoft for Startups</span>
+            <span class="program-value">$3.5K</span>
+          </div>
+          <div class="program-item">
+            <span class="program-num">3</span>
+            <span class="program-name">Google Cloud for Startups</span>
+            <span class="program-value">$2K</span>
+          </div>
+          <div class="program-item">
+            <span class="program-num">4</span>
+            <span class="program-name">Cloudflare Free</span>
+            <span class="program-value">CDN+</span>
+          </div>
+          <div class="program-item">
+            <span class="program-num">5</span>
+            <span class="program-name">AWS Activate Founders</span>
+            <span class="program-value">$1K</span>
+          </div>
+          <div class="program-item">
+            <span class="program-num">6</span>
+            <span class="program-name">NVIDIA Inception</span>
+            <span class="program-value">&#x1F511; $100K</span>
+          </div>
+          <div class="program-item">
+            <span class="program-num">7</span>
+            <span class="program-name">Figma Education</span>
+            <span class="program-value">$360</span>
+          </div>
+          <div class="program-item">
+            <span class="program-num">8</span>
+            <span class="program-name">Notion Education</span>
+            <span class="program-value">$120/yr</span>
+          </div>
+          <div class="program-item">
+            <span class="program-num">9</span>
+            <span class="program-name">YC Startup School</span>
+            <span class="program-value">$10K</span>
+          </div>
+          <div class="program-item">
+            <span class="program-num">10</span>
+            <span class="program-name">F6S Deal Aggregator</span>
+            <span class="program-value">$100M+</span>
+          </div>
+
+          <div class="tier-label">Tier 2 &mdash; Apply This Week</div>
+
+          <div class="program-item">
+            <span class="program-num tier-2">11</span>
+            <span class="program-name">Anthropic Claude Startup Program</span>
+            <span class="program-value" style="color:var(--amber)">$25K</span>
+          </div>
+          <div class="program-item" style="visibility:hidden"></div>
+
+          <div class="tier-label">Tier 3 &mdash; BU &amp; Boston</div>
+
+          <div class="program-item">
+            <span class="program-num tier-3">12</span>
+            <span class="program-name">BU Innovate / BUild Lab</span>
+            <span class="program-value" style="color:var(--cyan)">$10K</span>
+          </div>
+          <div class="program-item">
+            <span class="program-num tier-3">13</span>
+            <span class="program-name">Venture Cafe Cambridge</span>
+            <span class="program-value" style="color:var(--cyan)">Free</span>
+          </div>
+          <div class="program-item">
+            <span class="program-num tier-3">14</span>
+            <span class="program-name">MassChallenge HealthTech</span>
+            <span class="program-value" style="color:var(--cyan)">$100K+</span>
+          </div>
+          <div class="program-item">
+            <span class="program-num tier-3">15</span>
+            <span class="program-name">NSF I-Corps (BU)</span>
+            <span class="program-value" style="color:var(--cyan)">$50K</span>
+          </div>
+
+          <div class="tier-label">Tier 4 &mdash; Unlock Chain</div>
+
+          <div class="program-item">
+            <span class="program-num tier-4">16</span>
+            <span class="program-name">AWS Portfolio via NVIDIA</span>
+            <span class="program-value" style="color:var(--magenta)">$100K</span>
+          </div>
+          <div class="program-item" style="visibility:hidden"></div>
+
+        </div>
+      </div>
+    </div>
+
+    <!-- FULL WIDTH: File Locations -->
+    <div class="panel grid-full">
+      <div class="panel-header">
+        <div class="panel-title"><span class="icon">&#128193;</span> File Locations</div>
+        <span class="panel-badge badge-info">System</span>
+      </div>
+      <div class="panel-body">
+        <div class="callout callout-amber">
+          <div style="display:grid; grid-template-columns: auto 1fr; gap: 6px 16px; font-size: 11.5px;">
+            <span style="color:var(--amber); font-weight:600;">Script</span>
+            <span><code>~/dental-quest/scripts/free-stuff-autopilot.py</code></span>
+            <span style="color:var(--amber); font-weight:600;">Progress</span>
+            <span><code>~/dental-quest/docs/.free-stuff-progress.json</code></span>
+            <span style="color:var(--amber); font-weight:600;">Guide</span>
+            <span><code>~/dental-quest/docs/EASY_FREE_STUFF_GUIDE.md</code></span>
+            <span style="color:var(--amber); font-weight:600;">Master Ref</span>
+            <span><code>~/dental-quest/docs/RCT_ANALYTICS_MASTER_FUNDING_GUIDE.md</code></span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Footer -->
+  <div class="footer">
+    <div class="spark-row" id="sparkline"></div>
+    <div class="footer-text"><span class="glow">RCT Analytics</span> &bull; Free Stuff Autopilot &bull; Mission Control</div>
+  </div>
+
+</div>
+
+<script>
+  // Clock
+  function updateClock() {
+    const now = new Date();
+    const h = String(now.getHours()).padStart(2, '0');
+    const m = String(now.getMinutes()).padStart(2, '0');
+    const s = String(now.getSeconds()).padStart(2, '0');
+    document.getElementById('clock').textContent = `${h}:${m}:${s}`;
+  }
+  updateClock();
+  setInterval(updateClock, 1000);
+
+  // Copy command to clipboard
+  function copyCmd(el, cmd) {
+    navigator.clipboard.writeText(cmd).then(() => {
+      el.classList.add('copied');
+      el.querySelector('.copy-toast').textContent = '\u2398 copied';
+      setTimeout(() => el.classList.remove('copied'), 1500);
+    });
+  }
+
+  // Sparkline decoration
+  (function() {
+    const container = document.getElementById('sparkline');
+    const barCount = 60;
+    for (let i = 0; i < barCount; i++) {
+      const bar = document.createElement('div');
+      bar.className = 'spark-bar';
+      const h = Math.floor(Math.random() * 16) + 4;
+      bar.style.height = h + 'px';
+      bar.style.animationDelay = (Math.random() * 3).toFixed(2) + 's';
+      container.appendChild(bar);
+    }
+  })();
+</script>
+
+</body>
+</html>
