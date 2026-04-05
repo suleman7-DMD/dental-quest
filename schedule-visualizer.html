@@ -24,13 +24,13 @@
   --red: #ff1744;
   --magenta: #e040fb;
   --purple: #b388ff;
-  --text: #b0bec5;
-  --text-dim: #546e7a;
+  --text: #cfd8dc;
+  --text-dim: #78909c;
   --border: #1a2a35;
   --border-bright: #1e3a4a;
-  --hour-height: 52px;
+  --hour-height: 60px;
 }
-html { font-size: 13px; }
+html { font-size: 15px; }
 body {
   background: var(--bg-deep);
   color: var(--text);
@@ -74,7 +74,7 @@ body::before {
 .header-title .sep { opacity: 0.4; }
 .header-btns { display: flex; gap: 8px; }
 .btn-new-op, .btn-reset {
-  font-family: 'Orbitron', monospace; font-size: 0.6rem; padding: 6px 14px;
+  font-family: 'Orbitron', monospace; font-size: 0.65rem; padding: 8px 16px;
   cursor: pointer; letter-spacing: 2px; border-radius: 2px; transition: all 0.2s;
 }
 .btn-new-op {
@@ -86,7 +86,7 @@ body::before {
 }
 .btn-reset:hover { background: rgba(255,179,0,0.15); box-shadow: 0 0 10px rgba(255,179,0,0.2); }
 .header-sub {
-  display: flex; gap: 32px; flex-wrap: wrap; font-size: 0.8rem; color: var(--text-dim); letter-spacing: 1px;
+  display: flex; gap: 32px; flex-wrap: wrap; font-size: 0.9rem; color: var(--text-dim); letter-spacing: 1px;
 }
 .header-sub span { display: inline-flex; align-items: center; gap: 6px; }
 .header-sub .val { color: var(--green); }
@@ -113,13 +113,13 @@ body::before {
   width: 8px; height: 8px; border-bottom: 1px solid var(--green-dim); border-right: 1px solid var(--green-dim); z-index: 2;
 }
 .panel-title {
-  font-family: 'Orbitron', monospace; font-weight: 700; font-size: 0.75rem;
-  color: var(--green); letter-spacing: 2px; padding: 10px 16px 8px;
+  font-family: 'Orbitron', monospace; font-weight: 700; font-size: 0.85rem;
+  color: var(--green); letter-spacing: 2px; padding: 12px 16px 10px;
   border-bottom: 1px solid var(--border); background: rgba(0,255,65,0.03);
   text-shadow: 0 0 10px var(--green-glow);
   display: flex; justify-content: space-between; align-items: center;
 }
-.panel-title .tag { font-family: 'Share Tech Mono', monospace; font-size: 0.65rem; color: var(--text-dim); letter-spacing: 0; }
+.panel-title .tag { font-family: 'Share Tech Mono', monospace; font-size: 0.75rem; color: var(--text-dim); letter-spacing: 0; }
 
 /* ── Weeks ── */
 .weeks { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
@@ -128,11 +128,11 @@ body::before {
 /* ── Day Grid ── */
 .week-grid { display: grid; grid-template-columns: 44px repeat(5,1fr); gap: 0; padding: 0 8px 12px; }
 .day-header {
-  font-family: 'Orbitron', monospace; font-size: 0.6rem; font-weight: 700;
-  text-align: center; padding: 8px 2px; letter-spacing: 1px;
+  font-family: 'Orbitron', monospace; font-size: 0.7rem; font-weight: 700;
+  text-align: center; padding: 10px 2px; letter-spacing: 1px;
   color: var(--cyan); border-bottom: 1px solid var(--border); position: relative;
 }
-.day-header .date { display: block; font-family: 'Share Tech Mono', monospace; font-size: 0.7rem; color: var(--text-dim); margin-top: 2px; letter-spacing: 0; }
+.day-header .date { display: block; font-family: 'Share Tech Mono', monospace; font-size: 0.8rem; color: var(--text-dim); margin-top: 2px; letter-spacing: 0; }
 .day-add-btn {
   display: inline-block; width: 14px; height: 14px; line-height: 12px; text-align: center;
   font-size: 12px; font-weight: bold; color: var(--green-dim); border: 1px solid var(--green-muted);
@@ -140,9 +140,9 @@ body::before {
 }
 .day-header:hover .day-add-btn { opacity: 1; }
 .day-add-btn:hover { background: var(--green-muted); color: var(--green); }
-.time-header { font-size: 0.6rem; padding: 8px 0; text-align: right; padding-right: 6px; color: var(--text-dim); border-bottom: 1px solid var(--border); }
+.time-header { font-size: 0.7rem; padding: 10px 0; text-align: right; padding-right: 6px; color: var(--text-dim); border-bottom: 1px solid var(--border); }
 .time-col { padding-right: 4px; position: relative; }
-.time-label { position: absolute; right: 4px; font-size: 0.55rem; color: var(--text-dim); transform: translateY(-50%); white-space: nowrap; }
+.time-label { position: absolute; right: 4px; font-size: 0.65rem; color: var(--text-dim); transform: translateY(-50%); white-space: nowrap; }
 .day-col { position: relative; border-left: 1px solid rgba(26,42,53,0.6); }
 .hour-line { position: absolute; left: 0; right: 0; height: 1px; background: rgba(26,42,53,0.5); }
 .hour-line.half { background: rgba(26,42,53,0.25); }
@@ -150,15 +150,15 @@ body::before {
 /* ── Events ── */
 .ev {
   position: absolute; left: 3px; right: 3px; border-radius: 3px;
-  padding: 3px 5px; font-size: 0.6rem; line-height: 1.3; overflow: hidden;
+  padding: 4px 6px; font-size: 0.7rem; line-height: 1.35; overflow: hidden;
   z-index: 2; border-left: 3px solid; cursor: pointer;
   transition: box-shadow 0.3s, transform 0.15s;
   animation: fadeSlideIn 0.6s ease-out both;
 }
 .ev:hover { z-index: 10; transform: scale(1.03); }
 .ev-name { font-weight: bold; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; padding-right: 14px; }
-.ev-time { font-size: 0.55rem; opacity: 0.7; white-space: nowrap; }
-.ev-detail { font-size: 0.55rem; opacity: 0.6; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ev-time { font-size: 0.62rem; opacity: 0.8; white-space: nowrap; }
+.ev-detail { font-size: 0.6rem; opacity: 0.7; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .ev-x {
   position: absolute; top: 2px; right: 2px; width: 14px; height: 14px;
   display: none; align-items: center; justify-content: center;
@@ -198,12 +198,12 @@ body::before {
 .bottom-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
 @media (max-width: 900px) { .bottom-grid { grid-template-columns: 1fr; } }
 .beyond-item {
-  display: flex; gap: 10px; padding: 7px 16px; border-bottom: 1px solid var(--border);
-  font-size: 0.75rem; align-items: center; cursor: pointer; transition: background 0.15s;
+  display: flex; gap: 10px; padding: 9px 16px; border-bottom: 1px solid var(--border);
+  font-size: 0.85rem; align-items: center; cursor: pointer; transition: background 0.15s;
 }
 .beyond-item:last-child { border-bottom: none; }
 .beyond-item:hover { background: rgba(0,229,255,0.04); }
-.beyond-date { font-family: 'Orbitron', monospace; font-size: 0.65rem; color: var(--cyan); white-space: nowrap; min-width: 44px; letter-spacing: 1px; }
+.beyond-date { font-family: 'Orbitron', monospace; font-size: 0.75rem; color: var(--cyan); white-space: nowrap; min-width: 44px; letter-spacing: 1px; }
 .beyond-text { color: var(--text); line-height: 1.5; flex: 1; }
 .beyond-text .hl { color: var(--amber); }
 .beyond-x {
@@ -222,7 +222,7 @@ body::before {
 /* ── Conflicts ── */
 .conflict-item {
   padding: 10px 12px; margin: 0 16px 8px; border: 1px solid; border-radius: 3px;
-  font-size: 0.72rem; line-height: 1.5; position: relative; overflow: hidden;
+  font-size: 0.82rem; line-height: 1.5; position: relative; overflow: hidden;
 }
 .conflict-item:first-child { margin-top: 10px; }
 .conflict-item:last-child { margin-bottom: 14px; }
@@ -236,12 +236,12 @@ body::before {
 .conflict-low { border-color: rgba(0,229,255,0.2); background: rgba(0,229,255,0.03); }
 .conflict-low::before { background: var(--cyan-dim); }
 .conflict-low .conflict-sev { color: var(--cyan); }
-.conflict-sev { font-family: 'Orbitron', monospace; font-size: 0.6rem; letter-spacing: 1px; margin-bottom: 3px; }
+.conflict-sev { font-family: 'Orbitron', monospace; font-size: 0.7rem; letter-spacing: 1px; margin-bottom: 3px; }
 .conflict-desc { color: var(--text); }
-.conflict-action { margin-top: 4px; color: var(--amber); font-size: 0.65rem; }
+.conflict-action { margin-top: 4px; color: var(--amber); font-size: 0.72rem; }
 
 /* ── Legend ── */
-.legend { display: flex; flex-wrap: wrap; gap: 14px; padding: 10px 16px; font-size: 0.65rem; border-top: 1px solid var(--border); }
+.legend { display: flex; flex-wrap: wrap; gap: 16px; padding: 12px 16px; font-size: 0.75rem; border-top: 1px solid var(--border); }
 .legend-item { display: inline-flex; align-items: center; gap: 5px; }
 .legend-swatch { width: 10px; height: 10px; border-radius: 2px; border-left: 3px solid; }
 
@@ -249,7 +249,7 @@ body::before {
 .status-bar {
   position: fixed; bottom: 0; left: 0; right: 0; background: var(--bg-panel);
   border-top: 1px solid var(--border-bright); padding: 4px 20px;
-  display: flex; justify-content: space-between; font-size: 0.6rem; color: var(--text-dim); z-index: 100; letter-spacing: 1px;
+  display: flex; justify-content: space-between; font-size: 0.7rem; color: var(--text-dim); z-index: 100; letter-spacing: 1px;
 }
 .status-bar .active { color: var(--green); }
 
@@ -336,7 +336,7 @@ body::before {
 
 /* ── Export Button ── */
 .btn-export {
-  font-family: 'Orbitron', monospace; font-size: 0.6rem; padding: 6px 14px;
+  font-family: 'Orbitron', monospace; font-size: 0.65rem; padding: 8px 16px;
   cursor: pointer; letter-spacing: 2px; border-radius: 2px; transition: all 0.2s;
   background: rgba(0,229,255,0.08); border: 1px solid var(--cyan-dim); color: var(--cyan);
 }
@@ -363,8 +363,8 @@ body::before {
 .checklist-add-btn:hover { background: rgba(0,255,65,0.18); box-shadow: 0 0 10px var(--green-glow); }
 .checklist-items { padding: 0; }
 .checklist-item {
-  display: flex; align-items: center; gap: 10px; padding: 8px 16px;
-  border-bottom: 1px solid var(--border); font-size: 0.75rem; transition: background 0.15s;
+  display: flex; align-items: center; gap: 10px; padding: 10px 16px;
+  border-bottom: 1px solid var(--border); font-size: 0.85rem; transition: background 0.15s;
 }
 .checklist-item:hover { background: rgba(0,255,65,0.03); }
 .checklist-item:last-child { border-bottom: none; }
@@ -388,11 +388,11 @@ body::before {
   padding: 16px; color: var(--text-dim); font-size: 0.7rem; text-align: center;
 }
 .checklist-section {
-  font-family: 'Orbitron', monospace; font-size: 0.6rem; letter-spacing: 2px;
-  padding: 10px 16px 6px; border-bottom: 1px solid var(--border);
+  font-family: 'Orbitron', monospace; font-size: 0.72rem; letter-spacing: 2px;
+  padding: 12px 16px 8px; border-bottom: 1px solid var(--border);
   display: flex; justify-content: space-between; align-items: center;
 }
-.checklist-section .sec-count { font-family: 'Share Tech Mono', monospace; font-size: 0.6rem; letter-spacing: 0; }
+.checklist-section .sec-count { font-family: 'Share Tech Mono', monospace; font-size: 0.7rem; letter-spacing: 0; }
 .sec-must-today { color: var(--red); background: rgba(255,23,68,0.04); }
 .sec-up-next { color: var(--amber); background: rgba(255,179,0,0.04); }
 .sec-this-week { color: var(--cyan); background: rgba(0,229,255,0.04); }
@@ -514,7 +514,7 @@ body.export-mode .checklist-add-row { display: none !important; }
 // ═══════════════════════════════════════════════
 //  DATA MODEL — all events in a flat array
 // ═══════════════════════════════════════════════
-var HOUR_PX = 52, START_HOUR = 8, END_HOUR = 19, TOTAL_HOURS = END_HOUR - START_HOUR;
+var HOUR_PX = 60, START_HOUR = 8, END_HOUR = 19, TOTAL_HOURS = END_HOUR - START_HOUR;
 var LS_KEY = 'missionControlEvents_v2';
 var CL_KEY = 'missionControlChecklist_v2';
 var editingId = null;
@@ -801,7 +801,7 @@ function renderWeeks() {
 function createEventBlock(ev, dayIdx, evIdx) {
   var top = timeToY(ev.sh, ev.sm);
   var height = durationPx(ev.sh, ev.sm, ev.eh, ev.em);
-  if (height < 24) height = 24;
+  if (height < 28) height = 28;
 
   var el = document.createElement('div');
   el.className = 'ev ev-' + ev.type;
