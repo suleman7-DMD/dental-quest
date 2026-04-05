@@ -454,6 +454,7 @@ const DEFAULT_COMPETENCIES = {
         name: 'Fixed Prosthodontics',
         icon: '🦷',
         color: '#3b82f6',
+        yearTarget: 'd4',
         notes: 'Must include 1 FPD, 1 Implant Crown, 3 CEREC restorations. Cast Post/Core does NOT count as a unit. Up to 2 Pontic/Inlay/Onlay/Veneer CAN count.',
         sections: [
             { title: 'Aggregate Trackers (clinical experience)', items: [
@@ -475,13 +476,13 @@ const DEFAULT_COMPETENCIES = {
                 { id: 'fixed-sum-cement', text: '2 Cementation', required: 2, completed: 0, status: 'pending', completionEntries: [], note: '', d3Deadline: null, unlockedBy: [{ id: 'fixed-form-prep', required: 6 }, { id: 'fixed-form-prov', required: 6 }, { id: 'fixed-form-cement', required: 6 }, { id: 'fixed-form-impr', required: 6 }], unlockEmailTo: 'gdadmin@bu.edu', isSummative: true, rules: null, custom: false }
             ]},
             { title: 'Other Fixed Requirements', items: [
-                { id: 'fixed-occlusal-cr', text: 'Occlusal Analysis (Centric Relation)', required: 1, completed: 0, status: 'pending', completionEntries: [], note: '', d3Deadline: null, unlockedBy: null, unlockEmailTo: null, isSummative: false, rules: null, custom: false },
-                { id: 'fixed-occlusal-mi', text: 'Occlusal Analysis (Maximum Intercuspation)', required: 1, completed: 0, status: 'pending', completionEntries: [], note: '', d3Deadline: null, unlockedBy: null, unlockEmailTo: null, isSummative: false, rules: null, custom: false },
-                { id: 'fixed-mock', text: 'Mock Board', required: 1, completed: 0, status: 'pending', completionEntries: [], note: '', d3Deadline: null, unlockedBy: null, unlockEmailTo: null, isSummative: false, rules: null, custom: false },
-                { id: 'fixed-sim-1', text: 'Fixed Simulation #1 (with Dr. Ferriero)', required: 1, completed: 0, status: 'pending', completionEntries: [], note: '', d3Deadline: null, unlockedBy: null, unlockEmailTo: null, isSummative: false, rules: null, custom: false },
-                { id: 'fixed-sim-2', text: 'Fixed Simulation #2 (with Dr. Ferriero)', required: 1, completed: 0, status: 'pending', completionEntries: [], note: '', d3Deadline: null, unlockedBy: null, unlockEmailTo: null, isSummative: false, rules: null, custom: false },
-                { id: 'fixed-sim-fpd', text: 'Simulation: 3-unit Prep and Temp of FPD', required: 1, completed: 0, status: 'pending', completionEntries: [], note: '', d3Deadline: null, unlockedBy: null, unlockEmailTo: null, isSummative: false, rules: null, custom: false },
-                { id: 'fixed-case-pres', text: 'Case Presentation (on 2 completed fixed or fixed-removable units)', required: 1, completed: 0, status: 'pending', completionEntries: [], note: '', d3Deadline: null, unlockedBy: null, unlockEmailTo: null, isSummative: false, rules: null, custom: false }
+                { id: 'fixed-occlusal-cr', text: 'Occlusal Analysis (Centric Relation)', required: 1, completed: 0, status: 'pending', completionEntries: [], note: '', d3Deadline: null, unlockedBy: null, unlockEmailTo: null, isSummative: true, rules: null, custom: false },
+                { id: 'fixed-occlusal-mi', text: 'Occlusal Analysis (Maximum Intercuspation)', required: 1, completed: 0, status: 'pending', completionEntries: [], note: '', d3Deadline: null, unlockedBy: null, unlockEmailTo: null, isSummative: true, rules: null, custom: false },
+                { id: 'fixed-mock', text: 'Mock Board', required: 1, completed: 0, status: 'pending', completionEntries: [], note: '', d3Deadline: null, unlockedBy: null, unlockEmailTo: null, isSummative: true, rules: null, custom: false },
+                { id: 'fixed-sim-1', text: 'Fixed Simulation #1 (with Dr. Ferriero)', required: 1, completed: 0, status: 'pending', completionEntries: [], note: '', d3Deadline: null, unlockedBy: null, unlockEmailTo: null, isSummative: true, rules: null, custom: false },
+                { id: 'fixed-sim-2', text: 'Fixed Simulation #2 (with Dr. Ferriero)', required: 1, completed: 0, status: 'pending', completionEntries: [], note: '', d3Deadline: null, unlockedBy: null, unlockEmailTo: null, isSummative: true, rules: null, custom: false },
+                { id: 'fixed-sim-fpd', text: 'Simulation: 3-unit Prep and Temp of FPD', required: 1, completed: 0, status: 'pending', completionEntries: [], note: '', d3Deadline: null, unlockedBy: null, unlockEmailTo: null, isSummative: true, rules: null, custom: false },
+                { id: 'fixed-case-pres', text: 'Case Presentation (on 2 completed fixed or fixed-removable units)', required: 1, completed: 0, status: 'pending', completionEntries: [], note: '', d3Deadline: null, unlockedBy: null, unlockEmailTo: null, isSummative: true, rules: null, custom: false }
             ]}
         ]
     },
@@ -489,6 +490,7 @@ const DEFAULT_COMPETENCIES = {
         name: 'Operative',
         icon: '🔧',
         color: '#10b981',
+        yearTarget: 'd4',
         notes: '2 Class V required (exactly 2). 6 additional multisurface. Max 4 summatives with same faculty.',
         sections: [
             { title: 'Formative Prerequisite', items: [
@@ -515,6 +517,7 @@ const DEFAULT_COMPETENCIES = {
         name: 'Complete Dentures',
         icon: '🦴',
         color: '#8b5cf6',
+        yearTarget: 'd4',
         notes: 'ALL steps must be completed by SAME student. Digital denture steps may qualify if performed independently.',
         sections: [
             { title: 'Aggregate Tracker', items: [
@@ -548,6 +551,7 @@ const DEFAULT_COMPETENCIES = {
         name: 'RPDs',
         icon: '🔩',
         color: '#f59e0b',
+        yearTarget: 'd4',
         notes: 'Must complete one track. Flexible/interim RPD must have >=2 clasps AND replace >=3 teeth.',
         sections: [
             { title: 'Clinical Experience Tracks (choose one)', items: [
@@ -561,24 +565,11 @@ const DEFAULT_COMPETENCIES = {
             ]}
         ]
     },
-    srp: {
-        name: 'SRPs / Calculus Removal',
-        icon: '🩺',
-        color: '#ef4444',
-        notes: 'Officially Periodontology summatives, tracked with standalone IDs. NO separate perio-sum-calc ID exists.',
-        sections: [
-            { title: 'Calculus Removal Summatives', items: [
-                { id: 'srp-calc-1', text: 'Calculus Removal Summative #1', required: 1, completed: 0, status: 'pending', completionEntries: [], note: '', d3Deadline: null, unlockedBy: [{ id: 'perio-form-quad', required: 3 }], unlockEmailTo: null, isSummative: true, rules: 'Must initiate in SPS BEFORE procedure', custom: false },
-                { id: 'srp-calc-2', text: 'Calculus Removal Summative #2', required: 1, completed: 0, status: 'pending', completionEntries: [], note: '', d3Deadline: null, unlockedBy: [{ id: 'perio-form-quad', required: 3 }], unlockEmailTo: null, isSummative: true, rules: 'Must initiate in SPS BEFORE procedure', custom: false },
-                { id: 'srp-calc-3', text: 'Calculus Removal Summative #3', required: 1, completed: 0, status: 'pending', completionEntries: [], note: '', d3Deadline: null, unlockedBy: [{ id: 'perio-form-quad', required: 3 }], unlockEmailTo: null, isSummative: true, rules: 'Must initiate in SPS BEFORE procedure', custom: false },
-                { id: 'srp-reeval', text: 'Re-evaluate SRP Summative', required: 1, completed: 0, status: 'pending', completionEntries: [], note: '', d3Deadline: null, unlockedBy: [{ id: 'perio-form-reeval-srp', required: 1 }], unlockEmailTo: null, isSummative: true, rules: 'Must initiate in SPS BEFORE procedure. Alias: perio-sum-reeval-srp', custom: false }
-            ]}
-        ]
-    },
     endo: {
         name: 'Endodontics',
         icon: '🔬',
         color: '#06b6d4',
+        yearTarget: 'd4',
         notes: 'Pulpectomy summative can receive credit on completed RCT cases. Mock Board must be passed regardless of CDCA/WREB results.',
         sections: [
             { title: 'Requirements', items: [
@@ -596,6 +587,7 @@ const DEFAULT_COMPETENCIES = {
         name: 'Oral Surgery',
         icon: '🏥',
         color: '#ec4899',
+        yearTarget: 'both',
         notes: '',
         sections: [
             { title: '3rd Year Requirements (D3 Deadline)', items: [
@@ -623,10 +615,11 @@ const DEFAULT_COMPETENCIES = {
         name: 'Pediatric Dentistry',
         icon: '👶',
         color: '#84cc16',
+        yearTarget: 'both',
         notes: '',
         sections: [
             { title: 'Course & Rotations', items: [
-                { id: 'peds-course', text: 'PD 530 Didactic course completion', required: 1, completed: 0, status: 'pending', completionEntries: [], note: '', d3Deadline: null, unlockedBy: null, unlockEmailTo: null, isSummative: false, rules: null, custom: false },
+                { id: 'peds-course', text: 'PD 530 Didactic course completion', required: 1, completed: 0, status: 'pending', completionEntries: [], note: '', d3Deadline: '2026-05-15', unlockedBy: null, unlockEmailTo: null, isSummative: false, rules: null, custom: false },
                 { id: 'peds-rotation', text: 'Rotations (including Franciscan Hospital)', required: 1, completed: 0, status: 'pending', completionEntries: [], note: '', d3Deadline: null, unlockedBy: null, unlockEmailTo: null, isSummative: false, rules: null, custom: false },
                 { id: 'peds-assessment', text: 'Post-rotation assessment', required: 1, completed: 0, status: 'pending', completionEntries: [], note: '', d3Deadline: null, unlockedBy: null, unlockEmailTo: null, isSummative: false, rules: null, custom: false }
             ]},
@@ -641,34 +634,40 @@ const DEFAULT_COMPETENCIES = {
         name: 'Periodontology',
         icon: '🦠',
         color: '#f472b6',
+        yearTarget: 'both',
         notes: 'All summative exams must be initiated on SPS BEFORE procedure. Faculty intervention = does NOT qualify.',
         sections: [
             { title: 'Surgical', items: [
                 { id: 'perio-surg-assist', text: '7 Surgical Assist (max 1 implant uncovering)', required: 7, completed: 0, status: 'pending', completionEntries: [], note: '', d3Deadline: null, unlockedBy: null, unlockEmailTo: null, isSummative: false, rules: null, custom: false }
             ]},
-            { title: '3rd Year Summatives (D3 Deadlines)', items: [
-                { id: 'perio-3rd-ohi', text: 'OHI Summative', required: 1, completed: 0, status: 'pending', completionEntries: [], note: '', d3Deadline: '2025-10-01', unlockedBy: [{ id: 'perio-form-ohi', required: 2 }], unlockEmailTo: null, isSummative: true, rules: null, custom: false },
-                { id: 'perio-3rd-prophy', text: 'Scaling & Prophy Summative', required: 1, completed: 0, status: 'pending', completionEntries: [], note: '', d3Deadline: '2026-05-15', unlockedBy: [{ id: 'perio-form-prophy', required: 5 }], unlockEmailTo: null, isSummative: true, rules: null, custom: false },
-                { id: 'perio-3rd-reeval', text: 'Re-eval Gingivitis Summative', required: 1, completed: 0, status: 'pending', completionEntries: [], note: '', d3Deadline: '2026-05-15', unlockedBy: [{ id: 'perio-form-reeval-ging', required: 3 }], unlockEmailTo: null, isSummative: true, rules: null, custom: false }
-            ]},
             { title: 'Formatives (3rd + 4th Year Cumulative)', items: [
-                { id: 'perio-form-ohi', text: '2 Oral Hygiene (1 Zoom, 1 in-person)', required: 2, completed: 0, status: 'pending', completionEntries: [], note: '', d3Deadline: null, unlockedBy: null, unlockEmailTo: null, isSummative: false, rules: null, custom: false },
-                { id: 'perio-form-dx', text: '4 Diagnosis & Treatment Plan', required: 4, completed: 0, status: 'pending', completionEntries: [], note: '', d3Deadline: null, unlockedBy: null, unlockEmailTo: null, isSummative: false, rules: null, custom: false },
-                { id: 'perio-form-prophy', text: '5 Prophy', required: 5, completed: 0, status: 'pending', completionEntries: [], note: '', d3Deadline: null, unlockedBy: null, unlockEmailTo: null, isSummative: false, rules: null, custom: false },
+                { id: 'perio-form-ohi', text: '2 Oral Hygiene (1 Zoom, 1 in-person)', required: 2, completed: 0, status: 'pending', completionEntries: [], note: '', d3Deadline: '2026-05-15', unlockedBy: null, unlockEmailTo: null, isSummative: false, rules: null, custom: false },
+                { id: 'perio-form-dx', text: '4 Diagnosis & Treatment Plan', required: 4, completed: 0, status: 'pending', completionEntries: [], note: '', d3Deadline: '2026-05-15', unlockedBy: null, unlockEmailTo: null, isSummative: false, rules: null, custom: false },
+                { id: 'perio-form-prophy', text: '5 Prophy', required: 5, completed: 0, status: 'pending', completionEntries: [], note: '', d3Deadline: '2026-05-15', unlockedBy: null, unlockEmailTo: null, isSummative: false, rules: null, custom: false },
                 { id: 'perio-form-quad', text: '3 Quad SRP', required: 3, completed: 0, status: 'pending', completionEntries: [], note: '', d3Deadline: null, unlockedBy: null, unlockEmailTo: null, isSummative: false, rules: null, custom: false },
-                { id: 'perio-form-reeval-ging', text: '3 Re-evaluate Gingivitis', required: 3, completed: 0, status: 'pending', completionEntries: [], note: '', d3Deadline: null, unlockedBy: null, unlockEmailTo: null, isSummative: false, rules: null, custom: false },
+                { id: 'perio-form-reeval-ging', text: '3 Re-evaluate Gingivitis', required: 3, completed: 0, status: 'pending', completionEntries: [], note: '', d3Deadline: '2026-05-15', unlockedBy: null, unlockEmailTo: null, isSummative: false, rules: null, custom: false, d4Carryover: true },
                 { id: 'perio-form-reeval-srp', text: '1 Re-evaluate SRP', required: 1, completed: 0, status: 'pending', completionEntries: [], note: '', d3Deadline: null, unlockedBy: null, unlockEmailTo: null, isSummative: false, rules: null, custom: false },
                 { id: 'perio-form-impr', text: '3 Re-evaluate Impression', required: 3, completed: 0, status: 'pending', completionEntries: [], note: '', d3Deadline: null, unlockedBy: null, unlockEmailTo: null, isSummative: false, rules: null, custom: false },
                 { id: 'perio-form-recall', text: '6 Recall', required: 6, completed: 0, status: 'pending', completionEntries: [], note: '', d3Deadline: null, unlockedBy: null, unlockEmailTo: null, isSummative: false, rules: null, custom: false }
             ]},
             { title: 'Summatives (3rd + 4th Year Cumulative)', items: [
                 { id: 'perio-sum-hci', text: '1 Home Care Instruction', required: 1, completed: 0, status: 'pending', completionEntries: [], note: '', d3Deadline: '2025-10-01', unlockedBy: [{ id: 'perio-form-ohi', required: 2 }], unlockEmailTo: null, isSummative: true, rules: 'Must initiate in SPS BEFORE procedure', custom: false },
-                { id: 'perio-sum-dx', text: '2 Diagnosis & Treatment Plan (Type 2)', required: 2, completed: 0, status: 'pending', completionEntries: [], note: '', d3Deadline: null, unlockedBy: [{ id: 'perio-form-dx', required: 4 }], unlockEmailTo: null, isSummative: true, rules: 'Must initiate in SPS BEFORE procedure', custom: false },
-                { id: 'perio-sum-prophy', text: '3 Prophy (total)', required: 3, completed: 0, status: 'pending', completionEntries: [], note: '', d3Deadline: '2026-05-15', unlockedBy: [{ id: 'perio-form-prophy', required: 5 }], unlockEmailTo: null, isSummative: true, rules: '1 of 3 due by D3 (May 2026); remaining 2 by D4', custom: false },
-                { id: 'perio-sum-reeval-ging', text: '2 Re-evaluate Gingivitis', required: 2, completed: 0, status: 'pending', completionEntries: [], note: '', d3Deadline: '2026-05-15', unlockedBy: [{ id: 'perio-form-reeval-ging', required: 3 }], unlockEmailTo: null, isSummative: true, rules: '1 of 2 due by D3 (May 2026); remaining 1 by D4', custom: false },
+                { id: 'perio-sum-dx', text: '2 Diagnosis & Treatment Plan (Type 2)', required: 2, completed: 0, status: 'pending', completionEntries: [], note: 'Completing these also satisfies 2 OHRA + 2 Caries Detection summatives. Ensure all four are explicitly recorded in SPS.', d3Deadline: '2026-05-15', unlockedBy: [{ id: 'perio-form-dx', required: 4 }], unlockEmailTo: null, isSummative: true, rules: 'Must initiate in SPS BEFORE procedure', custom: false },
+                { id: 'perio-sum-prophy-d3', text: '1 Prophy (D3)', required: 1, completed: 0, status: 'pending', completionEntries: [], note: '', d3Deadline: '2026-05-15', unlockedBy: [{ id: 'perio-form-prophy', required: 5 }], unlockEmailTo: null, isSummative: true, rules: 'Must initiate in SPS BEFORE procedure', custom: false },
+                { id: 'perio-sum-prophy-d4', text: '2 Prophy (D4)', required: 2, completed: 0, status: 'pending', completionEntries: [], note: '', d3Deadline: null, unlockedBy: [{ id: 'perio-form-prophy', required: 5 }], unlockEmailTo: null, isSummative: true, rules: 'Must initiate in SPS BEFORE procedure', custom: false },
+                { id: 'perio-sum-reeval-ging', text: '1 Re-evaluate Gingivitis', required: 1, completed: 0, status: 'pending', completionEntries: [], note: '', d3Deadline: '2026-05-15', unlockedBy: [{ id: 'perio-form-reeval-ging', required: 3 }], unlockEmailTo: null, isSummative: true, rules: 'Must initiate in SPS BEFORE procedure', custom: false, d4Carryover: true },
                 { id: 'perio-sum-impr', text: '1 Re-evaluate Impression', required: 1, completed: 0, status: 'pending', completionEntries: [], note: '', d3Deadline: null, unlockedBy: [{ id: 'perio-form-impr', required: 3 }], unlockEmailTo: null, isSummative: true, rules: 'Must initiate in SPS BEFORE procedure', custom: false },
                 { id: 'perio-sum-recall', text: '2 Recall', required: 2, completed: 0, status: 'pending', completionEntries: [], note: '', d3Deadline: null, unlockedBy: [{ id: 'perio-form-recall', required: 6 }], unlockEmailTo: null, isSummative: true, rules: 'Must initiate in SPS BEFORE procedure', custom: false },
                 { id: 'perio-sum-mock', text: '1 Mock Board', required: 1, completed: 0, status: 'pending', completionEntries: [], note: '', d3Deadline: null, unlockedBy: null, unlockEmailTo: null, isSummative: true, rules: 'Must initiate in SPS BEFORE procedure', custom: false }
+            ]},
+            { title: 'Calculus Removal / SRP Summatives', items: [
+                { id: 'srp-calc-1', text: 'Calculus Removal Summative #1', required: 1, completed: 0, status: 'pending', completionEntries: [], note: '', d3Deadline: null, unlockedBy: [{ id: 'perio-form-quad', required: 3 }], unlockEmailTo: null, isSummative: true, rules: 'Must initiate in SPS BEFORE procedure', custom: false },
+                { id: 'srp-calc-2', text: 'Calculus Removal Summative #2', required: 1, completed: 0, status: 'pending', completionEntries: [], note: '', d3Deadline: null, unlockedBy: [{ id: 'perio-form-quad', required: 3 }], unlockEmailTo: null, isSummative: true, rules: 'Must initiate in SPS BEFORE procedure', custom: false },
+                { id: 'srp-calc-3', text: 'Calculus Removal Summative #3', required: 1, completed: 0, status: 'pending', completionEntries: [], note: '', d3Deadline: null, unlockedBy: [{ id: 'perio-form-quad', required: 3 }], unlockEmailTo: null, isSummative: true, rules: 'Must initiate in SPS BEFORE procedure', custom: false },
+                { id: 'srp-reeval', text: 'Re-evaluate SRP Summative', required: 1, completed: 0, status: 'pending', completionEntries: [], note: '', d3Deadline: null, unlockedBy: [{ id: 'perio-form-reeval-srp', required: 1 }], unlockEmailTo: null, isSummative: true, rules: 'Must initiate in SPS BEFORE procedure', custom: false }
+            ]},
+            { title: 'Other', items: [
+                { id: 'perio-dc-rotation', text: 'DC Rotation Week (4th year)', required: 1, completed: 0, status: 'pending', completionEntries: [], note: '', d3Deadline: null, unlockedBy: null, unlockEmailTo: null, isSummative: false, rules: null, custom: false }
             ]}
         ]
     },
@@ -676,6 +675,7 @@ const DEFAULT_COMPETENCIES = {
         name: 'Group Practice — D3 (GD 640)',
         icon: '👥',
         color: '#0ea5e9',
+        yearTarget: 'd3',
         notes: 'Grade: Formatives 25% (PR 7.5% + WA 7.5% + PMS 5% + Case 5%) + Summatives 65% (PR 30% + WA 35%) + Comm 10%.',
         sections: [
             { title: 'Attendance & Meetings', items: [
@@ -694,36 +694,35 @@ const DEFAULT_COMPETENCIES = {
                 { id: 'gp-pms-3rd', text: '1 Formative PMS (5%, at Leadership Workshop)', required: 1, completed: 0, status: 'pending', completionEntries: [], note: '', d3Deadline: '2026-05-15', unlockedBy: null, unlockEmailTo: null, isSummative: false, rules: null, custom: false }
             ]},
             { title: 'Communication Module (10%)', items: [
-                { id: 'gp-comm-workshop', text: 'Communication Workshop attendance (40% of comm)', required: 1, completed: 0, status: 'pending', completionEntries: [], note: '', d3Deadline: '2026-05-15', unlockedBy: null, unlockEmailTo: null, isSummative: false, rules: 'Excused absence + makeup = full credit; 0 if nothing attended', custom: false },
-                { id: 'gp-comm-form-txplan', text: '1 Formative Tx Plan Presentation (20% of comm)', required: 1, completed: 0, status: 'pending', completionEntries: [], note: '', d3Deadline: '2026-05-15', unlockedBy: null, unlockEmailTo: null, isSummative: false, rules: null, custom: false },
-                { id: 'gp-comm-sum-txplan', text: '1 Summative Tx Plan Presentation (40% of comm)', required: 1, completed: 0, status: 'pending', completionEntries: [], note: '', d3Deadline: '2026-05-15', unlockedBy: null, unlockEmailTo: null, isSummative: true, rules: null, custom: false }
+                { id: 'gp-comm-workshop', text: 'Communication Workshop attendance (40% of comm)', required: 1, completed: 0, status: 'pending', completionEntries: [], note: '', d3Deadline: '2026-05-15', unlockedBy: null, unlockEmailTo: null, isSummative: false, rules: 'Excused absence + makeup = full credit; 0 if nothing attended', custom: false }
             ]},
             { title: 'Other D3 GP Requirements', items: [
                 { id: 'gp-leader', text: 'Leadership Workshop attendance', required: 1, completed: 0, status: 'pending', completionEntries: [], note: '', d3Deadline: '2026-05-15', unlockedBy: null, unlockEmailTo: null, isSummative: false, rules: null, custom: false },
-                { id: 'gp-case', text: 'Case Presentation at Group Monthly Meeting (5%)', required: 1, completed: 0, status: 'pending', completionEntries: [], note: '', d3Deadline: '2026-05-15', unlockedBy: null, unlockEmailTo: null, isSummative: false, rules: null, custom: false },
-                { id: 'gp-ohra', text: 'OHRA at every PE/Tx Plan appointment', required: 1, completed: 0, status: 'pending', completionEntries: [], note: '', d3Deadline: '2026-05-15', unlockedBy: null, unlockEmailTo: null, isSummative: false, rules: 'Penalty: 1st offense -1, 2nd -3, 3rd -5 escalating', custom: false }
+                { id: 'gp-case', text: 'Case Presentation at Group Monthly Meeting (5%)', required: 1, completed: 0, status: 'pending', completionEntries: [], note: '', d3Deadline: '2026-05-15', unlockedBy: null, unlockEmailTo: null, isSummative: true, rules: null, custom: false },
+                { id: 'gp-milestones', text: '3rd Year Milestones', required: 1, completed: 0, status: 'pending', completionEntries: [], note: '', d3Deadline: '2026-05-15', unlockedBy: null, unlockEmailTo: null, isSummative: false, rules: null, custom: false }
+            ]},
+            { title: 'Leadership Requirements', items: [
+                { id: 'gp4-posttreat-eval', text: '3 Post Treatment Evaluations', required: 3, completed: 0, status: 'pending', completionEntries: [], note: '', d3Deadline: '2026-05-15', unlockedBy: null, unlockEmailTo: null, isSummative: false, rules: null, custom: false },
+                { id: 'gp4-aux-tech', text: 'Auxiliary Team Assessment with Dental Technician (1 formative)', required: 1, completed: 0, status: 'pending', completionEntries: [], note: '', d3Deadline: '2026-05-15', unlockedBy: null, unlockEmailTo: null, isSummative: false, rules: null, custom: false },
+                { id: 'gp4-aux-asst', text: 'Auxiliary Team Assessment with Dental Assistant (1 formative)', required: 1, completed: 0, status: 'pending', completionEntries: [], note: '', d3Deadline: '2026-05-15', unlockedBy: null, unlockEmailTo: null, isSummative: false, rules: null, custom: false },
+                { id: 'gp4-aux-summatives', text: 'Auxiliary Team Summatives (min 1 Technician + 1 Assistant, 4 total)', required: 4, completed: 0, status: 'pending', completionEntries: [], note: '', d3Deadline: '2026-05-15', unlockedBy: null, unlockEmailTo: null, isSummative: true, rules: null, custom: false },
+                { id: 'gp4-rounds-form', text: 'Leading Rounds (1 formative)', required: 1, completed: 0, status: 'pending', completionEntries: [], note: '', d3Deadline: '2026-05-15', unlockedBy: null, unlockEmailTo: null, isSummative: false, rules: null, custom: false },
+                { id: 'gp4-rounds-sum', text: 'Leading Rounds (1 summative)', required: 1, completed: 0, status: 'pending', completionEntries: [], note: '', d3Deadline: '2026-05-15', unlockedBy: null, unlockEmailTo: null, isSummative: true, rules: null, custom: false }
             ]}
         ]
     },
     grouppractice4: {
-        name: 'Group Practice — D4 (GD 642) & Leadership',
+        name: 'Group Practice — D4 (GD 642)',
         icon: '🎓',
         color: '#7c3aed',
-        notes: 'Formally D4 requirements but formatives can/should be started in D3.',
+        yearTarget: 'd4',
+        notes: 'Formally D4 requirements. Leadership requirements moved to D3 GD 640.',
         sections: [
             { title: '4th Year Summatives', items: [
-                { id: 'gp4-comm-txplan', text: '1 Communication Tx Plan Presentation (SEPARATE from D3)', required: 1, completed: 0, status: 'pending', completionEntries: [], note: '', d3Deadline: null, unlockedBy: null, unlockEmailTo: null, isSummative: true, rules: null, custom: false },
+                { id: 'gp4-comm-txplan', text: '1 Communication Treatment Plan Presentation', required: 1, completed: 0, status: 'pending', completionEntries: [], note: '', d3Deadline: null, unlockedBy: null, unlockEmailTo: null, isSummative: true, rules: null, custom: false },
                 { id: 'gp4-periodicrev-1', text: '2 Periodic Reviews (in 4th year)', required: 2, completed: 0, status: 'pending', completionEntries: [], note: '', d3Deadline: null, unlockedBy: null, unlockEmailTo: null, isSummative: true, rules: null, custom: false },
                 { id: 'gp4-written-analysis', text: '4 Written Analyses (cumulative — D3 summative WA counts)', required: 4, completed: 0, status: 'pending', completionEntries: [], note: '', d3Deadline: null, unlockedBy: null, unlockEmailTo: null, isSummative: true, rules: null, custom: false },
-                { id: 'gp4-pms', text: '4 Practice Management Scenarios (cumulative incl D3)', required: 4, completed: 0, status: 'pending', completionEntries: [], note: '', d3Deadline: null, unlockedBy: null, unlockEmailTo: null, isSummative: true, rules: null, custom: false }
-            ]},
-            { title: 'Leadership Requirements', items: [
-                { id: 'gp4-posttreat-eval', text: '3 Post Treatment Evaluations', required: 3, completed: 0, status: 'pending', completionEntries: [], note: '', d3Deadline: null, unlockedBy: null, unlockEmailTo: null, isSummative: false, rules: null, custom: false },
-                { id: 'gp4-aux-tech', text: 'Aux Assessment with Dental Technician (1 formative)', required: 1, completed: 0, status: 'pending', completionEntries: [], note: '', d3Deadline: null, unlockedBy: null, unlockEmailTo: null, isSummative: false, rules: null, custom: false },
-                { id: 'gp4-aux-asst', text: 'Aux Assessment with Dental Assistant (1 formative)', required: 1, completed: 0, status: 'pending', completionEntries: [], note: '', d3Deadline: null, unlockedBy: null, unlockEmailTo: null, isSummative: false, rules: null, custom: false },
-                { id: 'gp4-aux-summatives', text: 'Aux Team Summatives (min 1 Tech + 1 Asst, 4 total)', required: 4, completed: 0, status: 'pending', completionEntries: [], note: '', d3Deadline: null, unlockedBy: null, unlockEmailTo: null, isSummative: true, rules: null, custom: false },
-                { id: 'gp4-rounds-form', text: 'Leading Rounds (1 formative)', required: 1, completed: 0, status: 'pending', completionEntries: [], note: '', d3Deadline: null, unlockedBy: null, unlockEmailTo: null, isSummative: false, rules: null, custom: false },
-                { id: 'gp4-rounds-sum', text: 'Leading Rounds (1 summative)', required: 1, completed: 0, status: 'pending', completionEntries: [], note: '', d3Deadline: null, unlockedBy: null, unlockEmailTo: null, isSummative: true, rules: null, custom: false }
+                { id: 'gp4-pms', text: '4 Practice Management Scenarios (cumulative incl D3)', required: 4, completed: 0, status: 'pending', completionEntries: [], note: '', d3Deadline: null, unlockedBy: null, unlockEmailTo: null, isSummative: true, rules: null, custom: false, d4Carryover: true }
             ]}
         ]
     },
@@ -731,6 +730,7 @@ const DEFAULT_COMPETENCIES = {
         name: 'Treatment Planning (RS 545)',
         icon: '📋',
         color: '#6366f1',
+        yearTarget: 'both',
         notes: '',
         sections: [
             { title: 'Seminar Presentation (20% of RS 545 grade)', items: [
@@ -738,10 +738,6 @@ const DEFAULT_COMPETENCIES = {
             ]},
             { title: 'Seminar Attendance (80% of RS 545 grade)', items: [
                 { id: 'tx-attend-1', text: '2 Attend classmate presentations (by Apr 23, 2027)', required: 2, completed: 0, status: 'pending', completionEntries: [], note: '', d3Deadline: null, unlockedBy: null, unlockEmailTo: null, isSummative: false, rules: null, custom: false }
-            ]},
-            { title: 'Data Collection/Tx Planning Rotation', items: [
-                { id: 'tx-ohra-1', text: '2 OHRA Summatives', required: 2, completed: 0, status: 'pending', completionEntries: [], note: '', d3Deadline: '2026-05-15', unlockedBy: null, unlockEmailTo: null, isSummative: true, rules: null, custom: false },
-                { id: 'tx-caries-1', text: '2 Caries Detection Summatives', required: 2, completed: 0, status: 'pending', completionEntries: [], note: '', d3Deadline: '2026-05-15', unlockedBy: null, unlockEmailTo: null, isSummative: true, rules: null, custom: false }
             ]}
         ]
     },
@@ -749,6 +745,7 @@ const DEFAULT_COMPETENCIES = {
         name: 'Geriatric Dental Medicine',
         icon: '👴',
         color: '#8b5cf6',
+        yearTarget: 'both',
         notes: 'DMD 27 must challenge PH 541 Spring 2026, then rotation + assignment.',
         sections: [
             { title: 'Requirements', items: [
@@ -762,6 +759,7 @@ const DEFAULT_COMPETENCIES = {
         name: 'Externship & SPS',
         icon: '🌴',
         color: '#059669',
+        yearTarget: 'd4',
         notes: 'Group 1 rotation: May 18 - July 24, 2026.',
         sections: [
             { title: 'Externship Requirements', items: [
@@ -795,6 +793,229 @@ function ensureCompetenciesInitialized() {
     }
 }
 
+// D3/D4 Split Migration: move items between categories, resolve duplicates, add new items
+// Must run BEFORE migrateCompetencyEnhancements() and syncSchemaFields()
+function migrateCompetencyD3D4Split() {
+    if (localStorage.getItem('competencyD3D4SplitDone_v1')) return;
+    var comp = roadmapData.clinicalData?.competencies;
+    if (!comp || typeof comp !== 'object') return;
+
+    // Helper: find an item across all sections in a category, return {sec, itemKey, item}
+    function findItem(catKey, itemId) {
+        if (!comp[catKey]) return null;
+        var sections = comp[catKey].sections || {};
+        var secKeys = Object.keys(sections);
+        for (var s = 0; s < secKeys.length; s++) {
+            var sec = sections[secKeys[s]];
+            var items = sec.items || {};
+            var iKeys = Object.keys(items);
+            for (var i = 0; i < iKeys.length; i++) {
+                if (items[iKeys[i]] && (items[iKeys[i]].id || iKeys[i]) === itemId) {
+                    return { secKey: secKeys[s], sec: sec, itemKey: iKeys[i], item: items[iKeys[i]] };
+                }
+            }
+        }
+        return null;
+    }
+
+    // Helper: remove an item from a category
+    function removeItem(catKey, itemId) {
+        var found = findItem(catKey, itemId);
+        if (found) delete found.sec.items[found.itemKey];
+    }
+
+    // Helper: ensure a section exists in a category, return its items object
+    function ensureSection(catKey, sectionTitle) {
+        if (!comp[catKey]) return null;
+        var sections = comp[catKey].sections || {};
+        // Find existing section by title
+        var secKeys = Object.keys(sections);
+        for (var s = 0; s < secKeys.length; s++) {
+            if (sections[secKeys[s]].title === sectionTitle) return sections[secKeys[s]].items || {};
+        }
+        // Create new section
+        var newKey = 'sec_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5);
+        sections[newKey] = { title: sectionTitle, items: {} };
+        comp[catKey].sections = sections;
+        return sections[newKey].items;
+    }
+
+    // Helper: get item reference to find section and write into it
+    function ensureSectionRef(catKey, sectionTitle) {
+        if (!comp[catKey]) return null;
+        var sections = comp[catKey].sections || {};
+        var secKeys = Object.keys(sections);
+        for (var s = 0; s < secKeys.length; s++) {
+            if (sections[secKeys[s]].title === sectionTitle) return sections[secKeys[s]];
+        }
+        var newKey = 'sec_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5);
+        sections[newKey] = { title: sectionTitle, items: {} };
+        comp[catKey].sections = sections;
+        return sections[newKey];
+    }
+
+    // === PHASE 1: Move items between categories ===
+
+    // 1a. Move leadership items from grouppractice4 → grouppractice
+    var leadershipIds = ['gp4-posttreat-eval', 'gp4-aux-tech', 'gp4-aux-asst', 'gp4-aux-summatives', 'gp4-rounds-form', 'gp4-rounds-sum'];
+    var leaderSec = ensureSectionRef('grouppractice', 'Leadership Requirements');
+    if (leaderSec && comp.grouppractice4) {
+        leadershipIds.forEach(function(id) {
+            var found = findItem('grouppractice4', id);
+            if (found) {
+                leaderSec.items[found.itemKey] = found.item;
+                delete found.sec.items[found.itemKey];
+            }
+        });
+        console.log('[D3D4-SPLIT] Moved leadership items to grouppractice');
+    }
+
+    // 1b. Move SRP items from srp → perio
+    var srpIds = ['srp-calc-1', 'srp-calc-2', 'srp-calc-3', 'srp-reeval'];
+    var srpSec = ensureSectionRef('perio', 'Calculus Removal / SRP Summatives');
+    if (srpSec && comp.srp) {
+        srpIds.forEach(function(id) {
+            var found = findItem('srp', id);
+            if (found) {
+                srpSec.items[found.itemKey] = found.item;
+                delete found.sec.items[found.itemKey];
+            }
+        });
+        console.log('[D3D4-SPLIT] Moved SRP items to perio');
+    }
+
+    // 1c. Delete empty srp category
+    if (comp.srp) {
+        var srpHasItems = false;
+        getValues(comp.srp.sections || {}).forEach(function(sec) {
+            if (getCount(sec.items) > 0) srpHasItems = true;
+        });
+        if (!srpHasItems) {
+            delete comp.srp;
+            console.log('[D3D4-SPLIT] Deleted empty srp category');
+        }
+    }
+
+    // === PHASE 2: Resolve perio duplicates ===
+
+    // 2a. OHI: perio-3rd-ohi → perio-sum-hci (Math.max progress)
+    var oldOhi = findItem('perio', 'perio-3rd-ohi');
+    var targetOhi = findItem('perio', 'perio-sum-hci');
+    if (oldOhi && targetOhi) {
+        var oldC = oldOhi.item.completed ?? 0;
+        var targetC = targetOhi.item.completed ?? 0;
+        targetOhi.item.completed = Math.max(oldC, targetC);
+        if (oldOhi.item.lastVerified && (!targetOhi.item.lastVerified || oldOhi.item.lastVerified > targetOhi.item.lastVerified)) {
+            targetOhi.item.lastVerified = oldOhi.item.lastVerified;
+        }
+        if (oldOhi.item.note && !targetOhi.item.note) targetOhi.item.note = oldOhi.item.note;
+        removeItem('perio', 'perio-3rd-ohi');
+        console.log('[D3D4-SPLIT] Merged perio-3rd-ohi → perio-sum-hci (completed=' + targetOhi.item.completed + ')');
+    }
+
+    // 2b. Prophy split: perio-3rd-prophy + perio-sum-prophy → prophy-d3 + prophy-d4
+    var old3rdProphy = findItem('perio', 'perio-3rd-prophy');
+    var oldSumProphy = findItem('perio', 'perio-sum-prophy');
+
+    // Get progress values before deletion
+    var prophy3rdCompleted = old3rdProphy ? (old3rdProphy.item.completed ?? 0) : 0;
+    var prophySumCompleted = oldSumProphy ? (oldSumProphy.item.completed ?? 0) : 0;
+    var prophyBestVerified = null;
+    if (old3rdProphy && old3rdProphy.item.lastVerified) prophyBestVerified = old3rdProphy.item.lastVerified;
+    if (oldSumProphy && oldSumProphy.item.lastVerified) {
+        if (!prophyBestVerified || oldSumProphy.item.lastVerified > prophyBestVerified) {
+            prophyBestVerified = oldSumProphy.item.lastVerified;
+        }
+    }
+
+    // D3 gets: max of 3rd-year progress, capped at 1
+    var d3Completed = Math.min(Math.max(prophy3rdCompleted, Math.min(prophySumCompleted, 1)), 1);
+    // D4 gets: remainder from cumulative, capped at 2
+    var d4Completed = Math.min(Math.max(0, prophySumCompleted - 1), 2);
+
+    // Find summatives section in perio to add new items
+    var perioSumSec = ensureSectionRef('perio', 'Summatives (3rd + 4th Year Cumulative)');
+    if (perioSumSec) {
+        // Create perio-sum-prophy-d3 if not already present
+        if (!findItem('perio', 'perio-sum-prophy-d3')) {
+            var d3Key = 'item_prophyd3_' + Date.now();
+            perioSumSec.items[d3Key] = {
+                id: 'perio-sum-prophy-d3', text: '1 Prophy (D3)', required: 1,
+                completed: d3Completed, status: d3Completed >= 1 ? 'completed' : (d3Completed > 0 ? 'in_progress' : 'pending'),
+                note: '', d3Deadline: '2026-05-15', isSummative: true, custom: false,
+                lastVerified: d3Completed > 0 ? (prophyBestVerified || null) : null,
+                completionEntries: [], rules: null, unlockedBy: [{ id: 'perio-form-prophy', required: 5 }], unlockEmailTo: null
+            };
+        }
+        // Create perio-sum-prophy-d4 if not already present
+        if (!findItem('perio', 'perio-sum-prophy-d4')) {
+            var d4Key = 'item_prophyd4_' + Date.now() + '_1';
+            perioSumSec.items[d4Key] = {
+                id: 'perio-sum-prophy-d4', text: '2 Prophy (D4)', required: 2,
+                completed: d4Completed, status: d4Completed >= 2 ? 'completed' : (d4Completed > 0 ? 'in_progress' : 'pending'),
+                note: '', d3Deadline: null, isSummative: true, custom: false,
+                lastVerified: d4Completed > 0 ? (prophyBestVerified || null) : null,
+                completionEntries: [], rules: null, unlockedBy: [{ id: 'perio-form-prophy', required: 5 }], unlockEmailTo: null
+            };
+        }
+    }
+
+    // Delete old prophy items
+    if (old3rdProphy) removeItem('perio', 'perio-3rd-prophy');
+    if (oldSumProphy) removeItem('perio', 'perio-sum-prophy');
+    console.log('[D3D4-SPLIT] Split prophy: d3=' + d3Completed + ', d4=' + d4Completed);
+
+    // 2c. Re-eval gingivitis: perio-3rd-reeval → perio-sum-reeval-ging (Math.max)
+    var oldReeval = findItem('perio', 'perio-3rd-reeval');
+    var targetReeval = findItem('perio', 'perio-sum-reeval-ging');
+    if (oldReeval && targetReeval) {
+        var oldRC = oldReeval.item.completed ?? 0;
+        var targetRC = targetReeval.item.completed ?? 0;
+        targetReeval.item.completed = Math.max(oldRC, targetRC);
+        if (oldReeval.item.lastVerified && (!targetReeval.item.lastVerified || oldReeval.item.lastVerified > targetReeval.item.lastVerified)) {
+            targetReeval.item.lastVerified = oldReeval.item.lastVerified;
+        }
+        if (oldReeval.item.note && !targetReeval.item.note) targetReeval.item.note = oldReeval.item.note;
+        removeItem('perio', 'perio-3rd-reeval');
+        console.log('[D3D4-SPLIT] Merged perio-3rd-reeval → perio-sum-reeval-ging (completed=' + targetReeval.item.completed + ')');
+    }
+
+    // === PHASE 3: Add new items if not already present ===
+
+    // 3a. gp-milestones → grouppractice "Other D3 GP Requirements"
+    if (!findItem('grouppractice', 'gp-milestones')) {
+        var gpOtherSec = ensureSectionRef('grouppractice', 'Other D3 GP Requirements');
+        if (gpOtherSec) {
+            var msKey = 'item_milestones_' + Date.now();
+            gpOtherSec.items[msKey] = {
+                id: 'gp-milestones', text: '3rd Year Milestones', required: 1,
+                completed: 0, status: 'pending', note: '', d3Deadline: '2026-05-15',
+                isSummative: false, custom: false, lastVerified: null,
+                completionEntries: [], rules: null, unlockedBy: null, unlockEmailTo: null
+            };
+            console.log('[D3D4-SPLIT] Added gp-milestones');
+        }
+    }
+
+    // 3b. perio-dc-rotation → perio "Other"
+    if (!findItem('perio', 'perio-dc-rotation')) {
+        var perioOtherSec = ensureSectionRef('perio', 'Other');
+        if (perioOtherSec) {
+            var dcKey = 'item_dcrot_' + Date.now();
+            perioOtherSec.items[dcKey] = {
+                id: 'perio-dc-rotation', text: 'DC Rotation Week (4th year)', required: 1,
+                completed: 0, status: 'pending', note: '', d3Deadline: null,
+                isSummative: false, custom: false, lastVerified: null,
+                completionEntries: [], rules: null, unlockedBy: null, unlockEmailTo: null
+            };
+            console.log('[D3D4-SPLIT] Added perio-dc-rotation');
+        }
+    }
+
+    localStorage.setItem('competencyD3D4SplitDone_v1', '1');
+    console.log('[D3D4-SPLIT] Migration complete: leadership→grouppractice, srp→perio, perio duplicates resolved, new items added');
+}
+
 // CIS v3: Force-sync schema fields from DEFAULT_COMPETENCIES to saved data
 // v1 used ?? which preserved old incorrect d3Deadline values; v2 ALWAYS overwrites but ran before ground truth rebuild
 // v3: re-syncs after ground truth rebuild + removes orphaned items (perio-sum-calc, gp-comm, etc.)
@@ -820,24 +1041,28 @@ function migrateCompetencyEnhancements() {
         }
     });
 
-    // 2. Remove D4 items from old grouppractice (now in grouppractice4)
+    // 2. Remove non-leadership D4 items from grouppractice (now in grouppractice4)
+    // Leadership items (gp4-posttreat-eval, gp4-aux-*, gp4-rounds-*) NOW belong in grouppractice per HTML
+    var leadershipInGP = { 'gp4-posttreat-eval':1, 'gp4-aux-tech':1, 'gp4-aux-asst':1, 'gp4-aux-summatives':1, 'gp4-rounds-form':1, 'gp4-rounds-sum':1 };
     if (comp.grouppractice) {
         getValues(comp.grouppractice.sections || {}).forEach(function(sec) {
             var items = sec.items || {};
             Object.keys(items).forEach(function(itemKey) {
-                if ((items[itemKey].id || itemKey).indexOf('gp4-') === 0) {
+                var itemId = items[itemKey].id || itemKey;
+                if (itemId.indexOf('gp4-') === 0 && !leadershipInGP[itemId]) {
                     delete items[itemKey];
                 }
             });
         });
     }
 
-    // 3. Update category metadata from defaults (name, color, icon)
+    // 3. Update category metadata from defaults (name, color, icon, yearTarget)
     Object.keys(DEFAULT_COMPETENCIES).forEach(function(catKey) {
         if (comp[catKey]) {
             comp[catKey].name = DEFAULT_COMPETENCIES[catKey].name;
             comp[catKey].color = DEFAULT_COMPETENCIES[catKey].color;
             comp[catKey].icon = DEFAULT_COMPETENCIES[catKey].icon;
+            comp[catKey].yearTarget = DEFAULT_COMPETENCIES[catKey].yearTarget || null;
         }
     });
 
@@ -891,10 +1116,8 @@ function migrateToCompetencyV2() {
         // PERIO FORMATIVES
         'perio-form-ohi': 2, 'perio-form-dx': 4, 'perio-form-prophy': 5,
         'perio-form-quad': 1, 'perio-form-recall': 5,
-        // PERIO 3RD YEAR SUMMATIVES
-        'perio-3rd-ohi': 1, 'perio-3rd-prophy': 1,
-        // PERIO SUMMATIVES
-        'perio-sum-hci': 1, 'perio-sum-prophy': 3,
+        // PERIO SUMMATIVES (post D3/D4 split — 3rd-year duplicates merged)
+        'perio-sum-hci': 1, 'perio-sum-prophy-d3': 1, 'perio-sum-prophy-d4': 2,
         // ORAL SURGERY 3RD YEAR
         'os-3rd-rotation': 1, 'os-3rd-consult': 1, 'os-3rd-nerve': 1, 'os-3rd-suture': 1,
         // PEDS
@@ -949,6 +1172,21 @@ function syncSchemaFields() {
             (sec.items || []).forEach(function(item) { defaults[item.id] = item; });
         });
     });
+    // Remove saved categories not in DEFAULT_COMPETENCIES (e.g., stale srp from cloud merge)
+    Object.keys(comp).forEach(function(catKey) {
+        if (!DEFAULT_COMPETENCIES[catKey]) {
+            console.log('[SCHEMA-SYNC] Removing orphaned category: ' + catKey);
+            delete comp[catKey];
+        }
+    });
+
+    // Sync yearTarget on categories
+    Object.keys(DEFAULT_COMPETENCIES).forEach(function(catKey) {
+        if (comp[catKey]) {
+            comp[catKey].yearTarget = DEFAULT_COMPETENCIES[catKey].yearTarget || null;
+        }
+    });
+
     getValues(comp).forEach(function(cat) {
         getValues(cat.sections).forEach(function(sec) {
             var items = sec.items || {};
@@ -959,6 +1197,8 @@ function syncSchemaFields() {
                     item.rules = def.rules ?? null;
                     item.text = def.text;
                     item.required = def.required;
+                    item.isSummative = def.isSummative ?? false;
+                    item.d4Carryover = def.d4Carryover ?? false;
                 }
             });
             // Remove orphaned items not in DEFAULT_COMPETENCIES
@@ -1064,6 +1304,9 @@ function getWhatsNextItems(competencies) {
 // Track expanded categories
 var expandedCompCategories = new Set();
 
+// D3/D4 year tab state ('d3' or 'd4')
+var cv2ActiveYearTab = 'd3';
+
 // ==================== CIS v2: COMPETENCY TAB RENDERING HELPERS ====================
 // Tasks 4.3-4.18: Milestone dashboard, D3 deadlines, search/filter, evidence cards,
 // unlock chains, quick-record, patient view, pace projections, etc.
@@ -1080,19 +1323,23 @@ function renderMilestoneDashboard() {
     var aptCount = typeof getSmartAppointmentCount === 'function' ? getSmartAppointmentCount() : { total: 0 };
     var procCount = typeof getSmartProcedureCount === 'function' ? getSmartProcedureCount() : { total: 0 };
 
-    // Count summative items completed — ground truth: 7 Clinical Summatives
+    // Count summative items — dynamic total from isSummative flags
     var competencies = getCompetenciesData();
     var summativeCompleted = 0;
-    var summativeTotal = 7;
+    var summativeTotal = 0;
     getValues(competencies).forEach(function(cat) {
         getValues(cat.sections).forEach(function(sec) {
             getValues(sec.items).forEach(function(item) {
-                if (item.isSummative && item.completed >= (item.required ?? 1)) {
-                    summativeCompleted++;
+                if (item.isSummative) {
+                    summativeTotal++;
+                    if (item.completed >= (item.required ?? 1)) {
+                        summativeCompleted++;
+                    }
                 }
             });
         });
     });
+    if (summativeTotal === 0) summativeTotal = 7; // fallback
 
     var readiness = typeof calculateGraduationReadiness === 'function' ? calculateGraduationReadiness() : { percent: 0 };
 
@@ -1870,6 +2117,14 @@ function renderCompetencies() {
     // === ALL 3 PANELS rendered into competenciesContainer ===
     var html = '<div class="cv2-container">';
 
+    // === D3/D4 YEAR TABS ===
+    html += '<div class="cv2-year-tabs">';
+    html += '<button class="cv2-year-tab' + (cv2ActiveYearTab === 'd3' ? ' active-d3' : '') + '" onclick="cv2SwitchYearTab(\'d3\')">'
+        + 'By End of D3<span class="cv2-tab-deadline">Due: May 15, 2026</span></button>';
+    html += '<button class="cv2-year-tab' + (cv2ActiveYearTab === 'd4' ? ' active-d4' : '') + '" onclick="cv2SwitchYearTab(\'d4\')">'
+        + 'By End of D4<span class="cv2-tab-deadline">Due: May 15, 2027</span></button>';
+    html += '</div>';
+
     // === PANEL 1: MILESTONE STRIP + D3 ALERT ===
     html += cv2BuildMilestoneStrip(competencies, stats);
 
@@ -1880,21 +2135,55 @@ function renderCompetencies() {
     // === PANEL 2: CATEGORY ACCORDION ===
     var sortedCategories = getUrgencySortedCategoryKeys(competencies);
 
+    // Track whether Removable Prosthodontics visual group header has been rendered (D4 tab)
+    var removableGroupRendered = false;
+
     sortedCategories.forEach(function(entry) {
         var key = entry.key, cat = entry.cat, catStats = entry.stats;
+        var catYearTarget = cat.yearTarget || DEFAULT_COMPETENCIES[key]?.yearTarget || null;
+
+        // D3/D4 year tab filtering
+        if (!cv2CategoryVisibleForTab(key, cat, cv2ActiveYearTab)) return;
+
+        // For 'both' categories, recompute stats for only visible items in this tab
+        var tabFilteredStats = catStats;
+        if (catYearTarget === 'both') {
+            var filteredCompleted = 0, filteredTotal = 0;
+            getValues(cat.sections).forEach(function(sec) {
+                getValues(sec.items).forEach(function(item) {
+                    if (cv2ItemVisibleForTab(item, catYearTarget, cv2ActiveYearTab) || item.d4Carryover) {
+                        filteredTotal += item.required ?? 0;
+                        filteredCompleted += Math.min(item.completed ?? 0, item.required ?? 0);
+                    }
+                });
+            });
+            if (filteredTotal === 0) return; // No visible items in this tab
+            tabFilteredStats = {
+                completedUnits: filteredCompleted,
+                totalUnits: filteredTotal,
+                percent: filteredTotal > 0 ? Math.round((filteredCompleted / filteredTotal) * 100) : 0
+            };
+        }
+
         var isExpanded = expandedCompCategories.has(key);
-        var pct = catStats.percent || 0;
+        var pct = tabFilteredStats.percent || 0;
         var barCls = pct >= 100 ? 'cv2-bar-done' : pct > 0 ? 'cv2-bar-wip' : 'cv2-bar-critical';
         var safeKey = (key || '').replace(/['"\\]/g, '');
 
         // Skip if search/filter active and no visible items
         if ((compSearchQuery || compActiveFilters.length > 0) && !compCategoryHasVisibleItems(cat)) return;
 
+        // Removable Prosthodontics visual grouping (D4 tab: dentures + rpd under one header)
+        if (cv2ActiveYearTab === 'd4' && (key === 'dentures' || key === 'rpd') && !removableGroupRendered) {
+            html += '<div class="cv2-visual-group-header">Removable Prosthodontics</div>';
+            removableGroupRendered = true;
+        }
+
         html += '<div class="cv2-category' + (isExpanded ? ' expanded' : '') + '" data-cat="' + escapeHtml(key) + '">';
         html += '<div class="cv2-cat-header" onclick="cv2ToggleCategory(\'' + safeKey + '\')">';
         html += '<span class="cv2-cat-icon">' + (cat.icon || '') + '</span>';
         html += '<span class="cv2-cat-name">' + escapeHtml(cat.name || key) + '</span>';
-        html += '<span class="cv2-cat-count">' + catStats.completedUnits + '/' + catStats.totalUnits + '</span>';
+        html += '<span class="cv2-cat-count">' + tabFilteredStats.completedUnits + '/' + tabFilteredStats.totalUnits + '</span>';
         html += '<div class="cv2-cat-bar"><div class="cv2-cat-bar-fill ' + barCls + '" style="width:' + pct + '%"></div></div>';
         html += '<span class="cv2-cat-pct">' + pct + '%</span>';
         html += '<span class="cv2-cat-chevron">' + (isExpanded ? '\u25BC' : '\u25B6') + '</span>';
@@ -1918,16 +2207,20 @@ function renderCompetencies() {
             // Sections and items
             getValues(cat.sections).forEach(function(sec) {
                 var visibleItems = getValues(sec.items).filter(function(item) {
-                    return compItemMatchesFilter(item);
+                    if (!compItemMatchesFilter(item)) return false;
+                    // Year tab filtering for 'both' categories
+                    if (catYearTarget === 'both') {
+                        if (!cv2ItemVisibleForTab(item, catYearTarget, cv2ActiveYearTab) && !item.d4Carryover) return false;
+                    }
+                    return true;
                 });
-                if (visibleItems.length === 0 && (compSearchQuery || compActiveFilters.length > 0)) return;
+                if (visibleItems.length === 0) return;
 
                 if (sec.title) {
                     html += '<div class="cv2-section-title">' + escapeHtml(sec.title) + '</div>';
                 }
 
-                var itemsToRender = (compSearchQuery || compActiveFilters.length > 0) ? visibleItems : getValues(sec.items);
-                itemsToRender.forEach(function(item) {
+                visibleItems.forEach(function(item) {
                     if (!item || !item.id) return;
                     var completed = item.completed ?? 0;
                     var required = item.required ?? 1;
@@ -1945,7 +2238,8 @@ function renderCompetencies() {
                     var hasNote = item.note && item.note.trim().length > 0;
 
                     html += '<div class="cv2-req-row" data-item="' + escapeHtml(item.id) + '">';
-                    html += '<span class="cv2-req-name" onclick="cv2ShowPipeline(\'' + safeItemId + '\')">' + escapeHtml(item.text || item.id) + '</span>';
+                    var carryoverBadge = cv2GetCarryoverBadge(item, catYearTarget, cv2ActiveYearTab);
+                    html += '<span class="cv2-req-name" onclick="cv2ShowPipeline(\'' + safeItemId + '\')">' + escapeHtml(item.text || item.id) + carryoverBadge + '</span>';
                     html += '<div class="cv2-counter">';
                     html += '<button class="cv2-counter-btn" onclick="event.stopPropagation();adjustCompItem(\'' + safeKey + '\',\'' + safeItemId + '\',-1)">\u2212</button>';
                     html += '<span class="cv2-counter-val" onclick="event.stopPropagation();cv2EditCount(\'' + safeKey + '\',\'' + safeItemId + '\',this)">'
@@ -1994,6 +2288,31 @@ function renderCompetencies() {
         }
         html += '</div></div>'; // close cv2-cat-body and cv2-category
     });
+
+    // === CARRYOVER ITEMS (from other year tab) ===
+    var carryoverItems = cv2GetCarryoverItems(competencies, cv2ActiveYearTab);
+    if (carryoverItems.length > 0) {
+        var carryoverTitle = cv2ActiveYearTab === 'd3' ? 'Also Tracked (Cumulative D3+D4)' : 'D3 Carryover Items';
+        html += '<div class="cv2-section-title" style="margin-top:16px;font-size:0.85rem;color:var(--cv2-muted);">' + carryoverTitle + '</div>';
+        carryoverItems.forEach(function(co) {
+            var item = co.item;
+            var completed = item.completed ?? 0;
+            var required = item.required ?? 1;
+            var safeItemId = (item.id || '').replace(/['"\\]/g, '');
+            var safeKey = (co.catKey || '').replace(/['"\\]/g, '');
+            var statusIcon = completed >= required ? '\u2705' : (completed > 0 ? '\uD83D\uDFE1' : '\u2B1C');
+            html += '<div class="cv2-req-row" data-item="' + escapeHtml(item.id) + '">';
+            html += '<span class="cv2-req-name">' + escapeHtml(item.text || item.id) + co.badge + '</span>';
+            html += '<div class="cv2-counter">';
+            html += '<button class="cv2-counter-btn" onclick="event.stopPropagation();adjustCompItem(\'' + safeKey + '\',\'' + safeItemId + '\',-1)">\u2212</button>';
+            html += '<span class="cv2-counter-val" onclick="event.stopPropagation();cv2EditCount(\'' + safeKey + '\',\'' + safeItemId + '\',this)">'
+                + completed + '/' + required + '</span>';
+            html += '<button class="cv2-counter-btn" onclick="event.stopPropagation();adjustCompItem(\'' + safeKey + '\',\'' + safeItemId + '\',1)">+</button>';
+            html += '</div>';
+            html += '<span class="cv2-status">' + statusIcon + '</span>';
+            html += '</div>';
+        });
+    }
 
     // === PANEL 3: WHAT'S NEXT ===
     html += cv2BuildWhatsNext(competencies);
@@ -2214,6 +2533,72 @@ function toggleCompCategory(key) {
 function cv2FilterCompetencies(query) {
     compSearchQuery = (query || '').trim();
     renderCompetencies();
+}
+
+// Switch D3/D4 year tab
+function cv2SwitchYearTab(tab) {
+    cv2ActiveYearTab = tab;
+    renderCompetencies();
+}
+
+// Check if a category should be visible in the current year tab
+function cv2CategoryVisibleForTab(catKey, cat, tab) {
+    var yt = cat.yearTarget || DEFAULT_COMPETENCIES[catKey]?.yearTarget || null;
+    if (tab === 'd3') {
+        return yt === 'd3' || yt === 'both';
+    } else {
+        return yt === 'd4' || yt === 'both';
+    }
+}
+
+// Filter items within a 'both' category for the active year tab
+function cv2ItemVisibleForTab(item, catYearTarget, tab) {
+    if (catYearTarget !== 'both') return true; // d3/d4 categories show all items
+    if (tab === 'd3') {
+        return !!item.d3Deadline; // D3 tab: only items WITH d3Deadline
+    } else {
+        return !item.d3Deadline; // D4 tab: only items WITHOUT d3Deadline
+    }
+}
+
+// Check if an item should show as a carryover in the current tab
+function cv2GetCarryoverBadge(item, catYearTarget, tab) {
+    if (!item.d4Carryover) return '';
+    if (tab === 'd3') {
+        // In D3 tab, d4Carryover items from 'd4' categories show with badge
+        if (catYearTarget === 'd4') {
+            return '<span class="cv2-carryover-badge cv2-carryover-d4">Cumulative D3+D4</span>';
+        }
+        return ''; // d3/both items with carryover show normally in D3
+    } else {
+        // In D4 tab, d4Carryover items from 'd3' or 'both' categories show with badge
+        if (catYearTarget === 'd3' || (catYearTarget === 'both' && item.d3Deadline)) {
+            return '<span class="cv2-carryover-badge cv2-carryover-warn">Should have been completed in D3</span>';
+        }
+        return '';
+    }
+}
+
+// Collect d4Carryover items that need to show in the OTHER tab
+function cv2GetCarryoverItems(competencies, tab) {
+    var items = [];
+    Object.entries(competencies).forEach(function(entry) {
+        var catKey = entry[0], cat = entry[1];
+        var yt = cat.yearTarget || DEFAULT_COMPETENCIES[catKey]?.yearTarget || null;
+        getValues(cat.sections).forEach(function(sec) {
+            getValues(sec.items).forEach(function(item) {
+                if (!item.d4Carryover) return;
+                if (tab === 'd3' && yt === 'd4') {
+                    // D3 tab: show d4 items with d4Carryover
+                    items.push({ item: item, catKey: catKey, cat: cat, badge: '<span class="cv2-carryover-badge cv2-carryover-d4">Cumulative D3+D4</span>' });
+                } else if (tab === 'd4' && (yt === 'd3' || (yt === 'both' && item.d3Deadline))) {
+                    // D4 tab: show d3/both items with d4Carryover
+                    items.push({ item: item, catKey: catKey, cat: cat, badge: '<span class="cv2-carryover-badge cv2-carryover-warn">Should have been completed in D3</span>' });
+                }
+            });
+        });
+    });
+    return items;
 }
 
 // === CV2 HELPER: Inline count edit ===
@@ -2485,11 +2870,12 @@ function resetCompetencies() {
         roadmapData.clinicalData.competencies = migrateCompetencies(
             JSON.parse(JSON.stringify(DEFAULT_COMPETENCIES))
         );
-        // Clear migration flags so migrateToCompetencyV2() re-seeds verified counts on next init
+        // Clear migration flags so migrations re-run on next init
         localStorage.removeItem('competencyV2Migrated');
         localStorage.removeItem('unifiedPatientStoreDone_v1');
         localStorage.removeItem('competencyEnhancementsDone_v2');
         localStorage.removeItem('competencyEnhancementsDone_v3');
+        localStorage.removeItem('competencyD3D4SplitDone_v1');
         localStorage.removeItem('leadingZeroDedupDone_v2');
         localStorage.removeItem('perioNoiseCleanupDone_v1');
         expandedCompCategories.clear();

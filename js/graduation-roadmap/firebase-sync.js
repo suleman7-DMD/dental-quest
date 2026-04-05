@@ -875,6 +875,7 @@ function importBackup(file) {
             localStorage.removeItem('competencyEnhancementsDone_v2');
             localStorage.removeItem('competencyEnhancementsDone_v3');
             localStorage.removeItem('competencyV2Migrated');
+            localStorage.removeItem('competencyD3D4SplitDone_v1');
             localStorage.removeItem('leadingZeroDedupDone_v2');
             localStorage.removeItem('perioNoiseCleanupDone_v1');
 
@@ -1889,6 +1890,7 @@ function restoreCheckpoint(index) {
             localStorage.removeItem('competencyEnhancementsDone_v2');
             localStorage.removeItem('competencyEnhancementsDone_v3');
             localStorage.removeItem('competencyV2Migrated');
+            localStorage.removeItem('competencyD3D4SplitDone_v1');
             localStorage.removeItem('leadingZeroDedupDone_v2');
             localStorage.removeItem('perioNoiseCleanupDone_v1');
 
@@ -2160,6 +2162,7 @@ function importAndRestoreDirectly() {
                     localStorage.removeItem('competencyEnhancementsDone_v2');
                     localStorage.removeItem('competencyEnhancementsDone_v3');
                     localStorage.removeItem('competencyV2Migrated');
+                    localStorage.removeItem('competencyD3D4SplitDone_v1');
                     localStorage.removeItem('leadingZeroDedupDone_v2');
                     localStorage.removeItem('perioNoiseCleanupDone_v1');
 

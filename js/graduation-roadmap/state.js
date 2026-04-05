@@ -1136,7 +1136,7 @@ function getSmartProcedureCount() {
     // V2: No completionEntries exist — count items where completed > 0 in procedure categories
     // Only counts as "additional" procedures beyond what's in formal records
     var competencyDerivedCount = 0;
-    var procedureCategories = { fixed: 1, operative: 1, dentures: 1, rpd: 1, srp: 1, endo: 1, oralsurg: 1, perio: 1 };
+    var procedureCategories = { fixed: 1, operative: 1, dentures: 1, rpd: 1, endo: 1, oralsurg: 1, perio: 1 };
 
     // Fix #10: Exclude non-procedure items (simulations, mock boards, case presentations,
     // analyses, assists, approvals, assignments, exams) from fallback procedure count
@@ -1147,7 +1147,7 @@ function getSmartProcedureCount() {
         'op-approval': 1, 'op-assignment': 1, 'op-license': 1,
         'endo-postdoc': 1, 'endo-predoc': 1, 'endo-mock': 1,
         'cd-units-total': 1,
-        'perio-surg-assist': 1, 'perio-sum-mock': 1
+        'perio-surg-assist': 1, 'perio-sum-mock': 1, 'perio-dc-rotation': 1
     };
 
     if (competencies) {

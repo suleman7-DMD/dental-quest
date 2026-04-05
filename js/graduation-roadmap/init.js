@@ -1718,6 +1718,9 @@ function initUI() {
     // Ensure competencies are initialized before any render that reads them
     try { ensureCompetenciesInitialized(); } catch(e) { console.error('ensureCompetenciesInitialized error:', e); }
 
+    // D3/D4 split migration — MUST run before migrateCompetencyEnhancements/syncSchemaFields
+    try { migrateCompetencyD3D4Split(); } catch(e) { console.error('migrateCompetencyD3D4Split error:', e); }
+
     // CIS v3 migrations — idempotent, gated by localStorage flags
     try { migrateCompetencyEnhancements(); } catch(e) { console.error('migrateCompetencyEnhancements error:', e); }
     try { migrateToUnifiedPatientStore(); } catch(e) { console.error('migrateToUnifiedPatientStore error:', e); }

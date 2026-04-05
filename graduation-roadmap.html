@@ -3944,6 +3944,93 @@
             --cv2-radius-lg: 12px;
         }
 
+        /* ── D3/D4 Year Sub-Tabs ── */
+        .cv2-year-tabs {
+            display: flex;
+            gap: 0;
+            margin-bottom: 14px;
+            border-radius: var(--cv2-radius);
+            overflow: hidden;
+            border: 1px solid var(--cv2-border);
+        }
+        .cv2-year-tab {
+            flex: 1;
+            padding: 10px 16px;
+            font-family: var(--cv2-font-heading);
+            font-size: 0.85rem;
+            font-weight: 600;
+            text-align: center;
+            cursor: pointer;
+            border: none;
+            background: var(--cv2-surface);
+            color: var(--cv2-muted);
+            transition: all 0.2s ease;
+            letter-spacing: -0.01em;
+        }
+        .cv2-year-tab:hover {
+            background: var(--cv2-surface-raised);
+            color: var(--cv2-ink);
+        }
+        .cv2-year-tab.active-d3 {
+            background: rgba(88,166,255,0.12);
+            color: #58a6ff;
+            border-bottom: 2px solid #58a6ff;
+        }
+        .cv2-year-tab.active-d4 {
+            background: rgba(240,136,62,0.12);
+            color: #f0883e;
+            border-bottom: 2px solid #f0883e;
+        }
+        .cv2-year-tab .cv2-tab-deadline {
+            display: block;
+            font-size: 0.7rem;
+            font-weight: 400;
+            color: var(--cv2-muted);
+            margin-top: 2px;
+            font-family: var(--cv2-font-mono);
+        }
+        .cv2-year-tab.active-d3 .cv2-tab-deadline { color: rgba(88,166,255,0.7); }
+        .cv2-year-tab.active-d4 .cv2-tab-deadline { color: rgba(240,136,62,0.7); }
+
+        /* Carryover badge */
+        .cv2-carryover-badge {
+            display: inline-block;
+            font-size: 0.65rem;
+            font-weight: 600;
+            padding: 1px 6px;
+            border-radius: 3px;
+            margin-left: 6px;
+            vertical-align: middle;
+            letter-spacing: 0.02em;
+        }
+        .cv2-carryover-d4 {
+            background: rgba(240,136,62,0.12);
+            color: #f0883e;
+            border: 1px solid rgba(240,136,62,0.25);
+        }
+        .cv2-carryover-d3 {
+            background: rgba(88,166,255,0.12);
+            color: #58a6ff;
+            border: 1px solid rgba(88,166,255,0.25);
+        }
+        .cv2-carryover-warn {
+            background: rgba(248,81,73,0.10);
+            color: #f85149;
+            border: 1px solid rgba(248,81,73,0.25);
+        }
+
+        /* Visual grouping header for Removable Prostho */
+        .cv2-visual-group-header {
+            font-family: var(--cv2-font-heading);
+            font-weight: 600;
+            font-size: 0.9rem;
+            color: var(--cv2-ink);
+            padding: 10px 14px 6px;
+            margin-top: 8px;
+            border-bottom: 1px solid var(--cv2-border);
+            letter-spacing: -0.01em;
+        }
+
         /* ── Container & Layout ── */
         .cv2-container {
             background: var(--cv2-canvas);
@@ -11158,17 +11245,17 @@ NOTES: ...
     <div class="toast" id="toast">Saved!</div>
 
     <script src="js/graduation-roadmap/state.js?v=20260403"></script>
-    <script src="js/graduation-roadmap/firebase-sync.js?v=20260403"></script>
+    <script src="js/graduation-roadmap/firebase-sync.js?v=20260405"></script>
     <script src="js/graduation-roadmap/deadlines.js?v=20260403"></script>
     <script src="js/graduation-roadmap/grades.js?v=20260403"></script>
     <script src="js/graduation-roadmap/exam-content.js?v=20260403"></script>
-    <script src="js/graduation-roadmap/clinical.js?v=20260403"></script>
+    <script src="js/graduation-roadmap/clinical.js?v=20260405"></script>
     <script src="js/graduation-roadmap/patients.js?v=20260405"></script>
     <script src="js/graduation-roadmap/import-system.js?v=20260403"></script>
     <script src="js/graduation-roadmap/daily-planner.js?v=20260403"></script>
     <script src="js/graduation-roadmap/monthly-planner.js?v=20260403"></script>
     <script src="js/graduation-roadmap/periodic-review.js?v=20260403"></script>
     <script src="js/graduation-roadmap/troubleshooting.js?v=20260403"></script>
-    <script src="js/graduation-roadmap/init.js?v=20260403"></script>
+    <script src="js/graduation-roadmap/init.js?v=20260405"></script>
 </body>
 </html>

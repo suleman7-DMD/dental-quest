@@ -1,6 +1,6 @@
 # GROUND TRUTH: DMD 2027 GRADUATION REQUIREMENTS
 ## Suleman Shaikh — Single Source of Truth
-### Last Updated: 2026-04-02
+### Last Updated: 2026-04-05
 
 > **THIS FILE IS THE ONLY REQUIREMENTS REFERENCE.**
 > It replaces PR_PART_1_SULEMAN_SHAIKH.pdf and GRADUATION_REQUIREMENTS.pdf.
@@ -20,6 +20,17 @@
 
 ---
 
+## D3/D4 SPLIT MODEL
+
+Each category has a `yearTarget` property: `'d3'`, `'d4'`, or `'both'`.
+
+- **`d3` categories**: All items appear exclusively in the D3 tab.
+- **`d4` categories**: All items appear exclusively in the D4 tab.
+- **`both` categories**: Items with a `d3Deadline` appear in the D3 tab; items without appear in the D4 tab.
+- **`d4Carryover: true`**: Items marked with this flag appear in BOTH tabs (started in D3, completed in D4).
+
+---
+
 ## THE 3 MILESTONES (Non-Negotiable, by May 2026)
 
 From Sam Gaston — hard minimums based on historical lowest-10 students.
@@ -28,7 +39,7 @@ From Sam Gaston — hard minimums based on historical lowest-10 students.
 |-----------|--------|----------|
 | Attended Appointments | ≥ 90 | SPS Dashboard: ATTENDED field |
 | Completed Procedures | ≥ 116 | SPS Dashboard: TOTAL_COMPLETED field |
-| Clinical Summatives Passed | ≥ 7 | Sum across all summative categories |
+| Clinical Summatives Passed | ≥ 7 | Dynamically counted from isSummative items |
 
 **Consequences:**
 - Fail ALL 3 → Academic Probation
@@ -74,17 +85,17 @@ From Sam Gaston — hard minimums based on historical lowest-10 students.
 | fixed-sum-impr | Final Impression | 2 | 0 | null |
 | fixed-sum-cement | Cementation | 2 | 0 | null |
 
-### Other Fixed Requirements
+### Other Fixed Requirements (all isSummative: true)
 
-| Requirement ID | Description | Required | Completed | D3 Deadline |
-|---|---|---|---|---|
-| fixed-occlusal-cr | Occlusal Analysis (Centric Relation) | 1 | 0 | null |
-| fixed-occlusal-mi | Occlusal Analysis (Max Intercuspation) | 1 | 0 | null |
-| fixed-mock | Mock Board | 1 | 0 | null |
-| fixed-sim-1 | Fixed Simulation #1 (Dr. Ferriero) | 1 | 0 | null |
-| fixed-sim-2 | Fixed Simulation #2 (Dr. Ferriero) | 1 | 0 | null |
-| fixed-sim-fpd | Simulation: 3-unit Prep and Temp of FPD | 1 | 0 | null |
-| fixed-case-pres | Case Presentation (on 2 completed fixed or fixed-removable units) | 1 | 0 | null |
+| Requirement ID | Description | Required | Completed | D3 Deadline | isSummative |
+|---|---|---|---|---|---|
+| fixed-occlusal-cr | Occlusal Analysis (Centric Relation) | 1 | 0 | null | true |
+| fixed-occlusal-mi | Occlusal Analysis (Max Intercuspation) | 1 | 0 | null | true |
+| fixed-mock | Mock Board | 1 | 0 | null | true |
+| fixed-sim-1 | Fixed Simulation #1 (Dr. Ferriero) | 1 | 0 | null | true |
+| fixed-sim-2 | Fixed Simulation #2 (Dr. Ferriero) | 1 | 0 | null | true |
+| fixed-sim-fpd | Simulation: 3-unit Prep and Temp of FPD | 1 | 0 | null | true |
+| fixed-case-pres | Case Presentation (on 2 completed fixed or fixed-removable units) | 1 | 0 | null | true |
 
 ---
 
@@ -211,8 +222,8 @@ These are the perio summatives with D3 deadlines. The formatives listed below ar
    - Prereq: 5 Prophy Formatives
    - Status: DONE (formatives done, D3 summative completed)
 
-3. **Re-eval Gingivitis Summative** — by May 2026
-   - Prereq: 3 Re-eval Gingivitis Formatives
+3. **Re-eval Gingivitis Summative** — 1 by May 2026 (d4Carryover)
+   - Prereq: 3 Re-eval Gingivitis Formatives (d4Carryover)
    - Status: PENDING (formatives at 0/3)
 
 ### Surgical Assists
@@ -221,43 +232,36 @@ These are the perio summatives with D3 deadlines. The formatives listed below ar
 |---|---|---|---|---|
 | perio-surg-assist | Surgical Assist (max 1 can be implant uncovering) | 7 | 0 | null (by D4, combined D3+D4) |
 
-### 3rd Year Summatives
-
-| Requirement ID | Description | Required | Completed | D3 Deadline |
-|---|---|---|---|---|
-| perio-3rd-ohi | OHI Summative | 1 | 1 | 2025-10-01 — DONE |
-| perio-3rd-prophy | Scaling & Prophy Summative | 1 | 1 | 2026-05-15 — DONE |
-| perio-3rd-reeval | Re-eval Gingivitis Summative | 1 | 0 | 2026-05-15 |
-
 ### Formatives (3rd + 4th Year Cumulative)
 
 These unlock the corresponding summative categories. You cannot attempt a summative until formatives are done.
 
-| Requirement ID | Description | Required | Completed | Unlocks |
-|---|---|---|---|---|
-| perio-form-ohi | Oral Hygiene (1 Zoom, 1 in-person) | 2 | 2 | OHI summative — DONE |
-| perio-form-dx | Diagnosis & Treatment Plan | 4 | 4 | Dx & Tx Plan summative — DONE |
-| perio-form-prophy | Prophy | 5 | 5 | Prophy summatives — DONE |
-| perio-form-quad | Quad SRP | 3 | 1 | Calculus removal summatives |
-| perio-form-reeval-ging | Re-evaluate Gingivitis | 3 | 0 | Re-eval Gingivitis summatives |
-| perio-form-reeval-srp | Re-evaluate SRP | 1 | 0 | Re-eval SRP summative |
-| perio-form-impr | Re-evaluate Impression | 3 | 0 | Re-eval Impression summative |
-| perio-form-recall | Recall | 6 | 5 | Recall summatives |
+| Requirement ID | Description | Required | Completed | D3 Deadline | Unlocks | Notes |
+|---|---|---|---|---|---|---|
+| perio-form-ohi | Oral Hygiene (1 Zoom, 1 in-person) | 2 | 2 | 2026-05-15 | OHI summative — DONE | |
+| perio-form-dx | Diagnosis & Treatment Plan | 4 | 4 | 2026-05-15 | Dx & Tx Plan summative — DONE | |
+| perio-form-prophy | Prophy | 5 | 5 | 2026-05-15 | Prophy summatives — DONE | |
+| perio-form-quad | Quad SRP | 3 | 1 | null | Calculus removal summatives | |
+| perio-form-reeval-ging | Re-evaluate Gingivitis | 3 | 0 | 2026-05-15 | Re-eval Gingivitis summatives | d4Carryover: true |
+| perio-form-reeval-srp | Re-evaluate SRP | 1 | 0 | null | Re-eval SRP summative | |
+| perio-form-impr | Re-evaluate Impression | 3 | 0 | null | Re-eval Impression summative | |
+| perio-form-recall | Recall | 6 | 5 | null | Recall summatives | |
 
 ### Summatives (3rd + 4th Year Cumulative)
 
-| Requirement ID | Description | Required | Completed | D3 Deadline |
-|---|---|---|---|---|
-| perio-sum-hci | Home Care Instruction (= the D3 OHI summative) | 1 | 1 | 2025-10-01 — DONE |
-| perio-sum-dx | Diagnosis & Treatment Plan (Type 2) | 2 | 0 | null |
-| perio-sum-prophy | Prophy (includes the D3 one) | 3 | 3 | 1 by May 2026 (DONE); 2 more by D4 — ALL DONE |
-| perio-sum-reeval-ging | Re-evaluate Gingivitis (includes the D3 one) | 2 | 0 | 1 by May 2026; 1 more by D4 |
-| perio-sum-reeval-srp | Re-evaluate SRP | 1 | 0 | null |
-| perio-sum-impr | Re-evaluate Impression | 1 | 0 | null |
-| perio-sum-recall | Recall | 2 | 0 | null |
-| perio-sum-mock | Mock Board | 1 | 0 | null |
+| Requirement ID | Description | Required | Completed | D3 Deadline | Notes |
+|---|---|---|---|---|---|
+| perio-sum-hci | Home Care Instruction (= the D3 OHI summative) | 1 | 1 | 2025-10-01 — DONE | |
+| perio-sum-dx | Diagnosis & Treatment Plan (Type 2) | 2 | 0 | 2026-05-15 | OHRA/Caries auto-satisfied by this requirement |
+| perio-sum-prophy-d3 | Prophy — D3 (isSummative) | 1 | 1 | 2026-05-15 | Summative; split from perio-sum-prophy |
+| perio-sum-prophy-d4 | Prophy — D4 (isSummative) | 2 | 2 | null | Summative; split from perio-sum-prophy |
+| perio-sum-reeval-ging | Re-evaluate Gingivitis | 1 | 0 | 2026-05-15 | d4Carryover: true |
+| perio-sum-reeval-srp | Re-evaluate SRP | 1 | 0 | null | |
+| perio-sum-impr | Re-evaluate Impression | 1 | 0 | null | |
+| perio-sum-recall | Recall | 2 | 0 | null | |
+| perio-sum-mock | Mock Board | 1 | 0 | null | |
 
-### Calculus Removal / SRP Summatives
+### Calculus Removal / SRP (part of Periodontology)
 
 **NOTE:** These are officially part of Periodontology summatives but tracked with their own IDs for cleaner export/import. The standalone SRP IDs below are the CANONICAL IDs. There is NO separate "perio-sum-calc" ID.
 
@@ -269,6 +273,12 @@ These unlock the corresponding summative categories. You cannot attempt a summat
 | srp-reeval | Re-evaluate SRP Summative (same as perio-sum-reeval-srp) | 1 | 0 | null |
 
 **IMPORTANT:** srp-reeval and perio-sum-reeval-srp are the SAME requirement. srp-reeval is the canonical export ID. perio-sum-reeval-srp should be treated as an alias if encountered.
+
+### DC Rotation
+
+| Requirement ID | Description | Required | Completed | D3 Deadline | Notes |
+|---|---|---|---|---|---|
+| perio-dc-rotation | DC Rotation Week | 1 | 0 | null | 4th year requirement |
 
 ### PE 640 Clinical Workflow Requirements (Per Patient)
 
@@ -354,7 +364,7 @@ Update hx, radiographic review, exams, plaque control review, scaling/RP where i
 
 | Requirement ID | Description | Required | Completed | D3 Deadline |
 |---|---|---|---|---|
-| peds-course | PD 530 Didactic course completion | 1 | 1 | null — DONE |
+| peds-course | PD 530 Didactic course completion | 1 | 1 | 2026-05-15 — DONE |
 | peds-rotation | Rotations (including Franciscan Hospital) | 1 | 0 | null |
 | peds-assessment | Post-rotation assessment | 1 | 0 | null |
 | peds-recall | New Patient/Recall (on log sheet) | 3 | 0 | null |
@@ -401,18 +411,25 @@ All items in this category have a D3 deadline of May 2026 unless noted.
 | Requirement ID | Description | Required | Completed | D3 Deadline |
 |---|---|---|---|---|
 | gp-comm-workshop | Communication Workshop attendance (40% of comm grade) | 1 | 1 | 2026-05-15 — DONE |
-| gp-comm-form-txplan | Formative Tx Plan Presentation (20% of comm grade) | 1 | 0 | 2026-05-15 |
-| gp-comm-sum-txplan | Summative Tx Plan Presentation (40% of comm grade) | 1 | 0 | 2026-05-15 |
-
-**NOTE:** These D3 communication presentations are SEPARATE from the D4 gp4-comm-txplan requirement.
 
 ### Other D3 GP Requirements
 
+| Requirement ID | Description | Required | Completed | D3 Deadline | Notes |
+|---|---|---|---|---|---|
+| gp-leader | Leadership Workshop attendance | 1 | 0 | 2026-05-15 | |
+| gp-case | Case Presentation at Group Monthly Meeting (5% of grade) | 1 | 1 | 2026-05-15 — DONE | isSummative: true |
+| gp-milestones | 3rd Year Milestones | 1 | 0 | 2026-05-15 | |
+
+### Leadership Requirements (moved from D4 GP)
+
 | Requirement ID | Description | Required | Completed | D3 Deadline |
 |---|---|---|---|---|
-| gp-leader | Leadership Workshop attendance | 1 | 0 | 2026-05-15 |
-| gp-case | Case Presentation at Group Monthly Meeting (5% of grade) | 1 | 1 | 2026-05-15 — DONE |
-| gp-ohra | OHRA completed at every PE/Tx Plan appointment (penalty: -1/-3/-5 escalating) | ongoing | ongoing | ongoing |
+| gp4-posttreat-eval | Post Treatment Evaluations (no form/sum distinction) | 3 | 0 | 2026-05-15 |
+| gp4-aux-tech | Formative Aux Assessment with Dental Technician | 1 | 0 | 2026-05-15 |
+| gp4-aux-asst | Formative Aux Assessment with Dental Assistant | 1 | 0 | 2026-05-15 |
+| gp4-aux-summatives | Summative Aux Assessments (combined Tech+Asst, min 1 each type) | 4 | 0 | 2026-05-15 |
+| gp4-rounds-form | Formative Leading Rounds | 1 | 0 | 2026-05-15 |
+| gp4-rounds-sum | Summative Leading Rounds | 1 | 0 | 2026-05-15 |
 
 ### D3 GD 640 Grade Breakdown
 
@@ -424,29 +441,18 @@ All items in this category have a D3 deadline of May 2026 unless noted.
 
 ---
 
-## CATEGORY 10: GROUP PRACTICE — D4 (GD 642) & LEADERSHIP
+## CATEGORY 10: GROUP PRACTICE — D4 (GD 642)
 
 These are formally D4 requirements but formatives can/should be started in D3.
 
 ### Summatives
 
-| Requirement ID | Description | Required | Completed | D3 Deadline |
-|---|---|---|---|---|
-| gp4-comm-txplan | Communication Tx Plan Presentation (SEPARATE from D3 comm) | 1 | 0 | null |
-| gp4-periodicrev-1 | Periodic Reviews (in 4th year) | 2 | 0 | null |
-| gp4-written-analysis | Written Analyses (cumulative total — D3 summative WA counts toward this) | 4 | 0 | null |
-| gp4-pms | Practice Management Scenarios (cumulative — includes D3 formative) | 4 | 0 | null |
-
-### Leadership Requirements
-
-| Requirement ID | Description | Required | Completed | D3 Deadline |
-|---|---|---|---|---|
-| gp4-posttreat-eval | Post Treatment Evaluations (no form/sum distinction) | 3 | 0 | null |
-| gp4-aux-tech | Formative Aux Assessment with Dental Technician | 1 | 0 | null |
-| gp4-aux-asst | Formative Aux Assessment with Dental Assistant | 1 | 0 | null |
-| gp4-aux-summatives | Summative Aux Assessments (combined Tech+Asst, min 1 each type) | 4 | 0 | null |
-| gp4-rounds-form | Formative Leading Rounds | 1 | 0 | null |
-| gp4-rounds-sum | Summative Leading Rounds | 1 | 0 | null |
+| Requirement ID | Description | Required | Completed | D3 Deadline | Notes |
+|---|---|---|---|---|---|
+| gp4-comm-txplan | Communication Tx Plan Presentation (SEPARATE from D3 comm) | 1 | 0 | null | |
+| gp4-periodicrev-1 | Periodic Reviews (in 4th year) | 2 | 0 | null | |
+| gp4-written-analysis | Written Analyses (cumulative total — D3 summative WA counts toward this) | 4 | 0 | null | |
+| gp4-pms | Practice Management Scenarios (cumulative — includes D3 formative) | 4 | 0 | null | d4Carryover: true |
 
 ---
 
@@ -456,8 +462,8 @@ These are formally D4 requirements but formatives can/should be started in D3.
 |---|---|---|---|---|
 | tx-seminar-1 | Summative small group presentation (Type 2 case, 20% of RS 545 grade) | 1 | 0 | 2026-04-24 |
 | tx-attend-1 | Attend classmate presentations (80% of RS 545 grade) | 2 | 0 | null (by Apr 23, 2027) |
-| tx-ohra-1 | OHRA Summatives (Data Collection/Tx Planning rotation) | 2 | 0 | 2026-05-15 |
-| tx-caries-1 | Caries Detection Summatives | 2 | 0 | 2026-05-15 |
+
+**Note:** tx-ohra-1 and tx-caries-1 have been removed — auto-satisfied by perio-sum-dx.
 
 ---
 
@@ -492,31 +498,39 @@ Everything that MUST be done specifically by end of D3:
 | 1 | 90 Attended Appointments | (milestone) | May 2026 | IP |
 | 2 | 116 Completed Procedures | (milestone) | May 2026 | IP |
 | 3 | 7 Clinical Summatives Passed | (milestone) | May 2026 | IP |
-| 4 | Perio OHI: 2 formatives + 1 summative | perio-3rd-ohi | Oct 1, 2025 | DONE |
-| 5 | Perio Prophy: 5 formatives + 1 summative | perio-3rd-prophy | May 2026 | DONE |
-| 6 | Perio Re-eval Gingivitis: 3 formatives + 1 summative | perio-3rd-reeval | May 2026 | PENDING |
-| 7 | GP: 1 Formative Periodic Review | gp-form-review | May 2026 | DONE |
-| 8 | GP: 1 Summative Periodic Review | gp-sum-review | May 2026 | PENDING |
-| 9 | GP: 2 Formative Written Analyses | gp-form-analysis | May 2026 | DONE |
-| 10 | GP: 1 Summative Written Analysis | gp-sum-analysis | May 2026 | PENDING |
-| 11 | GP: 1 Formative PMS | gp-pms-3rd | May 2026 | PENDING |
-| 12 | GP: Communication Workshop attended | gp-comm-workshop | May 2026 | DONE |
-| 13 | GP: 1 Formative Tx Plan Presentation | gp-comm-form-txplan | May 2026 | PENDING |
-| 14 | GP: 1 Summative Tx Plan Presentation | gp-comm-sum-txplan | May 2026 | PENDING |
-| 15 | GP: Leadership Workshop attended | gp-leader | May 2026 | PENDING |
-| 16 | GP: 1 Case Presentation at group meeting | gp-case | May 2026 | DONE |
-| 17 | GP: 4 clinic sessions/week maintained | gp-attend | Ongoing | DONE |
-| 18 | GP: Group meetings attended (mandatory) | gp-meetings | Monthly | Ongoing |
-| 19 | RS 545: 1 Summative Type 2 presentation | tx-seminar-1 | April 24, 2026 | PENDING |
-| 20 | RS 545: 2 OHRA Summatives | tx-ohra-1 | May 2026 | PENDING |
-| 21 | RS 545: 2 Caries Detection Summatives | tx-caries-1 | May 2026 | PENDING |
-| 22 | PH 541 Geriatrics Didactic Course | geri-course | Spring 2026 | PENDING |
-| 23 | OS: 3rd Year Rotation completed | os-3rd-rotation | May 2026 | DONE |
-| 24 | OS: Summative — OS Consult Management | os-3rd-consult | May 2026 | DONE |
-| 25 | OS: Summative — IAN + Long Buccal Block | os-3rd-nerve | May 2026 | DONE |
-| 26 | OS: Summative — Suturing Workshop | os-3rd-suture | May 2026 | DONE |
-| 27 | Perio Patient Progress Report up to date | (workflow) | Ongoing | Ongoing |
-| 28 | OHRA at every PE/Tx Plan appt | gp-ohra | Ongoing | Ongoing |
+| 4 | Perio: OHI Summative | perio-sum-hci | Oct 1, 2025 | DONE |
+| 5 | Perio: D3 Prophy Summative | perio-sum-prophy-d3 | May 2026 | DONE |
+| 6 | Perio: Re-eval Gingivitis Summative | perio-sum-reeval-ging | May 2026 | PENDING |
+| 7 | Perio: Dx & Tx Plan Summative | perio-sum-dx | May 2026 | PENDING |
+| 8 | Perio: OHI Formatives | perio-form-ohi | May 2026 | DONE |
+| 9 | Perio: Dx Formatives | perio-form-dx | May 2026 | DONE |
+| 10 | Perio: Prophy Formatives | perio-form-prophy | May 2026 | DONE |
+| 11 | Perio: Re-eval Gingivitis Formatives | perio-form-reeval-ging | May 2026 | PENDING |
+| 12 | GP: 1 Formative Periodic Review | gp-form-review | May 2026 | DONE |
+| 13 | GP: 1 Summative Periodic Review | gp-sum-review | May 2026 | PENDING |
+| 14 | GP: 2 Formative Written Analyses | gp-form-analysis | May 2026 | DONE |
+| 15 | GP: 1 Summative Written Analysis | gp-sum-analysis | May 2026 | PENDING |
+| 16 | GP: 1 Formative PMS | gp-pms-3rd | May 2026 | PENDING |
+| 17 | GP: Communication Workshop attended | gp-comm-workshop | May 2026 | DONE |
+| 18 | GP: Leadership Workshop attended | gp-leader | May 2026 | PENDING |
+| 19 | GP: 1 Case Presentation at group meeting | gp-case | May 2026 | DONE |
+| 20 | GP: 3rd Year Milestones | gp-milestones | May 2026 | PENDING |
+| 21 | GP: Post Treatment Evaluations | gp4-posttreat-eval | May 2026 | PENDING |
+| 22 | GP: Formative Aux — Dental Technician | gp4-aux-tech | May 2026 | PENDING |
+| 23 | GP: Formative Aux — Dental Assistant | gp4-aux-asst | May 2026 | PENDING |
+| 24 | GP: Summative Aux Assessments | gp4-aux-summatives | May 2026 | PENDING |
+| 25 | GP: Formative Leading Rounds | gp4-rounds-form | May 2026 | PENDING |
+| 26 | GP: Summative Leading Rounds | gp4-rounds-sum | May 2026 | PENDING |
+| 27 | GP: 4 clinic sessions/week maintained | gp-attend | Ongoing | DONE |
+| 28 | GP: Group meetings attended (mandatory) | gp-meetings | Monthly | Ongoing |
+| 29 | RS 545: 1 Summative Type 2 presentation | tx-seminar-1 | April 24, 2026 | PENDING |
+| 30 | PH 541 Geriatrics Didactic Course | geri-course | Spring 2026 | PENDING |
+| 31 | OS: 3rd Year Rotation completed | os-3rd-rotation | May 2026 | DONE |
+| 32 | OS: Summative — OS Consult Management | os-3rd-consult | May 2026 | DONE |
+| 33 | OS: Summative — IAN + Long Buccal Block | os-3rd-nerve | May 2026 | DONE |
+| 34 | OS: Summative — Suturing Workshop | os-3rd-suture | May 2026 | DONE |
+| 35 | Peds: PD 530 Didactic Course | peds-course | May 2026 | DONE |
+| 36 | Perio Patient Progress Report up to date | (workflow) | Ongoing | Ongoing |
 
 ---
 
@@ -525,6 +539,15 @@ Everything that MUST be done specifically by end of D3:
 ### IDs REMOVED (do not use these anymore)
 - `perio-sum-calc` — replaced by srp-calc-1/2/3 (same 3 calculus removal summatives)
 - `gp-comm` — split into gp-comm-workshop, gp-comm-form-txplan, gp-comm-sum-txplan
+- `perio-3rd-ohi` — duplicate of perio-sum-hci (deleted 2026-04-05)
+- `perio-3rd-prophy` — replaced by perio-sum-prophy-d3 (deleted 2026-04-05)
+- `perio-3rd-reeval` — duplicate of perio-sum-reeval-ging (deleted 2026-04-05)
+- `perio-sum-prophy` — split into perio-sum-prophy-d3 and perio-sum-prophy-d4 (2026-04-05)
+- `gp-comm-form-txplan` — removed (2026-04-05)
+- `gp-comm-sum-txplan` — removed (2026-04-05)
+- `gp-ohra` — removed, OHRA auto-satisfied by perio-sum-dx (2026-04-05)
+- `tx-ohra-1` — auto-satisfied by perio-sum-dx (2026-04-05)
+- `tx-caries-1` — auto-satisfied by perio-sum-dx (2026-04-05)
 
 ### IDs ADDED (new in this version)
 - `fixed-units-total` — 10 unit aggregate tracker
@@ -533,10 +556,15 @@ Everything that MUST be done specifically by end of D3:
 - `fixed-cerec` — 3 CEREC sub-requirement
 - `cd-units-total` — 4 CD unit aggregate tracker
 - `gp-comm-workshop` — workshop attendance (was part of gp-comm)
-- `gp-comm-form-txplan` — D3 formative tx plan presentation (NEW)
-- `gp-comm-sum-txplan` — D3 summative tx plan presentation (NEW)
-- `gp-meetings` — monthly group meetings attendance (NEW)
-- `gp-ohra` — OHRA at PE/Tx Plan appointments (NEW)
+- `gp-meetings` — monthly group meetings attendance
+- `perio-sum-prophy-d3` — D3 prophy summative (split from perio-sum-prophy, 2026-04-05)
+- `perio-sum-prophy-d4` — D4 prophy summative (split from perio-sum-prophy, 2026-04-05)
+- `perio-dc-rotation` — DC Rotation Week, 4th year (2026-04-05)
+- `gp-milestones` — 3rd Year Milestones (2026-04-05)
+
+### IDs MOVED (2026-04-05 D3/D4 split)
+- `gp4-posttreat-eval`, `gp4-aux-tech`, `gp4-aux-asst`, `gp4-aux-summatives`, `gp4-rounds-form`, `gp4-rounds-sum` — moved from D4 GP (GD 642) to D3 GP (GD 640) Leadership Requirements, all with D3 Deadline: 2026-05-15
+- `srp-calc-1`, `srp-calc-2`, `srp-calc-3`, `srp-reeval` — consolidated under Periodontology (were already there, now explicitly part of perio category)
 
 ### IDs ALIASED
 - `srp-reeval` = `perio-sum-reeval-srp` (same requirement, srp-reeval is canonical)
@@ -549,3 +577,4 @@ Everything that MUST be done specifically by end of D3:
 |---|---|
 | 2026-04-01 | Initial ground truth document created. Replaces PR_PART_1_SULEMAN_SHAIKH.pdf and GRADUATION_REQUIREMENTS.pdf. Resolves SRP duplication, adds aggregate trackers, splits GP comm module, adds missing D3 deadline items. |
 | 2026-04-02 | Manual audit corrections: op-multi-5 completed 1→0 (only 4 multisurface summatives done), perio-sum-prophy completed 2→3 (all 3 done), gp-form-analysis completed 1→2 (both formative WAs done), peds-course completed 0→1 (PD 530 finished). Master checklist updated accordingly. |
+| 2026-04-05 | D3/D4 split overhaul: Added yearTarget/d4Carryover model. Deleted perio-3rd-ohi/prophy/reeval duplicates. Split perio-sum-prophy into d3/d4. Added d3Deadlines to perio formatives. Moved Leadership Requirements from D4 GP to D3 GP. Deleted gp-comm-form-txplan, gp-comm-sum-txplan, gp-ohra. Added gp-milestones, perio-dc-rotation. Removed tx-ohra-1/tx-caries-1 (auto-satisfied by perio-sum-dx). Updated perio-sum-reeval-ging required 2→1. Made fixed Other Requirements isSummative. Updated gp-case to isSummative. Added peds-course D3 deadline. Summative milestone now dynamically counted. |

@@ -2803,10 +2803,10 @@ function migratePerioNoiseCleanup() {
     if (!records || Object.keys(records).length === 0) return;
 
     var alwaysStrip = [
-        'perio-form-prophy', 'perio-sum-prophy',
+        'perio-form-prophy', 'perio-sum-prophy-d3', 'perio-sum-prophy-d4',
         'perio-form-recall', 'perio-sum-recall',
-        'perio-form-reeval-ging', 'perio-sum-reeval-ging', 'perio-3rd-reeval',
-        'perio-form-ohi'
+        'perio-form-reeval-ging', 'perio-sum-reeval-ging',
+        'perio-form-ohi', 'perio-dc-rotation'
     ];
     var conditionalStrip = [
         'perio-form-dx', 'perio-sum-dx',
@@ -3003,13 +3003,22 @@ function applyRequirementCheckoffs(items, importContext) {
     // Alias map for competency IDs that changed names between webchat export and DEFAULT_COMPETENCIES.
     // Add new aliases here when requirement IDs are renamed or consolidated.
     var COMPETENCY_ALIASES = {
-        'perio-sum-reeval-srp': 'srp-reeval'
+        'perio-sum-reeval-srp': 'srp-reeval',
+        'perio-sum-prophy': 'perio-sum-prophy-d3'
     };
 
-    // IDs removed/split in Apr 2026 — no single alias target, warn user
+    // IDs removed/split — no single alias target, warn user
     var REMOVED_COMPETENCY_IDS = {
         'perio-sum-calc': 'Replaced by srp-calc-1, srp-calc-2, srp-calc-3',
-        'gp-comm': 'Split into gp-comm-workshop, gp-comm-form-txplan, gp-comm-sum-txplan'
+        'gp-comm': 'Split into gp-comm-workshop',
+        'perio-3rd-ohi': 'Merged into perio-sum-hci',
+        'perio-3rd-prophy': 'Merged into perio-sum-prophy-d3',
+        'perio-3rd-reeval': 'Merged into perio-sum-reeval-ging',
+        'tx-ohra-1': 'Auto-satisfied by perio-sum-dx (Dx & Tx Plan summatives)',
+        'tx-caries-1': 'Auto-satisfied by perio-sum-dx (Dx & Tx Plan summatives)',
+        'gp-comm-form-txplan': 'Removed — not in D3 requirements HTML',
+        'gp-comm-sum-txplan': 'Removed — not in D3 requirements HTML',
+        'gp-ohra': 'Removed — not in requirements HTML'
     };
 
     items.forEach(function(item) {
