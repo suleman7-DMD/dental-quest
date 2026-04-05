@@ -1,0 +1,1281 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MISSION CONTROL // CLINIC OPS APRIL 2026</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Orbitron:wght@400;700;900&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --bg-deep: #050a0e;
+  --bg-panel: #0a1118;
+  --bg-card: #0f1923;
+  --green: #00ff41;
+  --green-dim: #00cc33;
+  --green-muted: #0a3a1a;
+  --green-glow: rgba(0,255,65,0.15);
+  --cyan: #00e5ff;
+  --cyan-dim: #0097a7;
+  --amber: #ffb300;
+  --amber-dim: #ff8f00;
+  --red: #ff1744;
+  --magenta: #e040fb;
+  --purple: #b388ff;
+  --text: #b0bec5;
+  --text-dim: #546e7a;
+  --border: #1a2a35;
+  --border-bright: #1e3a4a;
+  --hour-height: 52px;
+}
+html { font-size: 13px; }
+body {
+  background: var(--bg-deep);
+  color: var(--text);
+  font-family: 'Share Tech Mono', 'Courier New', monospace;
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+body::after {
+  content: '';
+  position: fixed; inset: 0;
+  background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.08) 2px, rgba(0,0,0,0.08) 4px);
+  pointer-events: none; z-index: 9999;
+}
+body::before {
+  content: '';
+  position: fixed; inset: 0;
+  background: radial-gradient(ellipse at center, transparent 50%, rgba(0,0,0,0.6) 100%);
+  pointer-events: none; z-index: 9998;
+}
+.wrapper { max-width: 1600px; margin: 0 auto; padding: 16px 20px 40px; }
+
+/* ── Header ── */
+.header {
+  border: 1px solid var(--green);
+  box-shadow: 0 0 15px var(--green-glow), inset 0 0 15px rgba(0,255,65,0.03);
+  padding: 16px 24px;
+  margin-bottom: 20px;
+  background: linear-gradient(180deg, rgba(0,255,65,0.04) 0%, transparent 100%);
+  position: relative;
+}
+.header::before, .header::after {
+  content: '//'; position: absolute; color: var(--green-dim); opacity: 0.3; font-size: 11px;
+}
+.header::before { top: 4px; left: 8px; }
+.header::after { bottom: 4px; right: 8px; }
+.header-top { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; margin-bottom: 8px; }
+.header-title {
+  font-family: 'Orbitron', monospace; font-weight: 900; font-size: 1.5rem;
+  color: var(--green); text-shadow: 0 0 20px var(--green-glow); letter-spacing: 3px;
+}
+.header-title .sep { opacity: 0.4; }
+.header-btns { display: flex; gap: 8px; }
+.btn-new-op, .btn-reset {
+  font-family: 'Orbitron', monospace; font-size: 0.6rem; padding: 6px 14px;
+  cursor: pointer; letter-spacing: 2px; border-radius: 2px; transition: all 0.2s;
+}
+.btn-new-op {
+  background: rgba(0,255,65,0.08); border: 1px solid var(--green-dim); color: var(--green);
+}
+.btn-new-op:hover { background: rgba(0,255,65,0.18); box-shadow: 0 0 15px var(--green-glow); }
+.btn-reset {
+  background: rgba(255,179,0,0.06); border: 1px solid rgba(255,179,0,0.3); color: var(--amber);
+}
+.btn-reset:hover { background: rgba(255,179,0,0.15); box-shadow: 0 0 10px rgba(255,179,0,0.2); }
+.header-sub {
+  display: flex; gap: 32px; flex-wrap: wrap; font-size: 0.8rem; color: var(--text-dim); letter-spacing: 1px;
+}
+.header-sub span { display: inline-flex; align-items: center; gap: 6px; }
+.header-sub .val { color: var(--green); }
+.header-sub .val-crit { color: var(--red); }
+.blink {
+  display: inline-block; width: 6px; height: 6px; border-radius: 50%;
+  background: var(--green); box-shadow: 0 0 6px var(--green);
+  animation: blink 1.5s ease-in-out infinite;
+}
+.blink-warn { background: var(--amber); box-shadow: 0 0 6px var(--amber); }
+@keyframes blink { 0%,100% { opacity:1; } 50% { opacity:0.2; } }
+
+/* ── Panel ── */
+.panel {
+  border: 1px solid var(--border-bright); background: var(--bg-panel);
+  position: relative; margin-bottom: 20px;
+}
+.panel::before {
+  content: ''; position: absolute; top: -1px; left: 12px;
+  width: 8px; height: 8px; border-top: 1px solid var(--green-dim); border-left: 1px solid var(--green-dim); z-index: 2;
+}
+.panel::after {
+  content: ''; position: absolute; bottom: -1px; right: 12px;
+  width: 8px; height: 8px; border-bottom: 1px solid var(--green-dim); border-right: 1px solid var(--green-dim); z-index: 2;
+}
+.panel-title {
+  font-family: 'Orbitron', monospace; font-weight: 700; font-size: 0.75rem;
+  color: var(--green); letter-spacing: 2px; padding: 10px 16px 8px;
+  border-bottom: 1px solid var(--border); background: rgba(0,255,65,0.03);
+  text-shadow: 0 0 10px var(--green-glow);
+  display: flex; justify-content: space-between; align-items: center;
+}
+.panel-title .tag { font-family: 'Share Tech Mono', monospace; font-size: 0.65rem; color: var(--text-dim); letter-spacing: 0; }
+
+/* ── Weeks ── */
+.weeks { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+@media (max-width: 1100px) { .weeks { grid-template-columns: 1fr; } }
+
+/* ── Day Grid ── */
+.week-grid { display: grid; grid-template-columns: 44px repeat(5,1fr); gap: 0; padding: 0 8px 12px; }
+.day-header {
+  font-family: 'Orbitron', monospace; font-size: 0.6rem; font-weight: 700;
+  text-align: center; padding: 8px 2px; letter-spacing: 1px;
+  color: var(--cyan); border-bottom: 1px solid var(--border); position: relative;
+}
+.day-header .date { display: block; font-family: 'Share Tech Mono', monospace; font-size: 0.7rem; color: var(--text-dim); margin-top: 2px; letter-spacing: 0; }
+.day-add-btn {
+  display: inline-block; width: 14px; height: 14px; line-height: 12px; text-align: center;
+  font-size: 12px; font-weight: bold; color: var(--green-dim); border: 1px solid var(--green-muted);
+  border-radius: 2px; cursor: pointer; margin-left: 3px; opacity: 0; transition: opacity 0.2s; vertical-align: middle;
+}
+.day-header:hover .day-add-btn { opacity: 1; }
+.day-add-btn:hover { background: var(--green-muted); color: var(--green); }
+.time-header { font-size: 0.6rem; padding: 8px 0; text-align: right; padding-right: 6px; color: var(--text-dim); border-bottom: 1px solid var(--border); }
+.time-col { padding-right: 4px; position: relative; }
+.time-label { position: absolute; right: 4px; font-size: 0.55rem; color: var(--text-dim); transform: translateY(-50%); white-space: nowrap; }
+.day-col { position: relative; border-left: 1px solid rgba(26,42,53,0.6); }
+.hour-line { position: absolute; left: 0; right: 0; height: 1px; background: rgba(26,42,53,0.5); }
+.hour-line.half { background: rgba(26,42,53,0.25); }
+
+/* ── Events ── */
+.ev {
+  position: absolute; left: 3px; right: 3px; border-radius: 3px;
+  padding: 3px 5px; font-size: 0.6rem; line-height: 1.3; overflow: hidden;
+  z-index: 2; border-left: 3px solid; cursor: pointer;
+  transition: box-shadow 0.3s, transform 0.15s;
+  animation: fadeSlideIn 0.6s ease-out both;
+}
+.ev:hover { z-index: 10; transform: scale(1.03); }
+.ev-name { font-weight: bold; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; padding-right: 14px; }
+.ev-time { font-size: 0.55rem; opacity: 0.7; white-space: nowrap; }
+.ev-detail { font-size: 0.55rem; opacity: 0.6; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ev-x {
+  position: absolute; top: 2px; right: 2px; width: 14px; height: 14px;
+  display: none; align-items: center; justify-content: center;
+  font-size: 9px; color: var(--red); cursor: pointer; border-radius: 2px;
+  background: rgba(0,0,0,0.6); z-index: 20; line-height: 1;
+}
+.ev:hover .ev-x { display: flex; }
+.ev-x:hover { background: var(--red); color: #fff; }
+
+.ev-rotation-bg {
+  background: repeating-linear-gradient(-45deg, rgba(0,255,65,0.03), rgba(0,255,65,0.03) 4px, transparent 4px, transparent 8px);
+  border-color: var(--green-muted); color: var(--green-dim); z-index: 0; border-left-width: 2px; opacity: 0.7;
+}
+.ev-rotation-bg .ev-name { font-size: 0.7rem; }
+.ev-patient { background: rgba(0,229,255,0.08); border-color: var(--cyan); color: var(--cyan); }
+.ev-patient:hover { box-shadow: 0 0 12px rgba(0,229,255,0.3); }
+.ev-lab { background: rgba(224,64,251,0.08); border-color: var(--magenta); color: var(--magenta); }
+.ev-lab:hover { box-shadow: 0 0 12px rgba(224,64,251,0.3); }
+.ev-meeting { background: rgba(255,179,0,0.08); border-color: var(--amber); color: var(--amber-dim); }
+.ev-meeting:hover { box-shadow: 0 0 12px rgba(255,179,0,0.2); }
+.ev-wa { background: rgba(179,136,255,0.08); border-color: var(--purple); color: var(--purple); }
+.ev-wa:hover { box-shadow: 0 0 12px rgba(179,136,255,0.3); }
+.ev-deadline {
+  background: rgba(255,23,68,0.1); border-color: var(--red); color: var(--red);
+  animation: fadeSlideIn 0.6s ease-out both, pulseRed 3s ease-in-out infinite;
+}
+.ev-exam { background: rgba(255,23,68,0.12); border-color: var(--red); color: #ff8a80; }
+.ev-exam:hover { box-shadow: 0 0 12px rgba(255,23,68,0.3); }
+.ev-conflict {
+  box-shadow: 0 0 8px rgba(255,23,68,0.3), inset 0 0 8px rgba(255,23,68,0.05);
+  outline: 1px dashed rgba(255,23,68,0.4); outline-offset: 1px;
+}
+@keyframes pulseRed { 0%,100% { box-shadow: 0 0 4px rgba(255,23,68,0.2); } 50% { box-shadow: 0 0 12px rgba(255,23,68,0.5); } }
+@keyframes fadeSlideIn { from { opacity:0; transform:translateY(6px); } to { opacity:1; transform:translateY(0); } }
+
+/* ── Bottom ── */
+.bottom-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+@media (max-width: 900px) { .bottom-grid { grid-template-columns: 1fr; } }
+.beyond-item {
+  display: flex; gap: 10px; padding: 7px 16px; border-bottom: 1px solid var(--border);
+  font-size: 0.75rem; align-items: center; cursor: pointer; transition: background 0.15s;
+}
+.beyond-item:last-child { border-bottom: none; }
+.beyond-item:hover { background: rgba(0,229,255,0.04); }
+.beyond-date { font-family: 'Orbitron', monospace; font-size: 0.65rem; color: var(--cyan); white-space: nowrap; min-width: 44px; letter-spacing: 1px; }
+.beyond-text { color: var(--text); line-height: 1.5; flex: 1; }
+.beyond-text .hl { color: var(--amber); }
+.beyond-x {
+  width: 16px; height: 16px; display: none; align-items: center; justify-content: center;
+  font-size: 9px; color: var(--red); cursor: pointer; border-radius: 2px; background: rgba(0,0,0,0.5); flex-shrink: 0;
+}
+.beyond-item:hover .beyond-x { display: flex; }
+.beyond-x:hover { background: var(--red); color: #fff; }
+.beyond-add-btn {
+  font-family: 'Share Tech Mono', monospace; font-size: 0.65rem; padding: 3px 10px;
+  background: transparent; border: 1px solid var(--green-muted); color: var(--green-dim);
+  cursor: pointer; border-radius: 2px; transition: all 0.2s; margin-left: 8px;
+}
+.beyond-add-btn:hover { background: var(--green-muted); color: var(--green); }
+
+/* ── Conflicts ── */
+.conflict-item {
+  padding: 10px 12px; margin: 0 16px 8px; border: 1px solid; border-radius: 3px;
+  font-size: 0.72rem; line-height: 1.5; position: relative; overflow: hidden;
+}
+.conflict-item:first-child { margin-top: 10px; }
+.conflict-item:last-child { margin-bottom: 14px; }
+.conflict-item::before { content: ''; position: absolute; top: 0; left: 0; bottom: 0; width: 3px; }
+.conflict-high { border-color: rgba(255,23,68,0.3); background: rgba(255,23,68,0.04); }
+.conflict-high::before { background: var(--red); }
+.conflict-high .conflict-sev { color: var(--red); }
+.conflict-med { border-color: rgba(255,179,0,0.3); background: rgba(255,179,0,0.04); }
+.conflict-med::before { background: var(--amber); }
+.conflict-med .conflict-sev { color: var(--amber); }
+.conflict-low { border-color: rgba(0,229,255,0.2); background: rgba(0,229,255,0.03); }
+.conflict-low::before { background: var(--cyan-dim); }
+.conflict-low .conflict-sev { color: var(--cyan); }
+.conflict-sev { font-family: 'Orbitron', monospace; font-size: 0.6rem; letter-spacing: 1px; margin-bottom: 3px; }
+.conflict-desc { color: var(--text); }
+.conflict-action { margin-top: 4px; color: var(--amber); font-size: 0.65rem; }
+
+/* ── Legend ── */
+.legend { display: flex; flex-wrap: wrap; gap: 14px; padding: 10px 16px; font-size: 0.65rem; border-top: 1px solid var(--border); }
+.legend-item { display: inline-flex; align-items: center; gap: 5px; }
+.legend-swatch { width: 10px; height: 10px; border-radius: 2px; border-left: 3px solid; }
+
+/* ── Status Bar ── */
+.status-bar {
+  position: fixed; bottom: 0; left: 0; right: 0; background: var(--bg-panel);
+  border-top: 1px solid var(--border-bright); padding: 4px 20px;
+  display: flex; justify-content: space-between; font-size: 0.6rem; color: var(--text-dim); z-index: 100; letter-spacing: 1px;
+}
+.status-bar .active { color: var(--green); }
+
+/* ── Tooltip ── */
+.tooltip {
+  display: none; position: fixed; background: var(--bg-card); border: 1px solid var(--green-dim);
+  box-shadow: 0 0 20px rgba(0,255,65,0.15); padding: 10px 14px; font-size: 0.72rem;
+  max-width: 280px; z-index: 1000; line-height: 1.6; pointer-events: none;
+}
+.tooltip.show { display: block; }
+.tooltip-title { color: var(--green); font-weight: bold; margin-bottom: 4px; }
+.tooltip-time { color: var(--cyan); font-size: 0.65rem; }
+.tooltip-detail { color: var(--text); margin-top: 4px; }
+
+/* ── Modal ── */
+.modal-overlay {
+  display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.85);
+  z-index: 5000; align-items: center; justify-content: center;
+}
+.modal-overlay.open { display: flex; }
+.modal {
+  background: var(--bg-panel); border: 1px solid var(--green);
+  box-shadow: 0 0 40px var(--green-glow), 0 0 80px rgba(0,255,65,0.05);
+  width: 440px; max-width: 95vw; animation: modalIn 0.25s ease-out;
+}
+@keyframes modalIn { from { opacity:0; transform:scale(0.95) translateY(10px); } to { opacity:1; transform:scale(1) translateY(0); } }
+.modal-title {
+  font-family: 'Orbitron', monospace; font-size: 0.75rem; color: var(--green);
+  padding: 12px 16px; border-bottom: 1px solid var(--border); background: rgba(0,255,65,0.03);
+  letter-spacing: 2px; text-shadow: 0 0 10px var(--green-glow);
+}
+.modal-form { padding: 16px; display: grid; grid-template-columns: 90px 1fr; gap: 10px; align-items: center; }
+.modal-form label { font-size: 0.65rem; color: var(--text-dim); letter-spacing: 1px; text-transform: uppercase; }
+.modal-form input, .modal-form select, .modal-form textarea {
+  background: var(--bg-deep); border: 1px solid var(--border-bright); color: var(--green);
+  font-family: 'Share Tech Mono', monospace; font-size: 0.75rem; padding: 7px 10px; outline: none;
+  border-radius: 2px; width: 100%; color-scheme: dark;
+}
+.modal-form textarea { resize: vertical; min-height: 40px; }
+.modal-form input:focus, .modal-form select:focus, .modal-form textarea:focus {
+  border-color: var(--green-dim); box-shadow: 0 0 8px var(--green-glow);
+}
+.modal-form select option { background: var(--bg-deep); color: var(--text); }
+.modal-form .checkbox-row { grid-column: 1 / -1; display: flex; align-items: center; gap: 8px; margin-top: 4px; }
+.modal-form .checkbox-row input { width: auto; }
+.modal-form .checkbox-row label { font-size: 0.65rem; color: var(--amber); cursor: pointer; }
+.modal-actions { padding: 12px 16px; border-top: 1px solid var(--border); display: flex; gap: 10px; }
+.btn-confirm, .btn-abort, .btn-delete-modal {
+  font-family: 'Share Tech Mono', monospace; font-size: 0.7rem; padding: 8px 20px;
+  cursor: pointer; letter-spacing: 1px; border-radius: 2px; transition: all 0.15s;
+}
+.btn-confirm { background: rgba(0,255,65,0.1); border: 1px solid var(--green-dim); color: var(--green); }
+.btn-confirm:hover { background: rgba(0,255,65,0.2); box-shadow: 0 0 12px var(--green-glow); }
+.btn-abort { background: transparent; border: 1px solid var(--border-bright); color: var(--text-dim); }
+.btn-abort:hover { border-color: var(--amber); color: var(--amber); }
+.btn-delete-modal { background: rgba(255,23,68,0.08); border: 1px solid rgba(255,23,68,0.3); color: var(--red); margin-left: auto; }
+.btn-delete-modal:hover { background: rgba(255,23,68,0.2); box-shadow: 0 0 10px rgba(255,23,68,0.3); }
+
+/* ── Confirm Dialog ── */
+.confirm-overlay {
+  display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.85);
+  z-index: 6000; align-items: center; justify-content: center;
+}
+.confirm-overlay.open { display: flex; }
+.confirm-box {
+  background: var(--bg-panel); border: 1px solid var(--red);
+  box-shadow: 0 0 30px rgba(255,23,68,0.2); padding: 20px 24px; max-width: 400px;
+  text-align: center; animation: modalIn 0.2s ease-out;
+}
+.confirm-msg { color: var(--text); font-size: 0.8rem; margin-bottom: 16px; line-height: 1.5; }
+.confirm-msg strong { color: var(--red); }
+.confirm-actions { display: flex; gap: 10px; justify-content: center; }
+
+/* ── Boot ── */
+.boot-overlay {
+  position: fixed; inset: 0; background: var(--bg-deep); z-index: 10000;
+  display: flex; align-items: center; justify-content: center; flex-direction: column;
+  font-family: 'Share Tech Mono', monospace; color: var(--green); transition: opacity 0.5s;
+}
+.boot-overlay.done { opacity: 0; pointer-events: none; }
+.boot-text { font-size: 0.8rem; line-height: 1.8; text-align: left; max-width: 500px; }
+.boot-line { opacity: 0; }
+.boot-line.show { opacity: 1; }
+
+/* ── Export Button ── */
+.btn-export {
+  font-family: 'Orbitron', monospace; font-size: 0.6rem; padding: 6px 14px;
+  cursor: pointer; letter-spacing: 2px; border-radius: 2px; transition: all 0.2s;
+  background: rgba(0,229,255,0.08); border: 1px solid var(--cyan-dim); color: var(--cyan);
+}
+.btn-export:hover { background: rgba(0,229,255,0.18); box-shadow: 0 0 15px rgba(0,229,255,0.2); }
+.btn-export.exporting { opacity: 0.5; pointer-events: none; }
+
+/* ── Checklist Module ── */
+.checklist-panel { margin-bottom: 20px; }
+.checklist-add-row {
+  display: flex; gap: 8px; padding: 10px 16px; border-bottom: 1px solid var(--border);
+}
+.checklist-add-row input {
+  flex: 1; background: var(--bg-deep); border: 1px solid var(--border-bright);
+  color: var(--green); font-family: 'Share Tech Mono', monospace; font-size: 0.75rem;
+  padding: 7px 10px; outline: none; border-radius: 2px;
+}
+.checklist-add-row input:focus { border-color: var(--green-dim); box-shadow: 0 0 8px var(--green-glow); }
+.checklist-add-row input::placeholder { color: var(--text-dim); }
+.checklist-add-btn {
+  font-family: 'Share Tech Mono', monospace; font-size: 0.75rem; padding: 7px 16px;
+  background: rgba(0,255,65,0.08); border: 1px solid var(--green-dim); color: var(--green);
+  cursor: pointer; border-radius: 2px; transition: all 0.15s; white-space: nowrap;
+}
+.checklist-add-btn:hover { background: rgba(0,255,65,0.18); box-shadow: 0 0 10px var(--green-glow); }
+.checklist-items { padding: 0; }
+.checklist-item {
+  display: flex; align-items: center; gap: 10px; padding: 8px 16px;
+  border-bottom: 1px solid var(--border); font-size: 0.75rem; transition: background 0.15s;
+}
+.checklist-item:hover { background: rgba(0,255,65,0.03); }
+.checklist-item:last-child { border-bottom: none; }
+.checklist-check {
+  width: 16px; height: 16px; border: 1px solid var(--green-dim); background: transparent;
+  cursor: pointer; border-radius: 2px; display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0; color: var(--green); font-size: 11px; transition: all 0.15s;
+}
+.checklist-check:hover { background: var(--green-muted); }
+.checklist-check.done { background: var(--green-muted); border-color: var(--green); }
+.checklist-item-text { flex: 1; color: var(--text); line-height: 1.4; }
+.checklist-item-text.done { text-decoration: line-through; opacity: 0.5; }
+.checklist-item-x {
+  width: 16px; height: 16px; display: none; align-items: center; justify-content: center;
+  font-size: 9px; color: var(--red); cursor: pointer; border-radius: 2px;
+  background: rgba(0,0,0,0.5); flex-shrink: 0;
+}
+.checklist-item:hover .checklist-item-x { display: flex; }
+.checklist-item-x:hover { background: var(--red); color: #fff; }
+.checklist-empty {
+  padding: 16px; color: var(--text-dim); font-size: 0.7rem; text-align: center;
+}
+</style>
+</head>
+<body>
+
+<div class="boot-overlay" id="bootOverlay"><div class="boot-text" id="bootText"></div></div>
+
+<div class="tooltip" id="tooltip">
+  <div class="tooltip-title" id="ttTitle"></div>
+  <div class="tooltip-time" id="ttTime"></div>
+  <div class="tooltip-detail" id="ttDetail"></div>
+</div>
+
+<!-- Modal -->
+<div class="modal-overlay" id="modalOverlay">
+  <div class="modal">
+    <div class="modal-title" id="modalTitle"></div>
+    <div class="modal-form">
+      <label>NAME</label>
+      <input type="text" id="evName" placeholder="Event name..." autocomplete="off">
+      <label>DATE</label>
+      <input type="date" id="evDate">
+      <label>START</label>
+      <input type="time" id="evStart">
+      <label>END</label>
+      <input type="time" id="evEnd">
+      <label>TYPE</label>
+      <select id="evType">
+        <option value="patient">PATIENT</option>
+        <option value="lab">LAB / SIM</option>
+        <option value="meeting">MEETING</option>
+        <option value="wa">WA (NO PT)</option>
+        <option value="deadline">DEADLINE</option>
+        <option value="exam">EXAM</option>
+        <option value="rotation-bg">ROTATION</option>
+      </select>
+      <label>DETAIL</label>
+      <textarea id="evDetail" placeholder="Chair, procedure, notes..." rows="2"></textarea>
+      <div class="checkbox-row">
+        <input type="checkbox" id="evConflict">
+        <label for="evConflict">CONFLICT FLAG</label>
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-confirm" id="btnSave">CONFIRM</button>
+      <button class="btn-abort" id="btnAbort">ABORT</button>
+      <button class="btn-delete-modal" id="btnDeleteModal" style="display:none">DELETE</button>
+    </div>
+  </div>
+</div>
+
+<!-- Delete Confirm -->
+<div class="confirm-overlay" id="confirmOverlay">
+  <div class="confirm-box">
+    <div class="confirm-msg" id="confirmMsg"></div>
+    <div class="confirm-actions">
+      <button class="btn-confirm" id="btnConfirmYes">CONFIRM</button>
+      <button class="btn-abort" id="btnConfirmNo">ABORT</button>
+    </div>
+  </div>
+</div>
+
+<div class="wrapper" id="mainContent" style="opacity:0">
+  <div class="header">
+    <div class="header-top">
+      <div class="header-title">MISSION CONTROL <span class="sep">//</span> CLINIC OPS</div>
+      <div class="header-btns">
+        <button class="btn-new-op" id="btnNewOp">+ NEW OP</button>
+        <button class="btn-export" id="btnExport">&#8681; EXPORT PNG</button>
+        <button class="btn-reset" id="btnReset">&circlearrowright; RESET</button>
+      </div>
+    </div>
+    <div class="header-sub" id="headerStats"></div>
+  </div>
+
+  <div class="weeks" id="weeksContainer"></div>
+
+  <div class="bottom-grid">
+    <div class="panel" id="beyondPanel"></div>
+    <div class="panel" id="conflictsPanel"></div>
+  </div>
+
+  <!-- CHECKLIST -->
+  <div class="panel checklist-panel" id="checklistPanel"></div>
+
+  <div class="panel" style="margin-bottom: 40px;">
+    <div class="legend" id="legendContainer"></div>
+  </div>
+</div>
+
+<div class="status-bar">
+  <span><span class="active">&#9632;</span> DENTAL-QUEST MISSION CONTROL v2.0</span>
+  <span>SULEMAN SHAIKH, DMD CANDIDATE</span>
+  <span id="statusClock"></span>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════
+//  DATA MODEL — all events in a flat array
+// ═══════════════════════════════════════════════
+var HOUR_PX = 52, START_HOUR = 8, END_HOUR = 19, TOTAL_HOURS = END_HOUR - START_HOUR;
+var LS_KEY = 'missionControlEvents_v2';
+var CL_KEY = 'missionControlChecklist_v1';
+var editingId = null;
+var pendingDeleteId = null;
+var checklist = [];
+
+var WEEK_DEFS = [
+  { label: 'WEEK 1: ORAL RAD ROTATION', tag: 'APR 6\u201310', mon: '2026-04-06' },
+  { label: 'WEEK 2: CLINIC WEEK', tag: 'APR 13\u201317', mon: '2026-04-13' },
+];
+
+var DAY_NAMES = ['MON','TUE','WED','THU','FRI'];
+
+function getWeekDates(monIso) {
+  var p = monIso.split('-').map(Number);
+  var d = new Date(p[0], p[1]-1, p[2]);
+  var out = [];
+  for (var i = 0; i < 5; i++) {
+    var dd = new Date(d.getFullYear(), d.getMonth(), d.getDate() + i);
+    out.push(dd.getFullYear() + '-' + String(dd.getMonth()+1).padStart(2,'0') + '-' + String(dd.getDate()).padStart(2,'0'));
+  }
+  return out;
+}
+
+function displayDate(iso) {
+  var p = iso.split('-').map(Number);
+  return p[1] + '/' + p[2];
+}
+
+function genId() { return 'ev_' + Date.now().toString(36) + Math.random().toString(36).substr(2,5); }
+
+function timeToY(h, m) { return ((h - START_HOUR) + m/60) * HOUR_PX; }
+function durationPx(sh, sm, eh, em) { return ((eh - sh) + (em - sm)/60) * HOUR_PX; }
+function fmtTime(h, m) { var hh = h > 12 ? h-12 : (h===0?12:h); return hh + ':' + String(m).padStart(2,'0'); }
+function timeInputVal(h, m) { return String(h).padStart(2,'0') + ':' + String(m).padStart(2,'0'); }
+function parseTimeInput(val) { var p = val.split(':').map(Number); return { h: p[0], m: p[1] }; }
+
+// ── Default data ──
+var DEFAULT_EVENTS = [
+  { id:'ev_01', date:'2026-04-06', sh:8,sm:0,eh:16,em:0, name:'ORAL RAD', detail:'Oral Radiology Rotation', type:'rotation-bg', conflict:false },
+  { id:'ev_02', date:'2026-04-06', sh:11,sm:30,eh:12,em:30, name:'EXT. ZOOM', detail:'Externship Zoom Meeting', type:'meeting', conflict:true },
+  { id:'ev_03', date:'2026-04-06', sh:13,sm:0,eh:13,em:30, name:'\u26A1 LIT REVIEW DUE', detail:'Crit Thinking Lit Review \u2014 1:00 PM', type:'deadline', conflict:false },
+  { id:'ev_04', date:'2026-04-07', sh:8,sm:0,eh:16,em:0, name:'ORAL RAD', detail:'Oral Radiology Rotation', type:'rotation-bg', conflict:false },
+  { id:'ev_05', date:'2026-04-08', sh:8,sm:0,eh:16,em:0, name:'ORAL RAD', detail:'Oral Radiology Rotation', type:'rotation-bg', conflict:false },
+  { id:'ev_06', date:'2026-04-08', sh:13,sm:0,eh:15,em:50, name:'FIXED SIM #2', detail:'Fixed Sim Lab \u2014 G-300 \u2014 OVERLAPS ROTATION', type:'lab', conflict:true },
+  { id:'ev_07', date:'2026-04-09', sh:8,sm:0,eh:16,em:0, name:'ORAL RAD', detail:'Oral Radiology Rotation', type:'rotation-bg', conflict:false },
+  { id:'ev_08', date:'2026-04-10', sh:8,sm:0,eh:16,em:0, name:'ORAL RAD', detail:'Oral Radiology Rotation', type:'rotation-bg', conflict:false },
+  { id:'ev_09', date:'2026-04-13', sh:8,sm:30,eh:11,em:30, name:'KISHA W.', detail:'Composite D2392 \u2014 Chair 9D', type:'patient', conflict:false },
+  { id:'ev_10', date:'2026-04-13', sh:13,sm:0,eh:15,em:0, name:'CRIT THINK', detail:'Crit Thinking Presentation', type:'meeting', conflict:false },
+  { id:'ev_11', date:'2026-04-13', sh:15,sm:30,eh:16,em:0, name:'CARMEN WA', detail:'WA Summative \u2014 Dr. Maseli (no pt)', type:'wa', conflict:false },
+  { id:'ev_12', date:'2026-04-13', sh:16,sm:0,eh:19,em:0, name:'ANABELY G.', detail:'Prophy \u2014 Chair 9F', type:'patient', conflict:true },
+  { id:'ev_13', date:'2026-04-14', sh:8,sm:30,eh:11,em:20, name:'FIXED SIM', detail:'Fixed Sim Lab \u2014 G-300', type:'lab', conflict:false },
+  { id:'ev_14', date:'2026-04-14', sh:12,sm:30,eh:15,em:0, name:'DEBRA F.', detail:'POE \u2014 Chair 9E', type:'patient', conflict:false },
+  { id:'ev_15', date:'2026-04-14', sh:15,sm:30,eh:16,em:0, name:'ANNETTE WA', detail:'WA \u2014 Dr. Maseli (no pt)', type:'wa', conflict:false },
+  { id:'ev_16', date:'2026-04-15', sh:8,sm:30,eh:11,em:30, name:'CARLOS B.H.', detail:'Class IV D2335 \u2014 Chair 9C', type:'patient', conflict:false },
+  { id:'ev_17', date:'2026-04-15', sh:16,sm:0,eh:19,em:0, name:'KRISTEN S.', detail:'Team CD Lower + rings \u2014 Chair 9G', type:'patient', conflict:false },
+  { id:'ev_18', date:'2026-04-16', sh:8,sm:30,eh:10,em:0, name:'VERONICA T.', detail:'TP w/ pt \u2014 Dr. Maseli \u2014 Chair 9H', type:'patient', conflict:false },
+  { id:'ev_19', date:'2026-04-16', sh:10,sm:0,eh:11,em:0, name:'MONICAH WA', detail:'WA \u2014 Dr. Maseli (no pt)', type:'wa', conflict:false },
+  { id:'ev_20', date:'2026-04-16', sh:11,sm:30,eh:12,em:20, name:'PD640 PEDS', detail:'Peds Rotation Meeting', type:'meeting', conflict:false },
+  { id:'ev_21', date:'2026-04-16', sh:12,sm:30,eh:14,em:0, name:'ANNETTE TP', detail:'TP \u2014 Dr. Maseli \u2014 Chair 9E', type:'patient', conflict:false },
+  { id:'ev_22', date:'2026-04-16', sh:14,sm:0,eh:15,em:30, name:'ANNETTE POE', detail:'POE \u2014 Chair 9E', type:'patient', conflict:false },
+  { id:'ev_23', date:'2026-04-16', sh:16,sm:0,eh:19,em:0, name:'MOHAMED K.', detail:'Prophy \u2014 Chair 9C', type:'patient', conflict:false },
+  { id:'ev_24', date:'2026-04-17', sh:16,sm:0,eh:16,em:30, name:'\u26A1 PASSION PROJ', detail:'Oral Med Passion Project DUE \u2014 4:00 PM', type:'deadline', conflict:false },
+  { id:'ev_25', date:'2026-04-17', sh:16,sm:30,eh:17,em:0, name:'\u26A1 NOTECARD DUE', detail:'Oral Med Final Notecard DUE \u2014 4:00 PM', type:'deadline', conflict:false },
+  { id:'ev_26', date:'2026-04-17', sh:16,sm:0,eh:17,em:50, name:'ORAL MED EXAM', detail:'OD531 Oral Medicine Final \u2014 4:00\u20135:50 PM', type:'exam', conflict:false },
+  { id:'ev_27', date:'2026-04-21', sh:8,sm:30,eh:11,em:30, name:'CARMEN LOE', detail:'Carmen LOE', type:'patient', conflict:false },
+  { id:'ev_28', date:'2026-04-21', sh:12,sm:30,eh:15,em:0, name:'TATA POE', detail:'Tata POE', type:'patient', conflict:false },
+  { id:'ev_29', date:'2026-04-22', sh:8,sm:30,eh:11,em:30, name:'RANY G. POE', detail:'Rany G. POE', type:'patient', conflict:false },
+  { id:'ev_30', date:'2026-04-22', sh:13,sm:0,eh:16,em:0, name:'PERIO ASSIST', detail:'Zapata implant surgery', type:'meeting', conflict:false },
+  { id:'ev_31', date:'2026-04-23', sh:12,sm:30,eh:15,em:0, name:'MONICAH TP', detail:'Monicah TP', type:'patient', conflict:false },
+  { id:'ev_32', date:'2026-05-08', sh:9,sm:0,eh:12,em:0, name:'PERIO ASSIST', detail:'Khan implant surgery', type:'meeting', conflict:false },
+];
+
+// ── Persistence ──
+var events = [];
+
+function loadEvents() {
+  try {
+    var raw = localStorage.getItem(LS_KEY);
+    if (raw) { events = JSON.parse(raw); return; }
+  } catch(e) {}
+  events = JSON.parse(JSON.stringify(DEFAULT_EVENTS));
+  saveEvents();
+}
+
+function saveEvents() {
+  localStorage.setItem(LS_KEY, JSON.stringify(events));
+}
+
+function resetEvents() {
+  events = JSON.parse(JSON.stringify(DEFAULT_EVENTS));
+  checklist = [];
+  saveEvents();
+  saveChecklist();
+  renderAll();
+}
+
+function loadChecklist() {
+  try {
+    var raw = localStorage.getItem(CL_KEY);
+    if (raw) { checklist = JSON.parse(raw); return; }
+  } catch(e) {}
+  checklist = [];
+}
+
+function saveChecklist() {
+  localStorage.setItem(CL_KEY, JSON.stringify(checklist));
+}
+
+// ═══════════════════════════════════════════════
+//  RENDERING
+// ═══════════════════════════════════════════════
+function renderAll() {
+  renderWeeks();
+  renderBeyond();
+  renderConflicts();
+  renderChecklist();
+  renderStats();
+  buildLegend();
+}
+
+function renderStats() {
+  var total = events.length;
+  var conflicts = events.filter(function(e){ return e.conflict; }).length;
+  var el = document.getElementById('headerStats');
+  while (el.firstChild) el.removeChild(el.firstChild);
+
+  var items = [
+    { pre: '', icon: 'blink', label: 'STATUS:', val: 'ACTIVE', cls: 'val' },
+    { label: 'PERIOD:', val: 'APR 6 \u2013 MAY 8, 2026', cls: 'val' },
+    { label: 'CONFLICTS:', val: conflicts + ' DETECTED', cls: 'val-crit', icon2: 'blink blink-warn' },
+    { label: 'BLOCKS:', val: total + ' SCHEDULED', cls: 'val' },
+  ];
+  items.forEach(function(it) {
+    var sp = document.createElement('span');
+    if (it.icon) { var b = document.createElement('span'); b.className = it.icon; sp.appendChild(b); }
+    sp.appendChild(document.createTextNode(' ' + it.label + ' '));
+    var v = document.createElement('span'); v.className = it.cls; v.textContent = it.val; sp.appendChild(v);
+    if (it.icon2) { var b2 = document.createElement('span'); b2.className = it.icon2; sp.appendChild(document.createTextNode(' ')); sp.appendChild(b2); }
+    el.appendChild(sp);
+  });
+}
+
+function renderWeeks() {
+  var container = document.getElementById('weeksContainer');
+  while (container.firstChild) container.removeChild(container.firstChild);
+
+  WEEK_DEFS.forEach(function(wdef) {
+    var dates = getWeekDates(wdef.mon);
+    var weekEvents = events.filter(function(ev) { return dates.indexOf(ev.date) !== -1; });
+
+    var panel = document.createElement('div');
+    panel.className = 'panel';
+
+    var title = document.createElement('div');
+    title.className = 'panel-title';
+    title.textContent = wdef.label;
+    var tag = document.createElement('span');
+    tag.className = 'tag';
+    tag.textContent = wdef.tag;
+    title.appendChild(tag);
+    panel.appendChild(title);
+
+    var grid = document.createElement('div');
+    grid.className = 'week-grid';
+
+    // Time header cell
+    var th = document.createElement('div');
+    th.className = 'time-header';
+    grid.appendChild(th);
+
+    // Day headers with + buttons
+    dates.forEach(function(dateIso, i) {
+      var dh = document.createElement('div');
+      dh.className = 'day-header';
+      dh.appendChild(document.createTextNode(DAY_NAMES[i]));
+      var ds = document.createElement('span');
+      ds.className = 'date';
+      ds.textContent = displayDate(dateIso);
+      dh.appendChild(ds);
+      var addBtn = document.createElement('span');
+      addBtn.className = 'day-add-btn';
+      addBtn.textContent = '+';
+      addBtn.title = 'Add event on ' + displayDate(dateIso);
+      addBtn.addEventListener('click', (function(d) { return function(e) { e.stopPropagation(); openModal('add', null, d); }; })(dateIso));
+      dh.appendChild(addBtn);
+      grid.appendChild(dh);
+    });
+
+    // Time labels column
+    var timeCol = document.createElement('div');
+    timeCol.className = 'time-col';
+    timeCol.style.height = (TOTAL_HOURS * HOUR_PX) + 'px';
+    for (var h = START_HOUR; h <= END_HOUR; h++) {
+      var lbl = document.createElement('div');
+      lbl.className = 'time-label';
+      lbl.style.top = ((h - START_HOUR) * HOUR_PX) + 'px';
+      var ap = h >= 12 ? 'p' : 'a';
+      var hh = h > 12 ? h - 12 : h;
+      lbl.textContent = hh + ap;
+      timeCol.appendChild(lbl);
+    }
+    grid.appendChild(timeCol);
+
+    // Day columns
+    dates.forEach(function(dateIso, dayIdx) {
+      var dayEvts = weekEvents.filter(function(ev) { return ev.date === dateIso; });
+      dayEvts.sort(function(a,b) { return (a.sh*60+a.sm) - (b.sh*60+b.sm); });
+
+      var col = document.createElement('div');
+      col.className = 'day-col';
+      col.style.height = (TOTAL_HOURS * HOUR_PX) + 'px';
+
+      // Click empty space to add
+      col.addEventListener('click', (function(d) {
+        return function(e) { if (e.target === col) openModal('add', null, d); };
+      })(dateIso));
+
+      for (var hr = 0; hr <= TOTAL_HOURS; hr++) {
+        var line = document.createElement('div');
+        line.className = 'hour-line';
+        line.style.top = (hr * HOUR_PX) + 'px';
+        col.appendChild(line);
+        if (hr < TOTAL_HOURS) {
+          var half = document.createElement('div');
+          half.className = 'hour-line half';
+          half.style.top = (hr * HOUR_PX + HOUR_PX / 2) + 'px';
+          col.appendChild(half);
+        }
+      }
+
+      dayEvts.forEach(function(ev, evIdx) {
+        col.appendChild(createEventBlock(ev, dayIdx, evIdx));
+      });
+
+      grid.appendChild(col);
+    });
+
+    panel.appendChild(grid);
+    container.appendChild(panel);
+  });
+}
+
+function createEventBlock(ev, dayIdx, evIdx) {
+  var top = timeToY(ev.sh, ev.sm);
+  var height = durationPx(ev.sh, ev.sm, ev.eh, ev.em);
+  if (height < 24) height = 24;
+
+  var el = document.createElement('div');
+  el.className = 'ev ev-' + ev.type;
+  if (ev.conflict) el.className += ' ev-conflict';
+  el.style.top = top + 'px';
+  el.style.height = height + 'px';
+  el.style.animationDelay = (dayIdx * 0.08 + evIdx * 0.05) + 's';
+
+  var timeStr = fmtTime(ev.sh, ev.sm) + '\u2013' + fmtTime(ev.eh, ev.em);
+
+  // X delete button
+  var xBtn = document.createElement('span');
+  xBtn.className = 'ev-x';
+  xBtn.textContent = '\u2715';
+  xBtn.addEventListener('click', (function(evt) { return function(e) { e.stopPropagation(); showDeleteConfirm(evt.id, evt.name); }; })(ev));
+  el.appendChild(xBtn);
+
+  var nameDiv = document.createElement('div');
+  nameDiv.className = 'ev-name';
+  nameDiv.textContent = ev.name;
+  el.appendChild(nameDiv);
+
+  if (height > 30) {
+    var timeDiv = document.createElement('div');
+    timeDiv.className = 'ev-time';
+    timeDiv.textContent = timeStr;
+    el.appendChild(timeDiv);
+  }
+  if (height > 50) {
+    var detDiv = document.createElement('div');
+    detDiv.className = 'ev-detail';
+    detDiv.textContent = (ev.detail || '').split('\u2014')[0].trim();
+    el.appendChild(detDiv);
+  }
+
+  // Click to edit
+  el.addEventListener('click', (function(evt) { return function() { openModal('edit', evt); }; })(ev));
+
+  // Tooltip
+  el.addEventListener('mouseenter', (function(evt, ts) {
+    return function() {
+      document.getElementById('ttTitle').textContent = evt.name;
+      document.getElementById('ttTime').textContent = ts;
+      document.getElementById('ttDetail').textContent = evt.detail || '';
+      document.getElementById('tooltip').classList.add('show');
+    };
+  })(ev, timeStr));
+  el.addEventListener('mousemove', function(e) {
+    var tt = document.getElementById('tooltip');
+    var x = e.clientX + 12, y = e.clientY + 12;
+    if (x + 280 > window.innerWidth) x = e.clientX - 290;
+    if (y + 100 > window.innerHeight) y = e.clientY - 110;
+    tt.style.left = x + 'px'; tt.style.top = y + 'px';
+  });
+  el.addEventListener('mouseleave', function() { document.getElementById('tooltip').classList.remove('show'); });
+
+  return el;
+}
+
+function renderBeyond() {
+  var allWeekDates = [];
+  WEEK_DEFS.forEach(function(w) { allWeekDates = allWeekDates.concat(getWeekDates(w.mon)); });
+  var beyondEvts = events.filter(function(ev) { return allWeekDates.indexOf(ev.date) === -1; });
+  beyondEvts.sort(function(a,b) { return a.date < b.date ? -1 : a.date > b.date ? 1 : (a.sh*60+a.sm) - (b.sh*60+b.sm); });
+
+  // Group by date
+  var grouped = {};
+  beyondEvts.forEach(function(ev) {
+    if (!grouped[ev.date]) grouped[ev.date] = [];
+    grouped[ev.date].push(ev);
+  });
+  var dateKeys = Object.keys(grouped).sort();
+
+  var panel = document.getElementById('beyondPanel');
+  while (panel.firstChild) panel.removeChild(panel.firstChild);
+
+  var title = document.createElement('div');
+  title.className = 'panel-title';
+  title.textContent = 'BEYOND // UPCOMING OPS';
+  var tag = document.createElement('span');
+  tag.className = 'tag';
+  tag.textContent = dateKeys.length > 0 ? displayDate(dateKeys[0]) + ' \u2013 ' + displayDate(dateKeys[dateKeys.length-1]) : 'NONE';
+  title.appendChild(tag);
+  var addBtn = document.createElement('button');
+  addBtn.className = 'beyond-add-btn';
+  addBtn.textContent = '+ ADD';
+  addBtn.addEventListener('click', function() { openModal('add', null, ''); });
+  title.appendChild(addBtn);
+  panel.appendChild(title);
+
+  dateKeys.forEach(function(dateIso) {
+    grouped[dateIso].forEach(function(ev) {
+      var row = document.createElement('div');
+      row.className = 'beyond-item';
+      row.addEventListener('click', (function(evt) { return function() { openModal('edit', evt); }; })(ev));
+
+      var dateSpan = document.createElement('span');
+      dateSpan.className = 'beyond-date';
+      dateSpan.textContent = displayDate(dateIso);
+      row.appendChild(dateSpan);
+
+      var textSpan = document.createElement('span');
+      textSpan.className = 'beyond-text';
+      textSpan.textContent = fmtTime(ev.sh, ev.sm) + ' \u2014 ' + ev.name;
+      if (ev.detail) textSpan.textContent += ' (' + ev.detail + ')';
+      row.appendChild(textSpan);
+
+      var xBtn = document.createElement('span');
+      xBtn.className = 'beyond-x';
+      xBtn.textContent = '\u2715';
+      xBtn.addEventListener('click', (function(evt) { return function(e) { e.stopPropagation(); showDeleteConfirm(evt.id, evt.name); }; })(ev));
+      row.appendChild(xBtn);
+
+      panel.appendChild(row);
+    });
+  });
+
+  if (dateKeys.length === 0) {
+    var empty = document.createElement('div');
+    empty.style.cssText = 'padding: 16px; color: var(--text-dim); font-size: 0.7rem; text-align: center;';
+    empty.textContent = 'NO UPCOMING OPS';
+    panel.appendChild(empty);
+  }
+}
+
+function renderConflicts() {
+  var conflictEvts = events.filter(function(e) { return e.conflict; });
+  var panel = document.getElementById('conflictsPanel');
+  while (panel.firstChild) panel.removeChild(panel.firstChild);
+
+  var title = document.createElement('div');
+  title.className = 'panel-title';
+  title.style.cssText = 'color:var(--red); text-shadow: 0 0 10px rgba(255,23,68,0.3);';
+  title.textContent = 'CONFLICTS // ALERT';
+  var tag = document.createElement('span');
+  tag.className = 'tag';
+  tag.style.color = 'var(--red)';
+  tag.textContent = conflictEvts.length + ' ACTIVE';
+  title.appendChild(tag);
+  panel.appendChild(title);
+
+  if (conflictEvts.length === 0) {
+    var ok = document.createElement('div');
+    ok.style.cssText = 'padding: 16px; color: var(--green); font-size: 0.7rem; text-align: center;';
+    ok.textContent = 'NO CONFLICTS DETECTED';
+    panel.appendChild(ok);
+    return;
+  }
+
+  conflictEvts.forEach(function(ev) {
+    var item = document.createElement('div');
+    item.className = 'conflict-item conflict-med';
+    var sev = document.createElement('div');
+    sev.className = 'conflict-sev';
+    sev.textContent = '\u25C6 ' + displayDate(ev.date) + ' \u2014 ' + ev.name;
+    item.appendChild(sev);
+    var desc = document.createElement('div');
+    desc.className = 'conflict-desc';
+    desc.textContent = ev.detail || 'Flagged as conflict';
+    item.appendChild(desc);
+    panel.appendChild(item);
+  });
+}
+
+function buildLegend() {
+  var items = [
+    { label: 'Rotation', border: '#0a3a1a', bg: 'rgba(0,255,65,0.06)' },
+    { label: 'Patient', border: '#00e5ff', bg: 'rgba(0,229,255,0.08)' },
+    { label: 'Lab/Sim', border: '#e040fb', bg: 'rgba(224,64,251,0.08)' },
+    { label: 'Meeting', border: '#ffb300', bg: 'rgba(255,179,0,0.08)' },
+    { label: 'WA (no pt)', border: '#b388ff', bg: 'rgba(179,136,255,0.08)' },
+    { label: 'Deadline/Exam', border: '#ff1744', bg: 'rgba(255,23,68,0.1)' },
+  ];
+  var container = document.getElementById('legendContainer');
+  if (container.childElementCount > 0) return; // only build once
+  items.forEach(function(item) {
+    var span = document.createElement('span');
+    span.className = 'legend-item';
+    var sw = document.createElement('span');
+    sw.className = 'legend-swatch';
+    sw.style.borderColor = item.border;
+    sw.style.background = item.bg;
+    span.appendChild(sw);
+    span.appendChild(document.createTextNode(' ' + item.label));
+    container.appendChild(span);
+  });
+}
+
+function renderChecklist() {
+  var panel = document.getElementById('checklistPanel');
+  while (panel.firstChild) panel.removeChild(panel.firstChild);
+
+  var title = document.createElement('div');
+  title.className = 'panel-title';
+  title.textContent = 'ADDITIONAL MUST-COMPLETE CHECKLIST';
+  var tag = document.createElement('span');
+  tag.className = 'tag';
+  var doneCount = checklist.filter(function(c) { return c.done; }).length;
+  tag.textContent = doneCount + '/' + checklist.length + ' DONE';
+  title.appendChild(tag);
+  panel.appendChild(title);
+
+  // Add row
+  var addRow = document.createElement('div');
+  addRow.className = 'checklist-add-row';
+  var addInput = document.createElement('input');
+  addInput.type = 'text';
+  addInput.placeholder = 'Add task...';
+  addInput.id = 'clAddInput';
+  addInput.addEventListener('keydown', function(e) {
+    if (e.key === 'Enter') addChecklistItem();
+  });
+  addRow.appendChild(addInput);
+  var addBtn = document.createElement('button');
+  addBtn.className = 'checklist-add-btn';
+  addBtn.textContent = '+ ADD';
+  addBtn.addEventListener('click', addChecklistItem);
+  addRow.appendChild(addBtn);
+  panel.appendChild(addRow);
+
+  // Items
+  var itemsDiv = document.createElement('div');
+  itemsDiv.className = 'checklist-items';
+
+  if (checklist.length === 0) {
+    var empty = document.createElement('div');
+    empty.className = 'checklist-empty';
+    empty.textContent = 'NO TASKS \u2014 ADD ONE ABOVE';
+    itemsDiv.appendChild(empty);
+  }
+
+  checklist.forEach(function(item) {
+    var row = document.createElement('div');
+    row.className = 'checklist-item';
+
+    var check = document.createElement('span');
+    check.className = 'checklist-check' + (item.done ? ' done' : '');
+    check.textContent = item.done ? '\u2713' : '';
+    check.addEventListener('click', (function(id) {
+      return function() { toggleChecklistItem(id); };
+    })(item.id));
+    row.appendChild(check);
+
+    var text = document.createElement('span');
+    text.className = 'checklist-item-text' + (item.done ? ' done' : '');
+    text.textContent = item.text;
+    row.appendChild(text);
+
+    var xBtn = document.createElement('span');
+    xBtn.className = 'checklist-item-x';
+    xBtn.textContent = '\u2715';
+    xBtn.addEventListener('click', (function(id) {
+      return function() { deleteChecklistItem(id); };
+    })(item.id));
+    row.appendChild(xBtn);
+
+    itemsDiv.appendChild(row);
+  });
+
+  panel.appendChild(itemsDiv);
+}
+
+function addChecklistItem() {
+  var input = document.getElementById('clAddInput');
+  var text = input.value.trim();
+  if (!text) return;
+  checklist.push({ id: genId(), text: text, done: false });
+  saveChecklist();
+  renderChecklist();
+  // Re-focus the input after render
+  setTimeout(function() { document.getElementById('clAddInput').focus(); }, 10);
+}
+
+function toggleChecklistItem(id) {
+  for (var i = 0; i < checklist.length; i++) {
+    if (checklist[i].id === id) { checklist[i].done = !checklist[i].done; break; }
+  }
+  saveChecklist();
+  renderChecklist();
+}
+
+function deleteChecklistItem(id) {
+  checklist = checklist.filter(function(c) { return c.id !== id; });
+  saveChecklist();
+  renderChecklist();
+}
+
+// ═══════════════════════════════════════════════
+//  EXPORT TO PNG
+// ═══════════════════════════════════════════════
+function exportToPNG() {
+  var btn = document.getElementById('btnExport');
+  btn.classList.add('exporting');
+  btn.textContent = 'EXPORTING...';
+
+  // Hide interactive elements during capture
+  var evXBtns = document.querySelectorAll('.ev-x, .beyond-x, .checklist-item-x, .day-add-btn, .beyond-add-btn, .header-btns, .status-bar, .checklist-add-row');
+  evXBtns.forEach(function(el) { el.dataset.prevDisplay = el.style.display; el.style.display = 'none'; });
+
+  var wrapper = document.getElementById('mainContent');
+  html2canvas(wrapper, {
+    backgroundColor: '#050a0e',
+    scale: 2,
+    useCORS: true,
+    logging: false,
+    width: wrapper.scrollWidth,
+    height: wrapper.scrollHeight,
+  }).then(function(canvas) {
+    var link = document.createElement('a');
+    link.download = 'mission-control-schedule.png';
+    link.href = canvas.toDataURL('image/png');
+    link.click();
+
+    // Restore hidden elements
+    evXBtns.forEach(function(el) { el.style.display = el.dataset.prevDisplay || ''; });
+    btn.classList.remove('exporting');
+    btn.textContent = '\u21A1 EXPORT PNG';
+  }).catch(function() {
+    evXBtns.forEach(function(el) { el.style.display = el.dataset.prevDisplay || ''; });
+    btn.classList.remove('exporting');
+    btn.textContent = '\u21A1 EXPORT PNG';
+  });
+}
+
+// ═══════════════════════════════════════════════
+//  MODAL CRUD
+// ═══════════════════════════════════════════════
+function openModal(mode, ev, preDate) {
+  document.getElementById('tooltip').classList.remove('show');
+  editingId = null;
+  var titleEl = document.getElementById('modalTitle');
+  var delBtn = document.getElementById('btnDeleteModal');
+
+  if (mode === 'edit' && ev) {
+    editingId = ev.id;
+    titleEl.textContent = '\u25B6 EDIT OPERATION';
+    document.getElementById('evName').value = ev.name;
+    document.getElementById('evDate').value = ev.date;
+    document.getElementById('evStart').value = timeInputVal(ev.sh, ev.sm);
+    document.getElementById('evEnd').value = timeInputVal(ev.eh, ev.em);
+    document.getElementById('evType').value = ev.type;
+    document.getElementById('evDetail').value = ev.detail || '';
+    document.getElementById('evConflict').checked = ev.conflict || false;
+    delBtn.style.display = '';
+  } else {
+    titleEl.textContent = '\u25B6 NEW OPERATION';
+    document.getElementById('evName').value = '';
+    document.getElementById('evDate').value = preDate || '';
+    document.getElementById('evStart').value = '08:30';
+    document.getElementById('evEnd').value = '11:30';
+    document.getElementById('evType').value = 'patient';
+    document.getElementById('evDetail').value = '';
+    document.getElementById('evConflict').checked = false;
+    delBtn.style.display = 'none';
+  }
+
+  document.getElementById('modalOverlay').classList.add('open');
+  document.getElementById('evName').focus();
+}
+
+function closeModal() {
+  document.getElementById('modalOverlay').classList.remove('open');
+  editingId = null;
+}
+
+function saveEvent() {
+  var name = document.getElementById('evName').value.trim();
+  var date = document.getElementById('evDate').value;
+  var startVal = document.getElementById('evStart').value;
+  var endVal = document.getElementById('evEnd').value;
+  var type = document.getElementById('evType').value;
+  var detail = document.getElementById('evDetail').value.trim();
+  var conflict = document.getElementById('evConflict').checked;
+
+  if (!name || !date || !startVal || !endVal) return;
+
+  var start = parseTimeInput(startVal);
+  var end = parseTimeInput(endVal);
+
+  if (editingId) {
+    for (var i = 0; i < events.length; i++) {
+      if (events[i].id === editingId) {
+        events[i].name = name;
+        events[i].date = date;
+        events[i].sh = start.h; events[i].sm = start.m;
+        events[i].eh = end.h; events[i].em = end.m;
+        events[i].type = type;
+        events[i].detail = detail;
+        events[i].conflict = conflict;
+        break;
+      }
+    }
+  } else {
+    events.push({
+      id: genId(), date: date,
+      sh: start.h, sm: start.m, eh: end.h, em: end.m,
+      name: name, detail: detail, type: type, conflict: conflict
+    });
+  }
+
+  saveEvents();
+  closeModal();
+  renderAll();
+}
+
+function deleteEvent(id) {
+  events = events.filter(function(e) { return e.id !== id; });
+  saveEvents();
+  renderAll();
+}
+
+function showDeleteConfirm(id, name) {
+  pendingDeleteId = id;
+  var msg = document.getElementById('confirmMsg');
+  msg.textContent = '';
+  msg.appendChild(document.createTextNode('CONFIRM DELETION OF '));
+  var strong = document.createElement('strong');
+  strong.textContent = '"' + name + '"';
+  msg.appendChild(strong);
+  msg.appendChild(document.createTextNode('?'));
+  document.getElementById('confirmOverlay').classList.add('open');
+}
+
+function closeConfirm() {
+  document.getElementById('confirmOverlay').classList.remove('open');
+  pendingDeleteId = null;
+}
+
+// ── Wire up buttons ──
+document.getElementById('btnSave').addEventListener('click', saveEvent);
+document.getElementById('btnAbort').addEventListener('click', closeModal);
+document.getElementById('btnDeleteModal').addEventListener('click', function() {
+  if (editingId) {
+    closeModal();
+    var ev = events.find(function(e) { return e.id === editingId; });
+    showDeleteConfirm(editingId, ev ? ev.name : '');
+  }
+});
+document.getElementById('btnConfirmYes').addEventListener('click', function() {
+  if (pendingDeleteId) deleteEvent(pendingDeleteId);
+  closeConfirm();
+});
+document.getElementById('btnConfirmNo').addEventListener('click', closeConfirm);
+document.getElementById('btnNewOp').addEventListener('click', function() { openModal('add', null, ''); });
+document.getElementById('btnExport').addEventListener('click', exportToPNG);
+document.getElementById('btnReset').addEventListener('click', function() {
+  pendingDeleteId = '__RESET__';
+  var msg = document.getElementById('confirmMsg');
+  msg.textContent = '';
+  msg.appendChild(document.createTextNode('RESET ALL DATA TO DEFAULTS? '));
+  var strong = document.createElement('strong');
+  strong.textContent = 'THIS CANNOT BE UNDONE.';
+  msg.appendChild(strong);
+  document.getElementById('confirmOverlay').classList.add('open');
+  // Override confirm handler for reset (resetEvents also clears checklist)
+  document.getElementById('btnConfirmYes').onclick = function() {
+    resetEvents();
+    closeConfirm();
+    // Restore normal handler
+    document.getElementById('btnConfirmYes').onclick = function() {
+      if (pendingDeleteId) deleteEvent(pendingDeleteId);
+      closeConfirm();
+    };
+  };
+});
+
+// Keyboard shortcuts
+document.addEventListener('keydown', function(e) {
+  if (e.key === 'Escape') {
+    if (document.getElementById('confirmOverlay').classList.contains('open')) closeConfirm();
+    else if (document.getElementById('modalOverlay').classList.contains('open')) closeModal();
+  }
+  if (e.key === 'Enter' && document.getElementById('modalOverlay').classList.contains('open')) {
+    if (e.target.tagName !== 'TEXTAREA') saveEvent();
+  }
+});
+
+// Close modals on overlay click
+document.getElementById('modalOverlay').addEventListener('click', function(e) { if (e.target === this) closeModal(); });
+document.getElementById('confirmOverlay').addEventListener('click', function(e) { if (e.target === this) closeConfirm(); });
+
+// ═══════════════════════════════════════════════
+//  BOOT & CLOCK
+// ═══════════════════════════════════════════════
+var bootLines = [
+  '> INITIALIZING MISSION CONTROL v2.0...',
+  '> LOADING SCHEDULE DATABASE...',
+  '> SCANNING FOR CONFLICTS...',
+  '> RENDERING TIMELINE GRID...',
+  '> SYSTEM ONLINE \u25A0',
+];
+
+function bootSequence() {
+  var overlay = document.getElementById('bootOverlay');
+  var textEl = document.getElementById('bootText');
+  var lineIdx = 0, charIdx = 0, currentLine = null;
+  function typeLine() {
+    if (lineIdx >= bootLines.length) {
+      setTimeout(function() {
+        overlay.classList.add('done');
+        var main = document.getElementById('mainContent');
+        main.style.transition = 'opacity 0.8s';
+        main.style.opacity = '1';
+        setTimeout(function() { overlay.remove(); }, 600);
+      }, 300);
+      return;
+    }
+    if (charIdx === 0) {
+      currentLine = document.createElement('div');
+      currentLine.className = 'boot-line show';
+      textEl.appendChild(currentLine);
+    }
+    var text = bootLines[lineIdx];
+    if (charIdx < text.length) {
+      currentLine.textContent = text.substring(0, charIdx + 1);
+      charIdx++;
+      setTimeout(typeLine, text[charIdx-1] === '.' ? 30 : 10);
+    } else {
+      lineIdx++; charIdx = 0;
+      setTimeout(typeLine, 100);
+    }
+  }
+  typeLine();
+}
+
+function updateClock() {
+  var now = new Date();
+  document.getElementById('statusClock').textContent =
+    String(now.getHours()).padStart(2,'0') + ':' +
+    String(now.getMinutes()).padStart(2,'0') + ':' +
+    String(now.getSeconds()).padStart(2,'0') + ' EST';
+}
+
+// ── Init ──
+document.addEventListener('DOMContentLoaded', function() {
+  loadEvents();
+  loadChecklist();
+  renderAll();
+  updateClock();
+  setInterval(updateClock, 1000);
+  bootSequence();
+});
+</script>
+</body>
+</html>
