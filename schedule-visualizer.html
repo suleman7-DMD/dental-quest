@@ -28,9 +28,9 @@
   --text-dim: #78909c;
   --border: #1a2a35;
   --border-bright: #1e3a4a;
-  --hour-height: 60px;
+  --hour-height: 64px;
 }
-html { font-size: 15px; }
+html { font-size: 17px; }
 body {
   background: var(--bg-deep);
   color: var(--text);
@@ -157,8 +157,8 @@ body::before {
 }
 .ev:hover { z-index: 10; transform: scale(1.03); }
 .ev-name { font-weight: bold; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; padding-right: 14px; }
-.ev-time { font-size: 0.62rem; opacity: 0.8; white-space: nowrap; }
-.ev-detail { font-size: 0.6rem; opacity: 0.7; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ev-time { font-size: 0.52rem; opacity: 0.8; white-space: nowrap; }
+.ev-detail { font-size: 0.48rem; opacity: 0.75; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .ev-x {
   position: absolute; top: 2px; right: 2px; width: 14px; height: 14px;
   display: none; align-items: center; justify-content: center;
@@ -514,7 +514,7 @@ body.export-mode .checklist-add-row { display: none !important; }
 // ═══════════════════════════════════════════════
 //  DATA MODEL — all events in a flat array
 // ═══════════════════════════════════════════════
-var HOUR_PX = 60, START_HOUR = 8, END_HOUR = 19, TOTAL_HOURS = END_HOUR - START_HOUR;
+var HOUR_PX = 64, START_HOUR = 8, END_HOUR = 19, TOTAL_HOURS = END_HOUR - START_HOUR;
 var LS_KEY = 'missionControlEvents_v2';
 var CL_KEY = 'missionControlChecklist_v2';
 var editingId = null;
