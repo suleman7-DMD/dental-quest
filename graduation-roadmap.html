@@ -7775,6 +7775,36 @@
         .fc-hv { color: #92400e; background: #fef3c7; padding: 0 4px; border-radius: 3px; font-weight: 600; }
         .fc-tooth { color: #6366f1; font-weight: 500; }
 
+        /* ─── Smart Record Field Formatting (rf-*) ─── */
+        .rf-bullet { display: block; padding: 3px 0 3px 16px; position: relative; line-height: 1.6; }
+        .rf-bullet::before { content: ''; position: absolute; left: 3px; top: 0.55em; width: 5px; height: 5px; border-radius: 50%; background: #cbd5e1; }
+        .rf-bullet + .rf-bullet { border-top: 1px solid rgba(0,0,0,0.03); }
+        .rf-line { display: block; padding: 2px 0; line-height: 1.6; }
+        .rf-cond { background: linear-gradient(135deg, #fef2f2, #fff1f2); color: #b91c1c; padding: 1px 5px; border-radius: 4px; font-weight: 600; white-space: nowrap; border: 1px solid rgba(185,28,28,0.1); }
+        .rf-alert { background: linear-gradient(135deg, #fef3c7, #fde68a); color: #92400e; padding: 1px 5px; border-radius: 4px; font-weight: 700; letter-spacing: 0.02em; border: 1px solid rgba(146,64,14,0.12); }
+        .rf-neg { color: #dc2626; font-weight: 700; }
+        .rf-med-list { display: flex; flex-direction: column; gap: 1px; }
+        .rf-med { padding: 5px 0 5px 12px; border-left: 2px solid #e2e8f0; line-height: 1.6; border-radius: 0 4px 4px 0; transition: border-color 0.2s; }
+        .rf-med:hover { border-left-color: #94a3b8; background: rgba(0,0,0,0.01); }
+        .rf-arrow { color: #d97706; font-weight: 600; }
+        .rf-effect { color: #92400e; font-style: italic; }
+        .rf-allergy { display: inline-block; background: linear-gradient(135deg, #fef2f2, #ffe4e6); color: #dc2626; padding: 3px 12px; border-radius: 14px; font-weight: 600; font-size: 0.92em; margin: 3px 4px 3px 0; border: 1px solid #fecaca; }
+        .rf-date { color: #4f46e5; font-weight: 500; }
+        .rf-tooth { color: #6366f1; font-weight: 600; }
+        .rf-cost { color: #059669; font-weight: 600; }
+        .rf-label { display: block; font-weight: 700; color: #475569; font-size: 0.82em; text-transform: uppercase; letter-spacing: 0.06em; margin: 10px 0 4px; padding-bottom: 3px; border-bottom: 1px solid #f1f5f9; }
+        .rf-label:first-child { margin-top: 2px; }
+        .rf-status-ok { background: #ecfdf5; color: #065f46; padding: 1px 6px; border-radius: 4px; font-weight: 600; }
+        .rf-status-warn { background: #fef3c7; color: #92400e; padding: 1px 6px; border-radius: 4px; font-weight: 600; }
+        .ptr-brief-body .rf-cond { font-size: 0.92em; }
+        .ptr-brief-body .rf-date { font-size: 0.92em; }
+
+        @media (max-width: 768px) {
+            .rf-bullet { padding: 3px 0 3px 14px; }
+            .rf-med { padding: 4px 0 4px 10px; }
+            .rf-allergy { padding: 2px 10px; font-size: 0.88em; }
+        }
+
         @media (max-width: 768px) {
             #tab-minireview { padding: 12px; }
             .mr-grid { grid-template-columns: 1fr; }
@@ -11133,7 +11163,7 @@ NOTES: ...
     <script src="js/graduation-roadmap/grades.js?v=20260403"></script>
     <script src="js/graduation-roadmap/exam-content.js?v=20260403"></script>
     <script src="js/graduation-roadmap/clinical.js?v=20260403"></script>
-    <script src="js/graduation-roadmap/patients.js?v=20260403"></script>
+    <script src="js/graduation-roadmap/patients.js?v=20260405"></script>
     <script src="js/graduation-roadmap/import-system.js?v=20260403"></script>
     <script src="js/graduation-roadmap/daily-planner.js?v=20260403"></script>
     <script src="js/graduation-roadmap/monthly-planner.js?v=20260403"></script>

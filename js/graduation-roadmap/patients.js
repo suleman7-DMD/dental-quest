@@ -790,7 +790,7 @@ function renderClinicalBrief(patient, patientId) {
         if (!val) return '';
         var rendered;
         if (key === 'flaggedConcerns') {
-            rendered = escapeHtml(val);
+            rendered = escapeHtml(decodeEntities(val));
             rendered = rendered.replace(/\((\d+)\)\s*/g, function(match, num, offset) {
                 return (offset > 0 ? '</li>' : '') + '<li>';
             });
@@ -987,13 +987,13 @@ function renderPatientRecord(patientId) {
                 + '<div class="ptr-field-label" style="color:' + accentColor + ';">' + escapeHtml(label) + '</div>'
                 + '<div contenteditable="true" data-patient-id="' + escapeHtml(patientId) + '" data-field="' + escapeHtml(fieldName) + '" onfocus="this.dataset.original=this.innerText;this.dataset.committed=\'false\';" onkeydown="if(event.key===\'Escape\'){this.innerText=this.dataset.original;this.dataset.committed=\'true\';this.blur();}" onblur="savePatientField(this)" '
                 + 'class="ptr-field-edit" style="border-left-color:' + accentColor + ';">'
-                + escapeHtml(val)
+                + escapeHtml(decodeEntities(val))
                 + '</div></div>';
         } else {
             if (!val) return '';
             return '<div class="ptr-field-view" style="border-left-color:' + accentColor + '40;">'
                 + '<span class="ptr-field-label" style="color:' + accentColor + ';">' + escapeHtml(label) + '</span>'
-                + '<div class="ptr-field-text">' + escapeHtml(val) + '</div>'
+                + '<div class="ptr-field-text">' + formatRecordField(val, fieldName) + '</div>'
                 + '</div>';
         }
     }
@@ -1129,7 +1129,7 @@ function renderPatientRecord(patientId) {
     if (patient.priorityNotes) {
         priorityHtml = '<div class="ptr-priority-card">'
             + '<span class="ptr-field-label" style="color:#92400e;">Priority Notes</span>'
-            + '<div class="ptr-field-text" style="color:#78350f; font-weight:500;">' + escapeHtml(patient.priorityNotes) + '</div>'
+            + '<div class="ptr-field-text" style="color:#78350f; font-weight:500;">' + formatRecordField(patient.priorityNotes, 'priorityNotes') + '</div>'
             + '</div>';
     }
 
@@ -1166,8 +1166,8 @@ function renderPatientRecord(patientId) {
                 isEdit
                     ? fld('poeLast', 'Last POE / Prophy', '#f59e0b') + fld('poeNext', 'Next POE / Prophy', '#fbbf24')
                     : '<div class="ptr-perio-row">'
-                      + '<div class="ptr-perio-item"><div class="ptr-perio-label">Last POE / Prophy</div><div class="ptr-perio-value">' + escapeHtml(patient.poeLast || '\u2014') + '</div></div>'
-                      + '<div class="ptr-perio-item"><div class="ptr-perio-label">Next POE / Prophy</div><div class="ptr-perio-value">' + escapeHtml(patient.poeNext || '\u2014') + '</div></div>'
+                      + '<div class="ptr-perio-item"><div class="ptr-perio-label">Last POE / Prophy</div><div class="ptr-perio-value">' + escapeHtml(decodeEntities(patient.poeLast || '\u2014')) + '</div></div>'
+                      + '<div class="ptr-perio-item"><div class="ptr-perio-label">Next POE / Prophy</div><div class="ptr-perio-value">' + escapeHtml(decodeEntities(patient.poeNext || '\u2014')) + '</div></div>'
                       + '</div>')
             + section('treatment', 'Treatment Plan & Visits', '\uD83D\uDCCB',
                 fld('txPlan', 'Treatment Plan', '#3b82f6')
@@ -1204,8 +1204,8 @@ function renderPatientRecord(patientId) {
                 isEdit
                     ? '<div contenteditable="true" data-patient-id="' + escapeHtml(patientId) + '" data-field="notes" onfocus="this.dataset.original=this.innerText;this.dataset.committed=\'false\';" onkeydown="if(event.key===\'Escape\'){this.innerText=this.dataset.original;this.dataset.committed=\'true\';this.blur();}" onblur="savePatientField(this)" '
                       + 'class="ptr-field-edit ptr-notes-edit" style="border-left-color:#a855f7;">'
-                      + escapeHtml(patient.notes || '') + '</div>'
-                    : '<div class="ptr-field-view ptr-notes-view" style="border-left-color:#a855f740;">' + escapeHtml(patient.notes || '') + '</div>');
+                      + escapeHtml(decodeEntities(patient.notes || '')) + '</div>'
+                    : '<div class="ptr-field-view ptr-notes-view" style="border-left-color:#a855f740;">' + formatRecordField(patient.notes || '', 'notes') + '</div>');
     }
 
     // Build the record — all user text is escaped via escapeHtml()
@@ -3425,9 +3425,16 @@ function parseDashboardUpdate(text) {
 // ==================== CLINICAL DISPLAY FORMATTING ====================
 // Pure display formatter — zero content change, just visual structure.
 // Takes raw text, escapes it, adds line breaks + color highlights for readability.
+// Decode pre-escaped HTML entities in stored data (fixes double-encoding from imports)
+function decodeEntities(str) {
+    if (!str || typeof str !== 'string') return str || '';
+    return str.replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>')
+        .replace(/&quot;/g, '"').replace(/&#039;/g, "'").replace(/&#x27;/g, "'").replace(/&apos;/g, "'");
+}
+
 function formatClinicalDisplay(rawText) {
     if (!rawText) return '';
-    var t = escapeHtml(rawText);
+    var t = escapeHtml(decodeEntities(rawText));
     var hasSections = false;
 
     // ── Phase headers → line break + teal ──
@@ -3483,7 +3490,167 @@ function formatClinicalDisplay(rawText) {
     t = t.replace(/^(\s*<br>\s*)+/, '');
     t = t.replace(/(<br>\s*){3,}/g, '<br>');
 
+    // ── Medical condition badges (avoid matching inside existing tags) ──
+    t = t.replace(/\b(ASA\s+I{1,3}V?(?:-I{1,3}V?)?)\b(?![^<]*<\/)/g, '<span class="rf-cond">$1</span>');
+    t = t.replace(/\b(HTN|COPD|PTSD|GERD|IBS|TMD|CHF|DM|ESRD|OSA|ADHD|CKD|DVT|AFib|HIV|CAD|CVA)\b(?![^<]*<\/)/g, '<span class="rf-cond">$1</span>');
+
+    // ── Date highlights ──
+    t = t.replace(/\b(\d{1,2}\/\d{1,2}\/\d{2,4})\b(?![^<]*<\/)/g, '<span class="rf-date">$1</span>');
+
     return t;
+}
+
+// ─── Smart Record Field Formatting ───
+
+// Inline highlights for medical/clinical text (applied to already-escaped HTML)
+function rfHighlights(t) {
+    // Multi-word conditions
+    t = t.replace(/\b(ASA\s+I{1,3}V?(?:-I{1,3}V?)?)\b/g, '<span class="rf-cond">$1</span>');
+    // Single-word medical abbreviations
+    t = t.replace(/\b(HTN|COPD|PTSD|GERD|IBS|TMD|CHF|DM|DVT|PE|ESRD|CAD|CVA|TIA|OSA|BPH|CKD|HIV|HCV|HBV|VTE|OCS|AFib|ADHD|MDD|GAD)\b/g, '<span class="rf-cond">$1</span>');
+    // Multi-word alert phrases (before single keywords)
+    t = t.replace(/\b(STILL NEEDED|NOT YET PRESCRIBED|NOT PRESCRIBED|NOT DOCUMENTED|NOT COMPLETED|EXTREMELY HIGH VALUE|EXTREMELY HIGH|HIGH VALUE|DO NOT SCHEDULE)\b/g, '<span class="rf-alert">$1</span>');
+    // Single alert keywords (avoid inside existing spans)
+    t = t.replace(/\b(NEEDED|URGENT|VERIFY|REQUIRED|PENDING|CRITICAL|PROTECT)\b(?![^<]*<\/span>)/g, '<span class="rf-alert">$1</span>');
+    // Negative emphasis (avoid matching inside multi-word alerts already wrapped)
+    t = t.replace(/\b(NOT|NEVER|CANNOT)\b(?!\s+(?:YET|PRESCRIBED|DOCUMENTED|COMPLETED|SCHEDULED))(?![^<]*<\/span>)/g, '<span class="rf-neg">$1</span>');
+    // Tooth numbers
+    t = t.replace(/#(\d{1,2})\b/g, '<span class="rf-tooth">#$1</span>');
+    // Arrows
+    t = t.replace(/→/g, '<span class="rf-arrow">→</span>');
+    t = t.replace(/-&gt;/g, '<span class="rf-arrow">→</span>');
+    // Cost figures
+    t = t.replace(/(~?\$[\d,]+\+?)/g, '<span class="rf-cost">$1</span>');
+    // Dates (M/D/YY or M/D/YYYY)
+    t = t.replace(/\b(\d{1,2}\/\d{1,2}\/\d{2,4})\b/g, '<span class="rf-date">$1</span>');
+    // BP readings
+    t = t.replace(/\b(BP)\s+(\d{2,3}\/\d{2,3})/g, '$1 <span class="rf-date">$2</span>');
+    return t;
+}
+
+// Split text into sentence-level bullet items
+function rfSentences(t) {
+    // Explicit newlines — split into items
+    if (t.indexOf('\n') !== -1) {
+        return t.split('\n').filter(function(l) { return l.trim(); }).map(function(line) {
+            return '<div class="rf-bullet">' + line.trim() + '</div>';
+        }).join('');
+    }
+    // Sentence split: require 2+ lowercase chars or digit or ) before period to avoid Dr./Mr./etc.
+    var marked = t.replace(/([a-z]{2,}|[0-9]|\))\.\s+(?=[A-Z])/g, '$1.\u0000');
+    var parts = marked.split('\u0000');
+    if (parts.length <= 1) return '<div class="rf-line">' + t + '</div>';
+    return parts.map(function(part) {
+        var text = part.trim();
+        return text ? '<div class="rf-bullet">' + text + '</div>' : '';
+    }).join('');
+}
+
+// Split medication string by ", " respecting parentheses
+function rfSplitMeds(text) {
+    var result = [], depth = 0, current = '';
+    for (var i = 0; i < text.length; i++) {
+        var ch = text[i];
+        if (ch === '(' || ch === '[') depth++;
+        else if (ch === ')' || ch === ']') depth = Math.max(0, depth - 1);
+        if (depth === 0 && ch === ',' && i + 1 < text.length && text[i + 1] === ' ') {
+            result.push(current.trim());
+            current = '';
+            i++;
+        } else {
+            current += ch;
+        }
+    }
+    if (current.trim()) result.push(current.trim());
+    return result;
+}
+
+// Smart field formatter — dispatches to field-specific visual formatting (read-mode only)
+function formatRecordField(text, fieldType) {
+    if (!text) return '';
+    var clean = decodeEntities(text);
+    var t = escapeHtml(clean);
+
+    switch (fieldType) {
+    case 'medicalHx':
+        return rfSentences(rfHighlights(t));
+
+    case 'medications': {
+        var aIdx = t.indexOf('Allergies:');
+        if (aIdx === -1) aIdx = t.indexOf('ALLERGIES:');
+        var mainText = aIdx > -1 ? t.substring(0, aIdx).trim() : t;
+        var aText = aIdx > -1 ? t.substring(aIdx) : '';
+        var html = '';
+        if (mainText) {
+            var meds = rfSplitMeds(mainText);
+            if (meds.length <= 1 && mainText.length > 120) {
+                html += rfSentences(rfHighlights(mainText));
+            } else {
+                html += '<div class="rf-med-list">';
+                meds.forEach(function(med) {
+                    if (med.trim()) html += '<div class="rf-med">' + rfHighlights(med.trim()) + '</div>';
+                });
+                html += '</div>';
+            }
+        }
+        if (aText) {
+            var aCont = aText.replace(/^(?:Allergies|ALLERGIES)\s*:\s*/, '');
+            var trailMatch = aCont.match(/\.\s+[A-Z]/);
+            var aNames = trailMatch ? aCont.substring(0, trailMatch.index + 1) : aCont.replace(/\.\s*$/, '');
+            var trailing = trailMatch ? aCont.substring(trailMatch.index + 1).trim() : '';
+            html += '<div class="rf-label">Allergies</div><div style="margin:4px 0 6px;">';
+            aNames.split(/[,;]\s*/).forEach(function(pill) {
+                pill = pill.trim().replace(/\.\s*$/, '');
+                if (pill) html += '<span class="rf-allergy">' + pill + '</span>';
+            });
+            html += '</div>';
+            if (trailing) html += rfSentences(rfHighlights(trailing));
+        }
+        return html;
+    }
+
+    case 'allergies': {
+        var items = t.split(/[,;]\s*/);
+        if (items.length > 1 || t.length < 100) {
+            return '<div style="margin:2px 0;">' + items.map(function(item) {
+                item = item.trim().replace(/\.\s*$/, '');
+                return item ? '<span class="rf-allergy">' + item + '</span>' : '';
+            }).join('') + '</div>';
+        }
+        return rfSentences(rfHighlights(t));
+    }
+
+    case 'txPlan': {
+        t = t.replace(/(Phase\s+\d+\s*:)/g, '<div class="rf-label">$1</div>');
+        t = t.replace(/(Phase\s+I{1,3}V?\s*(?:\([^)]*\))?\s*:?)/g, '<div class="rf-label">$1</div>');
+        return rfSentences(rfHighlights(t));
+    }
+
+    case 'recallHistory': {
+        if (t.indexOf('|') !== -1) {
+            return t.split(/\s*\|\s*/).map(function(item) {
+                return item.trim() ? '<div class="rf-bullet">' + rfHighlights(item.trim()) + '</div>' : '';
+            }).join('');
+        }
+        return rfSentences(rfHighlights(t));
+    }
+
+    case 'activeStatus': {
+        t = rfHighlights(t);
+        t = t.replace(/\b(active|Active)\b(?![^<]*<\/)/g, '<span class="rf-status-ok">$1</span>');
+        t = t.replace(/\b(inactive|Inactive|INACTIVE)\b(?![^<]*<\/)/g, '<span class="rf-status-warn">$1</span>');
+        return rfSentences(t);
+    }
+
+    case 'priorityNotes':
+        return rfSentences(rfHighlights(t));
+
+    case 'notes':
+    default:
+        t = rfHighlights(t);
+        t = t.replace(/\n/g, '<br>');
+        return t;
+    }
 }
 
 // ==================== MINI REVIEW TAB ====================
