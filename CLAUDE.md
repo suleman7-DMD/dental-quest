@@ -65,7 +65,7 @@ const date = new Date(year, month - 1, day);
 - **`mergeCompetencies()` (V2)**: Timestamp-based — most recent `lastVerified` wins. If neither, `Math.max` of counts. First arg wins STRUCTURE conflicts. `source-wins` passes source first; others pass fallback first.
 - **Cross-section dedup**: Before adding cloud section with unknown key, checks if items exist in ANY local section (by ID). Prevents duplicates.
 - **Migration versioning**: When DEFAULT_COMPETENCIES changes, ALWAYS bump migration version. Old flags prevent re-sync.
-- **`syncSchemaFields()`**: Runs every `initUI()`. Syncs `d3Deadline`, `rules`, `text`, `required`. NEVER sync `completed`, `status`, `note` — user data.
+- **`syncSchemaFields()`**: Runs every `initUI()`. Syncs `d3Deadline`, `rules`, `text`, `required`, `isSummative`, `d4Carryover`. Also removes orphaned categories/items not in DEFAULT_COMPETENCIES. NEVER sync `completed`, `status`, `note` — user data.
 - **`resetCompetencies()`**: Uses `forceUploadToCloud()` (not debounced save). Clears ALL migration flags.
 - **`COMPETENCY_ALIASES`**: Maps old→canonical IDs in `applyRequirementCheckoffs()`.
 - **Shallow grades merge**: Use deep per-course IIFE merge. Remote `null`/`undefined` must NOT overwrite local.
@@ -137,7 +137,7 @@ const date = new Date(year, month - 1, day);
 - **Summative ring target**: Dynamic count from `isSummative` items (was hardcoded 7, fixed Apr 2026). Fallback to 7 only if zero summatives found.
 - **`adjustCompItem()` / `setCompItemStatus()`**: Simple +/- or toggle. Sets `lastVerified`, derives status.
 - **`saveCompItem()` must set `lastVerified`**: Both add-new (when completed > 0) and edit-existing paths must set `lastVerified = getLocalDateString(new Date())`.
-- **Smart counting**: `getSmartProcedureCount()` sums `item.completed` across categories (no longer includes `srp` — absorbed into `perio`). SPS snapshot AUTHORITATIVE when exists.
+- **Smart counting**: `getSmartProcedureCount()` sums `item.completed` across procedure categories `{ fixed, operative, dentures, rpd, endo, oralsurg, perio }`. SPS snapshot AUTHORITATIVE when exists.
 - **`autoLinkReviewQueue`**: DELETED. Field kept as `[]` for schema compat only.
 - **V2 UI**: Warm Atlas Console design, `cv2-*` CSS classes. 4 panels: D3/D4 year tabs, milestone KPI strip, D3 alert + category accordion, What's Next.
 - **Pipeline badges**: `importedRequirements[]` on patient records is source. All `'planned'` (yellow) in V2.

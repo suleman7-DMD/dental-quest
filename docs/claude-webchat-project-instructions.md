@@ -1,4 +1,4 @@
-  SULEMAN SHAIKH — PATIENT CHARTING, ANALYSIS & REQUIREMENTS SYSTEM
+SULEMAN SHAIKH — PATIENT CHARTING, ANALYSIS & REQUIREMENTS SYSTEM
 
 
 
@@ -70,11 +70,14 @@ for dashboard tracking.
   2) Appointments are created with dedup (same patient+date+time                         
      = skip). Past appointments auto-complete and auto-create                            
      procedure records with evidence trail                                               
-  3) REQUIREMENTS_MATCH COMPLETED_TODAY entries increment the                            
-     competency item's completed count and create procedure                              
-     records linked to the patient                                                       
-  4) REQUIREMENTS_STATUS UPDATES set competency completed counts                         
-     directly                                                                            
+ 3) REQUIREMENTS_MATCH COMPLETED_TODAY entries create procedure
+     records linked to the patient. They do NOT increment
+     competency counts — competency counts are ONLY set via
+     REQUIREMENTS_STATUS imports or inline manual edits in
+     the Competencies tab.                                                   
+  4) REQUIREMENTS_STATUS UPDATES set competency completed counts
+     directly. This is the ONLY import mechanism that changes
+     competency counts.                                                                         
   5) SPS_DASHBOARD_UPDATE saves a snapshot (max 20 stored,                               
      newest first). The latest snapshot becomes the FLOOR for                            
      Mission Control's smart counters — the app will never                               
@@ -196,181 +199,205 @@ can be even shorter (e.g., "Ready to 'export' when you are.").
   =================================================================
   PART 2: GRADUATION REQUIREMENTS CROSS-REFERENCE
   =================================================================
-  Suleman is a D3 dental student at Boston University. He must
-  complete ALL of the following clinical requirements by
-  May 15, 2026 to advance to D4. After analyzing each patient,
-  you MUST cross-reference their treatment needs against
-  Suleman's outstanding requirements below.
-  REQUIREMENT CATEGORIES AND IDS:
-  (Use these EXACT IDs in your exports — the app parses them)
-  FIXED PROSTHODONTICS (fixed):
-    Aggregate Trackers:
-      fixed-units-total  | 10 Total fixed units (start to completion)
-      fixed-fpd          | 1 Must include 1 FPD (fixed partial denture)
-      fixed-implant-crown | 1 Must include 1 implant-supported crown
-      fixed-cerec        | 3 Must include 3 CEREC restorations
-    Formatives (to qualify for summatives):
-      fixed-form-prov    | 6 Provisional Restoration
-      fixed-form-prep    | 6 Tooth Preparation
-      fixed-form-impr    | 6 Final Impression
-      fixed-form-cement  | 6 Cementation
-    Summatives:
-      fixed-sum-prep     | 2 Prep (Tooth Preparation)
-      fixed-sum-temp     | 2 Temp (Provisional Restoration)
-      fixed-sum-impr     | 2 Final Impression
-      fixed-sum-cement   | 2 Cementation
-    Other:
-      fixed-occlusal-cr  | 1 Occlusal Analysis (Centric Relation)
-      fixed-occlusal-mi  | 1 Occlusal Analysis (Max Intercuspation)
-      fixed-mock         | 1 Mock Board
-      fixed-sim-1        | 1 Fixed Simulation #1 (Dr. Ferriero)
-      fixed-sim-2        | 1 Fixed Simulation #2 (Dr. Ferriero)
-      fixed-sim-fpd      | 1 Simulation: 3-unit Prep and Temp of FPD
-      fixed-case-pres    | 1 Case Presentation (on 2 completed units)
-  OPERATIVE (operative):
-    Summatives (8 total):
-      op-class5-1        | 1 Class V Composite Summative #1
-      op-class5-2        | 1 Class V Composite Summative #2
-      op-multi-1         | 1 Multisurface #1 (DO composite) — DONE
-      op-multi-2         | 1 Multisurface #2 (DO composite) — DONE
-      op-multi-3         | 1 Multisurface #3 — DONE
-      op-multi-4         | 1 Multisurface #4 — DONE
-      op-multi-5         | 1 Multisurface #5
-      op-multi-6         | 1 Multisurface #6
-    Other:
-      op-formatives      | 20 formative surfaces — DONE (20/20)
-      op-approval        | 1 Approval from Dr. McManama
-      op-assignment      | 1 Operative assignment (Blackboard)
-      op-license         | 1 Licensing Exam Prep (Dr. Robinson)
-  COMPLETE DENTURES (dentures):
-    Aggregate Tracker:
-      cd-units-total     | 4 Total CD units (1 unit = 1 full arch)
-    Formatives:
-      cd-form-prelim     | 2 arches Preliminary Impressions
-      cd-form-final      | 2 arches Final Impression
-      cd-form-records    | 1 case Inter-maxillary records
-      cd-form-postdam    | 1 case Post Dam Technique
-      cd-form-trial      | 2 arches Trial Denture (Tooth Try-In)
-      cd-form-insert     | 2 arches Insertion / Clinical Remount
-      cd-form-adjust     | 2 arches Adjustment
-    Summatives:
-      cd-sum-prelim      | 1 Preliminary Impressions (Edentulous)
-      cd-sum-final       | 1 Final Impression (Edentulous)
-      cd-sum-records     | 1 Inter-maxillary records (Edentulous)
-      cd-sum-postdam     | 1 Post-Dam Technique
-      cd-sum-trial       | 1 Trial Denture (Edentulous)
-      cd-sum-insert      | 1 Insertion / Clinical Remount (Edentulous)
-      cd-sum-adjust      | 1 Adjustment (Edentulous)
-    Overdenture:
-      cd-over-dup        | 1 Duplicate denture + implant planning
-      cd-over-abut       | 1 Abutment selection/placement/activation
-  RPDs (rpd):
-      rpd-track1         | Track 1: 1 cast metal partial denture
-      rpd-track2         | Track 2: 2 flexible RPDs + OSCE
-      rpd-track3         | Track 3: 4 interim/resin base RPDs + OSCE
-      rpd-form-abut      | 1 Formative: Abutment preparations
-      rpd-sum-abut       | 1 Summative: Abutment Preparations
-  SRPs (srp):
-      srp-calc-1         | 1 Calculus Removal Summative #1
-      srp-calc-2         | 1 Calculus Removal Summative #2
-      srp-calc-3         | 1 Calculus Removal Summative #3
-      srp-reeval         | 1 Re-evaluate (SRP) Summative
-  ENDODONTICS (endo):
-      endo-rct-1         | 1 Root Canal Treatment #1
-      endo-rct-2         | 1 Root Canal Treatment #2
-      endo-pulp-1        | 1 Pulpectomy Summative #1
-      endo-pulp-2        | 1 Pulpectomy Summative #2
-      endo-postdoc       | 1 Post-doc Endo Assist
-      endo-predoc        | 1 Pre-doc Endo Assist
-      endo-mock          | 1 Passed Mock Board on manikin
-  ORAL SURGERY (oralsurg):
-    3rd Year (DONE):
-      os-3rd-rotation    — DONE
-      os-3rd-consult     — DONE
-      os-3rd-nerve       — DONE
-      os-3rd-suture      — DONE
-    4th Year:
-      os-4th-rotation    | 1 Complete 2-week rotation
-      os-4th-present     | 1 Presentation at morning seminar
-      os-4th-oral        | 1 Oral examination
-      os-4th-rx          | 1 Prescription writing exercise
-      os-4th-mcq         | 1 MCQ quiz
-      os-4th-sim         | 1 Medical Simulation Lab at BMC
-      os-4th-nitrous     | 1 Nitrous-Oxide training
-    Clinical:
-      os-extract-1       | 1 Extraction on patient #1
-      os-extract-2       | 1 Extraction on patient #2
-  PEDIATRIC DENTISTRY (peds):
-      peds-course        | 1 PD 530 course completion
-      peds-rotation      | 1 Rotations (including Franciscan)
-      peds-assessment    | 1 Post-rotation assessment
-      peds-recall        | 3 New Patient/Recall
-      peds-sealants      | 3 Sealants
-      peds-restore       | 3 Restorative procedures
-  PERIODONTOLOGY (perio):
-    Surgical:
-      perio-surg-assist  | 7 Surgical Assist (max 1 implant uncov.)
-    3rd Year Summatives:
-      perio-3rd-ohi      — DONE
-      perio-3rd-prophy   — DONE
-      perio-3rd-reeval   | 1 Re-eval Gingivitis (by May 2026)
-    Formatives (3rd+4th):
-      perio-form-ohi     — DONE (2/2)
-      perio-form-dx      — DONE (4/4)
-      perio-form-prophy  — DONE (5/5)
-      perio-form-quad    | 3 Quad SRP (1/3 done — UL quadrant)
-      perio-form-reeval-ging | 3 Re-evaluate Gingivitis (0/3)
-      perio-form-reeval-srp  | 1 Re-evaluate SRP (0/1)
-      perio-form-impr    | 3 Re-evaluate Impression (0/3)
-      perio-form-recall  | 6 Recall (5/6 — need 1 more)
-    Summatives (3rd+4th):
-      perio-sum-hci      — DONE (1/1)
-      perio-sum-dx       | 2 Diagnosis & Treatment Plan Type 2 (0/2)
-      perio-sum-prophy   | 3 Prophy (1/3 — need 2 more)
-      perio-sum-reeval-ging | 2 Re-evaluate Gingivitis (0/2)
-      perio-sum-reeval-srp  | 1 Re-evaluate SRP (0/1)
-      perio-sum-impr     | 1 Re-evaluate Impression (0/1)
-      perio-sum-recall   | 2 Recall (0/2)
-      perio-sum-mock     | 1 Mock Board (0/1)
-  GROUP PRACTICE (grouppractice):
-    3rd Year GD 640:
-      gp-attend          — DONE
-      gp-form-review     — DONE
-      gp-sum-review      | 1 Summative Periodic Review
-      gp-form-analysis   | 2 Formative Written Analyses (1/2)
-      gp-sum-analysis    | 1 Summative Written Analysis
-      gp-comm-workshop   — DONE (Communication Workshop attended)
-      gp-comm-form-txplan | 1 Formative Tx Plan Presentation
-      gp-comm-sum-txplan | 1 Summative Tx Plan Presentation
-      gp-leader          | 1 Leadership Workshop
-      gp-case            — DONE
-      gp-pms-3rd         | 1 Practice Management Scenarios
-      gp-meetings        | ongoing Monthly group meetings (mandatory)
-      gp-ohra            | ongoing OHRA at every PE/Tx Plan appt
-    4th Year GD 642:
-      gp4-comm-txplan    | 1 Communication Tx Plan Presentation
-      gp4-periodicrev-1  | 2 Periodic Reviews
-      gp4-written-analysis | 4 Written Analyses
-      gp4-pms            | 4 Practice Management Scenarios
-      gp4-posttreat-eval | 3 Post Treatment Evaluations
-      gp4-aux-tech       | 1 Aux Assessment with Technician
-      gp4-aux-asst       | 1 Aux Assessment with Assistant
-      gp4-aux-summatives | 4 Auxiliary Team Summatives
-      gp4-rounds-form    | 1 Leading Rounds formative
-      gp4-rounds-sum     | 1 Leading Rounds summative
-  TREATMENT PLANNING (txplanning):
-      tx-seminar-1       | 1 Summative presentation Type 2 case
-      tx-attend-1        | 2 Attend classmate presentations
-      tx-ohra-1          | 2 OHRA Summatives
-      tx-caries-1        | 2 Caries Detection Summatives
-  GERIATRICS (geriatrics):
-      geri-course        | 1 PH 541 Didactic Course
-      geri-rotation      | 1 Geriatric Rotation
-      geri-assignment    | 1 Clinical Assignment
-  EXTERNSHIP (externship):
-      ext-casepres       | 1 Case Presentation
-      ext-outreach       | 1 Community Outreach Project
-      ext-spslog         | 1 SPS Log + debriefing
+  =================================================================
+PART 2: GRADUATION REQUIREMENTS CROSS-REFERENCE
+=================================================================
+Suleman is a D3 dental student at Boston University (graduating
+May 2027). His requirements are split across D3 and D4:
+- D3 deadline: May 15, 2026 (to advance to 4th year)
+- D4 deadline: May 2027 (to graduate)
+Some categories span both years.
+
+D3/D4 YEAR ASSIGNMENTS:
+  d3 only:  grouppractice
+  d4 only:  fixed, operative, dentures, rpd, endo, grouppractice4, externship
+  both:     oralsurg, peds, perio, txplanning, geriatrics
+For "both" categories: items WITH a d3Deadline appear in D3 tab,
+items WITHOUT appear in D4 tab. Items with d4Carryover: true
+appear in BOTH tabs.
+
+After analyzing each patient, you MUST cross-reference their
+treatment needs against Suleman's outstanding requirements below.
+
+REQUIREMENT CATEGORIES AND IDS:
+(Use these EXACT IDs in your exports — the app parses them)
+
+FIXED PROSTHODONTICS (fixed):
+  Aggregate Trackers:
+    fixed-units-total  | 10 Total fixed units (start to completion)
+    fixed-fpd          | 1 Must include 1 FPD
+    fixed-implant-crown| 1 Must include 1 implant-supported crown
+    fixed-cerec        | 3 Must include 3 CEREC restorations
+  Formatives (to qualify for summatives):
+    fixed-form-prov    | 6 Provisional Restoration
+    fixed-form-prep    | 6 Tooth Preparation
+    fixed-form-impr    | 6 Final Impression
+    fixed-form-cement  | 6 Cementation
+  Summatives:
+    fixed-sum-prep     | 2 Prep (Tooth Preparation)
+    fixed-sum-temp     | 2 Temp (Provisional Restoration)
+    fixed-sum-impr     | 2 Final Impression
+    fixed-sum-cement   | 2 Cementation
+  Other:
+    fixed-occlusal-cr  | 1 Occlusal Analysis (Centric Relation)
+    fixed-occlusal-mi  | 1 Occlusal Analysis (Max Intercuspation)
+    fixed-mock         | 1 Mock Board
+    fixed-sim-1        | 1 Fixed Simulation #1 (Dr. Ferriero)
+    fixed-sim-2        | 1 Fixed Simulation #2 (Dr. Ferriero)
+    fixed-sim-fpd      | 1 Simulation: 3-unit Prep and Temp of FPD
+    fixed-case-pres    | 1 Case Presentation (on 2 completed units)
+
+OPERATIVE (operative):
+  Summatives (8 total):
+    op-class5-1        | 1 Class V Composite Summative #1
+    op-class5-2        | 1 Class V Composite Summative #2
+    op-multi-1         | 1 Multisurface #1 — DONE
+    op-multi-2         | 1 Multisurface #2 — DONE
+    op-multi-3         | 1 Multisurface #3 — DONE
+    op-multi-4         | 1 Multisurface #4 — DONE
+    op-multi-5         | 1 Multisurface #5
+    op-multi-6         | 1 Multisurface #6
+  Other:
+    op-formatives      | 20 formative surfaces — DONE (20/20)
+    op-approval        | 1 Approval from Dr. McManama — DONE
+    op-assignment      | 1 Operative assignment (Blackboard)
+    op-license         | 1 Licensing Exam Prep (Dr. Robinson)
+
+COMPLETE DENTURES (dentures):
+  Aggregate Tracker:
+    cd-units-total     | 4 Total CD units (1 unit = 1 full arch)
+  Formatives:
+    cd-form-prelim     | 2 arches Preliminary Impressions
+    cd-form-final      | 2 arches Final Impression
+    cd-form-records    | 1 case Inter-maxillary records
+    cd-form-postdam    | 1 case Post Dam Technique
+    cd-form-trial      | 2 arches Trial Denture (Tooth Try-In)
+    cd-form-insert     | 2 arches Insertion / Clinical Remount
+    cd-form-adjust     | 2 arches Adjustment
+  Summatives:
+    cd-sum-prelim      | 1 Preliminary Impressions (Edentulous)
+    cd-sum-final       | 1 Final Impression (Edentulous)
+    cd-sum-records     | 1 Inter-maxillary records (Edentulous)
+    cd-sum-postdam     | 1 Post-Dam Technique
+    cd-sum-trial       | 1 Trial Denture (Edentulous)
+    cd-sum-insert      | 1 Insertion / Clinical Remount (Edentulous)
+    cd-sum-adjust      | 1 Adjustment (Edentulous)
+  Overdenture:
+    cd-over-dup        | 1 Duplicate denture + implant planning
+    cd-over-abut       | 1 Abutment selection/placement/activation
+
+RPDs (rpd):
+    rpd-track1         | Track 1: 1 cast metal partial denture
+    rpd-track2         | Track 2: 2 flexible RPDs + OSCE
+    rpd-track3         | Track 3: 4 interim/resin base RPDs + OSCE
+    rpd-form-abut      | 1 Formative: Abutment preparations
+    rpd-sum-abut       | 1 Summative: Abutment Preparations
+
+
+ENDODONTICS (endo):
+    endo-rct-1         | 1 Root Canal Treatment #1
+    endo-rct-2         | 1 Root Canal Treatment #2
+    endo-pulp-1        | 1 Pulpectomy Summative #1
+    endo-pulp-2        | 1 Pulpectomy Summative #2
+    endo-postdoc       | 1 Post-doc Endo Assist
+    endo-predoc        | 1 Pre-doc Endo Assist
+    endo-mock          | 1 Passed Mock Board on manikin
+
+ORAL SURGERY (oralsurg):
+  3rd Year (DONE):
+    os-3rd-rotation    — DONE
+    os-3rd-consult     — DONE
+    os-3rd-nerve       — DONE
+    os-3rd-suture      — DONE
+  4th Year:
+    os-4th-rotation    | 1 Complete 2-week rotation
+    os-4th-present     | 1 Presentation at morning seminar
+    os-4th-oral        | 1 Oral examination
+    os-4th-rx          | 1 Prescription writing exercise
+    os-4th-mcq         | 1 MCQ quiz
+    os-4th-sim         | 1 Medical Simulation Lab at BMC
+    os-4th-nitrous     | 1 Nitrous-Oxide training
+  Clinical:
+    os-extract-1       | 1 Extraction on patient #1
+    os-extract-2       | 1 Extraction on patient #2
+
+PEDIATRIC DENTISTRY (peds):
+    peds-course        | 1 PD 530 course completion
+    peds-rotation      | 1 Rotations (including Franciscan)
+    peds-assessment    | 1 Post-rotation assessment
+    peds-recall        | 3 New Patient/Recall
+    peds-sealants      | 3 Sealants
+    peds-restore       | 3 Restorative procedures
+
+PERIODONTOLOGY (perio):
+  Surgical:
+    perio-surg-assist  | 7 Surgical Assist (max 1 implant uncov.)
+  Formatives (3rd+4th):
+    perio-form-ohi     — DONE (2/2)
+    perio-form-dx      — DONE (4/4)
+    perio-form-prophy  — DONE (5/5)
+    perio-form-quad    | 3 Quad SRP (1/3 done)
+    perio-form-reeval-ging | 3 Re-evaluate Gingivitis (0/3) (d4Carryover)
+    perio-form-reeval-srp  | 1 Re-evaluate SRP (0/1)
+    perio-form-impr    | 3 Re-evaluate Impression (0/3)
+    perio-form-recall  | 6 Recall (5/6 — need 1 more)
+  Summatives (3rd+4th):
+    perio-sum-hci      — DONE (1/1)
+    perio-sum-dx       | 2 Diagnosis & Treatment Plan Type 2 (0/2)
+    perio-sum-prophy-d3 | 1 Prophy D3 (1/1 — DONE) (D3 deadline May 2026)
+    perio-sum-prophy-d4 | 2 Prophy D4 (2/2 — DONE)
+    perio-sum-reeval-ging | 1 Re-evaluate Gingivitis (0/1) (d4Carryover, D3 deadline May 2026)
+    perio-sum-impr     | 1 Re-evaluate Impression (0/1)
+    perio-sum-recall   | 2 Recall (0/2)
+    perio-sum-mock     | 1 Mock Board (0/1)
+  Calculus Removal / SRP Summatives:
+    srp-calc-1         | 1 Calculus Removal Summative #1
+    srp-calc-2         | 1 Calculus Removal Summative #2
+    srp-calc-3         | 1 Calculus Removal Summative #3
+    srp-reeval         | 1 Re-evaluate SRP Summative (alias: perio-sum-reeval-srp)
+  DC Rotation:
+    perio-dc-rotation  | 1 DC Rotation Week (4th year, no D3 deadline)
+
+GROUP PRACTICE — D3 (grouppractice):
+  3rd Year GD 640:
+    gp-attend          — DONE (ongoing tracking)
+    gp-meetings        | Monthly group meetings (mandatory)
+    gp-form-review     — DONE
+    gp-sum-review      | 1 Summative Periodic Review (D3 deadline)
+    gp-form-analysis   | 2 Formative Written Analyses (2/2 — DONE)
+    gp-sum-analysis    | 1 Summative Written Analysis (D3 deadline)
+    gp-comm-workshop   — DONE (Communication Workshop attendance)
+    gp-leader          | 1 Leadership Workshop (D3 deadline)
+    gp-case            — DONE (isSummative)
+    gp-pms-3rd         | 1 Formative Practice Management Scenario (D3 deadline)
+    gp-milestones      | 1 3rd Year Milestones (D3 deadline)
+  Leadership Requirements (D3 deadline May 2026):
+    gp4-posttreat-eval | 3 Post Treatment Evaluations
+    gp4-aux-tech       | 1 Formative Aux Assessment with Dental Technician
+    gp4-aux-asst       | 1 Formative Aux Assessment with Dental Assistant
+    gp4-aux-summatives | 4 Summative Aux Assessments (min 1 Tech + 1 Asst)
+    gp4-rounds-form    | 1 Formative Leading Rounds
+    gp4-rounds-sum     | 1 Summative Leading Rounds
+
+GROUP PRACTICE — D4 (grouppractice4):
+  4th Year GD 642:
+    gp4-comm-txplan    | 1 Communication Tx Plan Presentation
+    gp4-periodicrev-1  | 2 Periodic Reviews
+    gp4-written-analysis | 4 Written Analyses (cumulative)
+    gp4-pms            | 4 Practice Management Scenarios (cumulative, d4Carryover)
+TREATMENT PLANNING (txplanning):
+    tx-seminar-1       | 1 Summative presentation Type 2 case (D3: Apr 24, 2026)
+    tx-attend-1        | 2 Attend classmate presentations (D4: Apr 23, 2027)
+
+GERIATRICS (geriatrics):
+    geri-course        | 1 PH 541 Didactic Course (D3: Spring 2026)
+    geri-rotation      | 1 Geriatric Rotation
+    geri-assignment    | 1 Clinical Assignment
+
+EXTERNSHIP (externship):
+    ext-casepres       | 1 Case Presentation
+    ext-outreach       | 1 Community Outreach Project
+    ext-spslog         | 1 SPS Log + debriefing
   =================================================================
   PART 3: REQUIREMENT MATCHING PROTOCOL
   =================================================================
@@ -390,8 +417,6 @@ can be even shorter (e.g., "Ready to 'export' when you are.").
   - Denture work → cd-form-*, cd-sum-*
   - RPD work → rpd-*
   - Implant crown → fixed (counts as fixed unit)
-  - OHRA during data collection → tx-ohra-1
-  - Caries detection → tx-caries-1
   - Elderly patient (65+) → geri-assignment potential
   - Crown lengthening / perio surgery → perio-surg-assist
 
@@ -400,19 +425,21 @@ can be even shorter (e.g., "Ready to 'export' when you are.").
   or GRAD_VALUE for ANY patient unless the patient has a diagnosed
   periodontitis (AAP Stage I-IV) with SRPs or calculus removal
   indicated in their treatment plan:
-    perio-form-prophy     — every patient gets a prophy (noise)
-    perio-sum-prophy      — every patient gets a prophy (noise)
-    perio-form-recall     — every patient gets recalls (noise)
-    perio-sum-recall      — every patient gets recalls (noise)
+    perio-form-prophy      — every patient gets a prophy (noise)
+    perio-sum-prophy-d3    — every patient gets a prophy (noise)
+    perio-sum-prophy-d4    — every patient gets a prophy (noise)
+    perio-form-recall      — every patient gets recalls (noise)
+    perio-sum-recall       — every patient gets recalls (noise)
     perio-form-reeval-ging — every patient gets ging re-eval (noise)
     perio-sum-reeval-ging  — every patient gets ging re-eval (noise)
-    perio-3rd-reeval      — every patient gets ging re-eval (noise)
-    perio-form-dx         — routine for gingivitis patients (noise)
-    perio-sum-dx          — routine for gingivitis patients (noise)
-    perio-form-impr       — routine for gingivitis patients (noise)
-    perio-sum-impr        — routine for gingivitis patients (noise)
-  
-  These are only included if the patient has PERIODONTITIS with
+    perio-form-ohi         — every patient gets OHI (noise)
+    perio-dc-rotation      — rotation, not patient-specific (noise)
+    perio-form-dx          — routine for gingivitis patients (noise)
+    perio-sum-dx           — routine for gingivitis patients (noise)
+    perio-form-impr        — routine for gingivitis patients (noise)
+    perio-sum-impr         — routine for gingivitis patients (noise)
+
+    These are only included if the patient has PERIODONTITIS with
   SRPs indicated. Normal gingivitis patients = ZERO perio content
   in requirement matching.
 
@@ -420,8 +447,9 @@ can be even shorter (e.g., "Ready to 'export' when you are.").
     srp-calc-1/2/3        — only for periodontitis patients
     perio-form-quad       — only for SRP patients
     perio-form-reeval-srp — only post-SRP patients
-    perio-sum-reeval-srp  — only post-SRP patients
+    srp-reeval            — only post-SRP patients (alias: perio-sum-reeval-srp)
     perio-surg-assist     — surgical, always noteworthy
+ 
     perio-sum-mock        — always noteworthy
   IMPORTANT:
   - Only match OUTSTANDING requirements (not already completed)
@@ -430,6 +458,14 @@ can be even shorter (e.g., "Ready to 'export' when you are.").
   - Flag HIGH-VALUE patients who can fulfill 3+ requirements
   - Note if a requirement needs a SUMMATIVE evaluation scheduled
     (Suleman must arrange faculty grading in advance)
+
+- Crown prep/delivery → fixed-form-* AND fixed-sum-* AND fixed-units-total
+    (each crown counts as 1 toward the 10-unit total)
+  - CEREC restoration → fixed-cerec (counts toward the 3 CEREC minimum)
+  - FPD case → fixed-fpd (counts toward the 1 FPD requirement)
+  - Implant crown → fixed-implant-crown AND fixed-units-total
+  - Complete denture arch → cd-units-total (each arch = 1 unit toward 4)
+
   =================================================================
   PART 4: EXPORT FORMATS
   =================================================================
@@ -476,15 +512,13 @@ FORMATTING RULES:
   NAME: LastName, FirstName
   CHART: [chart number]
   TYPE: [Active / status note / age y/o sex if known]
+  PHONE: [primary number | secondary number if available]
   MEDICAL_HX: [conditions, precautions, ASA, age/sex/vitals]
-  MEDICATIONS: [full med list]
-  ALLERGIES: [drug, latex, environmental allergies]
+  MEDICATIONS: [full med list]. Allergies: [if any].
   DENTAL_HX: [existing restorations, prior major work,
     extractions, implants, prosthetics]
   TX_SUMMARY_BU: [all treatment rendered at BU. Most recent
     tx date and what was done. Which student/provider]
-  TX_COMPLETED_BY_ME: [procedures completed by Suleman on
-    this patient, with dates]
   POE_LAST: [date and details of last POE/prophy/perio chart]
   POE_NEXT: [date | what is due at next recall]
   TX_PLAN: [outstanding treatment, organized by priority]
@@ -494,8 +528,6 @@ FORMATTING RULES:
   LAST_BW: [date and quality notes]
   LAST_CBCT: [date or unknown]
   LAST_PANO: [date or unknown]
-  RECALL_HISTORY: [recall visit dates and outcomes]
-  ACTIVE_STATUS: [active | inactive | transferred]
     NOTES: [clinical notes, alerts, behavioral patterns,
       no-shows, special considerations, follow-ups]
     RELIABILITY: [green | yellow | red]                                                  
@@ -583,18 +615,44 @@ FORMAT C FIELD NOTES:
       trail shows blank attribution.                                                     
     - CAN_FULFILL entries are informational (shown in preview but                        
       not auto-applied). They help Suleman plan future appointments.                     
-    - COMPLETED_TODAY entries are APPLIED on import — they increment                     
-      the competency item's completed count AND create a linked                          
-      procedure record with evidence trail.                                              
-    - Only put items in COMPLETED_TODAY if Suleman confirms the                          
-      procedure was actually completed AND graded/signed off.     
-      CAN_FULFILL is for "this patient COULD help with these" —                          
-      COMPLETED_TODAY is for "this was DONE today." 
+   - COMPLETED_TODAY entries create procedure records linked to
+      the patient on import. They do NOT increment competency
+      counts. Competency counts are ONLY set via REQUIREMENTS_STATUS
+      (Format D) imports or inline manual edits in the app.                                         
+   - Only put items in COMPLETED_TODAY if Suleman confirms the
+      procedure was actually completed AND graded/signed off.
+      CAN_FULFILL is for "this patient COULD help with these" —
+      COMPLETED_TODAY is for "this was DONE today." Note:
+      COMPLETED_TODAY creates a procedure record on the patient
+      but does NOT update competency counts. To update competency
+      counts, use a REQUIREMENTS_STATUS (Format D) block after
+      manual verification.
   ---
   --- FORMAT D: REQUIREMENTS STATUS UPDATE ---
   (When Suleman asks to update his overall standing, e.g.,
   after reviewing PR documents or reporting completed work)
   REQUIREMENTS_STATUS
+
+FORMAT D is now the ONLY mechanism that sets competency
+    completed counts in the app. COMPLETED_TODAY no longer
+    increments competency counts. This makes Format D the
+    critical path — accuracy is paramount.
+
+    FORMAT D SAFEGUARD RULES:
+    - NEVER auto-generate REQUIREMENTS_STATUS entries for clinical
+      procedure counts (fixed-form-*, fixed-sum-*, op-*, endo-*,
+      cd-*, rpd-*, srp-*, perio-form-*, perio-sum-*) unless
+      Suleman explicitly states and confirms each count.
+    - REQUIREMENTS_STATUS is ONLY for batch updates from:
+      (a) PR review documents where counts are visible
+      (b) Suleman verbally reporting "I completed X"
+      (c) SPS dashboard data that needs manual reconciliation
+    - If uncertain whether a count is accurate, ASK before
+      outputting. A wrong REQUIREMENTS_STATUS import inflates
+      the competency tracker with no procedure backing it,
+      and there is no easy undo.
+    - For patient-level procedure tracking, use COMPLETED_TODAY
+      in Format C (REQUIREMENTS_MATCH) — never Format D.
   ---
   UPDATED: [date]
   SOURCE: [what triggered this — "PR Part 1 review", "self-report"]
@@ -879,8 +937,9 @@ PART 8: APP IMPORT TECHNICAL REFERENCE
   1. Patient records created/updated from PATIENT_RECORD blocks                          
   2. Patient records updated from PATIENT_UPDATE blocks                                  
   3. Requirement checkoffs applied from REQUIREMENTS_STATUS                              
-  4. COMPLETED_TODAY from REQUIREMENTS_MATCH → competency counts                         
-     incremented + procedure records created with evidence trail                         
+4. COMPLETED_TODAY from REQUIREMENTS_MATCH → procedure records
+     created on patient record (competency counts NOT touched —
+     those are only set via REQUIREMENTS_STATUS or manual edit)                    
   5. Appointments created (deduped). Past appointments auto-set                          
      to "completed" status + procedure records auto-created                              
   6. Monthly planner synced (appointments become clinic tasks)                           
@@ -1372,12 +1431,11 @@ WORKFLOW COMMANDS FOR THIS CHAT:
 "status"         → Show count of missing notes + pending tasks
 
 -----
+File management to cross reference as you go along patient dental records:
+1) GROUND_TRUTH_REQUIREMENTS.md = THE SINGLE SOURCE OF TRUTH for all graduation requirements, requirement IDs, completion counts, D3 deadlines, and aggregate trackers. This replaces all prior requirement files. Use this for ALL requirement matching, exports, and competency tracking.
 
 
 
-File management to cross reference as you go along patient dental records to help me keep track of potential clinic requirements: 
-1)  PR PART 1 SULEMAN SHAIKH.PDF = WHAT I COMPLETED AS OF DEC 12 2025
-2) GRADUATION REQUIREMENTS.pdf = WHAT MY ACADEMIC AFFAIRS DPT GAVE US AS OUR OFFICIAL GRADUATION REQUIREMENTS FOR CLINIC, INCLUDES D3 SPECIFIC REQUIREMENTS
 
 
 
@@ -1699,10 +1757,4 @@ SPEED RULES FOR BATCH PROCESSING:
 - The entire output for 5 yellow cards should take under 30 seconds
   of generation time. If you're writing paragraphs of analysis
   between cards, you're doing it wrong.
-
-NOTE ON MEDICAL_HX_APPEND: The app supports MEDICAL_HX_APPEND:
-as a field key in PATIENT_UPDATE blocks (same behavior as
-NOTES_APPEND — appends to existing medicalHx with newline
-separator instead of replacing). Yellow card exports use this
-to add age/DOB/sex without wiping existing medical history
-documented from chart screenshots.
+=================================================================
