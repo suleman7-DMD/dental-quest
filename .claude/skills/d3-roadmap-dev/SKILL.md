@@ -512,9 +512,6 @@ avgNeeded = remainingWeight > 0 ? (pointsNeeded / remainingWeight) * 100 : 0;
 | `initClinicalTab()` | clinical.js | Initialize clinical tab (patients + appointments + procedures) |
 | `renderCompetencies()` | clinical.js | Competencies rendering — evidence cards, search/filter, milestones, D3 deadlines, by-patient view. Saves/restores scroll position. |
 | `renderEvidenceCards(item, catKey)` | clinical.js | Rich evidence cards with type badges (procedure/manual/backfill/import), patient links, remove button |
-| `renderMilestoneDashboard()` | clinical.js | 3 progress rings (apts/procs/summatives) + graduation readiness. Reads clinicHeadlines targets. |
-| `renderD3Deadlines()` | clinical.js | D3 deadline alert pills. Urgency: overdue(<0d)/soon(<7d)/upcoming(<30d)/ok. Clickable → navigateToCompetencyItem. |
-| `renderWhatsNextPanel(comp)` | clinical.js | Top 5 in-progress/planned items with Quick Record buttons |
 | `renderReviewQueue()` | clinical.js | Auto-link review queue banner. Click opens DOM overlay panel (NOT showCustomConfirm). |
 | `renderCompSearchBar()` | clinical.js | Search input + status filter chips (All/Not Started/In Progress/Completed/Planned) |
 | `renderByPatientView(container)` | clinical.js | Alternative view grouping requirements by patient. Uses getValues() on importedRequirements. |
