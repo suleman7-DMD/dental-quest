@@ -2423,13 +2423,32 @@ function cv2BuildMilestoneStrip(competencies, stats) {
             + '</div>';
     }
 
-    // Readiness card — tab-specific % based ONLY on competency items
-    var readinessColor = tabPct >= 80 ? 'done' : tabPct >= 40 ? 'wip' : 'critical';
+    // Tab-specific competency completion — count ITEMS where completed >= required
+    var tabItemsDone = 0, tabItemsTotal = 0;
+    Object.entries(competencies).forEach(function(entry) {
+        var catKey = entry[0], cat = entry[1];
+        var yt = cat.yearTarget || DEFAULT_COMPETENCIES[catKey]?.yearTarget || null;
+        if (!cv2CategoryVisibleForTab(catKey, cat, tab)) return;
+        getValues(cat.sections).forEach(function(sec) {
+            getValues(sec.items).forEach(function(item) {
+                if (yt === 'both' && !cv2ItemVisibleForTab(item, yt, tab) && !item.d4Carryover) return;
+                tabItemsTotal++;
+                if ((item.completed ?? 0) >= (item.required ?? 1)) tabItemsDone++;
+            });
+        });
+    });
+    // Also count carryover items
+    carryoverItems.forEach(function(co) {
+        tabItemsTotal++;
+        if ((co.item.completed ?? 0) >= (co.item.required ?? 1)) tabItemsDone++;
+    });
+    var itemPct = tabItemsTotal > 0 ? Math.round((tabItemsDone / tabItemsTotal) * 100) : 0;
+    var itemColor = itemPct >= 80 ? 'done' : itemPct >= 40 ? 'wip' : 'critical';
     var tabLabel = tab === 'd3' ? 'D3' : 'D4';
 
     html += '<div class="cv2-readiness">'
-        + '<div class="cv2-readiness-score cv2-color-' + readinessColor + '">' + tabPct + '% ' + tabLabel + ' Done</div>'
-        + '<div class="cv2-readiness-meta">' + daysLeft + ' days left \u00B7 ' + itemsPerWeek + ' items/week needed</div>'
+        + '<div class="cv2-readiness-score cv2-color-' + itemColor + '">' + itemPct + '% ' + tabLabel + ' Complete</div>'
+        + '<div class="cv2-readiness-meta">' + tabItemsDone + '/' + tabItemsTotal + ' items done \u00B7 ' + daysLeft + ' days left</div>'
         + '</div>';
 
     html += '</div>'; // close cv2-milestones
