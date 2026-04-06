@@ -2446,9 +2446,11 @@ function cv2BuildMilestoneStrip(competencies, stats) {
     var itemColor = itemPct >= 80 ? 'done' : itemPct >= 40 ? 'wip' : 'critical';
     var tabLabel = tab === 'd3' ? 'D3' : 'D4';
 
+    var barFillColor = itemPct >= 80 ? 'var(--cv2-done)' : itemPct >= 40 ? 'var(--cv2-wip)' : 'var(--cv2-critical)';
     html += '<div class="cv2-readiness">'
-        + '<div class="cv2-readiness-score cv2-color-' + itemColor + '">' + itemPct + '% ' + tabLabel + ' Complete</div>'
-        + '<div class="cv2-readiness-meta">' + tabItemsDone + '/' + tabItemsTotal + ' items done \u00B7 ' + daysLeft + ' days left</div>'
+        + '<div class="cv2-readiness-score cv2-color-' + itemColor + '">' + itemPct + '%</div>'
+        + '<div class="cv2-readiness-bar"><div class="cv2-readiness-bar-fill" style="width:' + itemPct + '%;background:' + barFillColor + ';"></div></div>'
+        + '<div class="cv2-readiness-meta">' + tabItemsDone + '/' + tabItemsTotal + ' ' + tabLabel + ' items \u00B7 ' + daysLeft + 'd left</div>'
         + '</div>';
 
     html += '</div>'; // close cv2-milestones
@@ -2467,11 +2469,15 @@ function cv2BuildD3Alert(comp, daysLeft) {
     var today = new Date();
     today.setHours(0, 0, 0, 0);
 
+    var seenIds = {};
     Object.entries(comp).forEach(function(entry) {
         var catKey = entry[0], cat = entry[1];
         getValues(cat.sections).forEach(function(sec) {
             getValues(sec.items).forEach(function(item) {
                 if (item.d3Deadline && item.completed < (item.required ?? 1)) {
+                    // Dedup by item ID — prevents duplicates from migration artifacts
+                    if (seenIds[item.id]) return;
+                    seenIds[item.id] = true;
                     var parts = item.d3Deadline.split('-').map(Number);
                     var dlDate = new Date(parts[0], parts[1] - 1, parts[2]);
                     var itemDaysLeft = Math.floor((dlDate - today) / 86400000);

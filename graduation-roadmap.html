@@ -4128,32 +4128,44 @@
 
         /* ── Readiness Score Bar ── */
         .cv2-readiness {
+            grid-column: 1 / -1;
             display: flex;
             align-items: center;
-            justify-content: space-between;
-            padding: 10px 16px;
-            background: var(--cv2-surface);
+            gap: 16px;
+            padding: 14px 20px;
+            background: linear-gradient(135deg, var(--cv2-surface) 0%, var(--cv2-surface-raised) 100%);
             border: 1px solid var(--cv2-border);
             border-radius: var(--cv2-radius);
-            margin-bottom: 12px;
             box-shadow: var(--cv2-shadow-sm);
         }
 
         .cv2-readiness-score {
             font-family: var(--cv2-font-heading);
-            font-size: 1.25rem;
-            font-weight: 600;
-            color: var(--cv2-ink);
+            font-size: 1.5rem;
+            font-weight: 700;
+            letter-spacing: -0.02em;
+            white-space: nowrap;
         }
 
-        .cv2-readiness-score .pct {
-            color: var(--cv2-done);
+        .cv2-readiness-bar {
+            flex: 1;
+            height: 8px;
+            background: rgba(44, 40, 37, 0.08);
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .cv2-readiness-bar-fill {
+            height: 100%;
+            border-radius: 4px;
+            transition: width 0.4s ease;
         }
 
         .cv2-readiness-meta {
-            font-size: 0.75rem;
+            font-size: 0.78rem;
             color: var(--cv2-muted);
             text-align: right;
+            white-space: nowrap;
         }
 
         /* ── D3 Deadline Alert Bar ── */
