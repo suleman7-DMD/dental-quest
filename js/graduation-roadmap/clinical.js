@@ -2324,68 +2324,120 @@ function renderCompetencies() {
 }
 
 // === CV2 PANEL 1: Build Milestone Strip + D3 Alert (returns HTML string) ===
+// Tab-aware: D3 shows apt/proc/summative milestones + D3 competency %. D4 shows only D4 summatives + D4 competency %.
 function cv2BuildMilestoneStrip(competencies, stats) {
-    var aptCount = typeof getSmartAppointmentCount === 'function' ? getSmartAppointmentCount() : { total: 0 };
-    var procCount = typeof getSmartProcedureCount === 'function' ? getSmartProcedureCount() : { total: 0 };
+    var tab = cv2ActiveYearTab;
 
-    // Count summatives
-    var summativeCompleted = 0;
-    var summativeTotal = 0;
-    getValues(competencies).forEach(function(cat) {
+    // Compute tab-specific competency stats (units from visible items only)
+    var tabTotalUnits = 0, tabCompletedUnits = 0;
+    var tabSummativeCompleted = 0, tabSummativeTotal = 0;
+
+    Object.entries(competencies).forEach(function(entry) {
+        var catKey = entry[0], cat = entry[1];
+        var yt = cat.yearTarget || DEFAULT_COMPETENCIES[catKey]?.yearTarget || null;
+
+        // Skip categories not visible in this tab
+        if (!cv2CategoryVisibleForTab(catKey, cat, tab)) return;
+
         getValues(cat.sections).forEach(function(sec) {
             getValues(sec.items).forEach(function(item) {
+                // For 'both' categories, only count items visible in this tab
+                if (yt === 'both' && !cv2ItemVisibleForTab(item, yt, tab) && !item.d4Carryover) return;
+
+                var req = item.required ?? 0;
+                var comp = Math.min(item.completed ?? 0, req);
+                tabTotalUnits += req;
+                tabCompletedUnits += comp;
+
                 if (item.isSummative) {
-                    summativeTotal++;
-                    if (item.completed >= item.required) summativeCompleted++;
+                    tabSummativeTotal++;
+                    if ((item.completed ?? 0) >= req && req > 0) tabSummativeCompleted++;
                 }
             });
         });
     });
-    if (summativeTotal === 0) summativeTotal = 7;
 
-    var aptTarget = roadmapData.clinicHeadlines?.appointments?.target ?? 90;
-    var procTarget = roadmapData.clinicHeadlines?.procedures?.target ?? 116;
+    // Also count d4Carryover items from the other tab
+    var carryoverItems = cv2GetCarryoverItems(competencies, tab);
+    carryoverItems.forEach(function(co) {
+        var item = co.item;
+        var req = item.required ?? 0;
+        var comp = Math.min(item.completed ?? 0, req);
+        tabTotalUnits += req;
+        tabCompletedUnits += comp;
+        if (item.isSummative) {
+            tabSummativeTotal++;
+            if ((item.completed ?? 0) >= req && req > 0) tabSummativeCompleted++;
+        }
+    });
 
-    var kpis = [
-        { label: 'Appointments', current: aptCount.total, target: aptTarget },
-        { label: 'Procedures', current: procCount.total, target: procTarget },
-        { label: 'Summatives', current: summativeCompleted, target: summativeTotal }
-    ];
+    if (tabSummativeTotal === 0) tabSummativeTotal = 1; // fallback
+
+    var tabPct = tabTotalUnits > 0 ? Math.round((tabCompletedUnits / tabTotalUnits) * 100) : 0;
+
+    // Deadline for this tab
+    var deadlineDate = tab === 'd3' ? new Date(2026, 4, 15) : new Date(2027, 4, 15);
+    var today = new Date();
+    today.setHours(0, 0, 0, 0);
+    var daysLeft = Math.max(0, Math.ceil((deadlineDate - today) / 86400000));
+    var weeksLeft = Math.max(1, Math.floor(daysLeft / 7));
+    var remainingUnits = Math.max(0, tabTotalUnits - tabCompletedUnits);
+    var itemsPerWeek = weeksLeft > 0 ? (remainingUnits / weeksLeft).toFixed(1) : '0';
 
     var html = '<div class="cv2-milestones">';
 
-    kpis.forEach(function(kpi) {
-        var pct = kpi.target > 0 ? Math.min(100, Math.round((kpi.current / kpi.target) * 100)) : 0;
-        var colorClass = pct >= 80 ? 'on-track' : pct >= 40 ? 'behind' : 'critical';
-        var barClass = pct >= 100 ? 'cv2-bar-done' : pct > 0 ? 'cv2-bar-wip' : 'cv2-bar-critical';
-        html += '<div class="cv2-kpi-card">'
-            + '<div class="cv2-kpi-value cv2-color-' + colorClass + '">' + kpi.current + '/' + kpi.target + '</div>'
-            + '<div class="cv2-kpi-label">' + escapeHtml(kpi.label) + '</div>'
-            + '<div class="cv2-kpi-bar"><div class="cv2-kpi-bar-fill ' + barClass + '" style="width:' + pct + '%;"></div></div>'
-            + '<div class="cv2-kpi-pct">' + pct + '%</div>'
-            + '</div>';
-    });
+    if (tab === 'd3') {
+        // D3: Show Appointments, Procedures, Summatives milestone cards
+        var aptCount = typeof getSmartAppointmentCount === 'function' ? getSmartAppointmentCount() : { total: 0 };
+        var procCount = typeof getSmartProcedureCount === 'function' ? getSmartProcedureCount() : { total: 0 };
+        var aptTarget = roadmapData.clinicHeadlines?.appointments?.target ?? 90;
+        var procTarget = roadmapData.clinicHeadlines?.procedures?.target ?? 116;
 
-    // Readiness card
-    var overallPct = stats.overallPercent || 0;
-    var gradDate = new Date(2027, 4, 12); // May 12, 2027
-    var today = new Date();
-    today.setHours(0, 0, 0, 0);
-    var daysLeft = Math.max(0, Math.ceil((gradDate - today) / 86400000));
-    var weeksLeft = Math.max(1, Math.floor(daysLeft / 7));
-    var remainingUnits = Math.max(0, stats.totalUnits - stats.completedUnits);
-    var itemsPerWeek = weeksLeft > 0 ? (remainingUnits / weeksLeft).toFixed(1) : '0';
-    var readinessColor = overallPct >= 80 ? 'done' : overallPct >= 40 ? 'wip' : 'critical';
+        var kpis = [
+            { label: 'Appointments', current: aptCount.total, target: aptTarget },
+            { label: 'Procedures', current: procCount.total, target: procTarget },
+            { label: 'Summatives', current: tabSummativeCompleted, target: tabSummativeTotal }
+        ];
+
+        kpis.forEach(function(kpi) {
+            var pct = kpi.target > 0 ? Math.min(100, Math.round((kpi.current / kpi.target) * 100)) : 0;
+            var colorClass = pct >= 80 ? 'on-track' : pct >= 40 ? 'behind' : 'critical';
+            var barClass = pct >= 100 ? 'cv2-bar-done' : pct > 0 ? 'cv2-bar-wip' : 'cv2-bar-critical';
+            html += '<div class="cv2-kpi-card">'
+                + '<div class="cv2-kpi-value cv2-color-' + colorClass + '">' + kpi.current + '/' + kpi.target + '</div>'
+                + '<div class="cv2-kpi-label">' + escapeHtml(kpi.label) + '</div>'
+                + '<div class="cv2-kpi-bar"><div class="cv2-kpi-bar-fill ' + barClass + '" style="width:' + pct + '%;"></div></div>'
+                + '<div class="cv2-kpi-pct">' + pct + '%</div>'
+                + '</div>';
+        });
+    } else {
+        // D4: Show only Summatives KPI (no appointments/procedures — those are D3 milestones)
+        var sumPct = tabSummativeTotal > 0 ? Math.min(100, Math.round((tabSummativeCompleted / tabSummativeTotal) * 100)) : 0;
+        var sumColorClass = sumPct >= 80 ? 'on-track' : sumPct >= 40 ? 'behind' : 'critical';
+        var sumBarClass = sumPct >= 100 ? 'cv2-bar-done' : sumPct > 0 ? 'cv2-bar-wip' : 'cv2-bar-critical';
+        html += '<div class="cv2-kpi-card">'
+            + '<div class="cv2-kpi-value cv2-color-' + sumColorClass + '">' + tabSummativeCompleted + '/' + tabSummativeTotal + '</div>'
+            + '<div class="cv2-kpi-label">D4 Summatives</div>'
+            + '<div class="cv2-kpi-bar"><div class="cv2-kpi-bar-fill ' + sumBarClass + '" style="width:' + sumPct + '%;"></div></div>'
+            + '<div class="cv2-kpi-pct">' + sumPct + '%</div>'
+            + '</div>';
+    }
+
+    // Readiness card — tab-specific % based ONLY on competency items
+    var readinessColor = tabPct >= 80 ? 'done' : tabPct >= 40 ? 'wip' : 'critical';
+    var tabLabel = tab === 'd3' ? 'D3' : 'D4';
 
     html += '<div class="cv2-readiness">'
-        + '<div class="cv2-readiness-score cv2-color-' + readinessColor + '">' + overallPct + '% Ready</div>'
+        + '<div class="cv2-readiness-score cv2-color-' + readinessColor + '">' + tabPct + '% ' + tabLabel + ' Done</div>'
         + '<div class="cv2-readiness-meta">' + daysLeft + ' days left \u00B7 ' + itemsPerWeek + ' items/week needed</div>'
         + '</div>';
 
     html += '</div>'; // close cv2-milestones
 
-    // D3 Deadline alert bar
-    html += cv2BuildD3Alert(competencies, daysLeft);
+    // D3 Deadline alert bar (only on D3 tab)
+    if (tab === 'd3') {
+        html += cv2BuildD3Alert(competencies, daysLeft);
+    }
 
     return html;
 }
