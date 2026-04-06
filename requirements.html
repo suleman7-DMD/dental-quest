@@ -1,0 +1,747 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BU GSDM Clinical Requirements Tracker — DMD '27</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0e1117;
+    --surface: #161b22;
+    --surface2: #1c2129;
+    --border: #2d333b;
+    --border-light: #3d444d;
+    --text: #e6edf3;
+    --text-muted: #8b949e;
+    --text-dim: #6e7681;
+    --accent-d3: #58a6ff;
+    --accent-d3-bg: rgba(88,166,255,0.08);
+    --accent-d4: #f0883e;
+    --accent-d4-bg: rgba(240,136,62,0.08);
+    --green: #3fb950;
+    --red: #f85149;
+    --yellow: #d29922;
+    --purple: #bc8cff;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.6;
+    padding: 2rem;
+  }
+
+  .container {
+    max-width: 1100px;
+    margin: 0 auto;
+  }
+
+  h1 {
+    font-size: 1.75rem;
+    font-weight: 700;
+    margin-bottom: 0.25rem;
+    letter-spacing: -0.02em;
+  }
+
+  .subtitle {
+    color: var(--text-muted);
+    font-size: 0.95rem;
+    margin-bottom: 2.5rem;
+  }
+
+  /* Year Section */
+  .year-section {
+    margin-bottom: 3rem;
+  }
+
+  .year-header {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-bottom: 1.5rem;
+    padding-bottom: 0.75rem;
+    border-bottom: 2px solid var(--border);
+  }
+
+  .year-badge {
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    padding: 0.3rem 0.75rem;
+    border-radius: 4px;
+    font-family: 'JetBrains Mono', monospace;
+  }
+
+  .year-badge.d3 {
+    background: var(--accent-d3-bg);
+    color: var(--accent-d3);
+    border: 1px solid rgba(88,166,255,0.2);
+  }
+
+  .year-badge.d4 {
+    background: var(--accent-d4-bg);
+    color: var(--accent-d4);
+    border: 1px solid rgba(240,136,62,0.2);
+  }
+
+  .year-title {
+    font-size: 1.35rem;
+    font-weight: 600;
+  }
+
+  .year-deadline {
+    color: var(--text-muted);
+    font-size: 0.85rem;
+    margin-left: auto;
+    font-family: 'JetBrains Mono', monospace;
+  }
+
+  /* Category */
+  .category {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    margin-bottom: 1.25rem;
+    overflow: hidden;
+  }
+
+  .cat-header {
+    padding: 0.85rem 1.25rem;
+    font-weight: 600;
+    font-size: 0.95rem;
+    letter-spacing: -0.01em;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .cat-header.d3 { background: var(--accent-d3-bg); border-left: 3px solid var(--accent-d3); }
+  .cat-header.d4 { background: var(--accent-d4-bg); border-left: 3px solid var(--accent-d4); }
+
+  .cat-body {
+    padding: 1rem 1.25rem;
+  }
+
+  .cat-label {
+    font-size: 0.7rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--text-dim);
+    margin-bottom: 0.5rem;
+  }
+
+  /* Tables */
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.85rem;
+    margin-bottom: 0.75rem;
+  }
+
+  thead th {
+    text-align: left;
+    padding: 0.5rem 0.75rem;
+    font-size: 0.7rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--text-dim);
+    border-bottom: 1px solid var(--border-light);
+    background: var(--surface2);
+  }
+
+  tbody td {
+    padding: 0.5rem 0.75rem;
+    border-bottom: 1px solid var(--border);
+    vertical-align: top;
+  }
+
+  tbody tr:last-child td {
+    border-bottom: none;
+  }
+
+  td.num {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.8rem;
+    text-align: center;
+    white-space: nowrap;
+  }
+
+  td.note {
+    color: var(--text-muted);
+    font-size: 0.8rem;
+  }
+
+  /* Bullet lists in body */
+  .notes {
+    padding: 0.75rem 1.25rem 1rem;
+    border-top: 1px solid var(--border);
+  }
+
+  .notes ul, .cat-body ul {
+    list-style: none;
+    padding: 0;
+  }
+
+  .notes ul li, .cat-body ul li {
+    position: relative;
+    padding-left: 1rem;
+    font-size: 0.82rem;
+    color: var(--text-muted);
+    margin-bottom: 0.35rem;
+    line-height: 1.5;
+  }
+
+  .notes ul li::before, .cat-body ul li::before {
+    content: '›';
+    position: absolute;
+    left: 0;
+    color: var(--text-dim);
+    font-weight: 700;
+  }
+
+  .highlight {
+    color: var(--yellow);
+    font-weight: 500;
+  }
+
+  .callout {
+    background: rgba(210,153,34,0.08);
+    border: 1px solid rgba(210,153,34,0.2);
+    border-radius: 5px;
+    padding: 0.6rem 0.9rem;
+    font-size: 0.8rem;
+    color: var(--yellow);
+    margin: 0.5rem 0;
+  }
+
+  .sub-section-title {
+    font-weight: 600;
+    font-size: 0.85rem;
+    margin: 1rem 0 0.4rem;
+    color: var(--text);
+  }
+
+  .simple-list {
+    padding-left: 0;
+    list-style: none;
+  }
+
+  .simple-list li {
+    position: relative;
+    padding-left: 1rem;
+    font-size: 0.82rem;
+    color: var(--text-muted);
+    margin-bottom: 0.3rem;
+  }
+
+  .simple-list li::before {
+    content: '•';
+    position: absolute;
+    left: 0;
+    color: var(--text-dim);
+  }
+
+  hr.section-divider {
+    border: none;
+    border-top: 1px dashed var(--border);
+    margin: 0.75rem 0;
+  }
+</style>
+</head>
+<body>
+<div class="container">
+
+<h1>BU GSDM Clinical Requirements Tracker</h1>
+<p class="subtitle">DMD Class of 2027 — Comprehensive Competency Checklist</p>
+
+<!-- ============================================ -->
+<!-- D3 SECTION -->
+<!-- ============================================ -->
+<div class="year-section">
+  <div class="year-header">
+    <span class="year-badge d3">D3</span>
+    <span class="year-title">End of Third Year Requirements</span>
+    <span class="year-deadline">Due: May 15, 2026</span>
+  </div>
+
+  <!-- 1. RS 545 -->
+  <div class="category">
+    <div class="cat-header d3">1 &nbsp;│&nbsp; Treatment Planning &amp; Patient Management (RS 545)</div>
+    <div class="cat-body">
+      <table>
+        <thead><tr><th>Requirement</th><th>Type</th><th>Qty</th><th>Notes</th></tr></thead>
+        <tbody>
+          <tr>
+            <td>Small group presentation of a Type 2 case</td>
+            <td>Summative</td>
+            <td class="num">1</td>
+            <td class="note">Due by April 24, 2026. 20% of grade. Details on RS 545 Blackboard site.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- 2. GD 640 -->
+  <div class="category">
+    <div class="cat-header d3">2 &nbsp;│&nbsp; Group Practice Learning &amp; Leadership (GD 640)</div>
+    <div class="cat-body">
+      <table>
+        <thead><tr><th>Assessment Tool</th><th>Formative</th><th>Summative</th><th>Notes</th></tr></thead>
+        <tbody>
+          <tr><td>Clinical Attendance</td><td class="num">—</td><td class="num">—</td><td class="note">4 per week</td></tr>
+          <tr><td>Periodic Review</td><td class="num">1</td><td class="num">1</td><td class="note"></td></tr>
+          <tr><td>Written Analysis</td><td class="num">2</td><td class="num">1</td><td class="note">Completed in 3rd year</td></tr>
+          <tr><td>Practice Management Scenarios</td><td class="num">1</td><td class="num">4</td><td class="note">All due by end of D3</td></tr>
+          <tr><td>Communication Workshop</td><td class="num">—</td><td class="num">—</td><td class="note">Attendance and completion required</td></tr>
+          <tr><td>Leadership Workshop</td><td class="num">—</td><td class="num">—</td><td class="note">Attendance and completion required</td></tr>
+          <tr><td>Case Presentation at Group Monthly Meeting</td><td class="num">—</td><td class="num">1</td><td class="note">Successful completion required</td></tr>
+          <tr><td>3rd Year Milestones</td><td class="num">—</td><td class="num">—</td><td class="note">Successful completion required</td></tr>
+        </tbody>
+      </table>
+
+      <div class="sub-section-title">Leadership Requirements</div>
+      <table>
+        <thead><tr><th>Assessment Tool</th><th>Formative</th><th>Summative</th><th>Notes</th></tr></thead>
+        <tbody>
+          <tr><td>3 Post Treatment Evaluations</td><td class="num">N/A</td><td class="num">N/A</td><td class="note"></td></tr>
+          <tr><td>Auxiliary Team Assessment w/ Dental Technician</td><td class="num">1</td><td class="num">≥1</td><td class="note">Total of 4 summatives combined with Dental Assistant</td></tr>
+          <tr><td>Auxiliary Team Assessment w/ Dental Assistant</td><td class="num">1</td><td class="num">≥1</td><td class="note">Total of 4 summatives combined with Dental Technician</td></tr>
+          <tr><td>Leading Rounds</td><td class="num">1</td><td class="num">1</td><td class="note"></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- 3. PERIO D3 -->
+  <div class="category">
+    <div class="cat-header d3">3 &nbsp;│&nbsp; Periodontology (D3)</div>
+    <div class="cat-body">
+      <p class="cat-label">Formatives</p>
+      <table>
+        <thead><tr><th>Competency</th><th>Qty</th><th>Notes</th></tr></thead>
+        <tbody>
+          <tr><td>OHI / HCI</td><td class="num">2</td><td class="note">1 Zoom, 1 in-person — must precede OHI/HCI summative</td></tr>
+          <tr><td>Prophy</td><td class="num">5</td><td class="note">Must precede Prophy summative</td></tr>
+          <tr><td>Re-evaluate Gingivitis</td><td class="num">3</td><td class="note">Must precede Re-eval Gingivitis summative</td></tr>
+          <tr><td>Dx &amp; Tx Plan</td><td class="num">4</td><td class="note">Completed during DC/Tx Planning rotation weeks</td></tr>
+        </tbody>
+      </table>
+
+      <p class="cat-label">Summatives</p>
+      <table>
+        <thead><tr><th>Competency</th><th>Qty</th><th>Notes</th></tr></thead>
+        <tbody>
+          <tr><td>OHI / HCI</td><td class="num">1</td><td class="note">Due by October 1, 2025</td></tr>
+          <tr><td>Scaling &amp; Prophy</td><td class="num">1</td><td class="note">By May 2026</td></tr>
+          <tr><td>Re-evaluate Gingivitis</td><td class="num">1</td><td class="note">By May 2026</td></tr>
+          <tr><td>Dx &amp; Tx Plan (Type 2)</td><td class="num">2</td><td class="note"></td></tr>
+        </tbody>
+      </table>
+      <div class="callout">⚠ Completing the 2 Dx &amp; Tx Plan summatives also satisfies 2 OHRA summatives + 2 Caries Detection summatives. Ensure all four are explicitly recorded.</div>
+    </div>
+  </div>
+
+  <!-- 4. PEDS D3 -->
+  <div class="category">
+    <div class="cat-header d3">4 &nbsp;│&nbsp; Pediatric Dentistry (D3)</div>
+    <div class="cat-body">
+      <table>
+        <thead><tr><th>Requirement</th><th>Notes</th></tr></thead>
+        <tbody>
+          <tr><td>Successful completion of PD 530 Didactic Pediatric Dentistry course</td><td class="note"></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- 5. ORAL SURGERY D3 -->
+  <div class="category">
+    <div class="cat-header d3">5 &nbsp;│&nbsp; Oral Surgery (D3)</div>
+    <div class="cat-body">
+      <table>
+        <thead><tr><th>Requirement</th><th>Type</th><th>Notes</th></tr></thead>
+        <tbody>
+          <tr><td>Participate in 3rd Year Oral Surgery Rotation</td><td>Rotation</td><td class="note"></td></tr>
+          <tr><td>Management of Patient having an Oral Surgery Consult</td><td>Summative</td><td class="note"></td></tr>
+          <tr><td>Administration of an Inferior Alveolar and Long Buccal Nerve Block</td><td>Summative</td><td class="note"></td></tr>
+          <tr><td>Participation in Suturing Workshop on a suture board</td><td>Summative</td><td class="note"></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- 6. GERIATRIC D3 -->
+  <div class="category">
+    <div class="cat-header d3">6 &nbsp;│&nbsp; Geriatric Dental Medicine (D3)</div>
+    <div class="cat-body">
+      <table>
+        <thead><tr><th>Requirement</th><th>Notes</th></tr></thead>
+        <tbody>
+          <tr><td>Successfully challenge the PH 541 Geriatric Dental Medicine Didactic Course</td><td class="note">Spring Semester 2026</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+</div><!-- end D3 -->
+
+<!-- ============================================ -->
+<!-- D4 SECTION -->
+<!-- ============================================ -->
+<div class="year-section">
+  <div class="year-header">
+    <span class="year-badge d4">D4</span>
+    <span class="year-title">End of Fourth Year Requirements</span>
+    <span class="year-deadline">Due: May 15, 2027</span>
+  </div>
+
+  <!-- 1. RS 545 D4 -->
+  <div class="category">
+    <div class="cat-header d4">1 &nbsp;│&nbsp; Treatment Planning &amp; Patient Management (RS 545)</div>
+    <div class="cat-body">
+      <table>
+        <thead><tr><th>Requirement</th><th>Notes</th></tr></thead>
+        <tbody>
+          <tr><td>Attend 2 seminar presentations of classmates</td><td class="note">Through April 23, 2027. 80% of grade.</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- 2. GD 642 D4 -->
+  <div class="category">
+    <div class="cat-header d4">2 &nbsp;│&nbsp; Group Practice Learning &amp; Leadership (GD 642)</div>
+    <div class="cat-body">
+      <table>
+        <thead><tr><th>Assessment Tool</th><th>Summative Qty</th><th>Notes</th></tr></thead>
+        <tbody>
+          <tr><td>Communication Treatment Plan Presentation</td><td class="num">1</td><td class="note"></td></tr>
+          <tr><td>Periodic Reviews</td><td class="num">2</td><td class="note"></td></tr>
+          <tr><td>Written Analyses</td><td class="num">4</td><td class="note"></td></tr>
+          <tr><td>Practice Management Scenarios</td><td class="num">4</td><td class="note">Cumulative from 3rd and 4th years (additional D4 requirement)</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- 3. PERIO D4 -->
+  <div class="category">
+    <div class="cat-header d4">3 &nbsp;│&nbsp; Periodontology (D4)</div>
+    <div class="cat-body">
+      <p class="cat-label">Formatives</p>
+      <table>
+        <thead><tr><th>Competency</th><th>Qty</th><th>Notes</th></tr></thead>
+        <tbody>
+          <tr><td>Quad (SRP)</td><td class="num">3</td><td class="note"></td></tr>
+          <tr><td>Re-evaluate SRP</td><td class="num">1</td><td class="note"></td></tr>
+          <tr><td>Re-evaluate Impression</td><td class="num">3</td><td class="note"></td></tr>
+          <tr><td>Recall</td><td class="num">6</td><td class="note"></td></tr>
+        </tbody>
+      </table>
+
+      <p class="cat-label">Summatives</p>
+      <table>
+        <thead><tr><th>Competency</th><th>Qty</th><th>Notes</th></tr></thead>
+        <tbody>
+          <tr><td>Prophy</td><td class="num">2</td><td class="note">Additional beyond D3 (total across both years = 3)</td></tr>
+          <tr><td>Calculus Removal</td><td class="num">3</td><td class="note"></td></tr>
+          <tr><td>Re-evaluate (SRP)</td><td class="num">1</td><td class="note"></td></tr>
+          <tr><td>Re-evaluate (Impression)</td><td class="num">1</td><td class="note"></td></tr>
+          <tr><td>Recall</td><td class="num">2</td><td class="note"></td></tr>
+          <tr><td>Mock Board</td><td class="num">1</td><td class="note"></td></tr>
+        </tbody>
+      </table>
+
+      <p class="cat-label">Other</p>
+      <table>
+        <thead><tr><th>Requirement</th><th>Qty</th><th>Notes</th></tr></thead>
+        <tbody>
+          <tr><td>Surgical Assist</td><td class="num">7</td><td class="note">Total for both years</td></tr>
+          <tr><td>DC Rotation Week (4th year)</td><td class="num">—</td><td class="note">Attend and complete 4th year DC rotation. (D3 completed: 4 DC/Tx Plan formatives + 2 OHRA/Caries Detection/Dx&amp;Tx Plan summatives)</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- 4. PEDS D4 -->
+  <div class="category">
+    <div class="cat-header d4">4 &nbsp;│&nbsp; Pediatric Dentistry (D4)</div>
+    <div class="cat-body">
+      <p class="cat-label">Summatives (documented on Pediatric Dentistry Rotation Log Sheet)</p>
+      <table>
+        <thead><tr><th>Competency</th><th>Qty</th></tr></thead>
+        <tbody>
+          <tr><td>New Patient / Recall</td><td class="num">3</td></tr>
+          <tr><td>Sealants</td><td class="num">3</td></tr>
+          <tr><td>Restorative</td><td class="num">3</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="notes">
+      <ul>
+        <li>Pediatric Dentistry Rotation/Externship Log Sheet required</li>
+        <li>Successful completion of rotations in Pediatric Dentistry including Franciscan Hospital for Children (special needs)</li>
+        <li>Successful completion of post-rotation assessment</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- 5. ORAL SURGERY D4 -->
+  <div class="category">
+    <div class="cat-header d4">5 &nbsp;│&nbsp; Oral Surgery (D4)</div>
+    <div class="cat-body">
+      <p class="cat-label">2-Week Scheduled Rotation Requirements</p>
+      <table>
+        <thead><tr><th>Requirement</th><th>Type</th></tr></thead>
+        <tbody>
+          <tr><td>Presentation at morning seminar involving medical conditions related to practice of Dentistry and Oral Surgery</td><td>Rotation</td></tr>
+          <tr><td>Oral examination at completion of rotation (seminars, clinical treatment, surgical interventions, medical emergency evaluation/management)</td><td>Rotation</td></tr>
+          <tr><td>Take-home prescription writing exercise for antibiotics and pain medication/s</td><td>Rotation</td></tr>
+          <tr><td>MCQ quiz: Medical Emergency Training, Nitrous Oxide-Oxygen Sedation training, and instrument identification</td><td>Rotation</td></tr>
+          <tr><td>Participate in management of most common medical emergencies at Boston Medical Center Medical Simulation Lab</td><td>Rotation</td></tr>
+          <tr><td>Participate in Nitrous Oxide-Oxygen Sedation Hands-On training for safe delivery in out-patient setting</td><td>Rotation</td></tr>
+        </tbody>
+      </table>
+
+      <p class="cat-label">Summatives</p>
+      <table>
+        <thead><tr><th>Competency</th><th>Qty</th><th>Notes</th></tr></thead>
+        <tbody>
+          <tr><td>Extraction of a tooth/teeth</td><td class="num">2</td><td class="note">On two separate individual patients</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- 6. OPERATIVE DENTISTRY D4 -->
+  <div class="category">
+    <div class="cat-header d4">6 &nbsp;│&nbsp; Operative Dentistry</div>
+    <div class="cat-body">
+      <p class="cat-label">Summative Qualification</p>
+      <table>
+        <thead><tr><th>Requirement</th><th>Notes</th></tr></thead>
+        <tbody>
+          <tr><td>Complete 20 surfaces</td><td class="note">Email image of composite journal sheet to mcmanama@bu.edu for approval. Dr. McManama assesses quantity and quality. Once approved, unlocked in SPS for summative testing.</td></tr>
+        </tbody>
+      </table>
+
+      <p class="cat-label">Summatives — 8 total required to pass</p>
+      <table>
+        <thead><tr><th>Exam Type</th><th>Required Qty</th><th>Notes</th></tr></thead>
+        <tbody>
+          <tr><td>Class V Composite</td><td class="num">2</td><td class="note">Exactly 2 — only 2 will be counted</td></tr>
+          <tr><td>Class III or IV Composite</td><td class="num" rowspan="3">6 total<br><span style="font-size:0.7rem;color:var(--text-dim)">(any combo)</span></td><td class="note" rowspan="3"></td></tr>
+          <tr><td>Class II Inlay or Onlay (milled restoration)</td></tr>
+          <tr><td>Class II Composite</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="notes">
+      <ul>
+        <li>All formative procedures must be documented in the Operative Dentistry Formative Evaluation | Composite Restorations sheet</li>
+        <li>Once qualified for summative testing, choose exams on procedures that meet criteria and are deemed appropriate by supervising faculty</li>
+        <li>Get all proper documentation and signatures from the supervising faculty</li>
+        <li>Maximum of 4 operative summatives with the same faculty member</li>
+        <li>Completion of Operative assignment and survey listed on Blackboard (10% of final grade)</li>
+        <li>Completion of Licensing Exam Prep with Dr. Bruce Robinson (10% of final grade)</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- 7. REMOVABLE PROSTHODONTICS D4 -->
+  <div class="category">
+    <div class="cat-header d4">7 &nbsp;│&nbsp; Removable Prosthodontics: Replacing Missing Teeth</div>
+    <div class="cat-body">
+      <p class="cat-label">Complete Denture — Formatives</p>
+      <table>
+        <thead><tr><th>Competency</th><th>Qty</th><th>Notes</th></tr></thead>
+        <tbody>
+          <tr><td>Preliminary Impressions</td><td class="num">2 arches</td><td class="note">Edentulous preferred</td></tr>
+          <tr><td>Final Impression</td><td class="num">2 arches</td><td class="note">Edentulous preferred</td></tr>
+          <tr><td>Inter-maxillary Records</td><td class="num">1 case</td><td class="note">1 edentulous arch preferred</td></tr>
+          <tr><td>Post Dam Technique</td><td class="num">1 case</td><td class="note">Edentulous or maxillary Kennedy class I</td></tr>
+          <tr><td>Trial Denture (Tooth Try-In)</td><td class="num">2 arches</td><td class="note">1 edentulous arch preferred</td></tr>
+          <tr><td>Insertion / Clinical Remount</td><td class="num">2 arches</td><td class="note"></td></tr>
+          <tr><td>Adjustment</td><td class="num">2 arches</td><td class="note">1 edentulous arch preferred</td></tr>
+        </tbody>
+      </table>
+
+      <p class="cat-label">Removable Partial Denture — Formative</p>
+      <table>
+        <thead><tr><th>Competency</th><th>Qty</th><th>Notes</th></tr></thead>
+        <tbody>
+          <tr><td>Abutment Preparations — RPD</td><td class="num">1 case</td><td class="note">Mounted casts of a case</td></tr>
+        </tbody>
+      </table>
+
+      <div class="callout">⚠ To qualify for removable summative exam, email a full image of your Removable Flow Sheet to: gdadmin@bu.edu</div>
+
+      <p class="cat-label">Complete Denture — Summatives</p>
+      <table>
+        <thead><tr><th>Competency</th><th>Qty</th><th>Notes</th></tr></thead>
+        <tbody>
+          <tr><td>Preliminary Impressions</td><td class="num">1</td><td class="note">Edentulous only</td></tr>
+          <tr><td>Final Impression</td><td class="num">1</td><td class="note">Edentulous only</td></tr>
+          <tr><td>Inter-maxillary Records</td><td class="num">1</td><td class="note">Edentulous only</td></tr>
+          <tr><td>Post-Dam Technique</td><td class="num">1</td><td class="note">Edentulous or maxillary Kennedy class I</td></tr>
+          <tr><td>Trial Denture (Tooth Try-In)</td><td class="num">1</td><td class="note">Edentulous only</td></tr>
+          <tr><td>Insertion / Clinical Remount</td><td class="num">1</td><td class="note">Edentulous only</td></tr>
+          <tr><td>Adjustment</td><td class="num">1</td><td class="note">Edentulous only</td></tr>
+        </tbody>
+      </table>
+
+      <p class="cat-label">Removable Partial Denture — Summative</p>
+      <table>
+        <thead><tr><th>Competency</th><th>Qty</th><th>Notes</th></tr></thead>
+        <tbody>
+          <tr><td>Abutment Preparations (Intra-Oral) — RPD</td><td class="num">1 case</td><td class="note"></td></tr>
+        </tbody>
+      </table>
+
+      <p class="cat-label">Total Clinical Experience Required</p>
+      <table>
+        <thead><tr><th>Requirement</th><th>Notes</th></tr></thead>
+        <tbody>
+          <tr><td>4 Complete Dentures</td><td class="note"></td></tr>
+          <tr><td>1 cast metal partial denture <strong>OR</strong> 2 flexible RPDs + OSCE <strong>OR</strong> 4 interim/resin-base RPDs + OSCE</td><td class="note"></td></tr>
+          <tr><td>Overdenture Experience</td><td class="note">Either: duplicate denture and implant planning through surgery <strong>OR</strong> abutment selection, placement &amp; activation</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="notes">
+      <ul>
+        <li>All completed procedures must be documented on the Removable Prosthodontics Flow Sheet</li>
+        <li>Multiple summative grades in any areas will be averaged for final summative grade</li>
+        <li>Steps completed during the fabrication process of a digital denture may qualify as a formative or summative (as long as steps are performed independently)</li>
+        <li><strong>Unit Equivalents:</strong></li>
+        <li>1 unit CD = 1 full arch of complete, interim, digital, or overdenture</li>
+        <li>For a flexible RPD or interim/resin-base RPD to count as a unit: minimum of 2 clasps AND replace minimum of 3 teeth</li>
+        <li>All units must have all steps completed by the same student for credit. Partial completion or transfer between students not permitted.</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- 8. FIXED PROSTHODONTICS D4 -->
+  <div class="category">
+    <div class="cat-header d4">8 &nbsp;│&nbsp; Fixed Prosthodontics: Replacing Missing Teeth</div>
+    <div class="cat-body">
+      <p class="cat-label">Formatives</p>
+      <table>
+        <thead><tr><th>Competency</th><th>Qty</th></tr></thead>
+        <tbody>
+          <tr><td>Provisional Restoration</td><td class="num">6</td></tr>
+          <tr><td>Tooth Preparation</td><td class="num">6</td></tr>
+          <tr><td>Final Impression</td><td class="num">6</td></tr>
+          <tr><td>Cementation</td><td class="num">6</td></tr>
+        </tbody>
+      </table>
+
+      <div class="callout">⚠ To qualify for fixed summative exam, email a full image of your Fixed Prosthodontics Flow Sheet to: gdadmin@bu.edu</div>
+
+      <p class="cat-label">Summatives</p>
+      <table>
+        <thead><tr><th>Competency</th><th>Qty</th><th>Notes</th></tr></thead>
+        <tbody>
+          <tr><td>Prep (Tooth Preparation)</td><td class="num">2</td><td class="note"></td></tr>
+          <tr><td>Temp (Provisional Restoration)</td><td class="num">2</td><td class="note"></td></tr>
+          <tr><td>Final Impression</td><td class="num">2</td><td class="note"></td></tr>
+          <tr><td>Cementation</td><td class="num">2</td><td class="note"></td></tr>
+          <tr><td>Occlusal Analyses and TMD Evaluations</td><td class="num">2</td><td class="note">1 in Centric Relation + 1 in Maximum Intercuspation</td></tr>
+          <tr><td>Mock Board</td><td class="num">1</td><td class="note"></td></tr>
+          <tr><td>Fixed Simulations (with Dr. Mark Ferriero)</td><td class="num">2</td><td class="note"></td></tr>
+          <tr><td>Simulation of 3-unit Prep and Temp of FPD (with Dr. Mark Ferriero)</td><td class="num">1</td><td class="note"></td></tr>
+        </tbody>
+      </table>
+
+      <p class="cat-label">Minimum Clinical Experience</p>
+      <table>
+        <thead><tr><th>Requirement</th><th>Notes</th></tr></thead>
+        <tbody>
+          <tr><td>Minimum 10 units (start to completion)</td><td class="note">Must include BOTH a fixed partial denture AND an implant supported crown</td></tr>
+          <tr><td>Minimum 3 CEREC restorations</td><td class="note"></td></tr>
+          <tr><td>Implant Supported Crown</td><td class="note">Can be substituted with activation of implants on an implant overdenture — satisfies implant requirement but does NOT count towards fixed unit requirements</td></tr>
+        </tbody>
+      </table>
+
+      <p class="cat-label">Fixed Prosthodontics Case Presentation</p>
+      <table>
+        <thead><tr><th>Requirement</th><th>Notes</th></tr></thead>
+        <tbody>
+          <tr><td>Present 2 completed units of Fixed or Fixed Removable Prosthodontics Case</td><td class="note"></td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="notes">
+      <ul>
+        <li>All procedures must be documented on the Fixed Prosthodontics Flow Sheet</li>
+        <li>Ensure all steps (columns) are signed by faculty — this includes every required step on the flow sheet</li>
+        <li>Cast Post and Core (CPC) will not count as a unit</li>
+        <li>Up to 2 Pontic, Inlay/Onlay, Veneer can be counted towards unit credits</li>
+        <li>Case models must be correctly mounted and neat without plaster on them</li>
+        <li>All pictures, patient information, and prescriptions must be HIPAA compliant</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- 9. GERIATRIC D4 -->
+  <div class="category">
+    <div class="cat-header d4">9 &nbsp;│&nbsp; Geriatric Dental Medicine (D4)</div>
+    <div class="cat-body">
+      <table>
+        <thead><tr><th>Requirement</th><th>Notes</th></tr></thead>
+        <tbody>
+          <tr><td>Geriatric Dental Medicine Clinical Rotation</td><td class="note">Mandatory. After successful completion of PH 541 didactic course. More information shared during class in spring.</td></tr>
+          <tr><td>Geriatric Dental Medicine Clinical Assignment</td><td class="note">Using any patient from clinical training in GSDM treatment centers, clinical rotations, or externship.</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="notes">
+      <ul>
+        <li>Successful completion of the Didactic course, the Geriatric rotation, and the assignment together show competency in Geriatric Dental Medicine</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- 10. ENDODONTICS D4 -->
+  <div class="category">
+    <div class="cat-header d4">10 &nbsp;│&nbsp; Endodontics</div>
+    <div class="cat-body">
+      <table>
+        <thead><tr><th>Requirement</th><th>Type</th><th>Qty</th><th>Notes</th></tr></thead>
+        <tbody>
+          <tr><td>Pulpectomy</td><td>Summative</td><td class="num">2</td><td class="note">Can receive credit for Pulpectomy on completed RCT cases when indicated</td></tr>
+          <tr><td>Root Canal Treatment</td><td>Clinical</td><td class="num">2</td><td class="note">On patients, not on manikin</td></tr>
+          <tr><td>Post-doc Endo Assist</td><td>Assist</td><td class="num">1</td><td class="note"></td></tr>
+          <tr><td>Pre-doc Endo Assist</td><td>Assist</td><td class="num">1</td><td class="note"></td></tr>
+          <tr><td>Mock Board on manikin</td><td>Summative</td><td class="num">1</td><td class="note">Must pass regardless of results on CDCA or WREB</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- 11. EXTERNSHIP D4 -->
+  <div class="category">
+    <div class="cat-header d4">11 &nbsp;│&nbsp; D4 Year Externship</div>
+    <div class="cat-body">
+      <table>
+        <thead><tr><th>Requirement</th><th>Notes</th></tr></thead>
+        <tbody>
+          <tr><td>Case Presentation</td><td class="note">Presentation, Upload on Blackboard along with self-assessment and mock referral</td></tr>
+          <tr><td>Community Outreach Project</td><td class="note"></td></tr>
+          <tr><td>SPS Log of all procedures completed during Externship and debriefing</td><td class="note"></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+</div><!-- end D4 -->
+
+</div><!-- container -->
+</body>
+</html>
