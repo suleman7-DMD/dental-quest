@@ -228,7 +228,8 @@ One-time migration gated by `competencyV2Migrated` localStorage flag. Runs after
 - Typography: `Source Serif 4` headings, `Inter` body, `SF Mono` counters
 - Design tokens: `--cv2-done` (#5E8A5E warm green), `--cv2-wip` (#C4923A amber), `--cv2-critical` (#B85C5C clay), `--cv2-accent` (#6B7C5E olive/sage)
 - Shadows: warm-tinted `rgba(44, 40, 37, ...)` not cold gray
-- 3 panels: milestone strip (sticky), D3 alert + category accordion, What's Next
+- 4 panels: D3/D4 year tabs, tab-specific milestone strip (D3: 3 KPI cards + completion bar; D4: 1 summatives KPI + completion bar), D3 alert + category accordion, What's Next
+- Completion %: item-based (items where completed >= required), NOT milestone apts/procs. Each tab independent. Updates on counter +/-.
 - Mobile: 40px touch targets on counters, flex-wrap on req rows, hidden cat-bar, responsive D3 items
 - 100 cv2-* classes + 9 comp-* classes (modal, toast)
 - Pipeline data from `patient.importedRequirements[]` (NOT on competency items)

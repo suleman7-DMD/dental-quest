@@ -153,8 +153,10 @@ const date = new Date(year, month - 1, day);
 - **13 categories** (was 14 — `srp` absorbed into `perio` via migration). Each has `yearTarget: 'd3' | 'd4' | 'both'`.
 - **Category keys NEVER renamed**: `grouppractice`, `grouppractice4`, `perio`, `txplanning`, `peds`, `oralsurg`, `geriatrics` (both), `fixed`, `operative`, `dentures`, `rpd`, `endo`, `externship` (d4), `grouppractice` (d3).
 - **`d4Carryover: true`** on items: renders in BOTH D3 and D4 tabs. D3 shows "Cumulative D3+D4" badge, D4 shows "Should have been completed in D3" badge. Currently on: `perio-form-reeval-ging`, `perio-sum-reeval-ging`, `gp4-pms`.
-- **D3 tab**: Shows `yearTarget === 'd3'` (all items) + `'both'` (only items WITH `d3Deadline`) + d4Carryover items from `'d4'` categories.
-- **D4 tab**: Shows `yearTarget === 'd4'` (all items) + `'both'` (only items WITHOUT `d3Deadline`) + d4Carryover items from `'d3'` categories. `dentures` + `rpd` grouped under "Removable Prosthodontics" visual header.
+- **D3 tab**: Shows `yearTarget === 'd3'` (all items) + `'both'` (only items WITH `d3Deadline`) + d4Carryover items from `'d4'` categories. Dashboard: 3 milestone KPI cards (Appointments/Procedures/Summatives) + full-width completion bar (item-based %) + D3 deadline alert.
+- **D4 tab**: Shows `yearTarget === 'd4'` (all items) + `'both'` (only items WITHOUT `d3Deadline`) + d4Carryover items from `'d3'` categories. `dentures` + `rpd` grouped under "Removable Prosthodontics" visual header. Dashboard: 1 D4 Summatives KPI card + full-width completion bar (item-based %). NO appointments/procedures milestones (those are D3-only).
+- **Completion %**: Strictly item-based — counts competency items where `completed >= required`, NOT milestone appointments/procedures. Each tab computes independently. Updates in real time on counter +/-.
+- **D3 deadline alert dedup**: `cv2BuildD3Alert` uses `seenIds` to prevent duplicate items from migration artifacts.
 - **`cv2ActiveYearTab`**: State variable (`'d3'` or `'d4'`). Switched by `cv2SwitchYearTab(tab)`.
 - **`migrateCompetencyD3D4Split()`**: One-time migration gated by `competencyD3D4SplitDone_v1`. Moves leadership items from `grouppractice4` → `grouppractice`, SRP items from `srp` → `perio`, resolves 3 perio duplicate pairs, adds 4 new items. MUST run before `migrateCompetencyEnhancements()` and `syncSchemaFields()`.
 - **`syncSchemaFields()` syncs**: `d3Deadline`, `rules`, `text`, `required`, `isSummative`, `d4Carryover`. Also removes orphaned categories not in DEFAULT_COMPETENCIES (prevents stale `srp` from cloud merge).
