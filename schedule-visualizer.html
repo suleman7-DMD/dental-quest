@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=5">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<title>MISSION CONTROL // CLINIC OPS APRIL 2026</title>
+<title>MISSION CONTROL // CLINIC OPS APR\u2013MAY 2026</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Spline+Sans:wght@300;400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
@@ -659,8 +659,8 @@ body.export-mode .checklist-add-row { display: none !important; }
 // ═══════════════════════════════════════════════
 //  DATA MODEL — all events in a flat array
 // ═══════════════════════════════════════════════
-var HOUR_PX = 64, START_HOUR = 8, END_HOUR = 19, TOTAL_HOURS = END_HOUR - START_HOUR;
-var LS_KEY = 'missionControlEvents_v3';
+var HOUR_PX = 64, START_HOUR = 7, END_HOUR = 19, TOTAL_HOURS = END_HOUR - START_HOUR;
+var LS_KEY = 'missionControlEvents_v4';
 var CL_KEY = 'missionControlChecklist_v3';
 var editingId = null;
 var pendingDeleteId = null;
@@ -706,8 +706,9 @@ var DEFAULT_CHECKLIST = [
 ];
 
 var WEEK_DEFS = [
-  { label: 'WEEK 1: ORAL RAD ROTATION', tag: 'APR 6\u201310', mon: '2026-04-06' },
+  { label: 'WEEK 1: ORAL RAD ROTATION', tag: 'APR 7\u201310', mon: '2026-04-06' },
   { label: 'WEEK 2: CLINIC WEEK', tag: 'APR 13\u201317', mon: '2026-04-13' },
+  { label: 'WEEK 3: CLINIC + FIXED SIM', tag: 'APR 20\u201324', mon: '2026-04-20' },
 ];
 
 var DAY_NAMES = ['MON','TUE','WED','THU','FRI'];
@@ -738,38 +739,67 @@ function parseTimeInput(val) { var p = val.split(':').map(Number); return { h: p
 
 // ── Default data ──
 var DEFAULT_EVENTS = [
-  { id:'ev_01', date:'2026-04-06', sh:8,sm:0,eh:16,em:0, name:'ORAL RAD', detail:'Oral Radiology Rotation', type:'rotation-bg', conflict:false },
-  { id:'ev_02', date:'2026-04-06', sh:11,sm:30,eh:12,em:30, name:'EXT. ZOOM', detail:'Externship Zoom Meeting', type:'meeting', conflict:true },
-  { id:'ev_03', date:'2026-04-06', sh:13,sm:0,eh:13,em:30, name:'\u26A1 LIT REVIEW DUE', detail:'Crit Thinking Lit Review \u2014 1:00 PM', type:'deadline', conflict:false },
-  { id:'ev_04', date:'2026-04-07', sh:8,sm:0,eh:16,em:0, name:'ORAL RAD', detail:'Oral Radiology Rotation', type:'rotation-bg', conflict:false },
-  { id:'ev_05', date:'2026-04-08', sh:8,sm:0,eh:16,em:0, name:'ORAL RAD', detail:'Oral Radiology Rotation', type:'rotation-bg', conflict:false },
-  { id:'ev_06', date:'2026-04-08', sh:13,sm:0,eh:15,em:50, name:'FIXED SIM #2', detail:'Fixed Sim Lab \u2014 G-300 \u2014 OVERLAPS ROTATION', type:'lab', conflict:true },
-  { id:'ev_07', date:'2026-04-09', sh:8,sm:0,eh:16,em:0, name:'ORAL RAD', detail:'Oral Radiology Rotation', type:'rotation-bg', conflict:false },
-  { id:'ev_08', date:'2026-04-10', sh:8,sm:0,eh:16,em:0, name:'ORAL RAD', detail:'Oral Radiology Rotation', type:'rotation-bg', conflict:false },
-  { id:'ev_09', date:'2026-04-13', sh:8,sm:30,eh:11,em:30, name:'KISHA W.', detail:'Composite D2392 \u2014 Chair 9D', type:'patient', conflict:false },
-  { id:'ev_10', date:'2026-04-13', sh:13,sm:0,eh:15,em:0, name:'CRIT THINK', detail:'Crit Thinking Presentation', type:'meeting', conflict:false },
-  { id:'ev_11', date:'2026-04-13', sh:15,sm:30,eh:16,em:0, name:'CARMEN WA', detail:'WA Summative \u2014 Dr. Maseli (no pt)', type:'wa', conflict:false },
-  { id:'ev_12', date:'2026-04-13', sh:16,sm:0,eh:19,em:0, name:'ANABELY G.', detail:'Prophy \u2014 Chair 9F', type:'patient', conflict:true },
-  { id:'ev_13', date:'2026-04-14', sh:8,sm:30,eh:11,em:20, name:'FIXED SIM', detail:'Fixed Sim Lab \u2014 G-300', type:'lab', conflict:false },
-  { id:'ev_14', date:'2026-04-14', sh:12,sm:30,eh:15,em:0, name:'DEBRA F.', detail:'POE \u2014 Chair 9E', type:'patient', conflict:false },
-  { id:'ev_15', date:'2026-04-14', sh:15,sm:30,eh:16,em:0, name:'ANNETTE WA', detail:'WA \u2014 Dr. Maseli (no pt)', type:'wa', conflict:false },
-  { id:'ev_16', date:'2026-04-15', sh:8,sm:30,eh:11,em:30, name:'CARLOS B.H.', detail:'Class IV D2335 \u2014 Chair 9C', type:'patient', conflict:false },
-  { id:'ev_17', date:'2026-04-15', sh:16,sm:0,eh:19,em:0, name:'KRISTEN S.', detail:'Team CD Lower + rings \u2014 Chair 9G', type:'patient', conflict:false },
-  { id:'ev_18', date:'2026-04-16', sh:8,sm:30,eh:10,em:0, name:'VERONICA T.', detail:'TP w/ pt \u2014 Dr. Maseli \u2014 Chair 9H', type:'patient', conflict:false },
-  { id:'ev_19', date:'2026-04-16', sh:10,sm:0,eh:11,em:0, name:'MONICAH WA', detail:'WA \u2014 Dr. Maseli (no pt)', type:'wa', conflict:false },
-  { id:'ev_20', date:'2026-04-16', sh:11,sm:30,eh:12,em:20, name:'PD640 PEDS', detail:'Peds Rotation Meeting', type:'meeting', conflict:false },
-  { id:'ev_21', date:'2026-04-16', sh:12,sm:30,eh:14,em:0, name:'ANNETTE TP', detail:'TP \u2014 Dr. Maseli \u2014 Chair 9E', type:'patient', conflict:false },
-  { id:'ev_22', date:'2026-04-16', sh:14,sm:0,eh:15,em:30, name:'ANNETTE POE', detail:'POE \u2014 Chair 9E', type:'patient', conflict:false },
-  { id:'ev_23', date:'2026-04-16', sh:16,sm:0,eh:19,em:0, name:'MOHAMED K.', detail:'Prophy \u2014 Chair 9C', type:'patient', conflict:false },
-  { id:'ev_24', date:'2026-04-17', sh:16,sm:0,eh:16,em:30, name:'\u26A1 PASSION PROJ', detail:'Oral Med Passion Project DUE \u2014 4:00 PM', type:'deadline', conflict:false },
-  { id:'ev_25', date:'2026-04-17', sh:16,sm:30,eh:17,em:0, name:'\u26A1 NOTECARD DUE', detail:'Oral Med Final Notecard DUE \u2014 4:00 PM', type:'deadline', conflict:false },
-  { id:'ev_26', date:'2026-04-17', sh:16,sm:0,eh:17,em:50, name:'ORAL MED EXAM', detail:'OD531 Oral Medicine Final \u2014 4:00\u20135:50 PM', type:'exam', conflict:false },
-  { id:'ev_27', date:'2026-04-21', sh:8,sm:30,eh:11,em:30, name:'CARMEN LOE', detail:'Carmen LOE', type:'patient', conflict:false },
-  { id:'ev_28', date:'2026-04-21', sh:12,sm:30,eh:15,em:0, name:'TATA POE', detail:'Tata POE', type:'patient', conflict:false },
-  { id:'ev_29', date:'2026-04-22', sh:8,sm:30,eh:11,em:30, name:'RANY G. POE', detail:'Rany G. POE', type:'patient', conflict:false },
-  { id:'ev_30', date:'2026-04-22', sh:13,sm:0,eh:16,em:0, name:'PERIO ASSIST', detail:'Zapata implant surgery', type:'meeting', conflict:false },
-  { id:'ev_31', date:'2026-04-23', sh:12,sm:30,eh:15,em:0, name:'MONICAH TP', detail:'Monicah TP', type:'patient', conflict:false },
-  { id:'ev_32', date:'2026-05-08', sh:9,sm:0,eh:12,em:0, name:'PERIO ASSIST', detail:'Khan implant surgery', type:'meeting', conflict:false },
+  // ── WEEK 1: ORAL RAD ROTATION (Apr 7–10) ──
+  { id:'ev_01', date:'2026-04-07', sh:8,sm:0,eh:16,em:0, name:'ORAL RAD', detail:'Oral Radiology Rotation \u2014 No clinic', type:'rotation-bg', conflict:false },
+  { id:'ev_02', date:'2026-04-08', sh:8,sm:0,eh:16,em:0, name:'ORAL RAD', detail:'Oral Radiology Rotation \u2014 No clinic', type:'rotation-bg', conflict:false },
+  { id:'ev_03', date:'2026-04-09', sh:8,sm:0,eh:16,em:0, name:'ORAL RAD', detail:'Oral Radiology Rotation', type:'rotation-bg', conflict:false },
+  { id:'ev_04', date:'2026-04-09', sh:10,sm:0,eh:11,em:0, name:'FIXED SUMM', detail:'Fixed Summative \u2014 time TBD (get details from Sully)', type:'exam', conflict:false },
+  { id:'ev_05', date:'2026-04-10', sh:8,sm:0,eh:16,em:0, name:'ORAL RAD', detail:'Oral Radiology Rotation \u2014 No clinic', type:'rotation-bg', conflict:false },
+
+  // ── WEEK 2: CLINIC WEEK (Apr 13–17) ──
+  // Monday 4/13
+  { id:'ev_06', date:'2026-04-13', sh:8,sm:30,eh:11,em:30, name:'KISHA W.', detail:'079118 \u2014 Composite 2-surf post D2392, Chair 9D', type:'patient', conflict:false },
+  { id:'ev_07', date:'2026-04-13', sh:13,sm:0,eh:15,em:20, name:'CRIT THINK', detail:'GD660 EBD Presentations \u2014 670 Auditorium', type:'meeting', conflict:false },
+  { id:'ev_08', date:'2026-04-13', sh:15,sm:30,eh:16,em:0, name:'\u26D4 CARMEN WA', detail:'2118878 \u2014 Summative WA w/ Dr. Maseli \u2014 #1 PRIORITY \u2014 BAD MODELS', type:'wa', conflict:true },
+  { id:'ev_09', date:'2026-04-13', sh:16,sm:0,eh:17,em:30, name:'ANABELY G.', detail:'1647620 \u2014 Prophy D1110, Chair 9F', type:'patient', conflict:false },
+
+  // Tuesday 4/14
+  { id:'ev_10', date:'2026-04-14', sh:8,sm:30,eh:11,em:20, name:'FIXED SIM', detail:'SULLY SIMS SUMM \u2014 Fixed Sims Lab, G-300', type:'lab', conflict:false },
+  { id:'ev_11', date:'2026-04-14', sh:12,sm:30,eh:14,em:0, name:'DEBRA F.', detail:'2228237 \u2014 Periodic oral exam D0120, Chair 9E', type:'patient', conflict:false },
+  { id:'ev_12', date:'2026-04-14', sh:15,sm:30,eh:16,em:0, name:'\u26A0 ANNETTE WA', detail:'2684214 \u2014 WA \u2014 MUST RESCHEDULE (no models until 4/16 POE)', type:'wa', conflict:true },
+
+  // Wednesday 4/15
+  { id:'ev_13', date:'2026-04-15', sh:8,sm:30,eh:11,em:30, name:'CARLOS B.H.', detail:'1178594 \u2014 Comp 4+ surf D2335, Chair 9C', type:'patient', conflict:false },
+  { id:'ev_14', date:'2026-04-15', sh:13,sm:0,eh:14,em:50, name:'CRIT THINK', detail:'GD660 EBD Presentations \u2014 670 Auditorium', type:'meeting', conflict:false },
+  { id:'ev_15', date:'2026-04-15', sh:16,sm:0,eh:18,em:0, name:'KRISTEN S.', detail:'2107896 \u2014 Team Complete Lower Denture (TEAMBL), Chair 9G \u2014 GET SPS FORM', type:'patient', conflict:false },
+
+  // Thursday 4/16
+  { id:'ev_16', date:'2026-04-16', sh:8,sm:30,eh:11,em:20, name:'FIXED SIM', detail:'Fixed Sims Lab \u2014 G-300', type:'lab', conflict:true },
+  { id:'ev_17', date:'2026-04-16', sh:8,sm:30,eh:10,em:0, name:'VERONICA T.', detail:'1647791 \u2014 TP Creation (0002), Chair 9H \u2014 \u2705 HAS GOOD MODELS', type:'patient', conflict:true },
+  { id:'ev_18', date:'2026-04-16', sh:10,sm:0,eh:11,em:0, name:'\u26A0 MONICAH WA', detail:'2683505 \u2014 WA \u2014 MUST RESCHEDULE (no models until 4/23)', type:'wa', conflict:true },
+  { id:'ev_19', date:'2026-04-16', sh:11,sm:30,eh:12,em:20, name:'PD640 PEDS', detail:'Peds Rotation Meeting \u2014 Bakst Auditorium', type:'meeting', conflict:false },
+  { id:'ev_20', date:'2026-04-16', sh:12,sm:30,eh:14,em:0, name:'ANNETTE W.', detail:'2684214 \u2014 TP Creation + POE D0120, Chair 9E \u2014 models taken today', type:'patient', conflict:false },
+  { id:'ev_21', date:'2026-04-16', sh:16,sm:0,eh:17,em:30, name:'MOHAMED K.', detail:'2577113 \u2014 Prophy D1110, Chair 9C', type:'patient', conflict:false },
+
+  // Friday 4/17
+  { id:'ev_22', date:'2026-04-17', sh:8,sm:0,eh:15,em:30, name:'OD531 DUE', detail:'Oral Med notecard + passion project DUE \u2014 L-1101', type:'meeting', conflict:false },
+  { id:'ev_23', date:'2026-04-17', sh:16,sm:0,eh:17,em:50, name:'ORAL MED EXAM', detail:'OD531 Oral Medicine Exam \u2014 L-1101', type:'exam', conflict:false },
+
+  // ── WEEK 3: CLINIC + FIXED SIM (Apr 20–24) ──
+  // Monday 4/20 — HOLIDAY
+  { id:'ev_24', date:'2026-04-20', sh:8,sm:0,eh:16,em:0, name:'HOLIDAY', detail:'Patriot\'s Day \u2014 No clinic', type:'rotation-bg', conflict:false },
+
+  // Tuesday 4/21
+  { id:'ev_25', date:'2026-04-21', sh:8,sm:30,eh:11,em:20, name:'FIXED SIM', detail:'Fixed Sims Lab \u2014 G-300', type:'lab', conflict:true },
+  { id:'ev_26', date:'2026-04-21', sh:10,sm:0,eh:11,em:0, name:'\u26A0 MONICAH WA', detail:'2683505 \u2014 WA \u2014 still needs models (taken 4/23), may need reschedule', type:'wa', conflict:true },
+  { id:'ev_27', date:'2026-04-21', sh:12,sm:30,eh:14,em:0, name:'CARMEN M.', detail:'2118878 \u2014 Limited oral eval D0140, Chair 9F \u2014 BAD MODELS', type:'patient', conflict:true },
+  { id:'ev_28', date:'2026-04-21', sh:12,sm:30,eh:14,em:0, name:'TATA S.', detail:'2454384 \u2014 Periodic oral exam D0120, Chair 9H', type:'patient', conflict:true },
+
+  // Wednesday 4/22
+  { id:'ev_29', date:'2026-04-22', sh:7,sm:30,eh:8,em:30, name:'PERIO SURG', detail:'Surgical assist perio (0/7 count)', type:'meeting', conflict:false },
+  { id:'ev_30', date:'2026-04-22', sh:8,sm:30,eh:10,em:30, name:'RANY G.', detail:'0623911 \u2014 Periodic oral exam D0120, Chair 9D', type:'patient', conflict:false },
+  { id:'ev_31', date:'2026-04-22', sh:13,sm:0,eh:16,em:0, name:'ZAPATA W.', detail:'2464489 \u2014 Surgical implant D6010, Chair 07', type:'patient', conflict:false },
+
+  // Thursday 4/23
+  { id:'ev_32', date:'2026-04-23', sh:8,sm:30,eh:11,em:20, name:'FIXED SIM', detail:'Fixed Sims Lab \u2014 G-300', type:'lab', conflict:false },
+  { id:'ev_33', date:'2026-04-23', sh:12,sm:30,eh:14,em:0, name:'MONICAH TP', detail:'2683505 \u2014 TP Creation (0002), Chair 9E \u2014 models taken today', type:'patient', conflict:false },
+
+  // Friday 4/24
+  { id:'ev_34', date:'2026-04-24', sh:8,sm:30,eh:10,em:0, name:'NABABI M.', detail:'2568967 \u2014 TP Creation (0002), Chair 9D \u2014 NO MODELS (take deduction)', type:'patient', conflict:false },
+
+  // ── BEYOND (Sat/future) ──
+  { id:'ev_35', date:'2026-04-18', sh:8,sm:30,eh:11,em:0, name:'GAYLE J.', detail:'2685773 \u2014 Composite 2-surf D2392, Chair 9F', type:'patient', conflict:false },
+  { id:'ev_36', date:'2026-05-08', sh:9,sm:0,eh:12,em:0, name:'KHAN J.', detail:'210043 \u2014 Surgical implant D6010, Chair 243D', type:'patient', conflict:false },
 ];
 
 // ── Persistence ──
@@ -829,7 +859,7 @@ function renderStats() {
 
   var items = [
     { pre: '', icon: 'blink', label: 'STATUS:', val: 'ACTIVE', cls: 'val' },
-    { label: 'PERIOD:', val: 'APR 6 \u2013 MAY 8, 2026', cls: 'val' },
+    { label: 'PERIOD:', val: 'APR 7 \u2013 MAY 8, 2026', cls: 'val' },
     { label: 'CONFLICTS:', val: conflicts + ' DETECTED', cls: 'val-crit', icon2: 'blink blink-warn' },
     { label: 'BLOCKS:', val: total + ' SCHEDULED', cls: 'val' },
   ];
