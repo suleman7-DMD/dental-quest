@@ -758,6 +758,157 @@ html {
     }
 }
 
+/* ═══ NOTECARD SECTION ═══ */
+.nc {
+    max-width: 960px;
+    margin: 0 auto;
+    padding: 24px 16px;
+}
+.nc .nc-label {
+    color: var(--text-muted);
+    font-size: 11px;
+    letter-spacing: 2.5px;
+    text-transform: uppercase;
+    text-align: center;
+    margin-bottom: 8px;
+    font-weight: 600;
+}
+.nc .nc-card {
+    background: #fffff8;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 20px 18px;
+    margin-bottom: 28px;
+    box-shadow: var(--shadow-md);
+    overflow: hidden;
+}
+.nc .nc-card-title {
+    text-align: center;
+    font-size: 11px;
+    color: var(--text-muted);
+    letter-spacing: 0.8px;
+    text-transform: uppercase;
+    border-bottom: 1px solid var(--border-light);
+    padding-bottom: 10px;
+    margin-bottom: 14px;
+    line-height: 1.5;
+}
+.nc .nc-cols {
+    display: flex;
+    gap: 20px;
+}
+.nc .nc-col {
+    flex: 1;
+    overflow: hidden;
+    font-size: 13px;
+    line-height: 1.45;
+    color: #222;
+}
+.nc .nc-col-left {
+    border-right: 1px solid var(--border-light);
+    padding-right: 18px;
+}
+.nc .nc-col-right {
+    padding-left: 2px;
+}
+/* Color classes */
+.nc .r { color: #c00; }
+.nc .b { color: #0a58a0; }
+.nc .g { color: #1a7a1a; }
+.nc .p { color: #7a2d8e; }
+.nc .k { color: #111; }
+/* Heading styles */
+.nc .h {
+    font-weight: 700;
+    font-size: 15px;
+    border-bottom: 2px solid currentColor;
+    margin: 12px 0 8px;
+    padding-bottom: 4px;
+}
+.nc .h:first-child { margin-top: 0; }
+.nc .s {
+    font-weight: 700;
+    font-size: 14px;
+    margin: 10px 0 4px;
+    text-decoration: underline;
+    text-underline-offset: 2px;
+}
+.nc .ss {
+    font-weight: 600;
+    font-size: 13px;
+    margin: 8px 0 3px;
+}
+/* Tables */
+.nc table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 8px 0;
+    font-size: 12px;
+    line-height: 1.35;
+}
+.nc th {
+    background: rgba(0,0,0,0.06);
+    font-weight: 700;
+    text-align: left;
+    padding: 4px 8px;
+    border: 1px solid #bbb;
+    font-size: 11px;
+}
+.nc td {
+    padding: 4px 8px;
+    border: 1px solid #ccc;
+    vertical-align: top;
+}
+.nc .w { background: rgba(255,200,0,0.1); }
+.nc .hl { background: #ffe84d; padding: 0 3px; border-radius: 2px; }
+.nc .bx {
+    border: 1.5px solid currentColor;
+    padding: 1px 5px;
+    border-radius: 3px;
+    font-weight: 700;
+}
+.nc .pg {
+    border-bottom: 2px double currentColor;
+    font-weight: 700;
+}
+.nc .t { font-size: 12px; line-height: 1.35; }
+.nc .sep { border-top: 1px solid #ddd; margin: 8px 0; }
+.nc .btm {
+    font-size: 12px;
+    line-height: 1.35;
+    border-top: 2px solid var(--text-muted);
+    padding-top: 10px;
+    margin-top: 12px;
+}
+.nc br { display: block; margin-bottom: 2px; }
+
+/* ═══ NOTECARD MOBILE ═══ */
+@media (max-width: 768px) {
+    .nc { padding: 12px 8px; }
+    .nc .nc-card { padding: 14px 12px; }
+    .nc .nc-cols {
+        flex-direction: column;
+        gap: 0;
+    }
+    .nc .nc-col-left {
+        border-right: none;
+        border-bottom: 1px solid var(--border-light);
+        padding-right: 0;
+        padding-bottom: 16px;
+        margin-bottom: 16px;
+    }
+    .nc .nc-col-right { padding-left: 0; }
+    .nc .nc-col { font-size: 14px; line-height: 1.5; }
+    .nc .h { font-size: 17px; }
+    .nc .s { font-size: 15px; }
+    .nc table { font-size: 12.5px; }
+    .nc th { font-size: 12px; padding: 5px 6px; }
+    .nc td { padding: 5px 6px; }
+    .nc .t { font-size: 13px; }
+    .nc .btm { font-size: 13px; }
+    .nc .nc-card-title { font-size: 10px; }
+}
+
 </style>
 </head>
 <body>
@@ -792,6 +943,12 @@ html {
             <span class="tab-short">Sens</span>
             <span class="progress-pct" id="pct-sensation">0%</span>
         </a>
+        <a class="progress-tab" href="#sec-notecard" style="--tab-color: #C8923E" onclick="scrollToGuide(event, 'sec-notecard')">
+            <span class="tab-dot"></span>
+            <span class="tab-label">Notecard</span>
+            <span class="tab-short">Card</span>
+            <span class="progress-pct" id="pct-notecard">0%</span>
+        </a>
     </nav>
 </div>
 
@@ -802,7 +959,7 @@ html {
 <div class="guide-section" id="sec-hematologic">
     <div class="guide-section-divider">
         <div class="divider-inner">
-            <div class="section-number">Part 1 of 4</div>
+            <div class="section-number">Part 1 of 5</div>
             <h2>Hematologic Disorders</h2>
             <p>Bleeding disorders, anemias, WBC disorders, and hemostasis management</p>
         </div>
@@ -2252,7 +2409,7 @@ combined effects of all three cytopenias in the mouth:</p>
 <div class="guide-section" id="sec-oncology">
     <div class="guide-section-divider">
         <div class="divider-inner">
-            <div class="section-number">Part 2 of 4</div>
+            <div class="section-number">Part 2 of 5</div>
             <h2>Oral Oncology</h2>
             <p>Cancer therapy, acute and chronic sequelae, and dental management</p>
         </div>
@@ -3741,7 +3898,7 @@ combined effects of all three cytopenias in the mouth:</p>
 <div class="guide-section" id="sec-systemic">
     <div class="guide-section-divider">
         <div class="divider-inner">
-            <div class="section-number">Part 3 of 4</div>
+            <div class="section-number">Part 3 of 5</div>
             <h2>Systemic & Syndromic Conditions</h2>
             <p>Lupus, sarcoidosis, GPA, amyloidosis, vitamin disorders, and oncology dental clearance</p>
         </div>
@@ -4796,7 +4953,7 @@ combined effects of all three cytopenias in the mouth:</p>
 <div class="guide-section" id="sec-sensation">
     <div class="guide-section-divider">
         <div class="divider-inner">
-            <div class="section-number">Part 4 of 4</div>
+            <div class="section-number">Part 4 of 5</div>
             <h2>Disorders of Sensation</h2>
             <p>BMS, xerostomia, dysgeusia, trigeminal neuropathy, and self-injurious behavior</p>
         </div>
@@ -6084,6 +6241,397 @@ combined effects of all three cytopenias in the mouth:</p>
     </div>
 </div>
 
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<!-- GUIDE 5: NOTECARD -->
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<div class="guide-section" id="sec-notecard">
+    <div class="guide-section-divider">
+        <div class="divider-inner">
+            <div class="section-number">Part 5 of 5</div>
+            <h2>Exam Notecard</h2>
+            <p>Condensed two-sided cheat sheet — everything on one 5&times;8 card</p>
+        </div>
+    </div>
+    <div class="guide-section-content nc">
+
+<div class="nc-label">Side A</div>
+<div class="nc-card">
+<div class="nc-card-title">SIDE A &mdash; BLOOD &amp; CANCER | pt=patient tx=treatment dx=diagnosis sx=symptoms hx=history ext=extraction ppx=prophylaxis abx=antibiotics r/o=rule out def=deficiency d/o=disorder</div>
+<div class="nc-cols">
+
+<!-- ======== SIDE A LEFT: HEMATOLOGIC (RED) ======== -->
+<div class="nc-col nc-col-left r">
+<div class="h r">HEMATOLOGIC DISORDERS</div>
+
+<div class="s">Hemophilia (<span class="hl">2&deg; hemostasis = clotting cascade</span>)</div>
+A = <span class="hl">Factor VIII deficiency</span> | B = <span class="hl">Factor IX deficiency</span> | Both X-linked<br>
+<span class="hl">Characterized by delayed, deep bleeding into joints and muscles</span><br>
+(vs plt = immediate mucosal bleeding)<br>
+Severity: Severe <b>&lt;1%</b> | Mod <b>1-5%</b> | Mild <b>5-20%</b> remaining factor<br>
+Factor replacement 250-1500 IU, target 50-100%. Avoid regional blocks (hematoma)<br>
+<span class="bx r">Emicizumab = Hem A ONLY</span> bispecific Ab bridges FIXa+FX&rarr;mimics VIIIa<br>
+Severe: 2-5 spontaneous bleeds/mo w/o ppx. Gingival bleeding w/ <span class="hl">tooth eruption</span><br>
+Heme consult: new pts, mild hemophilia, before major oral surgery<br>
+
+<div class="s">Hemostasis Toolkit</div>
+Gelfoam: <b>neutral pH</b>, 4-6wk | Surgicel: <b>LOW pH</b> (bacteriostatic), 1-2wk<br>
+TXA: <b>100mg/mL</b> q6h &times; 2-5d | Amicar: <b>250mg/mL TID</b><br>
+Thrombin <b>5000 IU</b> | Hemodent (AlCl) | Silver nitrate | Cautery | Bone wax | Suture closed<br>
+
+<div class="s">Thrombocytopenia = <span class="hl">Disorder of Primary Hemostasis</span></div>
+Plt <b>&lt;150K/uL</b>. &gt;50K=any work | 50-30K=multi ext | 30-10K=single ext | &lt;10K=DON'T<br>
+<b>AVOID aspirin &amp; NSAIDs</b>. Petechiae &le;2mm | Purpura 3-10mm | Ecchymosis &gt;10mm<br>
+<span class="hl">Mucosal bleeding: often first sign of clinically apparent bleeding</span><br>
+Etiologies: ITP, BM failure, meds, liver dz, malignancy<br>
+
+<div class="s">Plasminogen Def (Ligneous Gingivitis)</div>
+Ligneous=woody. Type I. Impaired fibrinolysis&rarr;fibrin pseudomembranes. Marginal gingiva<br>
+Extraoral: conjunctivitis <b>80%</b> | respiratory <b>16%</b> (airway obstruction)<br>
+Lab: plasminogen <b>&lt;5-25%</b>, K19E mutation. Ryplazim: response in 4wk<br>
+<span class="hl">Standard periodontal therapy ineffective</span>. FFP periop | Enoxaparin subQ<br>
+
+<div class="s">Iron Deficiency Anemia</div>
+<span class="hl">Most common nutritional deficiency worldwide</span>. Fe def causes sx even w/o anemia<br>
+OM: <span class="hl">atrophic glossitis (27%)</span><br>
+<span class="hl">mucosal pallor</span><br>
+<span class="hl">xerostomia and hyposalivation</span><br>
+<span class="hl">oral candidiasis and angular cheilitis</span><br>
+<span class="hl">dysesthesia: burning sensation, dysgeusia</span><br>
+Koilonychia, alopecia 30%, pica. Fe enzymes&rarr;epithelial atrophy, lymphocyte&rarr;Candida<br>
+<span class="pg r"><span class="hl">Plummer-Vinson Syndrome</span></span>:<br>
+&bull; <span class="hl">iron deficiency anemia</span><br>
+&bull; <span class="hl">dysphagia</span><br>
+&bull; <span class="hl">upper esophageal webs</span><br>
+90% women age 47. 3-15% SCC risk. Tx: Fe suppl. Esophageal dilation. Annual GI endoscopy<br>
+
+<div class="s">Sickle Cell Disease</div>
+Most common AR genetic dz. HbS&rarr;sickling under hypoxia&rarr;vascular occlusion<br>
+Dental: aseptic pulp necrosis, delayed eruption. XR: <span class="pg r">"stepladder" trabecular</span> (PATHOGNOMONIC)<br>
+Skeletal: maxillary overgrowth, depressed nasal bridge. Osteomyelitis. Mental nerve neuropathy<br>
+Mgmt: <span class="hl">Avoid vasoconstrictor-induced ischemia</span><br>
+<span class="hl">Infiltration preferred over regional blocks</span><br>
+<span class="hl">Ensure adequate anesthesia to minimize stress</span> (stress&rarr;sickling)<br>
+<span class="hl">SCD patients at risk for undertreatment and discrimination in pain management</span><br>
+NSAIDs+opioids. Codeine/hydrocodone. Acetaminophen if NSAIDs CI<br>
+
+<div class="s">Aplastic Anemia</div>
+Pancytopenia + BM hypocellularity. <span class="hl">Life-threatening hematologic emergency</span><br>
+<span class="hl">Oral lesions often the first manifestation</span>. DUAL THREAT: bleeding + infxn<br>
+Hemorrhagic: plt&lt;25K, petechiae. Infectious: candida, NUG. Defer elective, abx ppx<br>
+
+<div class="s">Neutropenia / Agranulocytosis</div>
+ANC &lt;1500. Drug-induced most common. OM: ulceration 48%, fungal 20%, viral 15%<br>
+<table>
+<tr><th>ANC</th><th>Severity</th><th>Mgmt</th></tr>
+<tr><td><span class="hl">1000-1500 = Mild</span></td><td colspan="2">Generally safe</td></tr>
+<tr><td><span class="hl">500-999 = Moderate</span></td><td colspan="2">Coordinate physician</td></tr>
+<tr><td><span class="hl">&lt;500 = Severe</span></td><td colspan="2">Defer. Abx ppx</td></tr>
+<tr class="w"><td>&lt;200 = Agranulocytosis</td><td colspan="2">EMERGENCY</td></tr>
+</table>
+<span class="hl">CBC with differential on day of treatment</span><br>
+<span class="hl">Coordinate with hematology for invasive procedures</span><br>
+<span class="hl">Antibiotic prophylaxis for ANC &lt;500</span><br>
+Agranulocytosis: gingival necrosis, fever+sore throat. G-CSF: ANC &gt;250-1000<br>
+
+<div class="s">Cyclic Neutropenia</div>
+AD, ELANE gene. NO malignancy risk (unlike severe congenital)<br>
+<span class="hl">Usually diagnosed within first year of life</span><br>
+<span class="hl">~21-day cycles of severe neutropenia lasting 3-6 days</span><br>
+<span class="hl">Range 14-36 days in ~30%</span><br>
+Well between episodes. 10% death untreated. &gt;60% oral ulcers &ge;5x/yr<br>
+Perio dz disproportionate to age/hygiene. Dx: CBCs q2-3d &times; 6-8wk. G-CSF mainstay<br>
+
+<div class="s">Leukemia</div>
+Most common neoplastic WBC dz. <span class="hl">Gingival enlargement/hyperplasia = hallmark of AML</span><br>
+(soft, spongy, lobulated, 37-80%, 90% oral). ALL: childhood &lt;5yr. OMI survival 14.3% at 21mo<br>
+<b>LIVER CLOT</b>: more common in HEALTHY. <span class="bx r">DO NOT REMOVE</span>. Tx: topical thrombin<br>
+<div class="t">1&deg; vs 2&deg;: Primary=immediate superficial mucosal/petechiae. Secondary=delayed deep joints/hematomas</div>
+</div>
+
+<!-- ======== SIDE A RIGHT: ONCOLOGY (BLUE) ======== -->
+<div class="nc-col nc-col-right b">
+<div class="h b">ORAL ONCOLOGY / CANCER CARE</div>
+
+<div class="s">RT Thresholds</div>
+<table>
+<tr><th>Dose</th><th>Consequence</th></tr>
+<tr><td><b>66-70 Gy</b> / 6-7wk</td><td>Curative H&amp;N</td></tr>
+<tr class="w"><td><b>&ge;50 Gy</b> mandible</td><td><b>LIFELONG ORN risk</b></td></tr>
+<tr><td><b>&gt;26 Gy</b> parotid</td><td>Permanent xerostomia&rarr;caries</td></tr>
+<tr><td><b>&gt;45 Gy</b> cochlea</td><td>Ototoxicity (sensorineural HL)</td></tr>
+</table>
+Pre-RT clearance <b>MANDATORY</b>&mdash;ext BEFORE RT, not after<br>
+Modalities: EBRT (incl IMRT), brachytherapy, proton, SRS/Gamma Knife, TBI (before BMT)<br>
+
+<div class="s">Chemo Timeline</div>
+D1-2: N/V, infusion rxn | D2-7: fatigue, GI (peak wk2)<br>
+<b>D7-14: NADIR</b> (mucositis + neutropenia) | D14-21+: recovery | Wk2-3: hair loss<br>
+
+<div class="s">Mucositis &mdash; Sonis 5-Phase</div>
+1.Initiation (DNA) 2.Primary Damage (ROS&rarr;NF-&kappa;B&rarr;TNF-&alpha;/IL-1&beta;/IL-6) 3.Amplification<br>
+4.Ulceration (peak D7-10) 5.Healing. Palifermin: prolif+ROS | Cryo: vasoconstriction<br>
+WHO: G1 soreness | G2 CAN swallow | <span class="bx b">G3 CANNOT swallow</span> | G4 no alimentation<br>
+Prevention: PBM, cryo, benzydamine 0.15% 15mL 4-8x/d, glutamine 5-16g BID-QID<br>
+Tx: bland rinses, <b>topical morphine 0.2%</b>, opioids G3-4. Tube: &lt;60% &gt;10d OR G3+<br>
+
+<div class="s">HSCT</div>
+<table>
+<tr><th>Level</th><th>Intensity</th><th>Example</th></tr>
+<tr><td><b>MA</b></td><td>Irreversible pancytopenia</td><td>TBI &ge;8Gy</td></tr>
+<tr><td><b>RIC</b></td><td>Intermediate</td><td>Fludarabine+melphalan</td></tr>
+<tr><td><b>NMA</b></td><td>Graft-vs-tumor</td><td>TBI &le;2Gy</td></tr>
+</table>
+D-7 to D-2 conditioning, D0 transplant. H&amp;N: <b>TPF</b> (docetaxel+cisplatin+5-FU) Stage III-IVA<br>
+HLA: <b>8/8 match</b> A,B,C,DRB1. Sibling best (25%) &gt; unrelated &gt; haplo<br>
+
+<div class="s">GVHD Ppx &amp; Comparison</div>
+Ppx: tacrolimus/CsA + MTX/MMF D+1,3,6,11 + CY D+3,+4 (haplo). Taper 6-12mo<br>
+<table>
+<tr><th></th><th>Mucositis</th><th>aGVHD</th><th>Graft Rejection</th></tr>
+<tr><td><b>When</b></td><td>D+7-14</td><td>D+20+</td><td>D+14-21</td></tr>
+<tr><td><b>Mech</b></td><td>Direct cytotoxic</td><td>Donor T&rarr;host</td><td>Host&rarr;graft</td></tr>
+<tr><td><b>Oral</b></td><td>Pseudomembr nonkerat</td><td>Lichenoid/ulcer</td><td>Indirect</td></tr>
+<tr><td><b>Tx</b></td><td>Supportive</td><td>Steroids 1st line</td><td><b>EMERGENCY</b></td></tr>
+</table>
+
+<div class="ss">Post-transplant infxns:</div>
+0-30d: bacteria+Candida+HSV | 1-6mo: <b>CMV, PJP</b> | &gt;6mo: encapsulated bacteria. &le;6mo=highest IS. Signs may be ABSENT<br>
+PTLD: ~100% EBV, 1-20% alloHSCT, first 2-3mo<br>
+
+<div class="s">irAEs (Checkpoint Inhibitors)</div>
+Types: OLP/BP/EM/SJS-TEN/MMP/Sjogren-like. Within 3mo<br>
+<table>
+<tr><th>G</th><th>Clinical</th><th>Management</th></tr>
+<tr><td>1</td><td>Asx/mild</td><td>Dex 0.5mg/5mL, fluocinonide 0.05%, tacrolimus 0.1%</td></tr>
+<tr><td>2</td><td>Mod pain</td><td>Hold ICI + pred 1mg/kg</td></tr>
+<tr><td>3</td><td>Limits intake</td><td><b>HOLD ICI</b> + clobetasol 0.05% + pred 1-2mg/kg</td></tr>
+<tr><td>4</td><td>No alimentation</td><td>IV methylpred 1-2mg/kg</td></tr>
+</table>
+Salivary: pilocarpine 5mg TID or cevimeline 30mg TID<br>
+irCAE timeline: psoriasiform 0-3wk &rarr; maculopapular 4-6 &rarr; lichenoid 7-12 &rarr; BP 13-15+ | SJS/TEN ~wk7+<br>
+irAEs (chronic) = <b>BETTER relapse-free survival</b><br>
+
+<div class="s">MRONJ</div>
+<table>
+<tr><th>Stage</th><th>Clinical</th><th>Mgmt</th></tr>
+<tr><td>At Risk</td><td>On BMA, no bone</td><td>Education</td></tr>
+<tr><td>0</td><td>No bone, sx</td><td>Symptomatic</td></tr>
+<tr><td>1</td><td>Bone, <b>ASYMPTOMATIC</b></td><td>CHX, q8wk</td></tr>
+<tr><td>2</td><td><b>PAIN+INFECTION</b></td><td>Abx + debride</td></tr>
+<tr><td>3</td><td>Beyond alveolar/fx/OAC</td><td><b>SURGICAL</b></td></tr>
+</table>
+<div class="t">HIGH (onc): Zoledronic 4mg/mo 1-3%&rarr;9% | Xgeva 120mg/mo 0.5-11.6% | No holiday<br>
+LOW (osteo): Alendronate 1/100K/yr | <span class="pg b">Risedronate ~0.1% = LOWEST</span> | Prolia 5.2/10K, rebound risk<br>
+Holiday: &lt;4yr=none | &gt;4yr=<b>2mo</b> before invasive. <span class="bx b">HBO NOT rec</span> for ORN<br>
+ORN: bone &ge;3mo, hypoxic/hypovascular. Post-RT: <b>pentoxifylline 400mg BID + tocopherol 1000 IU</b></div>
+
+<div class="s">Clearance &amp; Timing</div>
+<span class="t">Referral 3-4wk &rarr; Clearance &ge;10-14d before conditioning &rarr; D0. 0.57% complications<br>
+Non-vital teeth + periapical path MUST be eliminated. <b>NEVER delay oncologic tx</b> (unless slow-growing+onc agrees)</span><br>
+<table>
+<tr><th>Tx</th><th>Delay?</th><th>Risk</th></tr>
+<tr><td>HSCT</td><td><b>NO</b></td><td>D0-100</td></tr>
+<tr><td>Chemo</td><td>NO (between cycles)</td><td>Neutropenia</td></tr>
+<tr><td>H&amp;N RT</td><td><b>NO</b></td><td>LIFELONG ORN</td></tr>
+<tr><td>BMA</td><td><b>MAYBE</b></td><td>LIFELONG MRONJ</td></tr>
+</table>
+<div class="t">Post-Tx: HSCT ANC&gt;1000/plt&gt;50K/D+100 | H&amp;N RT 1.1% NaF LIFELONG | BMA onc elective CI<br>
+<b>Key:</b> Post-RT &amp; On-BMA = endo+coronectomy PREFERRED over extraction<br>
+cGVHD: 80% oral, LP-like=diagnostic. SCC risk RR 2.78, &ge;15mo=58.6&times;. Tx: steroids 1st, rituximab, ECP<br>
+Survivors: 18.1M&rarr;26M. Fibrosis 74% | Lymphedema 67% | OSA 40% | Chemo brain 60%<br>
+Top 3 HNC: swallowing 45.7%, saliva 39.4%, pain 28.6%. Ototoxicity: cisplatin HL 20%<br>
+<b>Vignette:</b> In CA pts, pain/swelling may = <span class="hl">recurrent centrally necrotic SCC rather than abscess</span></div>
+</div>
+
+</div>
+</div>
+
+<div class="nc-label">Side B</div>
+<div class="nc-card">
+<div class="nc-card-title">SIDE B &mdash; SYSTEMS &amp; SENSATION | Quiz: Central sensitization=B (&uarr;responsiveness central neurons). Clinical=A (hyperalgesia+allodynia beyond healing). Dysgeusia 1st eval=C (examine nose)</div>
+<div class="nc-cols">
+
+<!-- ======== SIDE B LEFT: SYSTEMIC/SYNDROMIC (GREEN) ======== -->
+<div class="nc-col nc-col-left g">
+<div class="h g">SYSTEMIC &amp; SYNDROMIC CONDITIONS</div>
+<div class="t">Triage T1: Lupus, Vitamin Def, Sarcoidosis | T2: GPA, Amyloidosis, PJS | T3: EDS, Thyroid, HHT, Cowden, Addison</div>
+
+<div class="s">Lupus Erythematosus</div>
+90% F, age 15-44. SLE vs DLE. ~40% nephritis | 25% pericarditis | 50% neuropsych<br>
+OM: ulcers (hard palate/buccal), discoid, hyposal (2&deg; Sjogren), lichenoid drug rxn<br>
+<table>
+<tr><th></th><th>Oral Lupus</th><th>OLP</th></tr>
+<tr><td>Striae</td><td>Radiating FROM CENTER</td><td>Reticular (Wickham)</td></tr>
+<tr><td>Center</td><td>Erythema/ulceration</td><td>Intact</td></tr>
+<tr class="w"><td>DIF</td><td>IgG/IgM/C3 "LUPUS BAND"</td><td>Fibrinogen at DEJ</td></tr>
+</table>
+ANA screening &ge;1:80 HEp-2. SLE: &ge;10pts + &ge;1 clinical (renal bx=10, anti-dsDNA/Sm=6, joint=6, oral ulcers=2)<br>
+<span class="hl">Anti-dsDNA: 60-80% of active lupus, specific for lupus</span><br>
+<span class="hl">Anti-Sm (Smith): 10-30% of pts, most specific for lupus</span><br>
+Tx: dex rinse | fluocinonide 0.05% | tacrolimus 0.1% | triamcinolone 40mg/mL | HCQ | Sun protection<br>
+
+<div class="s">Sarcoidosis</div>
+Noncaseating granulomas, unknown cause. Lungs &gt;90%. Peak 25-35. &uarr; Black pts<br>
+SM: <span class="pg g">bilateral hilar adenopathy &gt;90%</span>, lupus pernio, uveitis 20-25%, cardiac 10-20%, neuro 10-25%<br>
+OM: nodules/ulcers, bone loss, parotid swelling. Oral may be FIRST SIGN&rarr;screen pulmonary<br>
+Dx: bx noncaseating (exclude TB/fungal). ACE ~60% (normal &ne; r/o). Tx: prednisone 20-40mg/d<br>
+<span class="bx g">Topicals NOT proven</span> (unlike lupus!). MTX, HCQ for cutaneous/oral<br>
+
+<div class="s">Granuloma Types</div>
+Granulation tissue &ne; Granuloma. <b>Pyogenic granuloma is NOT a granuloma</b><br>
+Caseating=TB/syphilis/GPA | Non-caseating=Sarcoid/Crohn/OFG | Suppurative=Bartonella | Foreign body=filler<br>
+
+<div class="s">Vitamin Deficiencies</div>
+<span class="hl">Common in: AUD, older adults, malabsorption, bariatric surgery, restrictive diets</span><br>
+<table>
+<tr><th>Def</th><th>Systemic</th><th>Oral</th></tr>
+<tr><td>B12</td><td>Megaloblastic, neuro</td><td><span class="pg g">"Beefy red" glossitis</span>, cheilitis, RAS</td></tr>
+<tr><td>Iron</td><td>Microcytic, koilonychia</td><td>Glossitis, pallor, Plummer-Vinson</td></tr>
+<tr><td>Vit C</td><td>Petechiae, corkscrew hairs</td><td><span class="pg g">Scorbutic gingivitis</span> (violaceous)</td></tr>
+</table>
+
+<div class="s">Vitamin Toxicity</div>
+<span class="hl">Vitamin excess from unsupervised supplementation causes toxicity</span><br>
+<table>
+<tr><th>Excess</th><th>Threshold</th><th>Oral Manifestation</th></tr>
+<tr><td>Vit A</td><td>Suppl/liver</td><td><span class="hl">Cheilitis, lip fissures, mucosal dryness/desquamation</span></td></tr>
+<tr class="w"><td>B6</td><td>&gt;50mg/d</td><td><span class="hl">Dysesthesia, burning sensation</span> (neuropathy MAY BE IRREVERSIBLE)</td></tr>
+<tr><td>B12</td><td>High-dose</td><td><span class="hl">Dysgeusia</span></td></tr>
+<tr><td>Vit D</td><td>&gt;10K IU/d</td><td><b>NO oral manifestations</b></td></tr>
+<tr><td>Zinc</td><td>&gt;40mg/d</td><td><span class="hl">Dysgeusia, GI upset</span> (Cu def&rarr;anemia)</td></tr>
+</table>
+<div class="t">Tx: B12 1000&mu;g IM/SQ | Fe 325mg/d | Vit C 500-1000mg/d. B6 neuropathy may persist</div>
+
+<div class="s">Amyloidosis</div>
+Extracellular misfolded protein fibrils. Types:<br>
+<span class="hl">AL (primary)</span> = <span class="hl">most common</span> type<br>
+<span class="hl">Light chain deposition from BM plasma cell disorder</span> (myeloma)<br>
+<span class="hl">HAS oral manifestations</span><br>
+<span class="hl">Factor X adsorbed to amyloid fibrils</span>&rarr;bleeding<br>
+AA (2&deg;): chronic inflamm. A&beta;2M (dialysis): <span class="hl">rarely deposits in TMJ</span>. ATTR: cardiac<br>
+<span class="hl">Macroglossia 15-20% of AL amyloidosis</span> (may be 1st sign)<br>
+<span class="hl">Periorbital purpura ("raccoon eyes") = pathognomonic</span><br>
+Dx: labial SG bx (58-86%). <span class="hl">Congo red stain</span> &rarr;<br>
+<span class="hl">apple-green birefringence under polarized light = pathognomonic</span><br>
+If AL: SPEP/SUEP, free light chains, BM bx. Tx: daratumumab, autoHSCT. Median survival 6mo w/ cardiac<br>
+
+<div class="s">Peutz-Jeghers (PJS)</div>
+STK11/LKB1. Triad: pigmentation + GI polyps + 93% lifetime CA risk<br>
+Macules 1-5mm. Oral BEFORE GI sx. Lip fades after puberty; intraoral persists<br>
+DDx: racial, Addison, Laugier-Hunziker (NO CA), melanotic macule. Screen: endoscopy age 8-10<br>
+
+<div class="s">GPA (Wegener)</div>
+ANCA vasculitis. Triad: upper resp + lower resp + kidneys (GN). <span class="bx g">UNTREATED = FATAL</span><br>
+Oral 6-13% (1st sign 2%). <span class="hl">PR3-ANCA (c-ANCA) positive in &gt;85%</span><br>
+Oral finding: <span class="hl">Strawberry gingivitis</span> = <span class="hl">pathognomonic</span><br>
+Description: <span class="hl">erythematous to violaceous</span>, <span class="hl">hyperplastic</span>, <span class="hl">petechial</span><br>
+Saddle nose, palatal perforation, OAC. Pulm nodules. GN (hematuria)<br>
+<span class="hl">Gingival biopsy rarely shows classic necrotizing granulomatous vasculitis</span><br>
+&rarr;nasal/lung tissue better. Tx: cyclophosphamide or rituximab + steroids. Maint: rituximab, MTX<br>
+</div>
+
+<!-- ======== SIDE B RIGHT: SENSATION (PURPLE) ======== -->
+<div class="nc-col nc-col-right p">
+<div class="h p">DISORDERS OF SENSATION</div>
+
+<div class="s">Key Terminology</div>
+<table>
+<tr><th>Term</th><th>Definition</th></tr>
+<tr><td><b>Paresthesia</b></td><td>Abnormal, NOT UNPLEASANT ("tingling")</td></tr>
+<tr><td><b>Dysesthesia</b></td><td><b>UNPLEASANT</b> ("burning")</td></tr>
+<tr><td><b>Allodynia</b></td><td>Pain from NON-painful stimulus</td></tr>
+<tr><td><b>Hyperpathia</b></td><td>Exaggerated, explosive, DELAYED</td></tr>
+<tr><td>Hyperalgesia</td><td>&uarr; pain to PAINFUL stimulus</td></tr>
+<tr><td>Formication</td><td>Bugs crawling</td></tr>
+</table>
+Somatosensory (pain/temp/touch) vs Special (taste/smell/salivary)<br>
+
+<div class="s">BMS / Oral Dysesthesia</div>
+Burning &gt;2h/d &gt;3mo, NO visible lesions, dx of EXCLUSION<br>
+Triad: burning + dysgeusia + xerostomia (NORMAL flow). Worsens day, NOT wake, relieved by eating<br>
+5F:1M, age 50-70, ~1-3%. R/O: candida, LP, contact allergy (cinnamon!), B12/folate/iron/zinc, DM<br>
+<table>
+<tr><th></th><th>Peripheral (50-65%)</th><th>Central (20-40%)</th></tr>
+<tr><td>Mech</td><td>Small fiber (A&delta;/C)</td><td>Striatal DOPAMINE</td></tr>
+<tr><td>Psych</td><td>Less common</td><td><b>COMMON</b></td></tr>
+<tr><td>Local tx?</td><td><b>YES</b></td><td><b>NO</b></td></tr>
+</table>
+<div class="ss">BMS Management:</div>
+<span class="hl">Education</span> is 1st line approach<br>
+<span class="hl">Psychological adaptation provides symptom improvement</span><br>
+<span class="hl">***Therapeutic Interaction***</span><br>
+<span class="hl">Topical Clonazepam (Best Evidence)</span>: 0.5-1mg swish &times;3min SPIT OUT TID<br>
+Mechanism: <span class="hl">GABA-A agonist</span>&rarr;&darr;peripheral nociceptor excitability<br>
+ALA 600mg/d. Gabapentin 300-3600mg/d | Pregabalin 150-600mg/d. Amitriptyline 10-75mg qhs. Capsaicin 0.025-0.1% (TRPV1). LLLT 808-980nm<br>
+
+<div class="s">Central Sensitization</div>
+= &uarr;responsiveness central neurons &rarr; hyperalgesia + allodynia persisting BEYOND healing<br>
+Top-down (1&deg; fibromyalgia) vs Bottom-up (2&deg; fibromyalgia)<br>
+
+<div class="s">Dysgeusia</div>
+<span class="hl">~95% of taste disorders are olfactory dysfunction</span>. First eval&rarr;EXAMINE NOSE<br>
+6 modalities: salty, sweet, sour, bitter, umami + oleogustus/fat<br>
+Most common cause: <span class="hl">Poor Oral Hygiene &amp; Infection</span><br>
+Very common: <span class="hl">Medications</span><br>
+<span class="hl">Direct: taste receptor damage/dysfunction, zinc depletion/chelation</span><br>
+<span class="hl">Indirect: hyposalivation</span><br>
+Meds: ACEi, ARBs, CCBs, metronidazole, FQs. <span class="hl">Chemotherapy (45-84%)</span><br>
+Tx: ID+treat cause. CHX short-term only (long-term&rarr;dysgeusia!)<br>
+<span class="hl">Zinc Supplementation: Zinc sulfate 220mg or zinc gluconate 50mg daily</span><br>
+Clonazepam 0.5mg suck-spit (GABA-A on taste bud receptor cells&mdash;different mech than BMS)<br>
+<span class="hl">Olfactory Training</span>:<br>
+<span class="hl">systematic exposure to strong odors (rose, lemon, eucalyptus, clove)</span><br>
+<span class="hl">Twice daily for 3-6 months</span><br>
+MSG 750mg/150g TID. <span class="hl">T1R3 is the SHARED subunit for both umami (T1R1/T1R3) AND sweet (T1R2/T1R3)</span><br>
+<span class="hl">Umami stimulation enhances gustatory-salivary reflex &rarr; increases salivary flow</span><br>
+
+<div class="s">Xerostomia w/o Hyposalivation</div>
+Neuropathic: altered composition but NORMAL flow. Mgmt: sialometry &rarr; neuropathic meds<br>
+
+<div class="s">Sialorrhea</div>
+Primary (rare): clozapine, risperidone, lithium. Tx: glycopyrrolate 1mg TID &rarr; botulinum 70% &rarr; surgery<br>
+Secondary: <span class="hl">~90% of sialorrhea patients</span>. Impaired clearance. CP 22%, Parkinson 74%, ALS 50%<br>
+<span class="hl">head and neck cancer patients (16%)</span><br>
+Psychogenic: <span class="bx p">Do NOT Rx anticholinergics/botulinum</span>. CBT. USFR gold standard (0.1 mL/min)<br>
+
+<div class="s">Trigeminal: Neuropathy vs Neuralgia</div>
+<table>
+<tr><th></th><th>PTTN (Neuropathy)</th><th>TN (Neuralgia)</th></tr>
+<tr><td>Pain</td><td>Constant, <span class="hl">burning, aching, constant</span></td><td>Paroxysmal, electric</td></tr>
+<tr><td>Duration</td><td>Prolonged</td><td>Sec to 2 min</td></tr>
+<tr><td>Triggers</td><td>Absent</td><td>Present + refractory</td></tr>
+<tr><td>Sensory exam</td><td><b>ABNORMAL</b></td><td>NORMAL</td></tr>
+<tr><td>Trauma hx</td><td><b>YES</b></td><td>No</td></tr>
+</table>
+PTTN (anaesthesia dolorosa). ICOP: &gt;3mo, hx injury, onset &lt;6mo. Exam: cotton (A&beta;), pinprick (A&delta;), warm (C)<br>
+
+<div class="s">Anesthetic Challenge</div>
+<span class="t">Step 1: topical 20% benzocaine/5% lido &times;5min. &ge;50-70%&rarr;peripheral (topicals) | ~30%&rarr;Step 2 | &lt;30%&rarr;central<br>
+Step 2: IAN 2% lido. &ge;70%&rarr;nerve blocks q6-8wk | 30-70%&rarr;blocks+TCA | <b>&lt;30% DESPITE numbness&rarr;CENTRAL</b> (TCAs, SNRIs, &alpha;2&delta;)</span><br>
+
+<div class="s">Self-Injurious Behavior</div>
+<span class="t">4 types: Neurodevelopmental (ASD, Lesch-Nyhan) | Neurologic (coma/seizures) | Psychiatric (OCD, delusional infest, NSSI, factitious) | Congenital insensitivity<br>
+<span class="pg p">Matchbox sign</span>=delusional infestation. Primary gain vs Secondary (conscious=MALINGERING) vs Tertiary<br>
+BFRBs: lip-cheek biting ~8%. Exfoliative cheilitis: 53% lip licking, tx: lanolin<br>
+Mgmt: appliances TIME-LIMITED, ext LAST RESORT. Psychotherapy: <span class="hl">medically unexplained symptoms</span><br>
+Congenital: CIPA=anhydrosis | SCN9A=ANOSMIA | HSAN III=NO FUNGIFORM PAPILLAE<br>
+Riga-Fede: infant 6-15mo, ventral tongue. Red flag&rarr;pain insensitivity<br>
+ASD SIB: 26-50%. Pain PARADOX: hypersensitivity. <span class="hl">SIB in ASD often response to pain/distress elsewhere</span>. RR 4.23</span>
+
+<div class="btm k">
+<b>PATHOGNOMONIC:</b> <span class="r">Stepladder=SCD | Ging hyperplasia=AML | Ligneous=plasminogen | Plummer-Vinson=Fe def</span> | <span class="g">Strawberry ging=GPA | Raccoon eyes=AL amyloid | Congo red=amyloid | Lupus band=lupus | Hilar adenopathy=sarcoid | Perioral macules=PJS</span> | <span class="p">Matchbox sign=delusion | 21-day ulcers=cyclic neutropenia</span><br>
+<b>ORAL=1st SIGN:</b> aplastic anemia, AML, sarcoidosis, AL amyloidosis, PJS, vitamin def, TCP<br>
+<b>AVOID:</b> <span class="r">ASA/NSAIDs TCP | vasoconstrictors SCD | blocks hemophilia | DON'T remove liver clots | perio ineffective plasminogen</span> | <span class="b">HBO NOT ORN | elective CI onc-BMA | ext BEFORE RT | CHX&rarr;dysgeusia</span> | <span class="p">No anticholinergics psychogenic | Appliances TIME-LIMITED</span> | <span class="g">Topicals NOT sarcoidosis | Ging bx rarely GPA</span><br>
+<b>DRUGS ACROSS:</b> Clonazepam: BMS (GABA-A nociceptors) AND dysgeusia (GABA-A taste buds) | HCQ: lupus+sarcoid+irAE | MTX: GVHD+sarcoid+GPA | Rituximab: GPA+cGVHD | Steroids: GVHD/irAE/lupus/sarcoid/GPA | Tacrolimus: GVHD+irAE+lupus | Gabapentin: BMS+neuropathy+xero
+</div>
+</div>
+
+</div>
+</div>
+
+    </div>
+</div>
+
 <footer class="guide-footer">
     <p>OD 531 Oral Medicine &mdash; Complete Study Guide &mdash; Dr. Laurel Henderson, DDS, MS &mdash; BU Goldman &mdash; Spring 2026</p>
     <p style="margin-top: 6px; font-size: 12px; opacity: 0.6;">All content sourced directly from lecture materials. Zero fabrication.</p>
@@ -6134,7 +6682,7 @@ function scrollToGuide(e, id) {
     const tabs = document.querySelectorAll('.progress-tab');
     const fill = document.getElementById('progressFill');
     const backTop = document.getElementById('backTop');
-    const keys = ['hematologic', 'oncology', 'systemic', 'sensation'];
+    const keys = ['hematologic', 'oncology', 'systemic', 'sensation', 'notecard'];
 
     function updateProgress() {
         const scrollTop = window.scrollY;
