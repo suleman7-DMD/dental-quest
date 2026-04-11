@@ -391,6 +391,162 @@ body::before, .blood-cell, .heartbeat-line { display: none !important; }
 
 
 
+/* ═══ UNIVERSAL IMAGE & CONTENT FIX ═══ */
+
+/* All guide content constrained to readable width */
+.guide-section-content {
+    max-width: 940px;
+    margin: 0 auto;
+    padding: 24px 20px 40px;
+}
+
+/* ALL images: block-level, full-width, never float, never wrap text */
+.guide-section-content img {
+    display: block !important;
+    max-width: 100% !important;
+    width: 100%;
+    height: auto !important;
+    float: none !important;
+    margin: 16px auto !important;
+    border-radius: var(--radius);
+    border: 1px solid var(--border);
+    box-shadow: var(--shadow-sm);
+}
+
+/* Figures: block, clear, contained */
+.guide-section-content figure,
+.guide-section-content .lecture-fig {
+    display: block !important;
+    float: none !important;
+    clear: both !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    margin: 20px 0 !important;
+    padding: 0;
+    text-align: center;
+}
+.guide-section-content figure img,
+.guide-section-content .lecture-fig img {
+    margin: 0 auto 8px !important;
+}
+.guide-section-content figcaption {
+    display: block;
+    font-size: 13px;
+    line-height: 1.55;
+    color: var(--text-muted);
+    font-style: italic;
+    margin-top: 8px;
+    padding: 0 8px;
+    text-align: left;
+}
+
+/* Tables: wrap in scrollable container on overflow */
+.guide-section-content table {
+    width: 100%;
+    max-width: 100%;
+    border-collapse: collapse;
+}
+
+/* Content wrapper for oncology (has .content class) */
+.guide-section-content .content {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 0;
+}
+
+/* Section elements inside guides */
+.guide-section-content .section,
+.guide-section-content section {
+    margin-bottom: 32px;
+    padding: 0;
+    clear: both;
+}
+
+/* Cards: uniform treatment */
+.guide-section-content .card {
+    overflow: hidden;
+}
+.guide-section-content .card img {
+    width: 100%;
+}
+
+/* Clinical image boxes: stack nicely */
+.guide-section-content .clinical-img {
+    clear: both;
+}
+
+/* Callouts: proper containment */
+.guide-section-content .high-yield,
+.guide-section-content .explain,
+.guide-section-content .callout-danger,
+.guide-section-content .case-box {
+    clear: both;
+    overflow: hidden;
+}
+
+/* ═══ TABLET FIXES (iPad) ═══ */
+@media (max-width: 1024px) {
+    .guide-section-content {
+        padding: 20px 16px 32px;
+    }
+    .guide-section-content img {
+        margin: 14px auto !important;
+    }
+    .guide-section-content figure {
+        margin: 16px 0 !important;
+    }
+    .guide-section-content .card {
+        padding: 20px 16px;
+    }
+    .guide-section-content .hemo-compare {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* ═══ MOBILE FIXES ═══ */
+@media (max-width: 700px) {
+    .guide-section-content {
+        padding: 16px 12px 28px;
+    }
+    .guide-section-content .card {
+        padding: 16px 12px;
+        margin-bottom: 16px;
+    }
+    .guide-section-content .card-header h3 {
+        font-size: 19px;
+    }
+    .guide-section-content .section-header h2 {
+        font-size: 20px;
+    }
+    .guide-section-content img {
+        margin: 12px auto !important;
+        border-radius: 6px;
+    }
+    .guide-section-content figcaption {
+        font-size: 12px;
+        padding: 0 4px;
+    }
+    .guide-section-content .severity-meter {
+        flex-direction: column;
+    }
+    .guide-section-content .toolkit-grid {
+        grid-template-columns: 1fr;
+    }
+    .guide-section-content .triage-grid {
+        grid-template-columns: 1fr;
+    }
+    .guide-section-content .case-box {
+        padding: 16px;
+        margin: 16px auto;
+    }
+    .guide-section-divider {
+        padding: 28px 16px 24px;
+    }
+    .guide-section-divider h2 {
+        font-size: 24px;
+    }
+}
+
 /* ═══ COMBINED STUDY GUIDE: PROGRESS BAR & SECTION NAV ═══ */
 
 .progress-shell {
