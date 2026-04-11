@@ -1,0 +1,2361 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Oral Oncology Study Guide | OD531 Spring 2026</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Young+Serif&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;0,8..60,700;1,8..60,400&family=Plus+Jakarta+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+/* ═══════════════════════════════════════════════
+   RESET & BASE
+   ═══════════════════════════════════════════════ */
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+:root {
+  --bg: #FAFAF7;
+  --bg-warm: #F5F3EF;
+  --text: #1C1917;
+  --text-secondary: #57534E;
+  --text-muted: #78716C;
+  --border: #E7E5E4;
+  --border-dark: #D6D3D1;
+
+  --s1: #1E40AF; --s1-light: #EFF6FF; --s1-border: #93C5FD; --s1-bg: #DBEAFE;
+  --s2: #991B1B; --s2-light: #FEF2F2; --s2-border: #FCA5A5; --s2-bg: #FEE2E2;
+  --s3: #5B21B6; --s3-light: #F5F3FF; --s3-border: #C4B5FD; --s3-bg: #EDE9FE;
+  --s4: #065F46; --s4-light: #ECFDF5; --s4-border: #6EE7B7; --s4-bg: #D1FAE5;
+
+  --amber: #92400E; --amber-light: #FFFBEB; --amber-border: #FCD34D;
+  --teal: #134E4A; --teal-light: #F0FDFA; --teal-border: #5EEAD4;
+  --rose: #9F1239; --rose-light: #FFF1F2; --rose-border: #FDA4AF;
+
+  --radius: 8px;
+  --radius-lg: 12px;
+  --shadow: 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
+  --shadow-md: 0 4px 6px rgba(0,0,0,0.05), 0 2px 4px rgba(0,0,0,0.04);
+  --shadow-lg: 0 10px 25px rgba(0,0,0,0.08);
+
+  --font-display: 'Young Serif', serif;
+  --font-heading: 'Source Serif 4', serif;
+  --font-body: 'Plus Jakarta Sans', sans-serif;
+  --font-mono: 'JetBrains Mono', monospace;
+
+  --nav-width: 280px;
+}
+
+html { scroll-behavior: smooth; font-size: 16px; }
+
+body {
+  font-family: var(--font-body);
+  color: var(--text);
+  background: var(--bg);
+  line-height: 1.7;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ═══════════════════════════════════════════════
+   NAVIGATION SIDEBAR
+   ═══════════════════════════════════════════════ */
+.nav-sidebar {
+  position: fixed; top: 0; left: 0;
+  width: var(--nav-width); height: 100vh;
+  background: #1C1917;
+  color: #E7E5E4;
+  overflow-y: auto;
+  z-index: 100;
+  padding: 24px 0;
+  border-right: 1px solid #292524;
+}
+
+.nav-logo {
+  padding: 0 20px 20px;
+  border-bottom: 1px solid #292524;
+  margin-bottom: 16px;
+}
+
+.nav-logo h2 {
+  font-family: var(--font-display);
+  font-size: 1.15rem;
+  color: #FAFAF9;
+  line-height: 1.3;
+}
+
+.nav-logo p {
+  font-size: 0.7rem;
+  color: #A8A29E;
+  margin-top: 4px;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.nav-section {
+  padding: 8px 20px;
+}
+
+.nav-section-title {
+  font-size: 0.65rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: #78716C;
+  margin-bottom: 8px;
+  font-weight: 600;
+}
+
+.nav-link {
+  display: block;
+  padding: 6px 12px;
+  font-size: 0.78rem;
+  color: #A8A29E;
+  text-decoration: none;
+  border-radius: 6px;
+  transition: all 0.2s;
+  line-height: 1.4;
+  margin-bottom: 2px;
+}
+
+.nav-link:hover { color: #FAFAF9; background: #292524; }
+.nav-link.active { color: #FAFAF9; background: #292524; font-weight: 500; }
+
+.nav-dot {
+  display: inline-block;
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  margin-right: 8px;
+  vertical-align: middle;
+}
+
+.nav-dot.s1 { background: #60A5FA; }
+.nav-dot.s2 { background: #F87171; }
+.nav-dot.s3 { background: #A78BFA; }
+.nav-dot.s4 { background: #34D399; }
+
+/* ═══════════════════════════════════════════════
+   MAIN CONTENT
+   ═══════════════════════════════════════════════ */
+.main-content {
+  margin-left: var(--nav-width);
+  min-height: 100vh;
+}
+
+/* ═══════════════════════════════════════════════
+   HERO
+   ═══════════════════════════════════════════════ */
+.hero {
+  background: linear-gradient(135deg, #1C1917 0%, #292524 40%, #44403C 100%);
+  color: white;
+  padding: 80px 60px 60px;
+  position: relative;
+  overflow: hidden;
+}
+
+.hero::before {
+  content: '';
+  position: absolute;
+  top: -100px; right: -100px;
+  width: 500px; height: 500px;
+  background: radial-gradient(circle, rgba(30,64,175,0.15) 0%, transparent 70%);
+  border-radius: 50%;
+}
+
+.hero::after {
+  content: '';
+  position: absolute;
+  bottom: -80px; left: 30%;
+  width: 400px; height: 400px;
+  background: radial-gradient(circle, rgba(91,33,182,0.1) 0%, transparent 70%);
+  border-radius: 50%;
+}
+
+.hero-badge {
+  display: inline-block;
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.15em;
+  color: #A8A29E;
+  border: 1px solid #44403C;
+  padding: 4px 14px;
+  border-radius: 20px;
+  margin-bottom: 20px;
+  font-weight: 500;
+}
+
+.hero h1 {
+  font-family: var(--font-display);
+  font-size: 3.2rem;
+  line-height: 1.15;
+  margin-bottom: 16px;
+  position: relative;
+}
+
+.hero-subtitle {
+  font-size: 1.1rem;
+  color: #D6D3D1;
+  max-width: 600px;
+  line-height: 1.6;
+}
+
+.hero-meta {
+  margin-top: 30px;
+  display: flex;
+  gap: 30px;
+  font-size: 0.85rem;
+  color: #A8A29E;
+  position: relative;
+}
+
+.hero-meta span { display: flex; align-items: center; gap: 6px; }
+
+/* ═══════════════════════════════════════════════
+   CONTENT CONTAINER
+   ═══════════════════════════════════════════════ */
+.content-wrap {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 40px 50px 80px;
+}
+
+/* ═══════════════════════════════════════════════
+   CLINICAL VIGNETTE
+   ═══════════════════════════════════════════════ */
+.vignette {
+  background: #1C1917;
+  color: #E7E5E4;
+  border-radius: var(--radius-lg);
+  padding: 36px 40px;
+  margin: -30px 50px 50px;
+  position: relative;
+  z-index: 10;
+  box-shadow: var(--shadow-lg);
+  max-width: 900px;
+  margin-left: auto;
+  margin-right: auto;
+  transform: translateX(0);
+  margin-left: calc((100% - 900px) / 2);
+}
+
+.vignette-label {
+  font-size: 0.65rem;
+  text-transform: uppercase;
+  letter-spacing: 0.15em;
+  color: #FCD34D;
+  font-weight: 600;
+  margin-bottom: 12px;
+}
+
+.vignette h3 {
+  font-family: var(--font-heading);
+  font-size: 1.3rem;
+  color: #FAFAF9;
+  margin-bottom: 16px;
+}
+
+.vignette p, .vignette li {
+  font-size: 0.9rem;
+  line-height: 1.7;
+  color: #D6D3D1;
+}
+
+.vignette ul { padding-left: 20px; }
+.vignette li { margin-bottom: 6px; }
+
+.vignette-highlight {
+  background: rgba(252,211,77,0.15);
+  border-left: 3px solid #FCD34D;
+  padding: 12px 16px;
+  margin-top: 16px;
+  border-radius: 0 var(--radius) var(--radius) 0;
+  font-size: 0.88rem;
+  color: #FDE68A;
+}
+
+.vignette-takeaway {
+  margin-top: 16px;
+  font-size: 0.82rem;
+  color: #A8A29E;
+  font-style: italic;
+}
+
+/* ═══════════════════════════════════════════════
+   SECTION HEADERS
+   ═══════════════════════════════════════════════ */
+.section-header {
+  padding: 40px 0 30px;
+  border-bottom: 2px solid var(--border);
+  margin-bottom: 36px;
+}
+
+.section-number {
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.15em;
+  font-weight: 500;
+  margin-bottom: 8px;
+}
+
+.section-header h2 {
+  font-family: var(--font-display);
+  font-size: 2.2rem;
+  line-height: 1.2;
+  color: var(--text);
+}
+
+.section-header p {
+  font-size: 0.95rem;
+  color: var(--text-secondary);
+  margin-top: 8px;
+  max-width: 650px;
+}
+
+/* Section color coding */
+.s1 .section-number { color: var(--s1); }
+.s1 .section-header { border-bottom-color: var(--s1-border); }
+.s2 .section-number { color: var(--s2); }
+.s2 .section-header { border-bottom-color: var(--s2-border); }
+.s3 .section-number { color: var(--s3); }
+.s3 .section-header { border-bottom-color: var(--s3-border); }
+.s4 .section-number { color: var(--s4); }
+.s4 .section-header { border-bottom-color: var(--s4-border); }
+
+/* ═══════════════════════════════════════════════
+   SUBSECTION HEADINGS
+   ═══════════════════════════════════════════════ */
+h3.sub-title {
+  font-family: var(--font-heading);
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--text);
+  margin: 44px 0 16px;
+  padding-top: 20px;
+  border-top: 1px solid var(--border);
+}
+
+h3.sub-title:first-of-type { border-top: none; padding-top: 0; margin-top: 0; }
+
+h4.sub-sub {
+  font-family: var(--font-heading);
+  font-size: 1.15rem;
+  font-weight: 600;
+  color: var(--text);
+  margin: 28px 0 10px;
+}
+
+/* ═══════════════════════════════════════════════
+   TEXT CONTENT
+   ═══════════════════════════════════════════════ */
+p { margin-bottom: 14px; font-size: 0.92rem; }
+p + p { margin-top: 0; }
+
+strong { font-weight: 600; color: var(--text); }
+
+.key-term {
+  font-weight: 600;
+  background: linear-gradient(to bottom, transparent 60%, rgba(252,211,77,0.3) 60%);
+  padding: 0 2px;
+}
+
+ul, ol {
+  padding-left: 22px;
+  margin-bottom: 16px;
+}
+
+li {
+  font-size: 0.92rem;
+  margin-bottom: 6px;
+  line-height: 1.65;
+}
+
+li li { font-size: 0.88rem; }
+
+/* ═══════════════════════════════════════════════
+   CALLOUT BOXES
+   ═══════════════════════════════════════════════ */
+.callout {
+  border-radius: var(--radius);
+  padding: 20px 24px;
+  margin: 20px 0;
+  font-size: 0.88rem;
+  line-height: 1.7;
+}
+
+.callout-title {
+  font-family: var(--font-heading);
+  font-weight: 700;
+  font-size: 0.82rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin-bottom: 8px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+/* Plain English */
+.callout.plain {
+  background: var(--amber-light);
+  border: 1px solid var(--amber-border);
+}
+.callout.plain .callout-title { color: var(--amber); }
+
+/* Clinical Pearl */
+.callout.pearl {
+  background: var(--teal-light);
+  border: 1px solid var(--teal-border);
+}
+.callout.pearl .callout-title { color: var(--teal); }
+
+/* High-Yield / Exam Critical */
+.callout.high-yield {
+  background: var(--rose-light);
+  border: 1px solid var(--rose-border);
+}
+.callout.high-yield .callout-title { color: var(--rose); }
+
+/* Dental Relevance */
+.callout.dental {
+  background: var(--s4-light);
+  border: 1px solid var(--s4-border);
+}
+.callout.dental .callout-title { color: var(--s4); }
+
+/* ═══════════════════════════════════════════════
+   TABLES
+   ═══════════════════════════════════════════════ */
+.table-wrap {
+  overflow-x: auto;
+  margin: 20px 0;
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  border: 1px solid var(--border);
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.84rem;
+}
+
+thead th {
+  background: #1C1917;
+  color: #FAFAF9;
+  padding: 12px 16px;
+  text-align: left;
+  font-weight: 600;
+  font-size: 0.8rem;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+}
+
+/* Section-specific header colors */
+.s1 thead th { background: var(--s1); }
+.s2 thead th { background: var(--s2); }
+.s3 thead th { background: var(--s3); }
+.s4 thead th { background: var(--s4); }
+
+tbody td {
+  padding: 11px 16px;
+  border-bottom: 1px solid var(--border);
+  vertical-align: top;
+  line-height: 1.55;
+}
+
+tbody tr:last-child td { border-bottom: none; }
+tbody tr:nth-child(even) { background: #FAFAF7; }
+tbody tr:hover { background: #F5F3EF; }
+
+td strong { font-weight: 600; }
+
+td.category-header {
+  background: #F5F3EF;
+  font-weight: 700;
+  font-size: 0.82rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--text-secondary);
+}
+
+/* ═══════════════════════════════════════════════
+   COMPARISON CARDS
+   ═══════════════════════════════════════════════ */
+.compare-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 16px;
+  margin: 20px 0;
+}
+
+.compare-card {
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 20px;
+  background: white;
+}
+
+.compare-card h5 {
+  font-family: var(--font-heading);
+  font-size: 1rem;
+  margin-bottom: 10px;
+  padding-bottom: 8px;
+  border-bottom: 2px solid var(--border);
+}
+
+.compare-card p, .compare-card li {
+  font-size: 0.85rem;
+}
+
+/* ═══════════════════════════════════════════════
+   PHASE / TIMELINE
+   ═══════════════════════════════════════════════ */
+.phase-list {
+  list-style: none;
+  padding-left: 0;
+  position: relative;
+}
+
+.phase-list::before {
+  content: '';
+  position: absolute;
+  left: 15px;
+  top: 8px;
+  bottom: 8px;
+  width: 2px;
+  background: var(--border-dark);
+}
+
+.phase-item {
+  position: relative;
+  padding-left: 44px;
+  margin-bottom: 20px;
+}
+
+.phase-item::before {
+  content: attr(data-phase);
+  position: absolute;
+  left: 4px;
+  top: 2px;
+  width: 24px; height: 24px;
+  background: var(--s2);
+  color: white;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.7rem;
+  font-weight: 700;
+}
+
+.phase-item h5 {
+  font-family: var(--font-heading);
+  font-weight: 700;
+  font-size: 0.95rem;
+  margin-bottom: 4px;
+}
+
+.phase-item p {
+  font-size: 0.88rem;
+  color: var(--text-secondary);
+  margin-bottom: 0;
+}
+
+/* ═══════════════════════════════════════════════
+   QUICK FACTS STRIP
+   ═══════════════════════════════════════════════ */
+.quick-facts {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 12px;
+  margin: 20px 0;
+}
+
+.quick-fact {
+  background: white;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 16px;
+  text-align: center;
+}
+
+.quick-fact .number {
+  font-family: var(--font-display);
+  font-size: 1.6rem;
+  color: var(--text);
+  display: block;
+}
+
+.quick-fact .label {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  margin-top: 4px;
+  line-height: 1.3;
+}
+
+/* ═══════════════════════════════════════════════
+   GRADING SCALES
+   ═══════════════════════════════════════════════ */
+.grade-scale {
+  display: flex;
+  gap: 0;
+  margin: 20px 0;
+  border-radius: var(--radius);
+  overflow: hidden;
+  border: 1px solid var(--border);
+}
+
+.grade-item {
+  flex: 1;
+  padding: 16px 14px;
+  font-size: 0.82rem;
+  line-height: 1.5;
+  border-right: 1px solid var(--border);
+}
+
+.grade-item:last-child { border-right: none; }
+
+.grade-item h5 {
+  font-weight: 700;
+  font-size: 0.85rem;
+  margin-bottom: 6px;
+}
+
+.grade-item.mild { background: #FEF9C3; }
+.grade-item.moderate { background: #FED7AA; }
+.grade-item.severe { background: #FECACA; }
+.grade-item.critical { background: #E11D48; color: white; }
+.grade-item.critical h5 { color: white; }
+
+/* ═══════════════════════════════════════════════
+   FIGURES & IMAGES
+   ═══════════════════════════════════════════════ */
+figure {
+  margin: 24px 0;
+  border-radius: var(--radius);
+  overflow: hidden;
+  border: 1px solid var(--border);
+  background: white;
+}
+
+figure img {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+
+figure.dark-bg {
+  background: #1C1917;
+  border-color: #292524;
+}
+
+figcaption {
+  padding: 10px 16px;
+  font-size: 0.76rem;
+  color: var(--text-muted);
+  border-top: 1px solid var(--border);
+  line-height: 1.5;
+  font-style: italic;
+}
+
+figure.dark-bg figcaption {
+  color: #A8A29E;
+  border-top-color: #292524;
+}
+
+figure.half {
+  max-width: 50%;
+}
+
+figure.two-thirds {
+  max-width: 66%;
+}
+
+.figure-row {
+  display: flex;
+  gap: 16px;
+  margin: 24px 0;
+}
+
+.figure-row figure {
+  flex: 1;
+  margin: 0;
+}
+
+@media (max-width: 700px) {
+  figure.half, figure.two-thirds { max-width: 100%; }
+  .figure-row { flex-direction: column; }
+}
+
+/* ═══════════════════════════════════════════════
+   PRINT STYLES
+   ═══════════════════════════════════════════════ */
+@media print {
+  .nav-sidebar { display: none; }
+  .main-content { margin-left: 0; }
+  .hero { padding: 30px; }
+  .callout { break-inside: avoid; }
+  .table-wrap { break-inside: avoid; }
+  body { font-size: 11pt; }
+}
+
+/* ═══════════════════════════════════════════════
+   RESPONSIVE
+   ═══════════════════════════════════════════════ */
+@media (max-width: 1100px) {
+  .nav-sidebar { display: none; }
+  .main-content { margin-left: 0; }
+  .content-wrap { padding: 30px 24px 60px; }
+  .hero { padding: 50px 24px 40px; }
+  .hero h1 { font-size: 2.2rem; }
+  .vignette { margin: -20px 24px 40px; }
+  .grade-scale { flex-direction: column; }
+  .grade-item { border-right: none; border-bottom: 1px solid var(--border); }
+}
+
+/* ═══════════════════════════════════════════════
+   BACK TO TOP
+   ═══════════════════════════════════════════════ */
+.back-top {
+  position: fixed;
+  bottom: 30px; right: 30px;
+  width: 44px; height: 44px;
+  background: #1C1917;
+  color: white;
+  border: none;
+  border-radius: 50%;
+  cursor: pointer;
+  font-size: 1.2rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: opacity 0.3s;
+  z-index: 50;
+  box-shadow: var(--shadow-md);
+}
+.back-top.visible { opacity: 1; }
+.back-top:hover { background: #292524; }
+
+/* Section divider */
+.section-divider {
+  height: 6px;
+  margin: 0;
+  border: none;
+}
+.section-divider.s1 { background: linear-gradient(90deg, var(--s1), var(--s1-border)); }
+.section-divider.s2 { background: linear-gradient(90deg, var(--s2), var(--s2-border)); }
+.section-divider.s3 { background: linear-gradient(90deg, var(--s3), var(--s3-border)); }
+.section-divider.s4 { background: linear-gradient(90deg, var(--s4), var(--s4-border)); }
+
+/* Two column layout */
+.two-col {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+  margin: 16px 0;
+}
+@media (max-width: 700px) { .two-col { grid-template-columns: 1fr; } }
+
+/* Inline dose/value */
+.dose {
+  font-family: var(--font-mono);
+  font-size: 0.84rem;
+  background: #F5F3EF;
+  padding: 1px 6px;
+  border-radius: 4px;
+  white-space: nowrap;
+}
+</style>
+</head>
+<body>
+
+<!-- ═══════════════════════════════════════════════
+     NAVIGATION SIDEBAR
+     ═══════════════════════════════════════════════ -->
+<nav class="nav-sidebar" id="nav">
+  <div class="nav-logo">
+    <h2>Oral Oncology</h2>
+    <p>OD531 &bull; Study Guide</p>
+  </div>
+
+  <div class="nav-section">
+    <div class="nav-section-title">Opening</div>
+    <a href="#vignette" class="nav-link">Clinical Vignette</a>
+  </div>
+
+  <div class="nav-section">
+    <div class="nav-section-title">Section 1</div>
+    <a href="#s1" class="nav-link"><span class="nav-dot s1"></span>Components of Cancer Care</a>
+    <a href="#s1-pillars" class="nav-link">Four Pillars of Therapy</a>
+    <a href="#s1-surgery" class="nav-link">Surgery Overview</a>
+    <a href="#s1-rt" class="nav-link">Radiotherapy Basics</a>
+    <a href="#s1-conditioning" class="nav-link">Conditioning Chemo</a>
+    <a href="#s1-induction" class="nav-link">Induction Chemo</a>
+    <a href="#s1-hla" class="nav-link">HLA Matching</a>
+    <a href="#s1-immuno" class="nav-link">Immunotherapy</a>
+    <a href="#s1-targeted" class="nav-link">Targeted Therapy</a>
+  </div>
+
+  <div class="nav-section">
+    <div class="nav-section-title">Section 2</div>
+    <a href="#s2" class="nav-link"><span class="nav-dot s2"></span>Acute Sequelae</a>
+    <a href="#s2-chemo-timeline" class="nav-link">Chemo Side Effects Timeline</a>
+    <a href="#s2-sonis" class="nav-link">Sonis Pathophysiology</a>
+    <a href="#s2-mucositis-mgmt" class="nav-link">Mucositis Management</a>
+    <a href="#s2-hsct-infections" class="nav-link">HSCT Infection Timeline</a>
+    <a href="#s2-gvhd" class="nav-link">GVHD Prevention</a>
+    <a href="#s2-comparison" class="nav-link">Mucositis vs aGVHD vs Rejection</a>
+    <a href="#s2-post-transplant" class="nav-link">Post-Transplant Period</a>
+    <a href="#s2-ptld" class="nav-link">PTLD</a>
+    <a href="#s2-iraes" class="nav-link">irAEs</a>
+    <a href="#s2-oral-iraes" class="nav-link">Oral irAE Management</a>
+  </div>
+
+  <div class="nav-section">
+    <div class="nav-section-title">Section 3</div>
+    <a href="#s3" class="nav-link"><span class="nav-dot s3"></span>Long-term Sequelae</a>
+    <a href="#s3-survivorship" class="nav-link">Cancer Survivorship</a>
+    <a href="#s3-cgvhd" class="nav-link">Oral cGVHD</a>
+    <a href="#s3-mronj" class="nav-link">MRONJ</a>
+    <a href="#s3-orn" class="nav-link">Osteoradionecrosis</a>
+    <a href="#s3-lymphedema" class="nav-link">Lymphedema &amp; Fibrosis</a>
+    <a href="#s3-dysphagia" class="nav-link">Dysphagia &amp; OSA</a>
+    <a href="#s3-pain" class="nav-link">Chronic Pain</a>
+    <a href="#s3-ototox" class="nav-link">Ototoxicity &amp; Chemo Brain</a>
+  </div>
+
+  <div class="nav-section">
+    <div class="nav-section-title">Section 4</div>
+    <a href="#s4" class="nav-link"><span class="nav-dot s4"></span>Dental Management</a>
+    <a href="#s4-clearance" class="nav-link">Pre-Treatment Clearance</a>
+    <a href="#s4-timing" class="nav-link">Timing &amp; Decision Matrix</a>
+    <a href="#s4-caries" class="nav-link">Caries Decision Guide</a>
+    <a href="#s4-post" class="nav-link">Post-Treatment Protocols</a>
+  </div>
+</nav>
+
+<!-- ═══════════════════════════════════════════════
+     MAIN CONTENT
+     ═══════════════════════════════════════════════ -->
+<div class="main-content">
+
+<!-- HERO -->
+<header class="hero">
+  <div class="hero-badge">Condensed Study Guide</div>
+  <h1>Oral Oncology</h1>
+  <p class="hero-subtitle">A comprehensive, plain-language study guide covering cancer therapy, acute and chronic sequelae, and dental management of oncologic patients.</p>
+  <div class="hero-meta">
+    <span>Dr. Laurel Henderson, DDS, MS</span>
+    <span>OD531 Oral Medicine &bull; Spring 2026</span>
+    <span>03/13/2026</span>
+  </div>
+</header>
+
+<!-- CLINICAL VIGNETTE -->
+<div class="vignette" id="vignette">
+  <div class="vignette-label">Opening Clinical Vignette &mdash; The Case That Ties It All Together</div>
+  <h3>33 y.o. Female with History of Tongue SCC</h3>
+  <p><strong>History:</strong> Squamous cell carcinoma (SCC) of the left tongue, diagnosed 05/2023. The cancer had already metastasized to her thyroid, lymph nodes, and skin. She underwent partial glossectomy (surgical removal of part of the tongue), radiation therapy (RT), and has been on <strong>pembrolizumab</strong> (a checkpoint inhibitor immunotherapy drug) since 12/2023. She also has hypothyroidism &mdash; likely an <em>irAE</em> (immune-related adverse event) from the pembrolizumab.</p>
+  <p><strong>New Chief Complaint:</strong> Pain and swelling of left mandible after an accidental collision with her baby's head 2 weeks ago.</p>
+  <ul>
+    <li>Immediate sharp pain in teeth, gums, buccal mucosa, left ear, left anterior mandible</li>
+    <li>Swelling getting slightly better</li>
+    <li>Taking Tylenol <span class="dose">3000 mg/day</span> but sleep still interrupted by pain</li>
+  </ul>
+  <div class="vignette-highlight">
+    <strong>CT Impression:</strong> A growing fluid collection in the left submandibular/sublingual space abutting the mandible, with thick enhancing rim. Radiology concluded this &ldquo;seems more likely to represent <strong>progressive recurrent centrally necrotic squamous cell carcinoma than infectious abscess</strong>.&rdquo; Also: enlarging lymph nodes in right neck levels 1&ndash;5 and an unchanged thyroid metastasis.
+  </div>
+  <figure class="dark-bg" style="margin-top:20px">
+    <img src="img/oral-onc/vignette-patient-ct.png" alt="Clinical vignette: 33 y.o. female with left mandibular swelling and CT showing peripherally enhancing fluid collection suspicious for recurrent SCC">
+    <figcaption>Left: Extraoral photo showing left mandibular swelling. Right: Axial CT with contrast showing peripherally enhancing fluid collection in the left submandibular space, more likely recurrent necrotic SCC than infectious abscess.</figcaption>
+  </figure>
+  <p class="vignette-takeaway">This single patient illustrates virtually every topic in this lecture: surgery (glossectomy), radiation (and its long-term risks), immunotherapy (pembrolizumab), irAEs (hypothyroidism), chronic pain management, recurrence risk, and the challenge of distinguishing infection from malignancy in a post-treatment patient. Keep her in mind as you read.</p>
+</div>
+
+<div class="content-wrap">
+
+<!-- ═══════════════════════════════════════════════════════════════
+     SECTION 1: COMPONENTS OF CANCER CARE
+     ═══════════════════════════════════════════════════════════════ -->
+<section class="s1" id="s1">
+<div class="section-header">
+  <div class="section-number">Section 01</div>
+  <h2>Components of Cancer Care</h2>
+  <p>The foundational treatment modalities used to fight cancer. Understanding these is essential because every oral complication you will see in practice traces back to one (or more) of these treatments.</p>
+</div>
+
+<!-- 4 PILLARS -->
+<h3 class="sub-title" id="s1-pillars">The Four Pillars of Cancer Therapy</h3>
+
+<p>Cancer treatment rests on four major pillars, often used in combination. Each pillar has fundamentally different mechanisms &mdash; and therefore fundamentally different side effects you need to know as a dentist.</p>
+
+<div class="compare-grid">
+  <div class="compare-card">
+    <h5 style="border-bottom-color: var(--s1);">1. Surgery</h5>
+    <p>Physically removing the tumor. Still the <strong>primary curative modality</strong> for most solid tumors (breast, colon, head &amp; neck). Modern approach favors organ-sparing, function-preserving surgery when oncologically safe.</p>
+  </div>
+  <div class="compare-card">
+    <h5 style="border-bottom-color: var(--s1);">2. Radiation Therapy</h5>
+    <p>Using ionizing radiation to damage DNA in rapidly dividing cells. Includes external beam (EBRT), intensity-modulated (IMRT), proton therapy, and brachytherapy (radioactive source placed inside/near tumor).</p>
+  </div>
+  <div class="compare-card">
+    <h5 style="border-bottom-color: var(--s1);">3. Chemotherapy / Systemic</h5>
+    <p>Drugs that kill rapidly dividing cells (cytotoxic chemo), target specific molecular pathways (targeted therapy), manipulate hormones (hormonal therapy), or replace bone marrow entirely (hematopoietic stem cell transplant / HSCT).</p>
+  </div>
+  <div class="compare-card">
+    <h5 style="border-bottom-color: var(--s1);">4. Immunotherapy</h5>
+    <p>Harnessing the patient's own immune system to recognize and attack cancer. Includes checkpoint inhibitors, CAR-T cell therapy, cancer vaccines, and oncolytic viruses. The newest and fastest-growing pillar.</p>
+  </div>
+</div>
+
+<figure>
+  <img src="img/oral-onc/hpv-hnc-treatment-approaches.png" alt="HPV+ Head and Neck Cancer treatment landscape showing transoral surgery, de-escalated radiation, neoadjuvant immunotherapies, and neoadjuvant chemotherapies">
+  <figcaption>The evolving treatment landscape for HPV+ Head &amp; Neck Cancer, showing all four pillars in action: transoral robotic surgery with adjuvants, de-escalated radiation &amp; IMRT, neoadjuvant immunotherapies (PD-1/PD-L1 inhibitors, EGFR inhibitors, TIM modulation), and neoadjuvant chemotherapies (taxanes, mTOR/mTORC1/PDE5 inhibitors). &mdash; Bouassaly J et al. (2024)</figcaption>
+</figure>
+
+<div class="callout plain">
+  <div class="callout-title">&#128161; Plain English &mdash; Neoadjuvant vs. Adjuvant</div>
+  <p><strong>Neoadjuvant</strong> = treatment given <em>before</em> the main surgery/radiation to shrink the tumor first (think &ldquo;neo&rdquo; = new beginning, given before the definitive treatment). <strong>Adjuvant</strong> = treatment given <em>after</em> the main surgery to mop up any leftover microscopic cancer cells and reduce recurrence risk (think &ldquo;adjunct&rdquo; = added on). Both terms come up constantly in oncology notes.</p>
+</div>
+
+<!-- SURGERY OVERVIEW -->
+<h3 class="sub-title" id="s1-surgery">Surgery Overview</h3>
+
+<h4 class="sub-sub">Goals of Cancer Surgery</h4>
+<ul>
+  <li><strong>Diagnosis:</strong> Biopsy to confirm what the tumor is</li>
+  <li><strong>Staging:</strong> Determine how far it has spread (e.g., sentinel lymph node biopsy)</li>
+  <li><strong>Curative resection:</strong> Removing the entire tumor with clear margins</li>
+  <li><strong>Palliation:</strong> Reducing tumor burden to relieve symptoms (when cure isn't possible)</li>
+</ul>
+
+<h4 class="sub-sub">Examples by Cancer Type</h4>
+<ul>
+  <li><strong>Breast:</strong> Lumpectomy vs. mastectomy &plusmn; sentinel lymph node biopsy</li>
+  <li><strong>Colorectal:</strong> Segmental resection with lymphadenectomy</li>
+  <li><strong>Head &amp; Neck:</strong> Wide local excision &plusmn; neck dissection &rarr; <strong>major oral implications</strong> (this is where you come in as a dentist)</li>
+</ul>
+
+<div class="callout dental">
+  <div class="callout-title">&#129463; Why This Matters for Dentistry</div>
+  <p>Head and neck surgery directly affects the structures you work with daily: tongue (glossectomy affects speech, swallowing, prosthetic retention), mandible (marginal or segmental mandibulectomy changes occlusion and prosthetic planning), maxilla (maxillectomy creates oral-nasal communication requiring obturator prostheses), and neck dissection can damage cranial nerve XI causing shoulder dysfunction.</p>
+</div>
+
+<!-- RADIOTHERAPY BASICS -->
+<h3 class="sub-title" id="s1-rt">Radiotherapy (RT) Basics</h3>
+
+<h4 class="sub-sub">How It Works</h4>
+<p>Ionizing radiation damages DNA in cells. Cancer cells divide rapidly and have impaired DNA repair mechanisms, so they're more vulnerable than normal cells. Radiation is delivered in small daily doses called <strong>fractions</strong> to allow normal tissue to recover between treatments.</p>
+
+<h4 class="sub-sub">Common Modalities</h4>
+<ul>
+  <li><strong>External Beam (EBRT):</strong> Most common. A machine aims radiation at the tumor from outside the body. <strong>IMRT</strong> (Intensity-Modulated RT) is a refined form that shapes the beam to spare normal tissues</li>
+  <li><strong>Brachytherapy:</strong> A radioactive source is placed <em>inside or next to</em> the tumor. Delivers high local dose with less damage to surrounding tissue</li>
+  <li><strong>Proton Therapy:</strong> Uses protons instead of X-rays. Key advantage: precise dose deposition with less &ldquo;exit dose&rdquo; to surrounding tissue</li>
+  <li><strong>Stereotactic Radiosurgery (SRS) / Gamma Knife:</strong> Single high-dose fraction for intracranial targets. <em>No oral implications</em></li>
+  <li><strong>Total Body Irradiation (TBI):</strong> Used before bone marrow transplant (myeloablative conditioning). Affects <em>all</em> oral tissues</li>
+</ul>
+
+<div class="callout high-yield">
+  <div class="callout-title">&#9888;&#65039; High-Yield &mdash; Critical H&amp;N Radiation Thresholds</div>
+  <ul style="margin-bottom:0">
+    <li><strong>Curative dose for H&amp;N cancer:</strong> <span class="dose">66&ndash;70 Gy</span> over 6&ndash;7 weeks</li>
+    <li><strong>&ge;50 Gy to mandible</strong> = <strong>lifelong osteoradionecrosis (ORN) risk</strong>. This never goes away. Ever.</li>
+    <li><strong>&gt;26 Gy mean dose to parotid</strong> = <strong>permanent xerostomia</strong> &rarr; rampant caries for life</li>
+    <li><strong>Pre-RT dental clearance is MANDATORY</strong> &mdash; extractions must be done <em>before</em> RT, not after (post-RT extractions risk ORN)</li>
+  </ul>
+</div>
+
+<div class="callout plain">
+  <div class="callout-title">&#128161; Plain English &mdash; Why Can't You Extract After Radiation?</div>
+  <p>Radiation permanently damages the blood vessels in bone (making it hypovascular), kills the bone-forming cells (making it hypocellular), and reduces oxygen supply (making it hypoxic). This &ldquo;<strong>3 H's</strong>&rdquo; of irradiated bone means the jaw can no longer heal normally. If you extract a tooth and create a wound in this compromised bone, it may never heal &mdash; that's osteoradionecrosis (ORN). This is why you extract hopeless teeth <em>before</em> radiation starts, and after radiation you do everything possible to avoid extractions.</p>
+</div>
+
+<!-- CONDITIONING CHEMO -->
+<h3 class="sub-title" id="s1-conditioning">Conditioning Chemotherapy (Liquid Tumors)</h3>
+
+<p>Conditioning chemotherapy is given <em>before</em> a hematopoietic stem cell transplant (HSCT). Its purpose is threefold:</p>
+<ol>
+  <li><strong>Eradicate malignant cells</strong> (kill the cancer)</li>
+  <li><strong>Suppress the recipient's immune system</strong> (prevent rejection of donor cells)</li>
+  <li><strong>Create &ldquo;space&rdquo;</strong> in the bone marrow for donor cells to engraft</li>
+</ol>
+<p>Conditioning usually runs from <strong>Day &minus;7 to Day &minus;2</strong>. The transplant itself (infusion of donor cells) happens on <strong>Day 0</strong>.</p>
+
+<h4 class="sub-sub">Three Intensity Levels</h4>
+
+<div class="table-wrap s1">
+<table>
+<thead><tr><th>Intensity</th><th>What It Does</th><th>Examples</th><th>Used For</th></tr></thead>
+<tbody>
+<tr>
+  <td><strong>Myeloablative (MA)</strong></td>
+  <td>Completely destroys all bone marrow. Causes irreversible pancytopenia. Patient <em>cannot survive</em> without stem cell rescue.</td>
+  <td>High-dose TBI (<span class="dose">&ge;8 Gy</span>), busulfan + cyclophosphamide</td>
+  <td>Younger, fit patients with AML, ALL, CML, MDS</td>
+</tr>
+<tr>
+  <td><strong>Reduced-Intensity (RIC)</strong></td>
+  <td>Intermediate intensity. Balances tumor kill with reduced toxicity.</td>
+  <td>Fludarabine + melphalan, fludarabine + busulfan (lower doses)</td>
+  <td>When full MA would be too toxic but you still need significant disease control</td>
+</tr>
+<tr>
+  <td><strong>Non-Myeloablative (NMA)</strong></td>
+  <td>Minimal direct tumor kill. Relies on <strong>graft-versus-tumor effect</strong> (the donor's immune cells will attack the cancer).</td>
+  <td>Low-dose TBI (<span class="dose">&le;2 Gy</span>) + fludarabine</td>
+  <td>Older or unfit patients, lymphomas, multiple myeloma</td>
+</tr>
+</tbody>
+</table>
+</div>
+
+<div class="callout plain">
+  <div class="callout-title">&#128161; Plain English &mdash; Myeloablative vs. Non-Myeloablative</div>
+  <p>Think of it like renovating a house. <strong>Myeloablative</strong> = demolish the entire house to the foundation and rebuild from scratch. The old structure is completely gone, and the new house (donor marrow) is the only thing that can make it livable again. <strong>Non-myeloablative</strong> = move new tenants (donor cells) into the house while some of the old tenants (patient's marrow) are still there, and rely on the new tenants to gradually push the old ones out. <strong>RIC</strong> is somewhere in between &mdash; you knock out most of the structure but not all of it.</p>
+</div>
+
+<!-- INDUCTION CHEMO -->
+<h3 class="sub-title" id="s1-induction">Induction Chemotherapy (Solid Tumors)</h3>
+
+<p>Induction chemotherapy is chemo given <em>before</em> definitive surgery or radiation. This is different from conditioning chemo (which prepares for transplant). Induction chemo is used for solid tumors, especially head and neck cancer.</p>
+
+<h4 class="sub-sub">Why Give Chemo First?</h4>
+<ul>
+  <li><strong>Reduce tumor size</strong> (cytoreduction) &mdash; makes surgery easier</li>
+  <li><strong>Improve local control</strong> &mdash; kills cancer cells at the primary site</li>
+  <li><strong>Eradicate micrometastatic disease</strong> &mdash; kills tiny deposits of cancer that have already spread but are too small to see</li>
+  <li><strong>Enable organ preservation</strong> &mdash; especially important for the larynx (preserving the voice box)</li>
+  <li><strong>Better drug delivery</strong> &mdash; blood vessels are still intact before surgery/radiation damages them</li>
+</ul>
+
+<h4 class="sub-sub">Head &amp; Neck Application</h4>
+<ul>
+  <li><strong>Preferred regimen: TPF</strong> &mdash; <span class="dose">Docetaxel + Cisplatin + 5-FU</span></li>
+  <li>Given for locally advanced disease (<strong>Stage III&ndash;IVA</strong>)</li>
+  <li>Followed by chemoradiation or surgery</li>
+  <li><strong>Controversy:</strong> Not universally superior to concurrent chemoradiation alone. Best reserved for patients seeking organ preservation, high risk of distant metastases, or rapidly growing symptomatic tumors</li>
+</ul>
+
+<!-- HLA MATCHING -->
+<h3 class="sub-title" id="s1-hla">HLA Matching Principles</h3>
+
+<h4 class="sub-sub">What is HLA?</h4>
+<p><strong>Human Leukocyte Antigen (HLA)</strong> = proteins on the surface of your cells that help your immune system distinguish &ldquo;self&rdquo; from &ldquo;non-self.&rdquo; You inherit one set from each parent. These proteins are encoded by genes on <strong>chromosome 6</strong>.</p>
+
+<p>When you transplant bone marrow from a donor, the donor's T cells look at the recipient's HLA proteins. If those proteins don't match what the donor's T cells recognize as &ldquo;self,&rdquo; the donor T cells will <strong>attack the recipient's body</strong> &mdash; this is <strong>Graft-versus-Host Disease (GVHD)</strong>.</p>
+
+<figure class="two-thirds">
+  <img src="img/oral-onc/hla-complex-chromosome6.png" alt="HLA Complex on Chromosome 6 showing Class I (A, B, C) and Class II (DP, DQ, DR) gene locations">
+  <figcaption>The HLA gene complex on the short arm of Chromosome 6. Class I genes (HLA-A, B, C) and Class II genes (DP, DQ, DR) are shown. The four genes matched for transplant are HLA-A, B, C, and DRB1.</figcaption>
+</figure>
+
+<h4 class="sub-sub">The Matching Goal</h4>
+<p><strong>8/8 match</strong> at four key genes: <span class="dose">HLA-A, HLA-B, HLA-C, HLA-DRB1</span>. Each mismatch increases GVHD risk and mortality.</p>
+
+<h4 class="sub-sub">Donor Options (Best to Most Available)</h4>
+<ol>
+  <li><strong>Matched Sibling:</strong> Best match, lowest GVHD risk. Only a <strong>25% chance</strong> any given sibling is a full match</li>
+  <li><strong>Matched Unrelated Donor (MUD):</strong> 8/8 match found through a registry (Be The Match). Larger pool but slightly higher GVHD risk than sibling</li>
+  <li><strong>Haploidentical:</strong> Half-matched family member (parent, child, or sibling). <em>Always</em> available (everyone has a haploidentical relative), but higher GVHD risk. Requires additional GVHD prophylaxis (post-transplant cyclophosphamide)</li>
+</ol>
+
+<!-- IMMUNOTHERAPY -->
+<h3 class="sub-title" id="s1-immuno">Immunotherapy Overview</h3>
+
+<p>Immunotherapy harnesses your own immune system to recognize and attack cancer cells. Unlike chemo (which poisons all rapidly dividing cells), immunotherapy makes the immune system smarter and removes the &ldquo;brakes&rdquo; that cancer uses to hide.</p>
+
+<h4 class="sub-sub">Major Categories</h4>
+
+<div class="table-wrap s1">
+<table>
+<thead><tr><th>Type</th><th>How It Works</th><th>Examples</th><th>Plain English</th></tr></thead>
+<tbody>
+<tr>
+  <td><strong>Checkpoint Inhibitors</strong></td>
+  <td>Block &ldquo;brake&rdquo; proteins on T-cells (PD-1, PD-L1, CTLA-4) &rarr; immune activation against cancer</td>
+  <td>Pembrolizumab, Nivolumab, Ipilimumab</td>
+  <td>Cancer cells put up &ldquo;don't eat me&rdquo; signs. Checkpoint inhibitors tear those signs down so T-cells can see and attack the cancer.</td>
+</tr>
+<tr>
+  <td><strong>CAR-T Cell Therapy</strong></td>
+  <td>Patient's own T-cells are removed, genetically engineered to target tumor antigens, multiplied in a lab, and infused back</td>
+  <td>Axicabtagene ciloleucel, Tisagenlecleucel</td>
+  <td>Take the patient's immune soldiers, give them GPS coordinates for the cancer, train millions of them, and send them back in.</td>
+</tr>
+<tr>
+  <td><strong>Bispecific Antibodies</strong></td>
+  <td>Engineered proteins that grab a T-cell with one arm and a tumor cell with the other, forcing them together</td>
+  <td>Blinatumomab, Teclistamab</td>
+  <td>A molecular handcuff that physically connects a killer T-cell to a cancer cell so the T-cell can't miss.</td>
+</tr>
+<tr>
+  <td><strong>Monoclonal Antibodies</strong></td>
+  <td>Lab-made antibodies that target specific proteins on tumor surfaces; may recruit immune cells or block growth signals</td>
+  <td>Rituximab (CD20), Trastuzumab (HER2)</td>
+  <td>Precision-guided missiles that stick to a specific target on the cancer cell's surface.</td>
+</tr>
+</tbody>
+</table>
+</div>
+
+<figure>
+  <img src="img/oral-onc/pd1-pdl1-checkpoint-mechanism.png" alt="PD-1/PD-L1 checkpoint inhibitor mechanism: Left shows T-cell braked by PD-L1/2, Right shows antibodies releasing the brake">
+  <figcaption>Left: T-cell receptor (TCR) recognizes tumor cell, but PD-L1/2 binding to PD-1 acts as a brake, preventing the T-cell from attacking. Right: PD-L1 and PD-1 monoclonal antibodies release the brake, allowing the T-cell to attack the tumor cell.</figcaption>
+</figure>
+
+<figure>
+  <img src="img/oral-onc/car-t-cell-therapy-process.png" alt="CAR T-cell Therapy process: blood drawn, T-cells engineered with CAR gene, expanded, and infused back into patient">
+  <figcaption>CAR T-cell Therapy workflow: (1) Remove blood to get T cells, (2) Insert gene for chimeric antigen receptor (CAR) in lab, (3) Grow millions of CAR T cells, (4) Infuse into patient, (5) CAR T cells bind to and kill cancer cells. &mdash; Winslow T. (2017), National Cancer Institute.</figcaption>
+</figure>
+
+<div class="callout plain">
+  <div class="callout-title">&#128161; Plain English &mdash; How PD-1/PD-L1 Checkpoint Inhibition Works</div>
+  <p>Normally, T-cells patrol the body looking for abnormal cells to kill. T-cells have a receptor called <strong>PD-1</strong> that acts as an &ldquo;off switch.&rdquo; When PD-1 binds to its partner <strong>PD-L1</strong> on another cell, the T-cell stands down. Cancer cells exploit this by covering themselves in PD-L1 &mdash; basically holding up a &ldquo;we're normal, move along&rdquo; badge. Checkpoint inhibitors like <strong>pembrolizumab</strong> (the drug our clinical vignette patient is on) block PD-1, so the T-cell's off switch can't be triggered. The T-cell stays active and kills the cancer. The downside: the T-cells may also attack normal tissues &mdash; that's what causes <strong>irAEs</strong> (immune-related adverse events).</p>
+</div>
+
+<!-- TARGETED THERAPY -->
+<h3 class="sub-title" id="s1-targeted">Targeted Therapy Overview</h3>
+
+<p>Unlike traditional chemotherapy (which kills <em>all</em> rapidly dividing cells, cancerous or not), targeted therapy blocks <strong>specific molecular targets</strong> driving cancer growth. This means fewer side effects on normal cells &mdash; but only works if the cancer has the specific target.</p>
+
+<h4 class="sub-sub">Major Categories</h4>
+
+<div class="table-wrap s1">
+<table>
+<thead><tr><th>Type</th><th>Mechanism</th><th>Examples</th></tr></thead>
+<tbody>
+<tr>
+  <td><strong>Tyrosine Kinase Inhibitors (TKIs)</strong></td>
+  <td>Small molecules that enter cells and block intracellular signaling kinases that drive growth</td>
+  <td>Imatinib (BCR-ABL in CML), Osimertinib (EGFR in lung cancer), Alectinib (ALK in lung cancer)</td>
+</tr>
+<tr>
+  <td><strong>Monoclonal Antibodies</strong></td>
+  <td>Large proteins that bind <em>extracellular</em> receptors/ligands on cell surface, blocking growth signals</td>
+  <td>Trastuzumab (HER2 in breast), Cetuximab (EGFR in H&amp;N/colorectal), Bevacizumab (VEGF &mdash; starves tumor blood supply)</td>
+</tr>
+<tr>
+  <td><strong>Antibody-Drug Conjugates (ADCs)</strong></td>
+  <td>Antibody acts as a guided delivery vehicle, carrying a cytotoxic drug payload directly to the tumor cell. The antibody finds the target, binds, gets internalized, and releases the poison inside the cancer cell</td>
+  <td>Trastuzumab deruxtecan (T-DXd) for HER2+ breast cancer</td>
+</tr>
+</tbody>
+</table>
+</div>
+
+<figure>
+  <img src="img/oral-onc/targeted-therapy-hallmarks-mechanisms.png" alt="Hallmarks of cancer wheel showing molecular targets, and comparison of monoclonal antibody, antibody-drug conjugate, and small molecule inhibitor mechanisms">
+  <figcaption>Left: Hallmarks of cancer with their corresponding targeted therapy drug classes mapped to each hallmark. Right: Three mechanisms of targeted therapy &mdash; monoclonal antibody (Pertuzumab inhibits HER2 dimerization), antibody-drug conjugate (Ado-trastuzumab emtansine delivers chemo to tumor cells), and small molecule inhibitor (Osimertinib inhibits downstream EGFR signaling). &mdash; Bedard PL et al. (2020); Powers Smith CE, Prasad V. (2021)</figcaption>
+</figure>
+
+<div class="callout plain">
+  <div class="callout-title">&#128161; Plain English &mdash; TKI vs. Monoclonal Antibody</div>
+  <p>Think of a cancer cell as a house on fire. <strong>TKIs</strong> are small enough to enter through the door and cut the wires fueling the fire from inside (intracellular). <strong>Monoclonal antibodies</strong> are too large to enter the house, so they stand outside and block the gas line feeding the fire (extracellular). <strong>ADCs</strong> are a monoclonal antibody carrying a bomb &mdash; they find the house, knock on the door, get let in, and then detonate the payload inside.</p>
+</div>
+
+</section>
+
+<!-- ═══════════════════════════════════════════════════════════════
+     SECTION 2: ACUTE SEQUELAE OF CANCER CARE
+     ═══════════════════════════════════════════════════════════════ -->
+<hr class="section-divider s2">
+<section class="s2" id="s2">
+<div class="section-header">
+  <div class="section-number">Section 02</div>
+  <h2>Acute Sequelae of Cancer Care</h2>
+  <p>The side effects that occur during or shortly after treatment. These are the complications you may see in a patient who walks into your operatory mid-treatment or shortly after.</p>
+</div>
+
+<!-- CHEMO SIDE EFFECTS TIMELINE -->
+<h3 class="sub-title" id="s2-chemo-timeline">Chemotherapy Side Effects Timeline</h3>
+
+<p>Chemo side effects follow a predictable timeline. Understanding this timeline tells you <em>when</em> a patient is most dangerous to treat dentally.</p>
+
+<div class="table-wrap s2">
+<table>
+<thead><tr><th>Time After Infusion</th><th>What Happens</th><th>Key Details</th></tr></thead>
+<tbody>
+<tr>
+  <td><strong>Day 1&ndash;2</strong><br>(During/Right After)</td>
+  <td>Immediate reactions</td>
+  <td>Nausea/vomiting, infusion reactions (flushing, rash, chest tightness), acute neuropathy (cold-triggered symptoms &mdash; common with oxaliplatin)</td>
+</tr>
+<tr>
+  <td><strong>Days 2&ndash;7</strong><br>(First Week)</td>
+  <td>Delayed symptoms</td>
+  <td>Delayed nausea/vomiting, fatigue, constipation, decreased appetite, diarrhea (peaks at week 2, then improves)</td>
+</tr>
+<tr>
+  <td><strong>Days 7&ndash;14</strong><br>(Nadir Period)</td>
+  <td>Bone marrow suppression reaches lowest point</td>
+  <td><strong>Oral mucositis</strong> appears. <strong>Neutropenia</strong> with risk of febrile neutropenia. This is the <em>most dangerous period</em> for dental treatment.</td>
+</tr>
+<tr>
+  <td><strong>Days 14&ndash;21+</strong><br>(Recovery)</td>
+  <td>Bone marrow recovering</td>
+  <td>Neutrophil recovery, mucositis resolution</td>
+</tr>
+<tr>
+  <td><strong>Weeks 2&ndash;3</strong></td>
+  <td>Hair loss (alopecia)</td>
+  <td>Visible but not dentally relevant</td>
+</tr>
+<tr>
+  <td><strong>Cumulative / Ongoing</strong></td>
+  <td>Builds over multiple cycles</td>
+  <td>Peripheral neuropathy (numbness/tingling in hands/feet), persistent fatigue</td>
+</tr>
+</tbody>
+</table>
+</div>
+
+<figure>
+  <img src="img/oral-onc/chemo-side-effects-timeline.png" alt="Chemotherapy side effects timeline with neutrophil count graph showing nadir at days 7-14 and recovery with G-CSF vs placebo">
+  <figcaption>Chemotherapy side effects timeline (left) and log neutrophil count over study days (right). Graph A shows the nadir (lowest point) of neutrophil count around days 8&ndash;12. Graph B shows how G-CSF (granulocyte colony-stimulating factor) accelerates neutrophil recovery compared to placebo. &mdash; Lieschke GJ, Burgess AW. (1992). N Engl J Med. 327(1):28&ndash;35.</figcaption>
+</figure>
+
+<div class="callout high-yield">
+  <div class="callout-title">&#9888;&#65039; High-Yield &mdash; The Nadir</div>
+  <p>&ldquo;Nadir&rdquo; means the lowest point. In oncology, it refers to when blood counts (especially neutrophils) hit their lowest level after a chemo cycle. This typically occurs <strong>7&ndash;14 days</strong> after infusion. During the nadir, patients are profoundly immunosuppressed and at highest risk for infection. <strong>Never do elective dental work during the nadir.</strong> If a patient needs dental treatment between cycles, time it when counts have recovered (typically check ANC &gt; 1000 and platelets &gt; 50,000).</p>
+</div>
+
+<!-- SONIS PATHOPHYSIOLOGY -->
+<h3 class="sub-title" id="s2-sonis">The Sonis Pathophysiology of Mucositis</h3>
+
+<p>Dr. Stephen Sonis described a <strong>5-phase model</strong> explaining why and how oral mucositis develops. This isn't just theoretical &mdash; understanding the mechanism explains why specific treatments work.</p>
+
+<figure>
+  <img src="img/oral-onc/sonis-pathophysiology-illustration.png" alt="Sonis 5-phase mucositis pathophysiology: detailed tissue cross-section showing Normal, Initiation, Primary Damage Response and Signal Amplification, Ulceration, and Healing phases">
+  <figcaption>The Sonis model of mucositis pathophysiology. Top: tissue-level view showing progression from normal epithelium through initiation (radiation/chemo damage), primary damage response and signal amplification (ROS, NF-&kappa;B, TNF, cytokines), ulceration (pseudomembrane formation, bacterial colonization), and healing (epithelial migration and proliferation). Bottom: cellular-level detail of each phase. &mdash; Sonis S. T. (2004). Seminars in Oncology Nursing, 20(1), 11&ndash;15.</figcaption>
+</figure>
+
+<ul class="phase-list">
+  <li class="phase-item" data-phase="1">
+    <h5>Initiation</h5>
+    <p>Chemotherapy or radiation causes <strong>direct DNA damage</strong> to the mucosal epithelial cells lining the mouth. This is the initial insult.</p>
+  </li>
+  <li class="phase-item" data-phase="2">
+    <h5>Primary Damage Response</h5>
+    <p>The DNA damage generates <strong>reactive oxygen species (ROS)</strong> &mdash; toxic molecules that cause further cell injury. ROS activate <strong>NF-&kappa;B</strong>, a &ldquo;master alarm switch&rdquo; inside cells, which triggers production of pro-inflammatory cytokines: <strong>TNF-&alpha;, IL-1&beta;, IL-6</strong>.</p>
+  </li>
+  <li class="phase-item" data-phase="3">
+    <h5>Signal Amplification</h5>
+    <p>Those cytokines recruit more inflammatory cells, which produce more ROS, which activate more NF-&kappa;B, which produces more cytokines. This creates a <strong>positive feedback loop</strong> &mdash; a vicious cycle that amplifies the damage far beyond what chemo/radiation alone caused.</p>
+  </li>
+  <li class="phase-item" data-phase="4">
+    <h5>Ulceration</h5>
+    <p>The mucosal lining breaks down completely. Open ulcers form. Bacteria from the oral cavity colonize these ulcers, activating macrophages in the submucosa and driving <em>even more</em> inflammation. <strong>Peak: Days 7&ndash;10 post-conditioning.</strong></p>
+  </li>
+  <li class="phase-item" data-phase="5">
+    <h5>Healing</h5>
+    <p>Signals from the extracellular matrix direct basal epithelial cells to migrate, proliferate, and differentiate, rebuilding the mucosal barrier. Resolves with engraftment (in HSCT patients) or end of treatment cycle.</p>
+  </li>
+</ul>
+
+<div class="callout pearl">
+  <div class="callout-title">&#128142; Clinical Pearl &mdash; Why Treatments Target Specific Phases</div>
+  <p><strong>Palifermin</strong> (keratinocyte growth factor): Works at Phase 1 and 5 &mdash; stimulates epithelial cell proliferation to thicken the mucosal barrier <em>before</em> damage occurs and accelerate healing after. Also scavenges ROS (Phase 2).<br>
+  <strong>Oral cryotherapy</strong> (ice chips during chemo infusion): Works by causing <em>vasoconstriction</em> in oral tissues, reducing blood flow to the mucosa during infusion, which means less chemotherapy drug gets delivered to oral tissue. Simple, cheap, and effective.</p>
+</div>
+
+<!-- MUCOSITIS MANAGEMENT -->
+<h3 class="sub-title" id="s2-mucositis-mgmt">Management of Oral Mucositis</h3>
+
+<h4 class="sub-sub">WHO Oral Toxicity Scale</h4>
+
+<div class="grade-scale">
+  <div class="grade-item mild">
+    <h5>Grade 1</h5>
+    Soreness &plusmn; erythema. Patient can eat and drink normally.
+  </div>
+  <div class="grade-item moderate">
+    <h5>Grade 2</h5>
+    Erythema + ulcers present. Patient can still swallow solid food.
+  </div>
+  <div class="grade-item severe">
+    <h5>Grade 3</h5>
+    Ulcers with extensive erythema. Patient <strong>cannot swallow solid food</strong>.
+  </div>
+  <div class="grade-item critical">
+    <h5>Grade 4</h5>
+    Mucositis so severe that <strong>oral alimentation is not possible</strong>. May need IV nutrition / feeding tube.
+  </div>
+</div>
+
+<figure>
+  <img src="img/oral-onc/who-mucositis-grading-photos.png" alt="WHO Oral Toxicity Scale with clinical photos: Grade 1 (soreness, erythema), Grade 2 (ulcers, can swallow solid), Grade 3 (cannot swallow solid), Grade 4 (alimentation not possible)">
+  <figcaption>WHO Oral Toxicity Scale with clinical photographs of each grade. Grade 1: soreness with erythema. Grade 2: erythema and ulcers, patient can still swallow solid food. Grade 3 (severe): extensive erythema and ulcers, patient cannot swallow solid food. Grade 4 (severe): mucositis so extensive that oral alimentation is not possible. &mdash; Raber-Durlacher JE et al. (2024); WHO (1979).</figcaption>
+</figure>
+
+<h4 class="sub-sub">Prevention</h4>
+<ul>
+  <li><strong>Photobiomodulation (PBM):</strong> Low-level laser therapy &mdash; reduces inflammation and promotes healing</li>
+  <li><strong>Oral cryotherapy:</strong> Ice chips during chemo infusion to reduce drug delivery to oral tissue</li>
+  <li><strong>Benzydamine 0.15% oral rinse:</strong> A topical NSAID + anesthetic. Rinse <span class="dose">15 mL</span> for 2 minutes, <span class="dose">4&ndash;8x/day</span> during RT or XRT</li>
+  <li><strong>Oral glutamine:</strong> A conditionally essential amino acid. <span class="dose">5&ndash;16 g</span> soak and swallow <span class="dose">BID&ndash;QID</span></li>
+  <li><strong>Palifermin</strong> (Keratin Growth Factor): Stimulates epithelial proliferation</li>
+</ul>
+
+<h4 class="sub-sub">Treatment / Symptom Management</h4>
+<ul>
+  <li><strong>Basic oral care:</strong> Soft toothbrush, floss, bland rinses (saline / sodium bicarbonate). <em>Avoid</em> alcohol-based products and mint
+    <ul><li><strong>Important:</strong> Avoid brushing and flossing during severe thrombocytopenia with active bleeding</li></ul>
+  </li>
+  <li><strong>Topical anesthetics:</strong> Viscous lidocaine, Magic Mouthwash (MMW)</li>
+  <li><strong>Topical morphine 0.2%:</strong> Especially helpful for H&amp;N XRT patients</li>
+  <li><strong>Systemic analgesics:</strong> Opioids often required for Grade 3&ndash;4 mucositis</li>
+  <li><strong>Nutritional support:</strong> Dietary modifications; feeding tube if intake &lt;60% for &gt;10 days or Grade 3+ mucositis</li>
+</ul>
+
+<!-- HSCT INFECTION TIMELINE -->
+<h3 class="sub-title" id="s2-hsct-infections">HSCT Infection Timeline</h3>
+
+<p>After a stem cell transplant, the patient's immune system is completely rebuilt from scratch. Different types of infections predominate at different time periods, based on which components of the immune system have recovered.</p>
+
+<figure>
+  <img src="img/oral-onc/hsct-infection-timeline.png" alt="HSCT infection timeline showing pathogens by time period from conditioning through Day +100 and beyond">
+  <figcaption>Timeline of infections after hematopoietic stem cell transplant. Conditioning regimen (Day &minus;7 to &minus;1), transplantation (Day 0), engraftment (~Week 3&ndash;4). Early: gram-positive/negative bacteria, HSV, Candida/Aspergillus. Mid: CMV, Pneumocystis jirovecii. Late: encapsulated bacteria, VZV. Acute GVHD peaks around weeks 3&ndash;8; chronic GVHD begins after week 12. &mdash; Kerr et al. 2023. Little &amp; Falace's, 10th ed.</figcaption>
+</figure>
+
+<div class="table-wrap s2">
+<table>
+<thead><tr><th>Period</th><th>Immune Defect</th><th>Main Pathogens</th><th>Details</th></tr></thead>
+<tbody>
+<tr>
+  <td><strong>Days 0&ndash;30</strong><br>(Pre-engraftment)</td>
+  <td>Neutropenia (no neutrophils)</td>
+  <td><strong>Bacteria</strong> (gram+, gram&minus;) + <strong>Candida</strong></td>
+  <td>Also HSV reactivation, Aspergillus. Pancytopenia requiring RBC/platelet transfusions.</td>
+</tr>
+<tr>
+  <td><strong>1&ndash;6 months</strong><br>(Post-engraftment)</td>
+  <td>T-cell dysfunction (T-cells haven't fully recovered)</td>
+  <td><strong>CMV</strong> (cytomegalovirus), <strong>PJP</strong> (<em>Pneumocystis jirovecii</em>)</td>
+  <td>Also respiratory syncytial virus. Acute GVHD typically occurs here. Immunoreconstitution ongoing.</td>
+</tr>
+<tr>
+  <td><strong>&gt;6 months</strong><br>(Late/Chronic)</td>
+  <td>Humoral dysfunction (B-cells and antibodies still impaired, especially with chronic GVHD)</td>
+  <td><strong>Encapsulated bacteria</strong> (Strep pneumo, H. flu, Neisseria), <strong>VZV</strong></td>
+  <td>Chronic GVHD begins here. Patients may be on prolonged immunosuppression.</td>
+</tr>
+</tbody>
+</table>
+</div>
+
+<!-- GVHD PREVENTION -->
+<h3 class="sub-title" id="s2-gvhd">Immunosuppression to Prevent GVHD</h3>
+
+<p><strong>Graft-versus-Host Disease (GVHD)</strong> is when the donor's immune cells (the &ldquo;graft&rdquo;) attack the recipient's body (the &ldquo;host&rdquo;). It's one of the most common and serious complications of allogeneic (donor) stem cell transplant.</p>
+
+<figure class="two-thirds">
+  <img src="img/oral-onc/gvhd-mechanism-diagram.png" alt="Graft-Versus-Host Disease mechanism: donor bone marrow cells view recipient body as foreign and attack recipient's cells">
+  <figcaption>GVHD mechanism: (1) Donor bone marrow/stem cells are transplanted into recipient. (2) Donor's cells view the body as foreign. (3) Donor's immune cells (white blood cells) attack recipient's cells &mdash; affecting skin, liver, GI tract, and other organs.</figcaption>
+</figure>
+
+<h4 class="sub-sub">Prophylaxis Regimen</h4>
+<p>GVHD prevention starts <em>before</em> the transplant and continues for months:</p>
+<ul>
+  <li><strong>Calcineurin inhibitor</strong> (tacrolimus or cyclosporine): Started Day &minus;3 or Day &minus;1</li>
+  <li><strong>Methotrexate OR mycophenolate mofetil:</strong> Given on Days +1, +3, +6, and +11</li>
+  <li><strong>Post-transplantation cyclophosphamide:</strong> Days +3, +4 &mdash; used specifically for <em>haploidentical or mismatched</em> donors</li>
+</ul>
+<p>Immunosuppression is gradually <strong>tapered and discontinued over 6&ndash;12 months</strong> if no GVHD develops.</p>
+
+<!-- MUCOSITIS VS AGVHD VS REJECTION -->
+<h3 class="sub-title" id="s2-comparison">Mucositis vs. Oral aGVHD vs. Graft Rejection</h3>
+
+<p>These three conditions can all present with oral symptoms after transplant. Distinguishing them is critical because the treatment is completely different for each.</p>
+
+<div class="table-wrap s2">
+<table>
+<thead><tr><th>Feature</th><th>Mucositis</th><th>Oral Acute GVHD</th><th>Graft Rejection</th></tr></thead>
+<tbody>
+<tr>
+  <td><strong>Timing</strong></td>
+  <td>Day +7&ndash;14, resolves ~Day +21</td>
+  <td>Day +20 onward, often at immunosuppression taper</td>
+  <td>Day +14&ndash;21 (primary); later with secondary rejection</td>
+</tr>
+<tr>
+  <td><strong>Mechanism</strong></td>
+  <td>Direct cytotoxic damage from conditioning chemo/radiation</td>
+  <td><strong>Donor T-cells attacking host tissues</strong></td>
+  <td>Host immune reconstitution destroying donor graft</td>
+</tr>
+<tr>
+  <td><strong>Systemic Signs</strong></td>
+  <td>GI mucositis, nausea, diarrhea, pain. Profoundly unwell but on a <em>predictable trajectory</em></td>
+  <td>Skin rash (often first sign), jaundice, high-volume diarrhea, oral pain. Multi-organ involvement</td>
+  <td>Fever, pancytopenia, failure to engraft. Patient deteriorates after a period of improvement</td>
+</tr>
+<tr>
+  <td><strong>Severity Trajectory</strong></td>
+  <td>Peaks then <em>resolves</em> with engraftment</td>
+  <td>Progressive if untreated; can be life-threatening</td>
+  <td><strong>Medical emergency</strong> &mdash; requires urgent salvage conditioning or second transplant</td>
+</tr>
+<tr>
+  <td><strong>Lab Findings</strong></td>
+  <td>Nadir of CBC tracks with symptom peak</td>
+  <td>Rising bilirubin, abnormal LFTs, skin biopsy, clinical staging</td>
+  <td>Falling donor chimerism on molecular testing, return of recipient hematopoiesis</td>
+</tr>
+<tr>
+  <td><strong>Treatment</strong></td>
+  <td>Supportive (pain, nutrition, infection prevention)</td>
+  <td>Increase immunosuppression &mdash; <strong>systemic corticosteroids first-line</strong></td>
+  <td>Urgent hematology intervention &mdash; salvage chemo, DLI, or re-transplant</td>
+</tr>
+<tr>
+  <td><strong>Oral Findings</strong></td>
+  <td>Diffuse erythema, pseudomembranous ulceration of <em>nonkeratinized</em> mucosa</td>
+  <td>Erythema, <strong>lichenoid changes</strong>, ulceration; hyposalivation (more robust in cGVHD)</td>
+  <td>Indirect &mdash; opportunistic infection, bleeding from thrombocytopenia</td>
+</tr>
+</tbody>
+</table>
+</div>
+
+<div class="callout plain">
+  <div class="callout-title">&#128161; Plain English &mdash; How to Tell Them Apart</div>
+  <p><strong>Timing is your best clue.</strong> Mucositis shows up early (week 1&ndash;2), peaks, then gets better as the new marrow engrafts. GVHD shows up later (Day 20+, often when doctors start reducing immunosuppression) and <em>keeps getting worse</em> unless you increase immunosuppression. Graft rejection is the scariest &mdash; the patient initially seems to be engrafting, then suddenly deteriorates because their own immune system rejected the donor cells.</p>
+</div>
+
+<!-- POST-TRANSPLANT -->
+<h3 class="sub-title" id="s2-post-transplant">&le;6 Months Post-Transplant = Highest Risk</h3>
+
+<p>During the first 6 months after transplant, the patient is maximally immunosuppressed. For dental management:</p>
+<ul>
+  <li><strong>Defer all routine dental care</strong> &mdash; emergency treatment only</li>
+  <li><strong>Infection is the dominant risk</strong> &mdash; not bleeding, not pain, <em>infection</em></li>
+  <li><strong>Classic signs of infection may be absent:</strong> Without functioning neutrophils, you may see no swelling, no erythema, and no purulence even with raging infection</li>
+</ul>
+
+<div class="callout high-yield">
+  <div class="callout-title">&#9888;&#65039; High-Yield &mdash; When Is It Safe to Treat?</div>
+  <p>For elective dental work after HSCT: <strong>ANC &gt; 1000</strong> and <strong>platelets &gt; 50,000</strong>, ideally after <strong>Day +100</strong>. Always coordinate with the transplant team. If in doubt, wait.</p>
+</div>
+
+<!-- PTLD -->
+<h3 class="sub-title" id="s2-ptld">Post-Transplant Lymphoproliferative Disorder (PTLD)</h3>
+
+<p>PTLD is an abnormal overgrowth of lymphocytes that occurs after transplant. It's essentially a lymphoma that develops because the immune system is too suppressed to keep EBV (Epstein-Barr virus) in check.</p>
+
+<ul>
+  <li><strong>Oral manifestations:</strong> Tonsillar enlargement, gingival ulcers or necrosis, oral mucosal masses</li>
+  <li><strong>Timing:</strong> First year post-transplant (usually first 2&ndash;3 months)</li>
+  <li><strong>Almost 100% EBV-associated</strong> in alloHSCT (the EBV comes from donor lymphocytes)</li>
+  <li>Occurs in <strong>1&ndash;20%</strong> of alloHSCT, depending on HLA matching and T-cell depletion</li>
+</ul>
+
+<figure>
+  <img src="img/oral-onc/ptld-clinical-risk-graph.png" alt="PTLD: clinical photo of gingival necrosis and graph showing relative risk of PTLD, leukemia, solid tumors, and NHL/HD over years post-transplant">
+  <figcaption>Top: Oral PTLD presenting as gingival ulceration and necrosis. Bottom: Relative risk of secondary malignancies over time after transplant &mdash; PTLD peaks early (first year), GvHD peaks around year 1, leukemia risk peaks around year 5, and solid tumor risk rises progressively over decades. &mdash; Kerr et al. 2023. Little &amp; Falace's, 10th ed.</figcaption>
+</figure>
+
+<div class="callout dental">
+  <div class="callout-title">&#129463; Dental Relevance</div>
+  <p>If you see a post-transplant patient with rapidly growing tonsillar or gingival masses, think PTLD. This is not a routine oral finding &mdash; urgent referral to the transplant team is required.</p>
+</div>
+
+<!-- irAEs -->
+<h3 class="sub-title" id="s2-iraes">Immune-Related Adverse Events (irAEs)</h3>
+
+<p>Remember how checkpoint inhibitors work by &ldquo;removing the brakes&rdquo; on the immune system? The problem: an unleashed immune system doesn't <em>only</em> attack cancer. It can also attack <strong>any normal tissue in the body</strong>. These autoimmune-like side effects are called <strong>irAEs</strong>.</p>
+
+<ul>
+  <li>Usually occur within the <strong>first 3 months</strong> of treatment</li>
+  <li>Can affect virtually <em>any organ system:</em> skin (rash, vitiligo, SJS), GI (colitis, hepatitis), endocrine (thyroiditis, adrenalitis, autoimmune diabetes), pulmonary (pneumonitis), cardiac (myocarditis), neurologic (encephalitis, neuropathy), musculoskeletal (arthritis, myositis), renal (nephritis), hematologic (cytopenias), and <strong>oral</strong></li>
+</ul>
+
+<figure class="dark-bg">
+  <img src="img/oral-onc/iraes-body-map-oral-photos.png" alt="irAEs body map showing affected organ systems, and clinical photos of oral irAE presentations: OLP-like, bullous pemphigoid-like, erythema multiforme-like, SJS/TEN-like, mucous membrane pemphigoid-like, Sjogren syndrome-like">
+  <figcaption>Left: Body map of irAEs showing all organ systems potentially affected by checkpoint inhibitor therapy &mdash; skin, eyes, lungs, heart, liver, pancreas, GI, joints, muscles, kidneys, blood, and nervous system. Right: Six patterns of oral mucosal irAEs &mdash; OLP-like (white reticulations, erosions), bullous pemphigoid-like, erythema multiforme-like, SJS/TEN-like, mucous membrane pemphigoid-like, and Sjogren syndrome-like (dry, smooth tongue). &mdash; Ramos-Casals et al. (2020); Klein BA (2022). Oral Diseases, 28(1), 9&ndash;22.</figcaption>
+</figure>
+
+<div class="callout plain">
+  <div class="callout-title">&#128161; Plain English &mdash; The irAE Paradox</div>
+  <p>Here's something counterintuitive: patients who develop irAEs (especially chronic ones) actually tend to have <strong>better cancer outcomes</strong>. Data shows chronic irAE patients have ~95% relapse-free survival at 30 months vs. ~55% without chronic irAEs. Why? The same immune hyperactivation that attacks normal tissues is also attacking the cancer more aggressively. So irAEs, while painful and dangerous, can actually be a sign that the immunotherapy is working well.</p>
+</div>
+
+<h4 class="sub-sub">Cutaneous irAE Timeline</h4>
+
+<figure>
+  <img src="img/oral-onc/ircae-timeline-onset.png" alt="irCAE time to onset chart showing weeks 0-3 psoriasiform rash through 16+ alopecia">
+  <figcaption>Cutaneous immune-related adverse event (irCAE) timeline showing typical time to onset in weeks after starting checkpoint inhibitor therapy. Psoriasiform rash appears earliest (weeks 0&ndash;3), followed by maculopapular rash/pruritus (4&ndash;6), lichenoid eruption (7&ndash;12), SJS/TEN/DRESS (7&ndash;12), bullous pemphigoid (13&ndash;15), vitiligo-like changes (10+), and alopecia (13+). &mdash; Geisler et al. J Aca Dermatol 30.</figcaption>
+</figure>
+
+<div class="table-wrap s2">
+<table>
+<thead><tr><th>Weeks 0&ndash;3</th><th>Weeks 4&ndash;6</th><th>Weeks 7&ndash;12</th><th>Weeks 10&ndash;15</th><th>Weeks 13+</th></tr></thead>
+<tbody>
+<tr>
+  <td>Psoriasiform rash</td>
+  <td>Maculopapular rash, Pruritus</td>
+  <td>Lichenoid eruption, SJS, TEN, DRESS</td>
+  <td>Bullous pemphigoid, Vitiligo-like changes</td>
+  <td>Alopecia</td>
+</tr>
+</tbody>
+</table>
+</div>
+
+<!-- ORAL irAE MANAGEMENT -->
+<h3 class="sub-title" id="s2-oral-iraes">Oral irAE Management</h3>
+
+<h4 class="sub-sub">Oral Mucosal irAEs</h4>
+<p>These look like autoimmune diseases you already know &mdash; because immunologically, they <em>are</em> autoimmune diseases triggered by the drug:</p>
+<ul>
+  <li><strong>OLP-like:</strong> White reticulations, erosions, ulcers (looks like oral lichen planus)</li>
+  <li><strong>MMP/BP-like:</strong> Vesicles, bullae, ulcers, erosions (looks like mucous membrane pemphigoid or bullous pemphigoid)</li>
+  <li><strong>EM-like:</strong> Irregular ulcerations, erosions, hemorrhagic crusting of the lips (looks like erythema multiforme)</li>
+  <li><strong>SJS/TEN-like, Sjogren syndrome-like</strong></li>
+</ul>
+
+<p><strong>Diagnostic workup:</strong> History and physical (ask about skin, ocular, genital involvement), rule out other etiologies, clinical photos, biopsy with DIF in addition to H&amp;E.</p>
+
+<div class="table-wrap s2">
+<table>
+<thead><tr><th>Grade</th><th>Presentation</th><th>Management</th></tr></thead>
+<tbody>
+<tr>
+  <td><strong>G1</strong></td>
+  <td>Asymptomatic or mildly symptomatic</td>
+  <td>Topical steroid solution (dexamethasone <span class="dose">0.5 mg/5 mL</span>) and/or gel (fluocinonide <span class="dose">0.05%</span>). Consider tacrolimus <span class="dose">0.1%</span> ointment for lip vermilion.</td>
+</tr>
+<tr>
+  <td><strong>G2</strong></td>
+  <td>Moderately painful lesions that do <em>not</em> interfere with oral intake</td>
+  <td>Consider <strong>holding ICI</strong> (in consultation with oncologist). Consider oral prednisone <span class="dose">1 mg/kg</span> in addition to topical steroids/tacrolimus.</td>
+</tr>
+<tr>
+  <td><strong>G3</strong></td>
+  <td>Severely painful lesions <strong>limiting oral intake</strong></td>
+  <td><strong>Hold ICI</strong>. Super high-potency topical steroid (clobetasol <span class="dose">0.05%</span> solution/gel). Oral prednisone <span class="dose">1&ndash;2 mg/kg</span> or steroid-sparing systemic medication if topical inadequate.</td>
+</tr>
+<tr>
+  <td><strong>G4</strong></td>
+  <td>Severely painful, unmanaged with prior interventions, oral alimentation <strong>impossible</strong></td>
+  <td><strong>Hold ICI, consider permanently discontinuing</strong>. Oral or IV (methyl)prednisolone <span class="dose">1&ndash;2 mg/kg</span> + steroid-sparing treatment. Continue topical regimen.</td>
+</tr>
+</tbody>
+</table>
+</div>
+
+<h4 class="sub-sub">Salivary irAEs</h4>
+<p>Presents as xerostomia, hyposalivation, and systemic features of Sjogren syndrome (fatigue, arthralgias).</p>
+<p><strong>Workup:</strong> Whole unstimulated saliva flow (WUSF), consider minor salivary gland biopsy, labs (ANA, anti-Ro, anti-La, RF).</p>
+
+<div class="table-wrap s2">
+<table>
+<thead><tr><th>Grade</th><th>Presentation</th><th>Management</th></tr></thead>
+<tbody>
+<tr>
+  <td><strong>G1</strong></td>
+  <td>Xerostomia without significant dietary change; WUSF <span class="dose">&gt;0.1 mL/min</span></td>
+  <td>OTC dry mouth products, adequate hydration. Consider sialagogue (pilocarpine <span class="dose">5 mg TID</span> or cevimeline <span class="dose">30 mg TID</span>).</td>
+</tr>
+<tr>
+  <td><strong>G2</strong></td>
+  <td>Diet limited to soft/moist foods; WUSF <span class="dose">&lt;0.1 mL/min</span>; mild systemic SS features</td>
+  <td>Consider holding ICI. Sialagogue, topical fluoride supplementation. Consider prednisone <span class="dose">1 mg/kg</span> or hydroxychloroquine. Refer to rheumatology.</td>
+</tr>
+<tr>
+  <td><strong>G3</strong></td>
+  <td>Unable to aliment orally; WUSF <span class="dose">&lt;0.1 mL/min</span>; systemic SS affecting ADLs</td>
+  <td><strong>Hold ICI.</strong> Systemic prednisone <span class="dose">1&ndash;2 mg/kg</span> or hydroxychloroquine. Co-manage with rheumatologist.</td>
+</tr>
+</tbody>
+</table>
+</div>
+
+</section>
+
+<!-- ═══════════════════════════════════════════════════════════════
+     SECTION 3: LONG-TERM SEQUELAE
+     ═══════════════════════════════════════════════════════════════ -->
+<hr class="section-divider s3">
+<section class="s3" id="s3">
+<div class="section-header">
+  <div class="section-number">Section 03</div>
+  <h2>Long-term Sequelae of Cancer Care</h2>
+  <p>The complications that persist months to years after treatment ends. As cancer survival improves, these long-term effects become increasingly important to manage &mdash; and many fall squarely in the dentist's domain.</p>
+</div>
+
+<!-- CANCER SURVIVORSHIP -->
+<h3 class="sub-title" id="s3-survivorship">Cancer Survivorship</h3>
+
+<div class="quick-facts">
+  <div class="quick-fact">
+    <span class="number">18.1M</span>
+    <span class="label">Cancer survivors in the US (Jan 2022)</span>
+  </div>
+  <div class="quick-fact">
+    <span class="number">26.0M</span>
+    <span class="label">Projected by 2040</span>
+  </div>
+  <div class="quick-fact">
+    <span class="number">78%</span>
+    <span class="label">Are over age 60</span>
+  </div>
+  <div class="quick-fact">
+    <span class="number">5.4%</span>
+    <span class="label">Of the US population</span>
+  </div>
+</div>
+
+<p>The bottom line: you <strong>will</strong> see cancer survivors in your practice. With 1 in 18 Americans being a cancer survivor (and rising), understanding long-term sequelae is not optional &mdash; it's a core competency.</p>
+
+<h4 class="sub-sub">Long-term Sequelae Overview (Adults)</h4>
+<div class="two-col">
+  <div>
+    <p><strong>Neurologic &amp; Psychologic:</strong> Chronic pain, chemotherapy-induced peripheral neuropathy (CIPN), ototoxicity, dysgeusia (taste changes), &ldquo;chemo brain&rdquo; (cognitive impairment), depression, anxiety, PTSD</p>
+    <p><strong>Lymphatic:</strong> Lymphedema</p>
+    <p><strong>Cardiovascular:</strong> Cardiotoxicity (from anthracyclines like doxorubicin)</p>
+  </div>
+  <div>
+    <p><strong>Musculoskeletal:</strong> ORN, fibrosis, fatigue, OSA</p>
+    <p><strong>Gastrointestinal:</strong> Dysphagia, hyposalivation</p>
+    <p><strong>Immune:</strong> Chronic GVHD, irAEs</p>
+  </div>
+</div>
+
+<h4 class="sub-sub">Long-term Sequelae (Pediatric Cancer Survivors)</h4>
+<p>Children treated for cancer face unique long-term effects because treatment hits developing organs:</p>
+<ul>
+  <li><strong>General:</strong> Delayed growth, delayed vaccination, educational delays, mental health burden</li>
+  <li><strong>Oral:</strong> Dental developmental abnormalities, osteoradionecrosis</li>
+  <li><strong>Endocrine:</strong> Growth hormone deficiency, hypothyroidism, thyroid cancer, adrenal insufficiency, precocious puberty</li>
+  <li><strong>Cardiac, GI, Immune, Musculoskeletal, Neurological, Reproductive, Sensory</strong></li>
+  <li><strong>Subsequent neoplasms:</strong> Breast cancer, colorectal cancer, skin cancer (treatment itself can cause new cancers)</li>
+</ul>
+
+<h4 class="sub-sub">Second Primary Malignancy</h4>
+<p>Cancer treatment itself can cause new, unrelated cancers years later:</p>
+<ul>
+  <li><strong>Radiation therapy &rarr;</strong> Leukemia (AML, CML, CLL, MDS), thyroid cancer, breast cancer (from chest RT for Hodgkin's), lung cancer, soft tissue sarcomas, bone cancer, GI cancers</li>
+  <li><strong>Chemotherapy &rarr;</strong> Leukemia from alkylating agents (cyclophosphamide, busulfan, melphalan), platinum drugs (cisplatin, carboplatin), and topoisomerase II inhibitors (etoposide)</li>
+  <li><strong>Targeted therapy &rarr;</strong> Cutaneous SCC (from vemurafenib and dabrafenib, both BRAF inhibitors)</li>
+</ul>
+
+<figure class="two-thirds">
+  <img src="img/oral-onc/second-primary-malignancy-diagram.png" alt="Diagram showing radiation therapy fields and associated secondary cancer types for different body regions">
+  <figcaption>Secondary malignancies associated with radiation therapy fields. Left figure: radiation to various body regions. Right: corresponding second primary cancers by anatomic location &mdash; CNS, thyroid, esophagus, lung, breast, stomach, GI tumors, sarcomas, colon/rectal, bladder, leukemia, and GYN/pelvic. &mdash; Kamran SC et al. (2016). Cancer, 122(12), 1809&ndash;1821.</figcaption>
+</figure>
+
+<!-- ORAL cGVHD -->
+<h3 class="sub-title" id="s3-cgvhd">Oral Chronic GVHD (cGVHD)</h3>
+
+<p>Chronic GVHD is the long-term form of graft-versus-host disease, occurring &gt;100 days post-transplant. Up to <strong>80% of cGVHD patients have oral involvement</strong>, making it one of the most common sites affected.</p>
+
+<h4 class="sub-sub">Oral Manifestations</h4>
+<ul>
+  <li><strong>Lichenoid mucosal lesions:</strong> White striae/plaques on buccal mucosa, tongue, palate (looks exactly like oral lichen planus). Causes food sensitivity and pain</li>
+  <li><strong>Salivary dysfunction:</strong> Hyposalivation, xerostomia, dysphagia, difficulty eating, <strong>very high caries index</strong> (because saliva isn't protecting teeth), recurrent mucoceles</li>
+  <li><strong>Sclerotic changes:</strong> Uncommon but causes <strong>trismus</strong> (limited mouth opening due to fibrosis of muscles/connective tissue)</li>
+  <li><strong>Second primary cancer:</strong> Oral cavity SCC and cutaneous SCC &mdash; this is a real risk</li>
+</ul>
+
+<figure>
+  <img src="img/oral-onc/oral-cgvhd-clinical-photos.png" alt="Oral chronic GVHD clinical photos showing lichenoid lesions on buccal mucosa, tongue, and palate">
+  <figcaption>Oral chronic GVHD clinical presentations: (a) Lichenoid changes on buccal mucosa with erythema and white reticulations, (b) erythematous and lichenoid changes on attached gingiva, (c) smooth, erythematous tongue with loss of papillae (salivary dysfunction), (d) widespread erythema and pseudomembranous changes on palate. &mdash; Mawardi et al. Oral Dis. 2019;25.</figcaption>
+</figure>
+
+<h4 class="sub-sub">NIH Diagnostic Criteria</h4>
+<div class="table-wrap s3">
+<table>
+<thead><tr><th>Category</th><th>Findings</th><th>Diagnostic Value</th></tr></thead>
+<tbody>
+<tr>
+  <td><strong>Diagnostic</strong></td>
+  <td>Lichen planus-like changes</td>
+  <td><strong>Sufficient alone</strong> to establish diagnosis of oral cGVHD</td>
+</tr>
+<tr>
+  <td><strong>Distinctive</strong></td>
+  <td>Hyposalivation, superficial mucoceles, mucosal atrophy, ulcers, pseudomembranes, sclerosis</td>
+  <td>Seen in cGVHD but <strong>insufficient alone</strong> &mdash; need additional organ involvement or biopsy</td>
+</tr>
+<tr>
+  <td><strong>Common</strong></td>
+  <td>Gingivitis, mucositis, erythema, pain</td>
+  <td>Seen in both acute and chronic GVHD &mdash; <strong>not diagnostic</strong></td>
+</tr>
+</tbody>
+</table>
+</div>
+
+<figure>
+  <img src="img/oral-onc/nih-oms-scoring-table.png" alt="NIH OMS scoring table for oral cGVHD: erythema, lichenoid, ulcers, and mucoceles scored by severity on different oral sites">
+  <figcaption>NIH Oral Mucosal Score (OMS) for oral cGVHD. Scored 0&ndash;15: erythema (0&ndash;3), lichenoid changes (0&ndash;3), ulcers (0&ndash;6), and mucoceles (0&ndash;3) are each graded by severity across oral sites (hard palate, soft palate, uvula, pharynx, tongue). &mdash; Filipovich et al. 2005. Biol Blood Marrow Transplant. 11(12):945&ndash;956.</figcaption>
+</figure>
+
+<p>The <strong>NIH Oral Mucosal Score (NIH OMS)</strong> grades oral cGVHD from 0&ndash;15 by measuring erythema (0&ndash;3), lichenoid changes (0&ndash;3), mucoceles (0&ndash;3), and ulcers (0&ndash;6).</p>
+
+<h4 class="sub-sub">cGVHD Treatment</h4>
+<figure>
+  <img src="img/oral-onc/ecp-photopheresis-process.png" alt="Extracorporeal photopheresis (ECP) 3-step process: blood separation, UVA irradiation with 8-MOP, and reinfusion">
+  <figcaption>Extracorporeal Photopheresis (ECP) process: Step 1 &mdash; whole blood drawn and separated into buffy coat (WBCs), plasma, and erythrocytes via automated cell separator. Step 2 &mdash; buffy coat treated with 8-Methoxypsoralen (8-MOP) and exposed to UVA irradiation (photoactivation). Step 3 &mdash; treated cells infused back to patient; red blood cells and plasma returned separately. &mdash; Bojanic I et al. (2023). Frontiers in Immunology, 14, 1086006.</figcaption>
+</figure>
+
+<p><strong>Corticosteroids</strong> are first-line (both systemic and topical). Other options: calcineurin inhibitors, mTOR inhibitors, anti-metabolites, rituximab, TKIs, and <strong>extracorporeal photopheresis (ECP)</strong> &mdash; a procedure where blood is drawn, the white blood cells are separated, treated with a photosensitizing drug + UVA light, and returned to the patient.</p>
+
+<div class="callout high-yield">
+  <div class="callout-title">&#9888;&#65039; High-Yield &mdash; cGVHD Massively Increases Oral Cancer Risk</div>
+  <ul style="margin-bottom:0">
+    <li>cGVHD increases oral cancer risk: <strong>RR = 2.78</strong> (95% CI 1.27&ndash;6.08)</li>
+    <li>SIR (standardized incidence ratio) for oral cancer after alloHCT: <strong>15.7</strong> (95% CI 12.1&ndash;20.1) &mdash; meaning 15.7x the expected rate</li>
+    <li>35-year cumulative incidence of secondary oral cancer: <strong>3.47%</strong></li>
+    <li>Highest risk: oral cGVHD duration <strong>&ge;15 months</strong> (58.6x higher than expected), prolonged immunosuppression (especially azathioprine), severe chronic GVHD</li>
+  </ul>
+</div>
+
+<!-- MRONJ -->
+<h3 class="sub-title" id="s3-mronj">Medication-Related Osteonecrosis of the Jaw (MRONJ)</h3>
+
+<h4 class="sub-sub">MRONJ Staging</h4>
+
+<div class="table-wrap s3">
+<table>
+<thead><tr><th>Stage</th><th>Clinical Features</th><th>Management</th></tr></thead>
+<tbody>
+<tr>
+  <td><strong>At Risk</strong></td>
+  <td>No exposed bone; patient on antiresorptive/antiangiogenic therapy</td>
+  <td>No treatment indicated. Patient education. Preventive dental care.</td>
+</tr>
+<tr>
+  <td><strong>Stage 0</strong></td>
+  <td>No exposed bone but nonspecific symptoms (pain, fistula, altered sensation) or radiographic changes</td>
+  <td>Symptomatic management (pain meds, antibiotics if indicated). Referral to dental specialist. Address modifiable risk factors.</td>
+</tr>
+<tr>
+  <td><strong>Stage 1</strong></td>
+  <td>Exposed/necrotic bone or fistula probing to bone; <strong>asymptomatic</strong>, no infection</td>
+  <td>Antibacterial mouth rinse (chlorhexidine). Meticulous oral hygiene. Minor debridement of sequestra. Follow-up q8 weeks. Patient education.</td>
+</tr>
+<tr>
+  <td><strong>Stage 2</strong></td>
+  <td>Exposed/necrotic bone with <strong>pain AND infection</strong> (erythema, purulent drainage)</td>
+  <td>Antibacterial rinse + <strong>systemic antibiotics</strong>. Pain control. Conservative debridement. Infection control.</td>
+</tr>
+<tr>
+  <td><strong>Stage 3</strong></td>
+  <td>Exposed bone with pain, infection, AND &ge;1 of: extension beyond alveolar bone, pathologic fracture, extraoral fistula, oral-antral/oral-nasal communication, osteolysis to inferior mandibular border or sinus floor</td>
+  <td>Antibacterial rinse + systemic antibiotics + pain control + <strong>surgical debridement or resection</strong>. Multidisciplinary approach.</td>
+</tr>
+</tbody>
+</table>
+</div>
+
+<figure class="dark-bg">
+  <img src="img/oral-onc/mronj-medication-table-clinical.png" alt="MRONJ medication risk comparison table with clinical photo showing exposed necrotic bone">
+  <figcaption>Left: Comprehensive MRONJ risk table comparing high-risk oncologic doses (zoledronic acid, denosumab/Xgeva, pamidronate) vs. lower-risk osteoporosis doses (oral alendronate, risedronate, ibandronate, IV zoledronic acid, denosumab/Prolia) with incidence rates and drug holiday recommendations. Right: Clinical photo of MRONJ showing exposed necrotic bone in the oral cavity.</figcaption>
+</figure>
+
+<figure>
+  <img src="img/oral-onc/mronj-panoramic-radiograph.png" alt="Panoramic radiograph showing MRONJ with areas of bone destruction and sequestration">
+  <figcaption>Panoramic radiograph of a patient with MRONJ showing irregular bone destruction, sequestration, and loss of normal trabecular architecture in the mandible.</figcaption>
+</figure>
+
+<figure class="dark-bg">
+  <img src="img/oral-onc/mronj-case-photos-ct.png" alt="MRONJ case progression photos and CT scans in axial, coronal, and sagittal views">
+  <figcaption>Top left: Clinical progression of MRONJ extraoral fistula over days (02/28, 03/04, 03/06/2023). Top right and bottom: CT imaging in axial and coronal views showing extent of bone destruction. Bottom right: Sagittal CT slices demonstrating osteolysis extending beyond the alveolar bone &mdash; consistent with Stage 3 MRONJ.</figcaption>
+</figure>
+
+<h4 class="sub-sub">MRONJ Risk by Medication</h4>
+<p>Risk is dramatically different between <strong>oncologic doses</strong> (high-risk) and <strong>osteoporosis doses</strong> (low-risk). This distinction matters enormously for your treatment planning.</p>
+
+<div class="table-wrap s3">
+<table>
+<thead><tr><th>Medication</th><th>Indication</th><th>Dose</th><th>MRONJ Risk</th><th>Drug Holiday?</th></tr></thead>
+<tbody>
+<tr><td colspan="5" class="category-header" style="background:#FEE2E2; color:#991B1B;">HIGH-RISK: ONCOLOGIC DOSES</td></tr>
+<tr>
+  <td><strong>Zoledronic acid (IV)</strong></td>
+  <td>Bone metastases</td>
+  <td><span class="dose">4 mg monthly</span></td>
+  <td><strong>HIGH:</strong> 1&ndash;3% at 1 year, up to 9% with prolonged use</td>
+  <td>Generally <strong>NOT</strong> recommended (skeletal event risk). If MRONJ develops, may consider stopping until soft tissue closure.</td>
+</tr>
+<tr>
+  <td><strong>Denosumab / Xgeva</strong></td>
+  <td>Bone metastases</td>
+  <td><span class="dose">120 mg monthly</span></td>
+  <td><strong>HIGH:</strong> 0.5&ndash;1.8% at 1&ndash;3 years; up to 11.6% in real-world data</td>
+  <td>Generally <strong>NOT</strong> recommended. Effects dissipate in ~6 months but stopping risks <strong>rebound vertebral fractures</strong>.</td>
+</tr>
+<tr>
+  <td><strong>Pamidronate (IV)</strong></td>
+  <td>Bone metastases</td>
+  <td><span class="dose">90 mg monthly</span></td>
+  <td><strong>HIGH:</strong> Similar to zoledronic acid</td>
+  <td>Same as zoledronic acid</td>
+</tr>
+<tr><td colspan="5" class="category-header" style="background:#D1FAE5; color:#065F46;">LOWER-RISK: OSTEOPOROSIS DOSES</td></tr>
+<tr>
+  <td><strong>Oral alendronate</strong></td>
+  <td>Osteoporosis</td>
+  <td><span class="dose">70 mg weekly</span></td>
+  <td><strong>LOW:</strong> 1 in 10,000&ndash;100,000/year; 0.21% after &gt;4 years</td>
+  <td>4 years + no risk factors: no holiday needed. &gt;4 years OR risk factors: consider 2-month holiday before invasive dental surgery.</td>
+</tr>
+<tr>
+  <td><strong>Oral risedronate</strong></td>
+  <td>Osteoporosis</td>
+  <td><span class="dose">35 mg weekly</span></td>
+  <td><strong>LOWEST</strong> among bisphosphonates (~0.1%)</td>
+  <td>Same as alendronate</td>
+</tr>
+<tr>
+  <td><strong>Oral ibandronate</strong></td>
+  <td>Osteoporosis</td>
+  <td><span class="dose">150 mg monthly</span></td>
+  <td>Same as alendronate</td>
+  <td>Same as alendronate</td>
+</tr>
+<tr>
+  <td><strong>IV zoledronic acid</strong></td>
+  <td>Osteoporosis</td>
+  <td><span class="dose">5 mg q12&ndash;18 months</span></td>
+  <td><strong>LOW:</strong> 0.2&ndash;10 per 10,000 patient-years</td>
+  <td>Pausing &gt;90 days before extraction reduces risk; &gt;1 year shows lowest risk</td>
+</tr>
+<tr>
+  <td><strong>Denosumab / Prolia</strong></td>
+  <td>Osteoporosis</td>
+  <td><span class="dose">60 mg q6 months</span></td>
+  <td><strong>LOW:</strong> 5.2 per 10,000 patient-years (0.1%)</td>
+  <td>Complex &mdash; effects dissipate in ~6 months but stopping risks <strong>rebound vertebral fractures</strong>. Consider transitioning to bisphosphonate if stopping.</td>
+</tr>
+</tbody>
+</table>
+</div>
+
+<div class="callout plain">
+  <div class="callout-title">&#128161; Plain English &mdash; Oncologic vs. Osteoporosis Dosing</div>
+  <p>The same drug at oncologic doses (monthly IV for bone metastases) is <strong>dramatically more dangerous</strong> than at osteoporosis doses (oral weekly/yearly IV for bone density). A patient on <span class="dose">alendronate 70 mg weekly</span> for osteoporosis has a 1-in-10,000 yearly risk of MRONJ &mdash; that's very low. A patient on <span class="dose">zoledronic acid 4 mg monthly</span> for bone metastases has up to a 9% risk &mdash; that's nearly 1 in 10. <strong>Always ask which indication the medication is for, not just the drug name.</strong></p>
+</div>
+
+<!-- ORN -->
+<h3 class="sub-title" id="s3-orn">Osteoradionecrosis (ORN)</h3>
+
+<p><strong>ORN</strong> is an area of exposed, devitalized, irradiated bone that fails to heal over a period of <strong>&ge;3 months</strong> in the absence of local neoplastic disease (you must rule out cancer recurrence).</p>
+
+<figure>
+  <img src="img/oral-onc/orn-panoramic-radiograph.png" alt="Panoramic radiograph showing osteoradionecrosis with devitalized irradiated bone in the mandible">
+  <figcaption>Panoramic radiograph of osteoradionecrosis (ORN) showing areas of devitalized, poorly healing bone in a previously irradiated mandible. Note the irregular radiolucency, loss of normal bone architecture, and evidence of pathologic changes. &mdash; Rivero et al. OOOO. 2017;124(5); Moon et al. Oral Oncol. 2017.</figcaption>
+</figure>
+
+<ul>
+  <li>The bone is <strong>hypoxic, hypovascular, hypocellular</strong> (the &ldquo;3 H's&rdquo;)</li>
+  <li><strong>Fibroatrophy:</strong> Progressive fibrotic replacement of normal bone and vascular tissue</li>
+  <li><strong>Incidence:</strong> Was ~20% historically; now approximately <strong>5%</strong> with modern IMRT techniques</li>
+</ul>
+
+<h4 class="sub-sub">ORN Management Recommendations</h4>
+<div class="callout high-yield">
+  <div class="callout-title">&#9888;&#65039; High-Yield &mdash; Two Key ORN Recommendations</div>
+  <ol style="margin-bottom:0">
+    <li><strong>Do NOT recommend hyperbaric oxygen (HBO)</strong> prior to extractions or for treatment of ORN. The evidence does not support it.</li>
+    <li><strong>DO recommend:</strong> Minimally traumatic extractions (when absolutely necessary), chlorhexidine rinses, and antibiotics (pre- and post-extraction). Pentoxifylline <span class="dose">400 mg BID</span> + tocopherol (vitamin E) <span class="dose">1000 IU daily</span> for treatment.</li>
+  </ol>
+</div>
+
+<!-- LYMPHEDEMA & FIBROSIS -->
+<h3 class="sub-title" id="s3-lymphedema">Lymphedema &amp; Fibrosis</h3>
+
+<div class="two-col">
+  <div>
+    <h4 class="sub-sub" style="margin-top:0">Lymphedema</h4>
+    <ul>
+      <li>Pathologic accumulation of interstitial fluid (the lymphatic drainage system is damaged)</li>
+      <li>Caused by surgery and/or RT</li>
+      <li><strong>67% of HNC survivors</strong></li>
+      <li>Decreased range of motion, hearing loss, decreased quality of life, social anxiety</li>
+      <li><strong>Treatment:</strong> Lymphatic drainage massage, compression sleeves/garments</li>
+    </ul>
+  </div>
+  <div>
+    <h4 class="sub-sub" style="margin-top:0">Fibrosis</h4>
+    <ul>
+      <li>Overaccumulation of fibrotic (scar) tissue in treated area</li>
+      <li>Caused by surgery and/or RT</li>
+      <li><strong>74% of HNC survivors</strong></li>
+      <li>Firm to touch, &ldquo;woody&rdquo; texture, swelling absent. Causes <strong>profound trismus</strong></li>
+      <li>Can <strong>worsen for years</strong> after treatment ends &rarr; late dysphagia, tracheal stenosis, abnormal posture</li>
+      <li><strong>Treatment:</strong> Early intervention with stretching exercises</li>
+    </ul>
+  </div>
+</div>
+
+<div class="figure-row">
+  <figure>
+    <img src="img/oral-onc/lymphedema-clinical-photos.png" alt="Head and neck lymphedema: compression bandages, manual lymph drainage technique, before and after decongestive therapy">
+    <figcaption>Lymphedema management in HNC: (A) Compressive bandages, (B) Manual lymph drainage, (C) Before decongestive therapy, (D) After 11 visits over 4 months. &mdash; Smith et al. 2015; Deng et al. 2019.</figcaption>
+  </figure>
+  <figure>
+    <img src="img/oral-onc/fibrosis-clinical-photos.png" alt="Radiation fibrosis: before and after photos showing firm woody tissue changes in the neck">
+    <figcaption>Radiation fibrosis in HNC survivor: (a, b) Profile views showing firm, &ldquo;woody&rdquo; tissue with loss of normal tissue planes in the neck. Causes profound trismus and can worsen for years after treatment. &mdash; Arends et al. (2024); Almadori et al. (2022).</figcaption>
+  </figure>
+</div>
+
+<div class="callout dental">
+  <div class="callout-title">&#129463; Dental Relevance &mdash; Trismus</div>
+  <p>Fibrosis-induced trismus is one of the most practically challenging findings you'll encounter. A patient who can only open 15&ndash;20mm makes comprehensive dental work extremely difficult. This is why early stretching exercises (TheraBite, tongue depressor stacking) are critical &mdash; fibrosis is much harder to reverse than prevent.</p>
+</div>
+
+<!-- DYSPHAGIA & OSA -->
+<h3 class="sub-title" id="s3-dysphagia">Dysphagia &amp; OSA</h3>
+
+<h4 class="sub-sub">Dysphagia (Difficulty Swallowing)</h4>
+<ul>
+  <li>Swallowing is a complex sensory-motor function; the <strong>tongue base</strong> is critical</li>
+  <li><strong>Risks:</strong> Aspiration pneumonia, malnutrition, dehydration, choking, psychosocial impact</li>
+  <li>May need <strong>gastrostomy</strong> (PEG tube &mdash; preferred over nasogastric tube for long-term feeding)</li>
+  <li><strong>Treatment:</strong> Food thickeners, swallowing exercises, dilation or Botox for strictures</li>
+</ul>
+
+<figure class="two-thirds">
+  <img src="img/oral-onc/swallowing-mechanics-diagram.png" alt="Swallowing mechanics: 3-phase diagram showing bolus movement, tongue elevation, UES opening, epiglottic closure">
+  <figcaption>Normal swallowing mechanics: (1) Bolus of food positioned on tongue, upper esophageal sphincter (UES) closed. (2) Tongue blocks oral cavity, soft palate blocks nasal cavity, UES opens. (3) Epiglottis blocks larynx, UES re-closes. Tongue base function is critical &mdash; any disruption (surgery, radiation fibrosis) impairs this sequence. &mdash; Baijens et al. 2021; Garc&iacute;a-Peris. 2007.</figcaption>
+</figure>
+
+<div class="callout high-yield">
+  <div class="callout-title">&#9888;&#65039; High-Yield &mdash; Sudden Onset Dysphagia</div>
+  <p>In a cancer survivor, <strong>sudden onset dysphagia = new or recurrent disease until proven otherwise</strong>. Do not assume it's just a progression of treatment effects. Urgent referral is needed.</p>
+</div>
+
+<h4 class="sub-sub">OSA Following Head &amp; Neck Cancer</h4>
+<ul>
+  <li><strong>40% of HNC patients</strong> vs. 11% of general population &mdash; nearly 4x the rate</li>
+  <li>Causes: Persistent tongue/laryngeal swelling from chemo/RT, restricted neck motion from RT fibrosis, surgical reconstruction causing obstruction</li>
+  <li>Chronic fatigue and poor sleep quality &rarr; <strong>screen for OSA</strong></li>
+  <li><strong>Treatment:</strong> CPAP, behavioral therapy, weight loss</li>
+</ul>
+
+<figure class="half">
+  <img src="img/oral-onc/osa-hnc-sagittal-ct.png" alt="Sagittal CT scans showing narrowed airway in HNC patient compared to measurements">
+  <figcaption>Sagittal CT scans of a head and neck cancer patient showing airway dimensions (x, y measurements). (a) Pre-treatment airway. (b) Post-treatment narrowing due to tissue swelling, fibrosis, and/or surgical reconstruction &mdash; contributing to the 40% OSA prevalence in HNC survivors. &mdash; Saesen et al. 2021; Ouyang et al. 2019.</figcaption>
+</figure>
+
+<!-- CHRONIC PAIN -->
+<h3 class="sub-title" id="s3-pain">Chronic Pain in Cancer Survivors</h3>
+
+<ul>
+  <li><strong>20&ndash;40%</strong> of all cancer survivors have chronic pain (up to <strong>50% in HNC</strong>)</li>
+  <li>Can be related to the tumor itself or to treatment</li>
+  <li><strong>Underdiagnosed and poorly managed</strong></li>
+  <li>Requires multimodal management</li>
+  <li>Causes unemployment and reduced working hours <strong>&gt;5 years</strong> after diagnosis</li>
+</ul>
+
+<h4 class="sub-sub">Chronic Pain in HNC Specifically</h4>
+<ul>
+  <li>High incidence that <strong>increases</strong> with time (see table below)</li>
+  <li style="color: var(--s2); font-weight:600;">Can be a sign of recurrence &mdash; always consider this</li>
+  <li>Associated with worse quality of life and depression</li>
+  <li>11.5% require opioids long-term</li>
+</ul>
+
+<div class="table-wrap s3">
+<table>
+<thead><tr><th>Years Since Dx</th><th>No Pain (n)</th><th>No Pain (%)</th><th>Mild&ndash;Severe Pain (n)</th><th>Mild&ndash;Severe Pain (%)</th></tr></thead>
+<tbody>
+<tr><td>1&ndash;3</td><td>38</td><td>62.3%</td><td>23</td><td>37.7%</td></tr>
+<tr><td>&gt;3&ndash;5</td><td>14</td><td>51.9%</td><td>13</td><td>48.1%</td></tr>
+<tr><td>&gt;5&ndash;10</td><td>18</td><td>41.9%</td><td><strong>25</strong></td><td><strong>58.1%</strong></td></tr>
+<tr><td>&gt;10</td><td>19</td><td>54.3%</td><td>16</td><td>45.7%</td></tr>
+</tbody>
+</table>
+</div>
+<p style="font-size:0.78rem;color:var(--text-muted);margin-top:-8px">Table 4: Frequency of Pain among Survivors of HNC Based on Years since Diagnosis. &mdash; Cramer et al. Otolaryng Head Neck. 2018;159(5).</p>
+
+<p><strong>Most Important Treatment-Related Effects to HNC Survivors:</strong></p>
+
+<div class="table-wrap s3">
+<table>
+<thead><tr><th>Effect</th><th>n</th><th>%</th></tr></thead>
+<tbody>
+<tr><td>1. Swallowing</td><td>80</td><td>45.7%</td></tr>
+<tr><td>2. Saliva</td><td>69</td><td>39.4%</td></tr>
+<tr><td style="font-weight:700;color:var(--s2)">3. Pain</td><td style="font-weight:700">50</td><td style="font-weight:700">28.6%</td></tr>
+<tr><td>4. Chewing</td><td>38</td><td>21.7%</td></tr>
+<tr><td>5. Activity</td><td>29</td><td>16.6%</td></tr>
+<tr><td>6. Speech</td><td>29</td><td>16.6%</td></tr>
+<tr><td>7. Shoulder</td><td>26</td><td>14.9%</td></tr>
+<tr><td>8. Taste</td><td>24</td><td>13.7%</td></tr>
+<tr><td>9. Anxiety</td><td>18</td><td>10.3%</td></tr>
+<tr><td>10. Appearance</td><td>18</td><td>10.3%</td></tr>
+<tr><td>11. Mood</td><td>17</td><td>9.7%</td></tr>
+<tr><td>12. Recreation</td><td>9</td><td>5.1%</td></tr>
+</tbody>
+</table>
+</div>
+<p style="font-size:0.78rem;color:var(--text-muted);margin-top:-8px">Table 3: Most Important Treatment-Related Effects to HNC Survivors. &mdash; Cramer et al. 2018.</p>
+
+<figure>
+  <img src="img/oral-onc/chronic-pain-pathways-diagram.png" alt="Mind map of pain types in cancer survivors: painful neuropathies, radiation induced pain, chronic post-surgical pain, musculoskeletal pain, direct tumour effects">
+  <figcaption>Pain pathways in cancer survivors: central hub shows &ldquo;Pain in cancer survivors&rdquo; with branches to painful neuropathies (CIPN, monoclonal antibody-related, para-neoplastic, GVHD-related), radiation-induced pain (brachial plexopathy, lumbosacral plexopathy, bystander effects), chronic post-surgical pain, musculoskeletal pain, direct tumor effects (cancer-induced bone pain), and general deconditioning. &mdash; Brown M &amp; Farquhar-Smith P. (2017). BJA, 119(4), 723&ndash;736.</figcaption>
+</figure>
+
+<h4 class="sub-sub">Minimizing Pain Risk</h4>
+<ul>
+  <li><strong>Spare cranial nerve XI</strong> during surgery (prevents shoulder dysfunction and chronic pain)</li>
+  <li><strong>Use IMRT</strong> (reduces radiation to non-target tissues)</li>
+  <li><strong>Prevent dental complications</strong> (so patients don't develop ORN, MRONJ, or chronic infections that cause additional pain)</li>
+</ul>
+
+<h4 class="sub-sub">Comprehensive Pain Treatment Options</h4>
+<div class="table-wrap s3">
+<table>
+<thead><tr><th>Category</th><th>Options</th><th>Indications</th></tr></thead>
+<tbody>
+<tr><td><strong>Nonopioid</strong></td><td>Acetaminophen, NSAIDs</td><td>Every patient if indicated (first-line)</td></tr>
+<tr><td><strong>Weak opioids</strong></td><td>Codeine, hydrocodone, tramadol</td><td>Mild-moderate pain with nonopioid; tramadol 2nd line for neuropathic</td></tr>
+<tr><td><strong>Strong opioids</strong></td><td>1st line: morphine, oxycodone, hydromorphone<br>2nd line: methadone, buprenorphine, tapentadol</td><td>Moderate to severe pain</td></tr>
+<tr><td><strong>Ketamine</strong></td><td>IV ketamine</td><td>Refractory chronic pain</td></tr>
+<tr><td><strong>TCAs</strong></td><td>Amitriptyline, nortriptyline</td><td>Neuropathic pain</td></tr>
+<tr><td><strong>SNRIs</strong></td><td>Duloxetine, venlafaxine</td><td>Neuropathic pain</td></tr>
+<tr><td><strong>Anticonvulsants</strong></td><td>Gabapentin, pregabalin</td><td>Neuropathic pain</td></tr>
+<tr><td><strong>Topical</strong></td><td>Lidocaine, capsaicin</td><td>Localized neuropathic pain</td></tr>
+<tr><td><strong>Neuromodulation</strong></td><td>Deep brain stimulation, TMS, spinal cord stimulation</td><td>Localized neuropathic pain / under research</td></tr>
+<tr><td><strong>Complementary</strong></td><td>Hypnosis, yoga, tai chi, CBT, acupuncture, massage, music therapy</td><td>Chronic pain, aromatase inhibitor-related arthralgia</td></tr>
+</tbody>
+</table>
+</div>
+
+<!-- OTOTOXICITY & CHEMO BRAIN -->
+<h3 class="sub-title" id="s3-ototox">Ototoxicity &amp; Chemotherapy-Induced Cognitive Impairment</h3>
+
+<h4 class="sub-sub">Ototoxicity</h4>
+<div class="two-col">
+  <div>
+    <p><strong>From Cisplatin (chemotherapy):</strong></p>
+    <ul>
+      <li>Moderate to severe hearing loss in <strong>20%</strong> of patients</li>
+      <li>Tinnitus in <strong>40%</strong></li>
+      <li>Dose-related and <strong>often permanent</strong></li>
+    </ul>
+  </div>
+  <div>
+    <p><strong>From Radiation Therapy:</strong></p>
+    <ul>
+      <li>Sensorineural hearing loss</li>
+      <li>Permanent, progressive, and dose-dependent</li>
+      <li>Presents <strong>&ge;12 months post-RT</strong></li>
+      <li>High frequencies affected first</li>
+      <li><strong>&gt;45 Gy</strong> to cochlea = at risk</li>
+    </ul>
+  </div>
+</div>
+
+<figure class="two-thirds">
+  <img src="img/oral-onc/ototoxicity-cochlea-distance.png" alt="Diagram showing distance of primary tumor sites from cochlea categorized as close, mid-near, mid-far, and far">
+  <figcaption>Distance of primary tumor site from cochlea determines radiation-induced hearing loss risk. Close (dark blue): nasopharynx, nasal cavity, ipsilateral temporal bone/parotid. Mid-near: ipsilateral oral cavity, oropharynx, hypopharynx. Mid-far: midline and contralateral oropharynx. Far (white): larynx, midline/contralateral oral cavity. &gt;45 Gy to cochlea = at risk. &mdash; Schuette et al. 2020; Mujica-Mota et al. 2013.</figcaption>
+</figure>
+
+<h4 class="sub-sub">Chemotherapy-Induced Cognitive Impairment (&ldquo;Chemo Brain&rdquo;)</h4>
+<ul>
+  <li><strong>60%</strong> of patients treated with chemotherapy develop cognitive dysfunction</li>
+  <li>Mechanism: Direct neuronal toxicity + chronic inflammation</li>
+  <li><strong>Can last for years</strong> after treatment</li>
+  <li>Deficits in concentration, memory, multi-tasking, decision-making, learning, and language</li>
+  <li><strong>Treatment:</strong> Compensatory strategies, CBT, physical activity</li>
+</ul>
+
+<figure class="two-thirds">
+  <img src="img/oral-onc/cici-mechanism-diagram.png" alt="CICI mechanism diagram showing oxidative stress, inflammatory cytokines, epigenetic modulations, apoptosis, reduced neurotransmitters, loss of dendritic arborization, MAPK dysregulation">
+  <figcaption>Mechanisms of Chemotherapy-Induced Cognitive Impairment (CICI): Oxidative stress, inflammatory cytokines, epigenetic modulations, apoptosis and autophagy, reduced neurotransmitters, loss of spine and dendritic arborization, and MAPK dysregulation all contribute to cognitive dysfunction. &mdash; Rao V et al. (2022). Advances in Cancer Research, 155, 29&ndash;76.</figcaption>
+</figure>
+
+<div class="callout dental">
+  <div class="callout-title">&#129463; Dental Relevance</div>
+  <p>Chemo brain affects your patient's ability to follow oral hygiene instructions, remember appointments, and make treatment decisions. Be patient, provide written instructions, and give extra reminders. Ototoxicity may mean your patient doesn't hear you well &mdash; face them directly and speak clearly.</p>
+</div>
+
+</section>
+
+<!-- ═══════════════════════════════════════════════════════════════
+     SECTION 4: DENTAL MANAGEMENT OF ONCOLOGIC PATIENTS
+     ═══════════════════════════════════════════════════════════════ -->
+<hr class="section-divider s4">
+<section class="s4" id="s4">
+<div class="section-header">
+  <div class="section-number">Section 04</div>
+  <h2>Dental Management of Oncologic Patients</h2>
+  <p>The practical clinical protocols: when to treat, what to prioritize, how to make treatment decisions for patients on cancer therapy. This is where everything comes together.</p>
+</div>
+
+<!-- PRE-TREATMENT CLEARANCE -->
+<h3 class="sub-title" id="s4-clearance">Pre-Treatment Dental Clearance = Infection Control</h3>
+
+<p>Why does oncology send patients to the dentist before starting cancer treatment? Because:</p>
+<ul>
+  <li><strong>Odontogenic infections can be life-threatening</strong> during profound immunosuppression. A routine periapical abscess that you'd normally treat with antibiotics can become fatal sepsis when the patient has zero neutrophils.</li>
+  <li>With appropriate clearance, only <strong>0.57%</strong> develop odontogenic complications &mdash; extremely low.</li>
+  <li><strong>Asymptomatic disease still matters:</strong> Non-vital teeth and untreated periapical pathology <strong>must be eliminated</strong> even if the patient has no symptoms. A tooth that's currently &ldquo;quiet&rdquo; can flare during neutropenia.</li>
+</ul>
+
+<!-- TIMING -->
+<h3 class="sub-title" id="s4-timing">Timing &amp; Decision Making</h3>
+
+<figure>
+  <img src="img/oral-onc/timing-clearance-timeline.png" alt="Pre-transplant dental clearance timeline: Referral 3-4 weeks before, Evaluation ASAP, Clearance 10-14 days before, Transplant Day 0">
+  <figcaption>Pre-transplant dental clearance timeline. Referral: 3&ndash;4 weeks before treatment. Evaluation and Treatment: ASAP. Clearance: &ge;10&ndash;14 days (ideally &ge;2 weeks) before conditioning. Transplant: Day 0. For urgent patients: prioritize infection control, even if treatment isn't ideal. &mdash; Tomblyn et al. (2009). Biol Blood Marrow Transplant, 15(10), 1143&ndash;1238.</figcaption>
+</figure>
+
+<h4 class="sub-sub">Pre-Treatment Timeline</h4>
+<div class="table-wrap s4">
+<table>
+<thead><tr><th>Step</th><th>When</th><th>Details</th></tr></thead>
+<tbody>
+<tr><td><strong>Referral</strong></td><td>3&ndash;4 weeks before treatment</td><td>Oncology refers patient to dentistry for evaluation</td></tr>
+<tr><td><strong>Evaluation &amp; Treatment</strong></td><td>ASAP after referral</td><td>Comprehensive exam, radiographs, identify and treat all sources of infection</td></tr>
+<tr><td><strong>Clearance</strong></td><td>&ge;10&ndash;14 days (ideally &ge;2 weeks) before conditioning</td><td>All extractions healed, infections resolved, patient cleared</td></tr>
+<tr><td><strong>Cancer Treatment</strong></td><td>Day 0</td><td>Transplant, first radiation, or first chemo cycle begins</td></tr>
+</tbody>
+</table>
+</div>
+
+<div class="callout high-yield">
+  <div class="callout-title">&#9888;&#65039; High-Yield &mdash; The Cardinal Rule</div>
+  <p><strong>NEVER delay oncologic treatment for dental work</strong> unless the tumor is slow-growing AND oncology agrees. Cancer treatment saves lives. Dental work can usually be expedited or deferred. If the timeline is tight, prioritize <strong>infection control</strong> even if ideal treatment isn't possible.</p>
+</div>
+
+<h4 class="sub-sub">When Can You Do Dental Work?</h4>
+
+<div class="table-wrap s4">
+<table>
+<thead><tr><th>Treatment Type</th><th>Healing Window Needed</th><th>Highest Risk Period</th><th>Can Delay Cancer Treatment?</th></tr></thead>
+<tbody>
+<tr>
+  <td><strong>HSCT</strong></td>
+  <td>10&ndash;14 days pre-conditioning</td>
+  <td>Days 0&ndash;100 (especially pre-engraftment)</td>
+  <td><strong>NO</strong></td>
+</tr>
+<tr>
+  <td><strong>Solid Organ Transplant</strong></td>
+  <td>None required</td>
+  <td>First 1&ndash;6 months post-transplant</td>
+  <td><strong>NO</strong></td>
+</tr>
+<tr>
+  <td><strong>Standard Chemotherapy</strong></td>
+  <td>None required</td>
+  <td>During neutropenia (ANC &lt;1000)</td>
+  <td><strong>NO</strong> &mdash; but can do dental work between cycles</td>
+</tr>
+<tr>
+  <td><strong>Intensive Chemotherapy</strong></td>
+  <td>None required</td>
+  <td>Days 0&ndash;100 (prolonged neutropenia)</td>
+  <td><strong>NO</strong></td>
+</tr>
+<tr>
+  <td><strong>Head &amp; Neck Radiation</strong></td>
+  <td>&ge;2 weeks pre-RT</td>
+  <td><strong>Lifelong</strong> (ORN risk)</td>
+  <td><strong>NO</strong></td>
+</tr>
+<tr>
+  <td><strong>Bone-Modifying Agents</strong></td>
+  <td>Complete healing before starting</td>
+  <td><strong>Lifelong</strong> (MRONJ risk 1.6&ndash;14.8%)</td>
+  <td><strong>Maybe</strong> &mdash; coordinate with oncology</td>
+</tr>
+</tbody>
+</table>
+</div>
+
+<!-- CARIES DECISION GUIDE -->
+<h3 class="sub-title" id="s4-caries">Caries Treatment Decision Guide by Cancer Type</h3>
+
+<figure>
+  <img src="img/oral-onc/ada-caries-classification.png" alt="ADA Caries Classification System showing Sound, Initial (ICDAS 1-2), Moderate (ICDAS 3-4), and Advanced (ICDAS 5-6) with clinical photos, smooth surface photos, and radiographic presentations">
+  <figcaption>American Dental Association Caries Classification System. Sound (ICDAS 0): no lesion. Initial (ICDAS 1&ndash;2): earliest detectable, enamel-limited, visually noncavitated. Moderate (ICDAS 3&ndash;4): visible enamel breakdown, early cavitation, radiolucency into middle 1/3 of dentin. Advanced (ICDAS 5&ndash;6): fully cavitated, deep dentin involvement, radiolucency into inner 1/3 of dentin. &mdash; Young DA et al. (2015). J Am Dent Assoc. 146(2):79&ndash;86.</figcaption>
+</figure>
+
+<p>This is the most practical table in the entire lecture. For each depth of caries lesion, the correct treatment decision changes based on what type of cancer treatment the patient is receiving.</p>
+
+<div class="table-wrap s4">
+<table>
+<thead><tr><th>Lesion</th><th>HSCT / LVAD</th><th>Solid Organ Transplant</th><th>Standard Chemo</th><th>Head &amp; Neck RT</th><th>Bone-Modifying Agents</th></tr></thead>
+<tbody>
+<tr>
+  <td><strong>D1 (Enamel)</strong></td>
+  <td>SDF + 5000ppm F</td>
+  <td>SDF + 5000ppm F</td>
+  <td>Fluoride varnish</td>
+  <td>Fluoride varnish</td>
+  <td>Fluoride varnish</td>
+</tr>
+<tr>
+  <td><strong>D2 (Dentin, not deep)</strong></td>
+  <td>SDF + ITR if hyposalivation; extract if rampant caries</td>
+  <td>SDF + ITR; acceptable</td>
+  <td>Observe or restore if time</td>
+  <td>Restore if time; SDF if not</td>
+  <td>Restore before starting BMA</td>
+</tr>
+<tr>
+  <td><strong>D3 (Deep, radio-dense zone)</strong></td>
+  <td><strong>Extract</strong></td>
+  <td>Extract or restore if 2&ndash;3 days available</td>
+  <td>Restore if time; observe if asymptomatic</td>
+  <td>Pre-RT: Extract if in RT field<br>Post-RT: Endo + coronectomy preferred over extraction</td>
+  <td>Pre-BMA: Extract<br>On BMA: Endo + coronectomy preferred</td>
+</tr>
+<tr>
+  <td><strong>D4 (Pulpal involvement)</strong></td>
+  <td><strong>Extract</strong></td>
+  <td><strong>Extract</strong></td>
+  <td>Extract or endo</td>
+  <td>Pre-RT: Extract<br>Post-RT: Endo + coronectomy preferred</td>
+  <td>Pre-BMA: Extract<br>On BMA: Endo + coronectomy preferred</td>
+</tr>
+<tr>
+  <td><strong>Severe periodontitis (&ge;6mm pockets)</strong></td>
+  <td><strong>Extract</strong></td>
+  <td><strong>Extract</strong></td>
+  <td>Observe</td>
+  <td>Extract if in RT field</td>
+  <td>Extract before starting</td>
+</tr>
+<tr>
+  <td><strong>Partially impacted 3rd molars</strong></td>
+  <td>Extract if pericoronitis history</td>
+  <td>Consider extraction</td>
+  <td>Observe</td>
+  <td>Pre-RT: Extract if time<br>Post-RT: Coronectomy if symptomatic</td>
+  <td>Extract before starting; coronectomy + endo if already on BMA</td>
+</tr>
+</tbody>
+</table>
+</div>
+
+<div class="callout plain">
+  <div class="callout-title">&#128161; Plain English &mdash; Why Endo + Coronectomy Post-RT/BMA?</div>
+  <p>After radiation or while on bone-modifying agents, you want to <strong>avoid extracting teeth at all costs</strong> because removing a tooth creates a wound in bone that may never heal (ORN or MRONJ). So instead, you do <strong>endodontic treatment</strong> (root canal to eliminate the infection) and then <strong>coronectomy</strong> (remove only the crown of the tooth, leaving the roots buried in bone). The roots stay in place, so you never create a bony wound. This is a compromise, but it's far safer than risking osteonecrosis.</p>
+</div>
+
+<!-- POST-TREATMENT PROTOCOLS -->
+<h3 class="sub-title" id="s4-post">Post-Treatment Dental Protocols</h3>
+
+<div class="table-wrap s4">
+<table>
+<thead><tr><th>Treatment</th><th>Safe for Elective Dental Work</th><th>Extraction Precautions</th><th>Preventive Protocol</th></tr></thead>
+<tbody>
+<tr>
+  <td><strong>HSCT</strong></td>
+  <td>ANC &gt;1000, platelets &gt;50K, ideally after Day +100</td>
+  <td>Avoid during neutropenia</td>
+  <td><span class="dose">5000ppm F</span> daily; chlorhexidine rinse</td>
+</tr>
+<tr>
+  <td><strong>Solid Organ Transplant</strong></td>
+  <td>After 6 months (immunosuppression tapered)</td>
+  <td>Check with transplant team first month</td>
+  <td><span class="dose">5000ppm F</span> if xerostomia</td>
+</tr>
+<tr>
+  <td><strong>Chemotherapy</strong></td>
+  <td>Between cycles if ANC &gt;1000 and platelets &gt;50K</td>
+  <td>CBC on day of procedure</td>
+  <td><span class="dose">5000ppm F</span> daily; saline/bicarb rinses</td>
+</tr>
+<tr>
+  <td><strong>Head &amp; Neck RT</strong></td>
+  <td>Anytime with precautions; <strong>avoid high-dose areas (&ge;50 Gy)</strong></td>
+  <td>Antibiotics pre- and post-extraction; pentoxifylline <span class="dose">400 mg BID</span> + tocopherol <span class="dose">1000 IU daily</span></td>
+  <td>Daily <span class="dose">1.1% NaF gel</span> or varnish 3x/year &mdash; <strong>LIFELONG</strong></td>
+</tr>
+<tr>
+  <td><strong>Bone-Modifying Agents (oncologic dose)</strong></td>
+  <td>Elective surgery <strong>contraindicated</strong></td>
+  <td>If must extract: close monitoring q6&ndash;8 weeks until healed</td>
+  <td>Dental exam q6 months; address modifiable risks</td>
+</tr>
+</tbody>
+</table>
+</div>
+
+<div class="callout pearl">
+  <div class="callout-title">&#128142; Clinical Pearl &mdash; Lifelong Fluoride After H&amp;N RT</div>
+  <p>Patients who received head and neck radiation need <strong>daily high-concentration fluoride for the rest of their lives</strong>. Permanent xerostomia from parotid damage means the teeth have lost their primary defense against acid attack. Without daily 1.1% NaF gel in custom trays or frequent fluoride varnish, these patients develop rampant caries that progresses extremely fast. This is non-negotiable preventive care.</p>
+</div>
+
+<!-- CONCLUSIONS -->
+<h3 class="sub-title">Conclusions</h3>
+
+<ul>
+  <li>With declining mortality, <strong>cancer survivorship is more important than ever</strong> &mdash; more patients are living longer with the consequences of their treatment</li>
+  <li>Adverse effects of therapy can lead to <strong>long-term morbidity</strong> that significantly impacts quality of life</li>
+  <li>With novel therapeutics (immunotherapy, targeted therapy), we're seeing <strong>new categories of side effects</strong> (irAEs) that we're still learning to manage</li>
+  <li>Long-term mortality data for HNC survivors (Ringash 2015):</li>
+</ul>
+
+<div class="table-wrap s4">
+<table>
+<thead><tr><th>Cause of Death</th><th>5-Year Mortality % (95% CI)</th><th>10-Year Mortality % (95% CI)</th></tr></thead>
+<tbody>
+<tr><td><strong>Head and neck cancer</strong></td><td>5.9 (5.7&ndash;6.2)</td><td>11.9 (11.6&ndash;12.3)</td></tr>
+<tr><td>Second primary malignancy</td><td>3.4 (3.2&ndash;3.6)</td><td>9.5 (9.1&ndash;9.9)</td></tr>
+<tr><td>Cardiovascular disease</td><td>2.7 (2.5&ndash;2.8)</td><td>8.4 (8.1&ndash;8.8)</td></tr>
+<tr><td>Other</td><td>2.9 (2.7&ndash;3.1)</td><td>9.5 (9.1&ndash;9.9)</td></tr>
+<tr><td>Cancer, unspecified</td><td>0.5 (0.4&ndash;0.6)</td><td>1.6 (1.4&ndash;1.7)</td></tr>
+</tbody>
+</table>
+</div>
+<p style="font-size:0.78rem;color:var(--text-muted);margin-top:-8px">Cumulative mortality by cause of death. &mdash; Ringash J. (2015). Journal of Clinical Oncology, 33(29), 3322&ndash;3327.</p>
+
+<ul>
+  <li>Our cancer survivor patients are <strong>dealing with a lot</strong> &mdash; pain, swallowing difficulties, dry mouth, fatigue, cognitive changes, anxiety, depression, and the ever-present fear of recurrence. Treat them with understanding.</li>
+</ul>
+
+<div class="callout pearl" style="margin-top: 30px;">
+  <div class="callout-title">&#128142; Bringing It Back to the Clinical Vignette</div>
+  <p>Our 33-year-old patient at the start of this lecture has navigated nearly every topic covered here: she had <strong>surgery</strong> (partial glossectomy), <strong>radiation therapy</strong> (with lifelong ORN risk), <strong>immunotherapy</strong> (pembrolizumab &mdash; a checkpoint inhibitor), an <strong>irAE</strong> (hypothyroidism from pembrolizumab), <strong>chronic pain</strong> (3000 mg Tylenol daily, sleep disrupted), and now faces possible <strong>cancer recurrence</strong> (the CT showing centrally necrotic mass more likely recurrent SCC than abscess). She represents the reality of oral oncology: these patients carry the cumulative burden of everything we've discussed, often all at once.</p>
+</div>
+
+</section>
+
+</div><!-- /content-wrap -->
+</div><!-- /main-content -->
+
+<!-- BACK TO TOP BUTTON -->
+<button class="back-top" id="backTop" onclick="window.scrollTo({top:0,behavior:'smooth'})" title="Back to top">&uarr;</button>
+
+<script>
+// Back to top visibility
+const backTop = document.getElementById('backTop');
+window.addEventListener('scroll', () => {
+  backTop.classList.toggle('visible', window.scrollY > 600);
+});
+
+// Active nav link highlighting
+const navLinks = document.querySelectorAll('.nav-link[href^="#"]');
+const sections = [];
+navLinks.forEach(link => {
+  const id = link.getAttribute('href').slice(1);
+  const el = document.getElementById(id);
+  if (el) sections.push({ el, link });
+});
+
+function updateActiveNav() {
+  let current = sections[0];
+  const scrollPos = window.scrollY + 120;
+  for (const s of sections) {
+    if (s.el.offsetTop <= scrollPos) current = s;
+  }
+  navLinks.forEach(l => l.classList.remove('active'));
+  if (current) current.link.classList.add('active');
+}
+
+window.addEventListener('scroll', updateActiveNav);
+updateActiveNav();
+</script>
+
+</body>
+</html>

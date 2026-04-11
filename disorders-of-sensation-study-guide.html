@@ -1,0 +1,2016 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Disorders of Sensation | OD 531 Study Guide</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Crimson+Pro:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&family=Karla:ital,wght@0,400;0,500;0,600;0,700;1,400&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+    --bg: #FAF8F4;
+    --bg-card: #FFFFFF;
+    --bg-sidebar: #1B2838;
+    --text: #1B2838;
+    --text-muted: #5A6B7D;
+    --text-light: #8896A6;
+    --border: #E2DDD5;
+    --border-light: #F0ECE6;
+    --primary: #2B5E8C;
+    --primary-dark: #1E4366;
+    --primary-light: #E8F0F8;
+    --accent: #C8923E;
+    --accent-dark: #A87730;
+    --accent-light: #FEF7EC;
+    --success: #2E7D5B;
+    --success-light: #EBF5F0;
+    --danger: #B5483B;
+    --danger-light: #FDF0EE;
+    --purple: #6B4C9A;
+    --purple-light: #F3EFF8;
+    --teal: #1A8A7D;
+    --teal-light: #E6F6F4;
+    --shadow-sm: 0 1px 3px rgba(27,40,56,0.06);
+    --shadow-md: 0 4px 12px rgba(27,40,56,0.08);
+    --shadow-lg: 0 8px 24px rgba(27,40,56,0.10);
+    --radius: 8px;
+    --radius-lg: 12px;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+html { scroll-behavior: smooth; scroll-padding-top: 80px; }
+
+body {
+    font-family: 'Karla', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    font-size: 16px;
+    line-height: 1.72;
+    -webkit-font-smoothing: antialiased;
+}
+
+/* ═══ HEADER ═══ */
+.hero {
+    background: linear-gradient(135deg, #1B2838 0%, #2B5E8C 50%, #1A8A7D 100%);
+    color: #fff;
+    padding: 56px 40px 48px;
+    position: relative;
+    overflow: hidden;
+}
+.hero::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.03'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+}
+.hero-inner {
+    max-width: 900px;
+    margin: 0 auto;
+    position: relative;
+    z-index: 1;
+}
+.hero-badge {
+    display: inline-block;
+    background: rgba(255,255,255,0.12);
+    border: 1px solid rgba(255,255,255,0.2);
+    border-radius: 20px;
+    padding: 4px 14px;
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    margin-bottom: 16px;
+    backdrop-filter: blur(4px);
+}
+.hero h1 {
+    font-family: 'Crimson Pro', serif;
+    font-size: clamp(32px, 5vw, 52px);
+    font-weight: 700;
+    line-height: 1.15;
+    margin-bottom: 12px;
+    letter-spacing: -0.5px;
+}
+.hero-sub {
+    font-size: 17px;
+    opacity: 0.85;
+    margin-bottom: 6px;
+}
+.hero-meta {
+    display: flex;
+    gap: 24px;
+    flex-wrap: wrap;
+    font-size: 13px;
+    opacity: 0.65;
+    margin-top: 20px;
+    padding-top: 16px;
+    border-top: 1px solid rgba(255,255,255,0.15);
+}
+
+/* ═══ NAV BAR ═══ */
+.nav-bar {
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    background: rgba(250,248,244,0.92);
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--border);
+    padding: 0 24px;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+}
+.nav-bar::-webkit-scrollbar { height: 0; }
+.nav-inner {
+    max-width: 900px;
+    margin: 0 auto;
+    display: flex;
+    gap: 4px;
+}
+.nav-link {
+    display: block;
+    padding: 12px 14px;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-muted);
+    text-decoration: none;
+    white-space: nowrap;
+    border-bottom: 2px solid transparent;
+    transition: all 0.2s;
+}
+.nav-link:hover {
+    color: var(--primary);
+    border-bottom-color: var(--primary);
+}
+
+/* ═══ MAIN CONTENT ═══ */
+.content {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 32px 24px 80px;
+}
+
+/* ═══ SECTIONS ═══ */
+.section {
+    margin-bottom: 48px;
+}
+.section-header {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    margin-bottom: 24px;
+    padding-bottom: 12px;
+    border-bottom: 2px solid var(--border);
+}
+.section-num {
+    flex-shrink: 0;
+    width: 36px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--primary);
+    color: #fff;
+    font-size: 15px;
+    font-weight: 700;
+    border-radius: 50%;
+}
+.section-header h2 {
+    font-family: 'Crimson Pro', serif;
+    font-size: 28px;
+    font-weight: 700;
+    color: var(--text);
+    line-height: 1.2;
+}
+
+/* ═══ CARDS ═══ */
+.card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 28px;
+    margin-bottom: 20px;
+    box-shadow: var(--shadow-sm);
+}
+.card h3 {
+    font-family: 'Crimson Pro', serif;
+    font-size: 22px;
+    font-weight: 600;
+    color: var(--text);
+    margin-bottom: 16px;
+    line-height: 1.3;
+}
+.card h4 {
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--primary-dark);
+    margin: 20px 0 10px;
+}
+.card h4:first-child { margin-top: 0; }
+
+.card p { margin-bottom: 12px; }
+.card ul, .card ol { margin: 8px 0 12px 20px; }
+.card li { margin-bottom: 6px; }
+.card li li { font-size: 15px; color: var(--text-muted); }
+
+/* ═══ CALLOUT BOXES ═══ */
+.callout {
+    border-radius: var(--radius);
+    padding: 18px 20px;
+    margin: 16px 0;
+    font-size: 15px;
+    line-height: 1.65;
+    border-left: 4px solid;
+}
+.callout-title {
+    font-weight: 700;
+    font-size: 13px;
+    letter-spacing: 0.8px;
+    text-transform: uppercase;
+    margin-bottom: 6px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+.callout.plain-english {
+    background: var(--accent-light);
+    border-color: var(--accent);
+}
+.callout.plain-english .callout-title { color: var(--accent-dark); }
+
+.callout.high-yield {
+    background: var(--success-light);
+    border-color: var(--success);
+}
+.callout.high-yield .callout-title { color: var(--success); }
+
+.callout.clinical-pearl {
+    background: var(--primary-light);
+    border-color: var(--primary);
+}
+.callout.clinical-pearl .callout-title { color: var(--primary); }
+
+.callout.warning {
+    background: var(--danger-light);
+    border-color: var(--danger);
+}
+.callout.warning .callout-title { color: var(--danger); }
+
+.callout.key-concept {
+    background: var(--purple-light);
+    border-color: var(--purple);
+}
+.callout.key-concept .callout-title { color: var(--purple); }
+
+.callout.teal-note {
+    background: var(--teal-light);
+    border-color: var(--teal);
+}
+.callout.teal-note .callout-title { color: var(--teal); }
+
+/* ═══ TABLES ═══ */
+.table-wrap {
+    overflow-x: auto;
+    margin: 16px 0;
+    border-radius: var(--radius);
+    border: 1px solid var(--border);
+}
+table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 14.5px;
+    line-height: 1.55;
+}
+thead th {
+    background: var(--bg-sidebar);
+    color: #fff;
+    font-weight: 600;
+    text-align: left;
+    padding: 12px 16px;
+    font-size: 13px;
+    letter-spacing: 0.3px;
+}
+tbody td {
+    padding: 11px 16px;
+    border-bottom: 1px solid var(--border-light);
+    vertical-align: top;
+}
+tbody tr:last-child td { border-bottom: none; }
+tbody tr:nth-child(even) { background: #FAFAF8; }
+td strong { color: var(--text); }
+.cat-label {
+    font-weight: 700;
+    color: var(--primary-dark);
+    font-size: 13px;
+    letter-spacing: 0.3px;
+    text-transform: uppercase;
+}
+
+/* ═══ QUIZ ═══ */
+.quiz-box {
+    background: var(--bg-card);
+    border: 2px solid var(--primary);
+    border-radius: var(--radius-lg);
+    padding: 28px;
+    margin: 20px 0;
+}
+.quiz-box .quiz-q {
+    font-family: 'Crimson Pro', serif;
+    font-size: 20px;
+    font-weight: 600;
+    color: var(--primary-dark);
+    margin-bottom: 16px;
+    line-height: 1.35;
+}
+.quiz-options {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+.quiz-options li {
+    padding: 10px 14px;
+    margin-bottom: 6px;
+    border-radius: 6px;
+    border: 1px solid var(--border);
+    cursor: pointer;
+    transition: all 0.15s;
+    font-size: 15px;
+}
+.quiz-options li:hover {
+    border-color: var(--primary);
+    background: var(--primary-light);
+}
+.quiz-options li.correct {
+    border-color: var(--success);
+    background: var(--success-light);
+    font-weight: 600;
+}
+.quiz-options li.incorrect {
+    border-color: var(--danger);
+    background: var(--danger-light);
+    opacity: 0.7;
+}
+.quiz-explanation {
+    display: none;
+    margin-top: 16px;
+    padding: 16px;
+    background: var(--success-light);
+    border-radius: var(--radius);
+    border-left: 4px solid var(--success);
+    font-size: 15px;
+    line-height: 1.65;
+}
+.quiz-explanation.visible { display: block; }
+.quiz-explanation strong { color: var(--success); }
+
+/* ═══ COMPARISON CARDS ═══ */
+.vs-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin: 16px 0;
+}
+.vs-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 20px;
+    border-top: 3px solid var(--primary);
+}
+.vs-card.right { border-top-color: var(--teal); }
+.vs-card h4 {
+    margin: 0 0 12px;
+    font-size: 16px;
+    color: var(--primary-dark);
+}
+.vs-card.right h4 { color: var(--teal); }
+.vs-card ul { margin: 0 0 0 16px; font-size: 14.5px; }
+.vs-card li { margin-bottom: 5px; }
+
+/* ═══ STEP CARDS ═══ */
+.step {
+    display: flex;
+    gap: 16px;
+    margin: 16px 0;
+    padding: 20px;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+}
+.step-num {
+    flex-shrink: 0;
+    width: 32px;
+    height: 32px;
+    background: var(--primary);
+    color: #fff;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 14px;
+}
+.step-content h4 { margin-top: 0; font-size: 15px; }
+.step-content ul { font-size: 14.5px; }
+
+/* ═══ IMAGES ═══ */
+.img-ref {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 12px;
+    background: var(--border-light);
+    border: 1px dashed var(--border);
+    border-radius: 6px;
+    font-size: 13px;
+    color: var(--text-muted);
+    margin: 4px 0;
+    font-style: italic;
+}
+.img-ref::before { content: '📷'; font-style: normal; }
+
+.clinical-img {
+    margin: 16px 0;
+    text-align: center;
+}
+.clinical-img img {
+    max-width: 100%;
+    border-radius: var(--radius);
+    border: 1px solid var(--border);
+    box-shadow: var(--shadow-md);
+}
+.clinical-img.sm img { max-width: 420px; }
+.clinical-img.md img { max-width: 560px; }
+.clinical-img.lg img { max-width: 720px; }
+.clinical-img figcaption {
+    font-size: 13px;
+    color: var(--text-muted);
+    font-style: italic;
+    margin-top: 8px;
+    line-height: 1.4;
+}
+
+/* ═══ DOSE BOX ═══ */
+.dose {
+    display: inline-block;
+    background: var(--purple-light);
+    color: var(--purple);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    font-weight: 500;
+    padding: 2px 8px;
+    border-radius: 4px;
+    letter-spacing: 0.2px;
+}
+
+/* ═══ TAG / BADGE ═══ */
+.tag {
+    display: inline-block;
+    padding: 2px 10px;
+    border-radius: 12px;
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+}
+.tag.best { background: var(--success-light); color: var(--success); border: 1px solid var(--success); }
+.tag.common { background: var(--accent-light); color: var(--accent-dark); border: 1px solid var(--accent); }
+.tag.rare { background: var(--purple-light); color: var(--purple); border: 1px solid var(--purple); }
+.tag.alert { background: var(--danger-light); color: var(--danger); border: 1px solid var(--danger); }
+
+/* ═══ COLLAPSIBLE ═══ */
+details {
+    margin: 12px 0;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+}
+details summary {
+    padding: 14px 18px;
+    font-weight: 600;
+    font-size: 15px;
+    cursor: pointer;
+    background: #FAFAF8;
+    border-bottom: 1px solid transparent;
+    transition: background 0.15s;
+    list-style: none;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+details summary::before {
+    content: '▸';
+    transition: transform 0.2s;
+    font-size: 12px;
+    color: var(--text-muted);
+}
+details[open] summary::before { transform: rotate(90deg); }
+details[open] summary {
+    border-bottom-color: var(--border);
+    background: var(--primary-light);
+}
+details summary::-webkit-details-marker { display: none; }
+details .detail-body { padding: 18px; }
+
+/* ═══ PRINT ═══ */
+@media print {
+    .nav-bar { display: none; }
+    .hero { padding: 24px; }
+    .card { break-inside: avoid; box-shadow: none; border: 1px solid #ccc; }
+    .callout { break-inside: avoid; }
+    details { break-inside: avoid; }
+    details[open] summary ~ * { display: block !important; }
+}
+
+/* ═══ MOBILE ═══ */
+@media (max-width: 700px) {
+    .hero { padding: 32px 20px; }
+    .hero h1 { font-size: 28px; }
+    .content { padding: 20px 16px 60px; }
+    .card { padding: 20px 16px; }
+    .vs-grid { grid-template-columns: 1fr; }
+    .step { flex-direction: column; gap: 8px; }
+    .section-header h2 { font-size: 22px; }
+    table { font-size: 13px; }
+    thead th, tbody td { padding: 8px 10px; }
+}
+
+/* ═══ EMPHASIS ═══ */
+.hl { background: linear-gradient(180deg, transparent 55%, rgba(200,146,62,0.25) 55%); }
+.hl-green { background: linear-gradient(180deg, transparent 55%, rgba(46,125,91,0.2) 55%); }
+.hl-red { background: linear-gradient(180deg, transparent 55%, rgba(181,72,59,0.2) 55%); }
+
+/* ═══ CASE BOX ═══ */
+.case-box {
+    background: linear-gradient(135deg, var(--primary-light) 0%, #f0f4f8 100%);
+    border: 1px solid #c8d6e5;
+    border-radius: var(--radius-lg);
+    padding: 24px;
+    margin: 16px 0;
+    position: relative;
+}
+.case-box::before {
+    content: 'CLINICAL CASE';
+    position: absolute;
+    top: -10px;
+    left: 20px;
+    background: var(--primary);
+    color: #fff;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 1.2px;
+    padding: 3px 12px;
+    border-radius: 4px;
+}
+.case-box p { margin-bottom: 8px; font-size: 15px; }
+
+/* ═══ HR DIVIDER ═══ */
+.divider {
+    border: none;
+    height: 1px;
+    background: var(--border);
+    margin: 32px 0;
+}
+
+/* ═══ SUFFIX TABLE ═══ */
+.suffix-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 10px;
+    margin: 12px 0;
+}
+.suffix-item {
+    background: var(--primary-light);
+    border-radius: 6px;
+    padding: 10px 14px;
+    font-size: 14px;
+}
+.suffix-item strong {
+    color: var(--primary-dark);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+}
+
+/* ═══ FLOW ARROW ═══ */
+.flow {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin: 12px 0;
+    font-size: 14.5px;
+}
+.flow-step {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 8px 14px;
+    font-weight: 500;
+}
+.flow-arrow { color: var(--text-light); font-size: 18px; }
+
+/* ═══ LEARNING OBJECTIVES ═══ */
+.objectives {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 10px;
+    margin: 16px 0;
+}
+.obj-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 12px;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    font-size: 14.5px;
+}
+.obj-check {
+    flex-shrink: 0;
+    width: 20px;
+    height: 20px;
+    border: 2px solid var(--primary);
+    border-radius: 4px;
+    margin-top: 1px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.15s;
+}
+.obj-check.checked {
+    background: var(--primary);
+    border-color: var(--primary);
+}
+.obj-check.checked::after {
+    content: '✓';
+    color: #fff;
+    font-size: 13px;
+    font-weight: 700;
+}
+</style>
+</head>
+<body>
+
+<!-- ══════════════════════ HERO ══════════════════════ -->
+<header class="hero">
+    <div class="hero-inner">
+        <div class="hero-badge">OD 531 &middot; Oral Medicine</div>
+        <h1>Disorders of Sensation</h1>
+        <p class="hero-sub">Comprehensive Study Guide &mdash; Zero Filler, Zero Hallucinations</p>
+        <div class="hero-meta">
+            <span>Dr. Laurel Henderson, DDS, MS</span>
+            <span>BU Goldman School of Dental Medicine</span>
+            <span>Spring 2026 &middot; Lecture Date: 04/03/2026</span>
+        </div>
+    </div>
+</header>
+
+<!-- ══════════════════════ NAV ══════════════════════ -->
+<nav class="nav-bar">
+    <div class="nav-inner">
+        <a class="nav-link" href="#objectives">Objectives</a>
+        <a class="nav-link" href="#terminology">Terminology</a>
+        <a class="nav-link" href="#bms">BMS</a>
+        <a class="nav-link" href="#xerostomia">Xerostomia</a>
+        <a class="nav-link" href="#sialorrhea">Sialorrhea</a>
+        <a class="nav-link" href="#dysgeusia">Dysgeusia</a>
+        <a class="nav-link" href="#central-sensitization">Central Sensitization</a>
+        <a class="nav-link" href="#trigeminal">Trigeminal</a>
+        <a class="nav-link" href="#self-injury">Self-Injury</a>
+        <a class="nav-link" href="#quizzes">Quizzes</a>
+    </div>
+</nav>
+
+<main class="content">
+
+<!-- ══════════════════════ EXAM INFO ══════════════════════ -->
+<div class="callout high-yield">
+    <div class="callout-title">Final Exam Info</div>
+    50 questions, 5 from the 1st half of the course. 5"&times;8" handwritten notecard allowed (cards over size = zero). Must turn in your card. No pens or pencils.
+</div>
+
+<!-- ══════════════════════ LEARNING OBJECTIVES ══════════════════════ -->
+<section class="section" id="objectives">
+    <div class="section-header">
+        <div class="section-num">0</div>
+        <h2>Learning Objectives</h2>
+    </div>
+    <p style="margin-bottom: 12px; color: var(--text-muted)">Click each box as you master the topic:</p>
+    <div class="objectives">
+        <div class="obj-item"><div class="obj-check" onclick="this.classList.toggle('checked')"></div>Definitions of sensation disturbance</div>
+        <div class="obj-item"><div class="obj-check" onclick="this.classList.toggle('checked')"></div>BMS and xerostomia management</div>
+        <div class="obj-item"><div class="obj-check" onclick="this.classList.toggle('checked')"></div>Dysgeusia and phantogeusia</div>
+        <div class="obj-item"><div class="obj-check" onclick="this.classList.toggle('checked')"></div>Central and peripheral neuropathic pain</div>
+        <div class="obj-item"><div class="obj-check" onclick="this.classList.toggle('checked')"></div>Painful traumatic trigeminal neuropathy</div>
+        <div class="obj-item"><div class="obj-check" onclick="this.classList.toggle('checked')"></div>Self-injurious behavior</div>
+    </div>
+</section>
+
+<!-- ══════════════════════ 1. TERMINOLOGY ══════════════════════ -->
+<section class="section" id="terminology">
+    <div class="section-header">
+        <div class="section-num">1</div>
+        <h2>Sensation Disorder Terminology</h2>
+    </div>
+
+    <div class="callout plain-english">
+        <div class="callout-title">In Plain English</div>
+        Before diving in, learn the word roots &mdash; they unlock every term on this table:<br>
+        <strong>-esthesia</strong> = sensation &nbsp;|&nbsp; <strong>-algesia</strong> = pain &nbsp;|&nbsp; <strong>-osmia</strong> = smell &nbsp;|&nbsp; <strong>-geusia</strong> = taste<br>
+        <strong>hypo-</strong> = decreased &nbsp;|&nbsp; <strong>hyper-</strong> = increased &nbsp;|&nbsp; <strong>an-/a-</strong> = absent &nbsp;|&nbsp; <strong>para-</strong> = abnormal &nbsp;|&nbsp; <strong>dys-</strong> = bad/unpleasant &nbsp;|&nbsp; <strong>phanto-</strong> = phantom (no stimulus)
+    </div>
+
+    <div class="card">
+        <div class="table-wrap">
+            <table>
+                <thead>
+                    <tr><th style="width:25%">Category</th><th style="width:20%">Term</th><th style="width:30%">Definition</th><th>How the Patient Describes It</th></tr>
+                </thead>
+                <tbody>
+                    <tr><td class="cat-label" rowspan="5">Decreased / Absent Sensation</td><td><strong>Anesthesia</strong></td><td>Complete loss of sensation</td><td>"Numb"</td></tr>
+                    <tr><td><strong>Hypoesthesia</strong></td><td>Reduced sensation</td><td>"Less feeling"</td></tr>
+                    <tr><td><strong>Hypoalgesia</strong></td><td>Reduced pain perception</td><td>Blunted pain</td></tr>
+                    <tr><td><strong>Anosmia</strong></td><td>Loss of smell</td><td>"Cannot smell"</td></tr>
+                    <tr><td><strong>Ageusia</strong></td><td>Loss of taste</td><td>"Cannot taste"</td></tr>
+
+                    <tr><td class="cat-label" rowspan="2">Increased Sensation</td><td><strong>Hyperesthesia</strong></td><td>Increased sensitivity</td><td>"Everything feels heightened"</td></tr>
+                    <tr><td><strong>Hyperalgesia</strong></td><td>Increased pain to a painful stimulus</td><td>"More painful than expected"</td></tr>
+
+                    <tr><td class="cat-label" rowspan="6">Abnormal Non-Painful Sensation</td><td><strong>Paresthesia</strong></td><td>Abnormal sensation, not unpleasant</td><td>Tingling, pins/needles</td></tr>
+                    <tr><td><strong>Dysesthesia</strong></td><td>Unpleasant abnormal sensation</td><td>Burning, raw, uncomfortable</td></tr>
+                    <tr><td><strong>Formication</strong></td><td>Sensation of insects crawling</td><td>"Bugs crawling"</td></tr>
+                    <tr><td><strong>Parosmia</strong></td><td>Distorted smell</td><td>"Smells wrong"</td></tr>
+                    <tr><td><strong>Phantosmia</strong></td><td>Smell without any stimulus</td><td>"Smelling something not there"</td></tr>
+                    <tr><td><strong>Parageusia / Dysgeusia</strong></td><td>Distorted taste</td><td>Metallic, bitter</td></tr>
+
+                    <tr><td class="cat-label" rowspan="2">Pain with Abnormal Processing</td><td><strong>Allodynia</strong></td><td>Pain from a non-painful stimulus</td><td>"Light touch hurts"</td></tr>
+                    <tr><td><strong>Hyperpathia</strong></td><td>Exaggerated, explosive pain response</td><td>Delayed, intense pain</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="callout warning">
+        <div class="callout-title">Don't Confuse These Pairs</div>
+        <strong>Paresthesia vs Dysesthesia:</strong> Paresthesia = weird but NOT painful (your foot "falling asleep"). Dysesthesia = the sensation IS unpleasant or painful (burning, rawness).<br><br>
+        <strong>Allodynia vs Hyperalgesia:</strong> Allodynia = pain from something that <em>shouldn't</em> hurt at all (light touch on skin). Hyperalgesia = <em>extra</em> pain from something that should only hurt a little (mild pinch feels like stabbing).<br><br>
+        <strong>Parosmia vs Phantosmia:</strong> Parosmia = there IS a real smell, but your brain distorts it ("coffee smells like sewage"). Phantosmia = there is NO smell at all, but your brain creates one from nothing.
+    </div>
+</section>
+
+<!-- ══════════════════════ 2. BMS ══════════════════════ -->
+<section class="section" id="bms">
+    <div class="section-header">
+        <div class="section-num">2</div>
+        <h2>Burning Mouth Syndrome (BMS)</h2>
+    </div>
+
+    <!-- Case -->
+    <div class="case-box">
+        <p><strong>A 58-year-old postmenopausal woman</strong></p>
+        <ul>
+            <li>CC: 5-month history of burning pain on her tongue</li>
+            <li>She says it feels like she <em>"scalded her tongue on hot coffee"</em> but the pain never goes away</li>
+            <li>She's seen three dentists who found nothing wrong</li>
+            <li>Her oral mucosa appears <strong>completely normal</strong> on your exam</li>
+        </ul>
+        <p style="margin-top: 10px;"><strong>Key distinction for your differential:</strong></p>
+        <ul>
+            <li><strong>Sensation</strong> = somatosensory (pain, temperature, touch)</li>
+            <li><strong>Special sensations</strong> = taste, smell, salivary perception</li>
+        </ul>
+    </div>
+    <figure class="clinical-img md">
+        <img src="img/sensation/10.png" alt="Two clinical photos of the tongue showing white plaques — differential diagnosis for BMS (candidiasis, lichen planus)">
+        <figcaption>Clinical photos: tongue with white plaques. These represent conditions to rule out before diagnosing BMS (e.g., oral candidiasis, lichen planus).</figcaption>
+    </figure>
+
+    <!-- Definition -->
+    <div class="card">
+        <h3>Definition: Oral Dysesthesia / BMS</h3>
+        <p>BMS is formally defined as:</p>
+        <ul>
+            <li>An intraoral <strong>burning or dysesthetic sensation</strong></li>
+            <li>Recurring daily for <strong>&gt;2 hours per day</strong> for <strong>&gt;3 months</strong></li>
+            <li><strong>Without</strong> clinically evident causative lesions</li>
+        </ul>
+        <h4>Key Features</h4>
+        <ul>
+            <li><strong>Normal clinical examination</strong> &mdash; you look in the mouth and see nothing wrong</li>
+            <li>No visible mucosal pathology</li>
+            <li><span class="hl">Diagnosis of exclusion</span> &mdash; you must rule out everything else first</li>
+        </ul>
+        <div class="callout plain-english">
+            <div class="callout-title">In Plain English</div>
+            Think of BMS like a <strong>phantom pain</strong>. The patient's brain is generating a burning sensation where nothing is physically wrong. It's similar to how amputees can feel pain in a limb that no longer exists. The nerves or brain are misfiring &mdash; there is no ulcer, no infection, no burn. That's why 3 dentists found "nothing wrong" &mdash; because there IS nothing visible. The problem is in the nerve wiring, not the tissue.
+        </div>
+        <p style="font-size:13px; color:var(--text-light);">References: Currie CC et al. (2021). J Oral Rehabil. 48(2): 147&ndash;155. Jääskeläinen SK (2018). Pain. 159(4): 610&ndash;613.</p>
+    </div>
+
+    <!-- Clinical Presentation -->
+    <div class="card">
+        <h3>Clinical Presentation</h3>
+        <h4>The Classic Triad</h4>
+        <ol>
+            <li><strong>Burning pain:</strong> tongue, lips, anterior hard palate</li>
+            <li><strong>Dysgeusia:</strong> altered taste, often metallic or bitter</li>
+            <li><strong>Xerostomia:</strong> subjective dry mouth <em>with normal salivary flow</em></li>
+        </ol>
+
+        <h4>Characteristic Pattern <span class="tag best">High Yield</span></h4>
+        <ul>
+            <li>Symptoms <span class="hl">worsen during the day</span> (worst in evening)</li>
+            <li>Pain does <strong>NOT</strong> wake patient from sleep</li>
+            <li>Often <span class="hl-green">relieved temporarily by eating/drinking</span></li>
+        </ul>
+        <div class="callout plain-english">
+            <div class="callout-title">In Plain English</div>
+            This daily pattern is a huge diagnostic clue. Real tissue damage (like an ulcer) hurts the WORST when you eat or drink &mdash; acidic food stings. But BMS patients feel BETTER when they eat. Why? Eating/drinking activates normal sensory pathways that temporarily "override" the misfiring pain signals. It's like static on a radio &mdash; turning up the music (eating) drowns out the static (phantom burning). Also, if pain woke them up from sleep, you'd suspect something else &mdash; BMS gives the brain a break at night.
+        </div>
+
+        <h4>Demographics</h4>
+        <ul>
+            <li><strong>Postmenopausal women</strong> (5 females : 1 male)</li>
+            <li>Age: typically <strong>50&ndash;70 years</strong></li>
+            <li>General population prevalence: <strong>~1&ndash;3%</strong></li>
+        </ul>
+
+        <div class="callout clinical-pearl">
+            <div class="callout-title">Clinical Pearl &mdash; COVID-19 Connection</div>
+            Both Burning Eye Syndrome (BES) and BMS are now recognized as <strong>neuropathic complications of COVID-19</strong>. A 2023 systematic review (Williams &amp; Zis) found COVID-related BMS ranges from 4% in mild-moderate cases to 15% in severe hospitalized cases. Female patients mostly affected. COVID-19 severity is a potential risk factor for both. Both can appear within the first week post-infection and persist for 9+ weeks. May be initial long COVID manifestations.
+        </div>
+        <p style="font-size:13px; color:var(--text-light);">Ref: Ritchie A, Kramer JM (2018). J Dent Res. 97(11): 1193&ndash;1199.</p>
+    </div>
+
+    <!-- Diagnosis of Exclusion -->
+    <div class="card">
+        <h3>Diagnosis of Exclusion: Rule Out Secondary Causes FIRST</h3>
+        <div class="vs-grid">
+            <div class="vs-card">
+                <h4>Local Factors</h4>
+                <ul>
+                    <li>Oral candidiasis (even subtle)</li>
+                    <li>Lichen planus, lichenoid reactions</li>
+                    <li>Geographic tongue</li>
+                    <li>Contact allergies (dental materials, flavorings, cinnamon)</li>
+                    <li>Xerostomia with <em>true</em> hyposalivation</li>
+                </ul>
+            </div>
+            <div class="vs-card right">
+                <h4>Systemic Factors</h4>
+                <ul>
+                    <li>Nutritional deficiencies: B12, folate, iron, zinc</li>
+                    <li>Medications: ACE inhibitors, ARBs, antidepressants, antihistamines</li>
+                    <li>Endocrine: Diabetes, hypothyroidism</li>
+                    <li>Autoimmune: Sjögren syndrome</li>
+                </ul>
+            </div>
+        </div>
+
+        <h4>Required Workup</h4>
+        <ul>
+            <li>Complete oral exam</li>
+            <li><strong>Labs:</strong> CBC, comprehensive metabolic panel, B12, folate, iron studies, zinc, TSH, HbA1c</li>
+            <li><strong>Consider:</strong> Candida culture, patch testing if indicated</li>
+        </ul>
+        <div class="callout plain-english">
+            <div class="callout-title">In Plain English</div>
+            Before you can say "this is BMS," you must prove it's NOT any of these other things. Think of it like a detective &mdash; you're eliminating suspects one by one. Is it a hidden fungal infection? A nutritional deficiency? A drug side effect? Diabetes messing with nerves? Only after all of these come back clean can you say: "the burning is neuropathic (nerve-based), not caused by any visible or lab-detectable problem."
+        </div>
+        <p style="font-size:13px; color:var(--text-light);">Ref: Ritchie A, Kramer JM (2018). J Dent Res. 97(11): 1193&ndash;1199.</p>
+    </div>
+
+    <!-- Neuropathic Mechanisms -->
+    <div class="card">
+        <h3>Neuropathic Mechanisms of BMS</h3>
+        <div class="vs-grid">
+            <div class="vs-card">
+                <h4>Peripheral Level</h4>
+                <ul>
+                    <li><strong>Small fiber damage</strong> (A&delta; taste afferents, C-fibers)</li>
+                    <li>Detected by: thermal QST, epithelial nerve fiber density &darr;</li>
+                    <li>Abnormal electrogustatometry</li>
+                </ul>
+            </div>
+            <div class="vs-card right">
+                <h4>Central Level</h4>
+                <ul>
+                    <li>Striatal <strong>dopamine dysfunction</strong></li>
+                    <li>Deficient CNS pain inhibition</li>
+                    <li>Altered brain activation to thermal stimuli</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="callout plain-english">
+            <div class="callout-title">In Plain English</div>
+            BMS can break at two levels, like a bad phone connection:<br><br>
+            <strong>Peripheral</strong> = the "wires" (small nerve fibers in the tongue mucosa) are physically damaged. The tiny nerves that carry taste and pain signals have fewer fibers than normal. This is detectable: you can biopsy the tongue and literally count the nerve fibers under a microscope &mdash; BMS patients have fewer.<br><br>
+            <strong>Central</strong> = the "switchboard" (the brain itself) is malfunctioning. The brain's dopamine system (which normally helps filter/suppress pain signals) isn't working right, so even normal signals get amplified into perceived burning. This is the same dopamine pathway involved in Parkinson's disease, which is why BMS and Parkinson's share some neurological overlap.
+        </div>
+        <figure class="clinical-img md">
+            <img src="img/sensation/11.png" alt="Histology: epithelial nerve fiber density — (A) normal with dense branching fibers vs (B) BMS with visibly reduced fiber count">
+            <figcaption>(A) Normal epithelial nerve fiber density vs (B) BMS — note the markedly reduced nerve fibers in BMS. Stained nerve fibers appear as dark branching structures. (Lauria G et al., 2005)</figcaption>
+        </figure>
+        <p style="font-size:13px; color:var(--text-light);">Refs: Jääskeläinen SK (2018). Pain. 159(4): 610&ndash;613. Lauria G et al. (2005). Pain. 115(3): 332&ndash;337.</p>
+    </div>
+
+    <!-- Peripheral vs Central Subtypes -->
+    <div class="card">
+        <h3>Peripheral vs. Central Subtypes of Oral Dysesthesia</h3>
+        <div class="table-wrap">
+            <table>
+                <thead>
+                    <tr><th>Feature</th><th>Peripheral Subtype</th><th>Central Subtype</th></tr>
+                </thead>
+                <tbody>
+                    <tr><td><strong>Prevalence</strong></td><td>50&ndash;65% of cases</td><td>20&ndash;40% of cases</td></tr>
+                    <tr><td><strong>Mechanism</strong></td><td>Small fiber neuropathy in oral mucosa</td><td>Striatal dopamine dysfunction, deficient CNS inhibition</td></tr>
+                    <tr><td><strong>Detection</strong></td><td>Thermal QST, epithelial nerve fiber density, electrogustatometry</td><td>PET scan (dopamine), fMRI, brainstem reflex testing</td></tr>
+                    <tr><td><strong>Psychiatric comorbidity</strong></td><td>Less common</td><td><strong>Common</strong> (depression, anxiety)</td></tr>
+                    <tr><td><strong>Response to local treatment</strong></td><td><strong>YES</strong> &mdash; responds to topical clonazepam, lidocaine blocks</td><td><strong>NO</strong> &mdash; does not respond to local treatments</td></tr>
+                    <tr><td><strong>Treatment approach</strong></td><td>Topical therapies first-line</td><td>Systemic therapies required</td></tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="callout high-yield">
+            <div class="callout-title">High Yield for Exam</div>
+            The <strong>key clinical test</strong> that distinguishes peripheral from central BMS: <strong>Does the patient respond to topical clonazepam/lidocaine?</strong> If YES → peripheral (nerve fibers in the mouth are the problem). If NO → central (the brain is the problem). This determines your entire treatment strategy.
+        </div>
+        <p style="font-size:13px; color:var(--text-light);">Refs: Jääskeläinen SK (2018). Pain. 159(4): 610&ndash;613. Jääskeläinen SK, Woda A (2017). Cephalalgia. 37(7): 627&ndash;647. Jääskeläinen SK (2012). Clin Neurophysiol. 123(1): 71&ndash;77.</p>
+    </div>
+
+    <!-- Management -->
+    <div class="card">
+        <h3>Management of BMS</h3>
+
+        <details>
+            <summary>1. Education &amp; Therapeutic Interaction</summary>
+            <div class="detail-body">
+                <ul>
+                    <li>True spontaneous symptom resolution is <strong>rare</strong> &mdash; be honest with the patient</li>
+                    <li><span class="hl">Psychological adaptation provides symptom improvement</span> &mdash; over time, the brain can learn to "turn down" the signal</li>
+                    <li><span class="hl-red">Therapeutic interaction itself is treatment</span> &mdash; just being heard and validated helps these patients enormously. Many have been dismissed by multiple providers.</li>
+                </ul>
+            </div>
+        </details>
+
+        <details>
+            <summary>2. Nerve Distraction</summary>
+            <div class="detail-body">
+                <ul>
+                    <li><strong>Physical barriers:</strong> thermoplastic occlusal appliance (like a bleach tray) worn over the teeth &mdash; gives the tongue something different to feel</li>
+                    <li><strong>Oral tactile stimulation:</strong> sugar-free candies or gum &mdash; keeps the mouth "busy" with real sensation</li>
+                    <li><strong>Attention redirection:</strong> exercise, enjoyable activities &mdash; divert the brain away from the phantom signal</li>
+                </ul>
+                <div class="callout plain-english">
+                    <div class="callout-title">In Plain English</div>
+                    This works on the same principle as why eating temporarily relieves BMS. You're flooding the brain with REAL sensory input to compete with the phantom burning signal. Like turning up music to drown out static.
+                </div>
+            </div>
+        </details>
+
+        <details>
+            <summary>3. Alpha-Lipoic Acid (ALA)</summary>
+            <div class="detail-body">
+                <ul>
+                    <li><strong>Dose:</strong> <span class="dose">600 mg daily</span> (or <span class="dose">200 mg TID</span>)</li>
+                    <li><strong>Mechanism:</strong> Antioxidant, neuroprotective, improves mitochondrial function &mdash; basically helps repair/protect damaged nerve fibers</li>
+                    <li><strong>Side effects:</strong> Minimal (GI upset, headache, GERD)</li>
+                </ul>
+            </div>
+        </details>
+
+        <details open>
+            <summary>4. Topical Clonazepam <span class="tag best">Best Evidence</span></summary>
+            <div class="detail-body">
+                <ul>
+                    <li><strong>Dose:</strong> <span class="dose">0.5&ndash;1 mg tablet</span>, dissolve in mouth, swish &times; 3 minutes, <strong>spit out</strong>, TID</li>
+                    <li><strong>Mechanism:</strong> <span class="hl">GABA-A agonist</span> &mdash; reduces peripheral nociceptor excitability. Essentially quiets the overactive pain nerve endings in the tongue.</li>
+                    <li><strong>Side effects:</strong> Minimal (bitter taste, mild sedation if swallowed)</li>
+                </ul>
+                <div class="callout high-yield">
+                    <div class="callout-title">High Yield</div>
+                    This is the <strong>best-evidence treatment</strong> for BMS. Critical details: the patient <strong>spits it out</strong> (topical, not systemic). It works because there are GABA-A receptors on the nerve endings in the mouth itself. By stimulating those receptors locally, you dampen the overactive pain signaling right at the source. This is why it works for PERIPHERAL subtype but NOT central.
+                </div>
+            </div>
+        </details>
+
+        <details>
+            <summary>5. Gabapentinoids</summary>
+            <div class="detail-body">
+                <ul>
+                    <li><strong>Gabapentin:</strong> <span class="dose">300&ndash;3600 mg/day</span> (start low, titrate up)</li>
+                    <li><strong>Pregabalin:</strong> <span class="dose">150&ndash;600 mg/day</span></li>
+                    <li><strong>Mechanism:</strong> Voltage-gated calcium channel modulation &mdash; blocks the calcium channels that neurons use to transmit pain signals. Works in the central nervous system.</li>
+                    <li>For <strong>central subtype</strong> or refractory patients</li>
+                </ul>
+            </div>
+        </details>
+
+        <details>
+            <summary>6. Tricyclic Antidepressants (TCAs)</summary>
+            <div class="detail-body">
+                <ul>
+                    <li><strong>Amitriptyline:</strong> <span class="dose">10&ndash;75 mg qhs</span> (at bedtime)</li>
+                    <li><strong>Dual benefit:</strong> neuropathic pain relief + mood improvement</li>
+                    <li><strong>Side effects:</strong> dry mouth (ironic for a dry-mouth patient), sedation, weight gain</li>
+                </ul>
+                <div class="callout plain-english">
+                    <div class="callout-title">In Plain English</div>
+                    TCAs at these low doses aren't really being used as antidepressants &mdash; they're being used for their pain-modulating properties. At low doses, they increase norepinephrine and serotonin in the descending pain inhibition pathway (the brain's built-in "turn down the pain" system). The mood improvement is a bonus, especially since BMS patients with the central subtype often have comorbid depression.
+                </div>
+            </div>
+        </details>
+
+        <details>
+            <summary>7. Capsaicin Rinses</summary>
+            <div class="detail-body">
+                <ul>
+                    <li><strong>Dose:</strong> <span class="dose">0.025&ndash;0.1% capsaicin oral rinse</span></li>
+                    <li><strong>Mechanism:</strong> Desensitizes <strong>TRPV1 receptors</strong> &mdash; these are the exact receptors that detect "hot/burning." Capsaicin initially activates them (causing burning), but with repeated use, the receptors become exhausted and stop responding.</li>
+                    <li><strong>Limitation:</strong> Side effects (intense burning sensation initially, dyspepsia) &mdash; hard to convince a patient with burning mouth to use something that causes MORE burning first</li>
+                </ul>
+            </div>
+        </details>
+
+        <details>
+            <summary>8. Low-Level Laser Therapy (LLLT)</summary>
+            <div class="detail-body">
+                <ul>
+                    <li><strong>Parameters:</strong> <span class="dose">808&ndash;980 nm wavelength</span>, multiple sessions</li>
+                    <li>Emerging evidence, well-tolerated</li>
+                    <li>Requires specialized equipment</li>
+                    <li>Mechanism is thought to involve photobiomodulation &mdash; light energy stimulates cellular repair in damaged nerve fibers</li>
+                </ul>
+            </div>
+        </details>
+
+        <p style="font-size:13px; color:var(--text-light); margin-top:16px;">Refs: Ritchie A, Kramer JM (2018). J Dent Res. 97(11): 1193&ndash;1199. Rossetti A, Teixeira A, Milhazes N (2025). Clin Oral Investig. 29(1): 1&ndash;14. Liu YF et al. (2018). Oral Dis. 24(3): 325&ndash;334.</p>
+    </div>
+</section>
+
+<!-- ══════════════════════ 3. XEROSTOMIA ══════════════════════ -->
+<section class="section" id="xerostomia">
+    <div class="section-header">
+        <div class="section-num">3</div>
+        <h2>Xerostomia without Hyposalivation</h2>
+    </div>
+
+    <div class="card">
+        <h3>The Paradox: "My Mouth Is Dry" but Saliva Flow Is Normal</h3>
+        <h4>Neuropathic Mechanism</h4>
+        <ul>
+            <li>Quantitative sensory testing findings: elevated thermal thresholds, decreased pain perception</li>
+            <li><strong>Small-fiber neuropathy pattern</strong> &mdash; same type of nerve damage as in BMS</li>
+            <li>Altered salivary composition (elevated Na, K, Cl, Ca, IgA, amylase) &mdash; the saliva is chemically different even though the volume is normal</li>
+            <li><span class="hl">Bidirectional relationship</span> between sensory changes and dryness perception</li>
+        </ul>
+
+        <div class="callout plain-english">
+            <div class="callout-title">In Plain English</div>
+            Imagine your bathroom faucet is running fine, but the sensor on your smart home system says "no water detected." The problem isn't the water supply &mdash; it's the <strong>sensor</strong>. In xerostomia without hyposalivation, the salivary glands are producing normal amounts of saliva, but the <strong>nerves that detect moisture</strong> are damaged, so the brain gets the message "dry." Additionally, the saliva's chemical composition is altered, so even though there's enough of it, it may not "feel" right to the patient. That's why saliva substitutes alone won't fix it &mdash; you need to treat the underlying nerve problem.
+        </div>
+
+        <h4>Management &mdash; 3-Step Approach</h4>
+        <div class="step">
+            <div class="step-num">1</div>
+            <div class="step-content">
+                <h4>Confirm Normal Salivary Flow</h4>
+                <ul>
+                    <li>Perform <strong>sialometry</strong> (unstimulated AND stimulated)</li>
+                    <li>Rule out true hyposalivation &mdash; if flow is actually reduced, treat the cause (medication change, Sjögren workup, etc.)</li>
+                </ul>
+            </div>
+        </div>
+        <div class="step">
+            <div class="step-num">2</div>
+            <div class="step-content">
+                <h4>Address Neuropathic Component</h4>
+                <ul>
+                    <li>Gabapentin</li>
+                    <li>Pregabalin</li>
+                    <li>Low-dose tricyclic antidepressants (amitriptyline, nortriptyline)</li>
+                </ul>
+            </div>
+        </div>
+        <div class="step">
+            <div class="step-num">3</div>
+            <div class="step-content">
+                <h4>Manage Contributing Factors</h4>
+                <ul>
+                    <li>Medication review &mdash; avoid xerogenic drugs if possible</li>
+                    <li>Screen for anxiety, depression (both can amplify perceived dryness)</li>
+                </ul>
+            </div>
+        </div>
+
+        <p style="font-size:13px; color:var(--text-light); margin-top:16px;">Refs: Granot M, Nagler RM (2005). J Pain. 6(9): 593&ndash;598. Hwang YJ, Kho HS (2026). J Oral Rehabil. 53(1): 1&ndash;10. Kang JH, Kho HS (2021). Arch Oral Biol. 125: 105096. Nagler RM, Hershkovich O (2004). J Pain. 5(1): 56&ndash;63.</p>
+    </div>
+</section>
+
+<!-- ══════════════════════ 4. SIALORRHEA ══════════════════════ -->
+<section class="section" id="sialorrhea">
+    <div class="section-header">
+        <div class="section-num">4</div>
+        <h2>Sialorrhea (Drooling)</h2>
+    </div>
+
+    <div class="card">
+        <h3>Definition &amp; Classification</h3>
+        <p><strong>Sialorrhea</strong> = excess spillage of saliva from the mouth; drooling. Normal saliva production: <span class="dose">0.5&ndash;1.5 L/day</span></p>
+
+        <div class="vs-grid" style="grid-template-columns: repeat(3, 1fr);">
+            <div class="vs-card" style="border-top-color: var(--danger);">
+                <h4 style="color:var(--danger);">Primary (True) <span class="tag rare">Rare</span></h4>
+                <ul>
+                    <li><strong>Actual excess saliva production</strong></li>
+                    <li>Extremely rare</li>
+                    <li><strong>Causes:</strong> Medications (clozapine, risperidone, lithium), heavy metal poisoning, Wilson disease, GERD (water brash)</li>
+                </ul>
+            </div>
+            <div class="vs-card" style="border-top-color: var(--accent);">
+                <h4 style="color:var(--accent-dark);">Secondary (Perceived) <span class="tag common">~90%</span></h4>
+                <ul>
+                    <li><strong>Normal production, impaired clearance</strong></li>
+                    <li>Poor oromotor control, dysphagia, decreased swallowing</li>
+                    <li>Saliva "pools" &mdash; NOT increased production</li>
+                </ul>
+            </div>
+            <div class="vs-card" style="border-top-color: var(--purple);">
+                <h4 style="color:var(--purple);">Psychogenic</h4>
+                <ul>
+                    <li><strong>Normal production + heightened somatic focus</strong></li>
+                    <li>Normal swallowing</li>
+                    <li>Compulsive spitting, bringing "evidence" (bottles of saliva), fear of swallowing own saliva</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="callout high-yield">
+            <div class="callout-title">High Yield</div>
+            <span class="hl">~90% of sialorrhea patients have SECONDARY sialorrhea</span> &mdash; their salivary glands are producing the same amount as everyone else. The problem is they can't CLEAR it (swallowing dysfunction, poor lip seal, poor head control). Common in: Cerebral palsy (22%), <strong>Parkinson disease (up to 74%)</strong>, ALS (50%), stroke survivors, head and neck cancer patients (16%).
+        </div>
+
+        <div class="callout plain-english">
+            <div class="callout-title">In Plain English</div>
+            <strong>Psychogenic sialorrhea</strong> is especially tricky. These patients genuinely feel like they're drowning in saliva, but their swallowing is fine and saliva production is normal. It's driven by <strong>anxiety</strong> &mdash; they become hyper-focused on their saliva, which makes them notice it more, which makes them more anxious, creating a vicious cycle. The "matchbox sign" equivalent: they may literally bring in bottles of collected spit. <strong>Do NOT treat these patients with anticholinergics or Botox</strong> &mdash; that would reinforce the illness behavior and expose them to side effects for a problem that needs psychiatric, not pharmacologic, treatment.
+        </div>
+    </div>
+
+    <!-- Diagnosis -->
+    <div class="card">
+        <h3>Diagnosis</h3>
+        <h4>History</h4>
+        <ul>
+            <li>Medication review (anticholinergics vs. cholinergics)</li>
+            <li>Neurological examination (oromotor function, swallowing, cranial nerves)</li>
+            <li>Assess for dental malocclusion, poor head control, postural problems</li>
+            <li>Psychiatric history &mdash; anxiety, health preoccupation, somatic focus</li>
+        </ul>
+
+        <h4>Objective Measurement Tools</h4>
+        <div class="table-wrap">
+            <table>
+                <thead><tr><th>Type</th><th>Tool</th><th>Details</th></tr></thead>
+                <tbody>
+                    <tr><td><strong>True Sialorrhea</strong><br>(quantitative)</td><td>Unstimulated Salivary Flow Rate (USFR)</td><td>5-minute collection in preweighed cup. Normal: 0.1 mL/min. <strong>GOLD STANDARD.</strong> USFR ≤0.2 g/min = significant hyposalivation.</td></tr>
+                    <tr><td><strong>Secondary Sialorrhea</strong><br>(subjective scales)</td><td>DFSS, DIS, Modified Teacher's Scale, 5-min Drooling Quotient</td><td>Observe for visible drooling, perioral skin breakdown. DFSS: 2&ndash;9 point. DIS: 10&ndash;40 point.</td></tr>
+                    <tr><td><strong>Psychogenic Sialorrhea</strong><br>(psychiatric)</td><td>Somatic Symptom Disorder Criteria</td><td>Disproportionate thoughts about symptom seriousness. Persistently high health anxiety. Excessive time/energy on symptoms.</td></tr>
+                </tbody>
+            </table>
+        </div>
+        <p style="font-size:13px; color:var(--text-light);">Refs: Sauer KS et al. (2023). Neurol Clin. 41(3): 659&ndash;676. Plemons JM et al. (2014). J Am Dent Assoc. 145(8): 867&ndash;873. Löwe B et al. (2024). Lancet. 403(10431): 1458&ndash;1470.</p>
+    </div>
+
+    <!-- Management -->
+    <div class="card">
+        <h3>Management by Type</h3>
+
+        <details open>
+            <summary>Primary Sialorrhea</summary>
+            <div class="detail-body">
+                <ol>
+                    <li><strong>First-line:</strong> Anticholinergic trial &mdash; <span class="dose">Glycopyrrolate 1 mg TID</span> (best efficacy, fewest side effects)</li>
+                    <li><strong>Second-line:</strong> Botulinum toxin injection (IncobotulinumtoxinA, OnabotulinumtoxinA &mdash; both FDA-approved). 70% response rate, effects last weeks to months.</li>
+                    <li><strong>Third-line (refractory):</strong> Radiation therapy or surgical options (4-duct ligation, gland excision)</li>
+                </ol>
+            </div>
+        </details>
+
+        <details>
+            <summary>Secondary Sialorrhea</summary>
+            <div class="detail-body">
+                <ul>
+                    <li><strong>First-line: Conservative/Behavioral</strong> &mdash; positioning optimization, oromotor therapy, swallowing therapy. Behavioral interventions most effective with higher cognition.</li>
+                    <li><strong>Escalation if conservative fails:</strong> Glycopyrrolate <span class="dose">1 mg TID</span> or botulinum toxin injection into salivary glands</li>
+                </ul>
+            </div>
+        </details>
+
+        <details>
+            <summary>Psychogenic Sialorrhea <span class="tag alert">Do Not Medicate</span></summary>
+            <div class="detail-body">
+                <div class="callout warning">
+                    <div class="callout-title">Critical Principle</div>
+                    <strong>Do NOT prescribe anticholinergics or botulinum toxin</strong> for psychogenic sialorrhea. It will not address the underlying issue AND exposes patients to unnecessary side effects. Avoid reinforcing illness behavior with unnecessary interventions.
+                </div>
+                <ul>
+                    <li><strong>Validate</strong> patient's distress while <strong>reframing</strong> the problem</li>
+                    <li><strong>Psychoeducation</strong></li>
+                    <li><strong>CBT:</strong> Address catastrophic thinking about saliva; reduce checking/spitting behaviors; exposure to swallowing without spitting</li>
+                    <li>Treat underlying anxiety, depression</li>
+                </ul>
+            </div>
+        </details>
+        <p style="font-size:13px; color:var(--text-light); margin-top:12px;">Refs: Sauer KS et al. (2023). Neurol Clin. 41(3): 659&ndash;676. Plemons JM et al. (2014). J Am Dent Assoc. 145(8): 867&ndash;873. Isaacson SH et al. (2020). JAMA Neurol. 77(4): 461&ndash;469.</p>
+    </div>
+</section>
+
+<!-- ══════════════════════ 5. DYSGEUSIA ══════════════════════ -->
+<section class="section" id="dysgeusia">
+    <div class="section-header">
+        <div class="section-num">5</div>
+        <h2>Dysgeusia &amp; Parageusia</h2>
+    </div>
+
+    <div class="case-box">
+        <p><strong>Patient presents with:</strong></p>
+        <ul>
+            <li>CC: For the past 3 months, everything tastes bitter</li>
+            <li>Meds: Lisinopril, metformin, sertraline</li>
+            <li>Oral hygiene: meticulous &mdash; brushes 5 times a day</li>
+            <li>Clinical exam: Unremarkable</li>
+        </ul>
+        <p style="margin-top:10px"><strong>What's the FIRST thing you should evaluate?</strong> (Answer below in quiz section)</p>
+    </div>
+
+    <div class="card">
+        <h3>The 95% Rule: It's Usually NOT Taste!</h3>
+        <div class="callout high-yield">
+            <div class="callout-title">High Yield &mdash; Most Important Concept</div>
+            <span class="hl"><strong>~95% of "taste" disorders are actually olfactory (smell) dysfunction.</strong></span> True gustatory loss is rare.
+        </div>
+        <h4>Why Patients Confuse Smell and Taste</h4>
+        <p><strong>Flavor</strong> (what patients experience as "taste") is actually composed of:</p>
+        <ul>
+            <li><strong>Taste</strong> (tongue receptors): only salty, sweet, sour, bitter, umami, and the 6th modality: <strong>oleogustus</strong> (fat)</li>
+            <li><strong>Smell</strong> (olfactory system): thousands of different odors &mdash; this is where most of "flavor" actually comes from</li>
+            <li><strong>Texture</strong> and <strong>Temperature</strong></li>
+        </ul>
+        <div class="callout plain-english">
+            <div class="callout-title">In Plain English</div>
+            When patients say "I can't taste anything" or "everything tastes wrong," <strong>95% of the time their nose is the problem, not their tongue</strong>. Think about when you have a cold &mdash; food tastes bland because you can't SMELL it, even though your tongue still works fine. The tongue only detects 6 basic tastes. Everything else &mdash; the difference between strawberry and cherry, coffee and chocolate &mdash; that's all smell being processed retronasally (odor molecules floating up the back of your throat to the olfactory epithelium). So your FIRST step with any "taste" complaint: <strong>examine the nose</strong>.
+        </div>
+        <figure class="clinical-img sm">
+            <img src="img/sensation/13.png" alt="Anatomy of smell and taste pathways — olfactory bulb, olfactory nerve, smell/taste center in brain, taste receptor epithelium of tongue">
+            <figcaption>Smell vs. taste pathways. Left: detecting an odor (olfactory bulb → olfactory nerve → brain). Right: detecting a taste (food → cilia on tongue epithelium → taste receptor → nerve fiber). Most of what patients call "taste" is actually retronasal olfaction.</figcaption>
+        </figure>
+        <p style="font-size:13px; color:var(--text-light);">Refs: Savard DJ et al. (2023). Am Fam Physician. 107(1): 50&ndash;58. Malaty J, Malaty IA (2013). Am Fam Physician. 88(12): 852&ndash;859.</p>
+    </div>
+
+    <div class="card">
+        <h3>What Causes True Dysgeusia in Dental Patients?</h3>
+        <div class="table-wrap">
+            <table>
+                <thead><tr><th>Cause</th><th>Details</th><th>Mechanism</th></tr></thead>
+                <tbody>
+                    <tr><td><strong>Poor Oral Hygiene &amp; Infection</strong> <span class="tag common">Most Common</span></td><td>Gingivitis, periodontal disease, oral candidiasis (metallic/salty taste), oral abscess, viral URI (COVID-19)</td><td>Direct contamination of taste receptors</td></tr>
+                    <tr><td><strong>Medications</strong> <span class="tag common">Very Common</span></td><td>ACE inhibitors (lisinopril, enalapril), ARBs (losartan), CCBs (amlodipine), antibiotics (metronidazole, clarithromycin, fluoroquinolones), antidepressants, anticonvulsants, <strong>chemotherapy (45&ndash;84%)</strong></td><td>Direct: taste receptor damage/dysfunction, <span class="hl">zinc depletion or chelation</span>. Indirect: hyposalivation.</td></tr>
+                    <tr><td><strong>Hyposalivation</strong></td><td>Any cause of reduced saliva flow</td><td>Reduces tastant dissolution and transport to receptors</td></tr>
+                    <tr><td><strong>Nutritional Deficiencies</strong></td><td>Vitamin B12, folate, copper, zinc</td><td>Impaired taste receptor turnover</td></tr>
+                    <tr><td><strong>Post-Surgical</strong></td><td>Third molar extraction, middle ear surgery</td><td>Chorda tympani nerve injury (carries taste from anterior 2/3 of tongue)</td></tr>
+                    <tr><td><strong>Head &amp; Neck Radiation</strong></td><td>Radiation to H&amp;N region</td><td>Taste bud destruction, salivary gland damage</td></tr>
+                </tbody>
+            </table>
+        </div>
+        <div class="callout clinical-pearl">
+            <div class="callout-title">Clinical Pearl</div>
+            Notice the case patient is on <strong>lisinopril</strong> (ACE inhibitor) &mdash; a well-known cause of dysgeusia. BUT the first step is still to examine the nose (95% rule), because the bitter taste could be olfactory dysfunction. Then review medications, then labs.
+        </div>
+        <p style="font-size:13px; color:var(--text-light);">Refs: Savard DJ et al. (2023). Am Fam Physician. 107(1): 50&ndash;58. Glick A, Sista V, Johnson C (2020). Am Fam Physician. 101(10): 613&ndash;620. Rademacher WMH et al. (2020). Oral Dis. 26(2): 213&ndash;223.</p>
+    </div>
+
+    <div class="card">
+        <h3>Management of Dysgeusia</h3>
+        <ol>
+            <li><strong>Identify and treat underlying cause:</strong>
+                <ul>
+                    <li>Medication adjustment (coordinate with prescriber)</li>
+                    <li>Treat oral infections (candidiasis, gingivitis, periodontitis)</li>
+                    <li>Chlorhexidine rinse &mdash; <strong>short-term only!</strong> Long-term use itself causes dysgeusia</li>
+                    <li>Nutritional supplementation if deficient</li>
+                    <li>Improve oral hygiene</li>
+                </ul>
+            </li>
+            <li><strong>Zinc Supplementation:</strong> <span class="dose">Zinc sulfate 220 mg daily</span> or <span class="dose">Zinc gluconate 50 mg daily</span></li>
+            <li><strong>Address Hyposalivation:</strong> Sialagogues, sugar-free gum/lozenges. For xerostomia without hyposalivation &mdash; saliva substitutes for comfort only (won't improve taste); address the underlying sensory cause.</li>
+            <li><strong>Clonazepam:</strong> <span class="dose">0.5 mg topical suck-and-spit</span> or systemic. Acts on <strong>GABA-A receptors expressed directly on lingual taste bud receptor cells</strong>.</li>
+            <li><strong>Olfactory Training</strong> (for the olfactory component): <span class="hl">Systematic exposure to strong odors (rose, lemon, eucalyptus, clove)</span>. Twice daily for <strong>3&ndash;6 months</strong>.</li>
+        </ol>
+
+        <div class="callout plain-english">
+            <div class="callout-title">In Plain English &mdash; Olfactory Training</div>
+            Think of olfactory training like physical therapy for your nose. After smell loss (from a virus, for example), the olfactory neurons can regenerate, but they need to be "trained" to reconnect properly. By sniffing the same 4 strong, distinct scents (rose, lemon, eucalyptus, clove) twice a day for months, you're giving the regenerating nerve fibers a consistent signal to "aim" for. Studies show this actually works &mdash; it promotes neuroplasticity in the olfactory system.
+        </div>
+    </div>
+
+    <div class="card">
+        <h3>MSG/Glutamate Supplementation <span class="tag rare">Emerging Evidence</span></h3>
+        <p>Primarily studied in <strong>oncology patients</strong> with chemotherapy-induced taste changes.</p>
+        <h4>Receptor-Level Mechanism</h4>
+        <ul>
+            <li>MSG maintains expression of the <strong>T1R3</strong> taste receptor subunit during chemotherapy</li>
+            <li><span class="hl">T1R3 is the SHARED subunit for both umami (T1R1/T1R3) AND sweet (T1R2/T1R3) receptors</span></li>
+            <li>Chemotherapy selectively downregulates T1R3; MSG supplementation suppresses this downregulation</li>
+        </ul>
+        <h4>Salivary Reflex</h4>
+        <ul>
+            <li><span class="hl">Umami stimulation enhances gustatory-salivary reflex &rarr; increases salivary flow &rarr; improves tastant transport to ALL receptors</span></li>
+            <li>May also enhance saltiness perception, allowing reduced sodium intake</li>
+        </ul>
+        <h4>Dosing</h4>
+        <ul>
+            <li><span class="dose">750 mg MSG per 150 g serving</span> of staple food (rice, soups, broths), three times daily</li>
+            <li>Alternative: umami-rich foods &mdash; parmesan, tomatoes, mushrooms, soy sauce, fish sauce</li>
+        </ul>
+        <div class="callout plain-english">
+            <div class="callout-title">In Plain English</div>
+            Chemo kills taste buds, especially the ones for sweet and umami (both share the T1R3 receptor subunit). By adding MSG to food, you keep that shared receptor active and functioning. Bonus: umami triggers a reflex that makes your salivary glands produce more saliva, which helps dissolve and carry taste molecules to ALL your remaining taste receptors &mdash; so even salty and sour taste improve. It's a two-for-one: protect the receptor AND improve the delivery system.
+        </div>
+        <figure class="clinical-img sm">
+            <img src="img/sensation/14.png" alt="Taste receptor wheel showing 5 basic taste modalities and their receptor types: Umami (T1R1+T1R3), Sweet (T1R2+T1R3), Salty (ENaC), Sour (intracellular acidification), Bitter (T2Rs), Fat (GPR120/GPR40)">
+            <figcaption>The 5 (+1) basic taste modalities and their receptor types. Note: T1R3 is the shared subunit for both umami and sweet — this is why chemotherapy (which downregulates T1R3) impairs both. (Chaudhari &amp; Roper, 2010)</figcaption>
+        </figure>
+        <p style="font-size:13px; color:var(--text-light);">Ref: Chaudhari N, Roper S (2010). J Cell Biol. 191(3): 429.</p>
+    </div>
+</section>
+
+<!-- ══════════════════════ 6. CENTRAL SENSITIZATION ══════════════════════ -->
+<section class="section" id="central-sensitization">
+    <div class="section-header">
+        <div class="section-num">6</div>
+        <h2>Central Sensitization</h2>
+    </div>
+
+    <div class="card">
+        <h3>What Is Central Sensitization?</h3>
+        <div class="callout key-concept">
+            <div class="callout-title">Key Concept</div>
+            <strong>Central sensitization</strong> = heightened excitability of nociceptive neurons in the <strong>central nervous system</strong>, resulting in amplified responses to normal or even subthreshold inputs. Manifests clinically as <strong>hyperalgesia</strong> and <strong>allodynia</strong>.
+        </div>
+
+        <div class="callout plain-english">
+            <div class="callout-title">In Plain English</div>
+            Imagine your brain's <strong>volume knob for pain is stuck on MAX</strong>. Normally, your central nervous system filters pain signals &mdash; a light touch should produce zero pain, a mild bump should produce mild pain. In central sensitization, the filtering system breaks down. The neurons in your spinal cord and brain become hyper-excitable &mdash; they start amplifying signals that shouldn't be painful (allodynia) and over-amplifying signals that should only be mildly painful (hyperalgesia). The key: this is NOT a problem with the tissue or the peripheral nerves &mdash; it's the brain/spinal cord processing that's gone wrong.
+        </div>
+
+        <h4>Nociplastic Pain Framework</h4>
+        <figure class="clinical-img md">
+            <img src="img/sensation/12.png" alt="Nociplastic pain mechanisms diagram showing top-down pain inhibition and bottom-up pain facilitation pathways">
+            <figcaption>Nociplastic pain mechanisms: Top-down inhibition (genetics, expectations, mood) vs Bottom-up facilitation (peripheral nociceptive inputs). (Woolf CJ, 2011)</figcaption>
+        </figure>
+        <div class="vs-grid">
+            <div class="vs-card">
+                <h4>Top-Down: Pain Inhibition</h4>
+                <p>Your brain normally INHIBITS (turns down) pain. Factors involved:</p>
+                <ul>
+                    <li>Genetics</li>
+                    <li>Prior experiences</li>
+                    <li>Expectations</li>
+                    <li>Emotions or mood</li>
+                </ul>
+                <p><strong>When top-down fails:</strong> Pain does NOT resolve even when peripheral nociceptive input ends &rarr; <strong>Primary fibromyalgia</strong></p>
+            </div>
+            <div class="vs-card right">
+                <h4>Bottom-Up: Pain Facilitation</h4>
+                <p>Stimulated by peripheral nociceptive inputs that "wind up" the CNS</p>
+                <ul>
+                    <li>Repeated/prolonged nociceptive input</li>
+                    <li>Nerve injury</li>
+                    <li>Inflammation</li>
+                </ul>
+                <p><strong>When bottom-up drives it:</strong> Pain MAY resolve with termination of nociceptive input &rarr; <strong>Secondary fibromyalgia</strong></p>
+            </div>
+        </div>
+        <div class="callout plain-english">
+            <div class="callout-title">In Plain English &mdash; Why This Matters for Dentistry</div>
+            This framework explains why some patients still have pain <strong>after you've fixed everything</strong>. You extracted the tooth, treated the infection, the tissue healed perfectly &mdash; but the patient still hurts. Why? Because the prolonged pain "rewired" their central nervous system (bottom-up sensitization). Or they have poor pain inhibition to begin with (top-down failure, often linked to anxiety/depression). Either way, the problem is no longer in the mouth &mdash; it's in the brain. This means you need <strong>centrally-acting medications</strong> (TCAs, gabapentinoids, SNRIs), not more local treatment.
+        </div>
+        <p style="font-size:13px; color:var(--text-light);">Ref: Woolf CJ (2011). <em>Pain</em>, 152(3 Suppl), S2&ndash;S15.</p>
+    </div>
+</section>
+
+<!-- ══════════════════════ 7. TRIGEMINAL NEUROPATHY ══════════════════════ -->
+<section class="section" id="trigeminal">
+    <div class="section-header">
+        <div class="section-num">7</div>
+        <h2>Trigeminal Neuropathy &amp; PTTN</h2>
+    </div>
+
+    <div class="card">
+        <h3>Causes of Trigeminal Neuropathy</h3>
+        <div class="table-wrap">
+            <table>
+                <thead><tr><th>Category</th><th>Examples</th></tr></thead>
+                <tbody>
+                    <tr><td><strong>Structural/Compressive</strong></td><td>Acoustic schwannoma, metastases, pituitary adenomas</td></tr>
+                    <tr><td><strong>Demyelinating &amp; Inflammatory</strong></td><td>Multiple Sclerosis, Sjögren syndrome, SLE</td></tr>
+                    <tr><td><strong>Trauma &amp; Iatrogenic</strong></td><td>Facial trauma, dental procedures, maxillofacial surgery</td></tr>
+                    <tr><td><strong>Infectious</strong></td><td>Herpes zoster virus</td></tr>
+                    <tr><td><strong>Idiopathic</strong></td><td>No identifiable cause</td></tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="callout teal-note">
+            <div class="callout-title">Testing Levels (from the anatomical diagram)</div>
+            <strong style="color:var(--danger);">Peripheral nerve level:</strong> tested with <strong>topical anesthetic</strong> (Step 1 of anesthetic challenge)<br>
+            <strong style="color:var(--accent);">Regional nerve level:</strong> tested with <strong>nerve block</strong> (Step 2 of anesthetic challenge)<br>
+            <strong style="color:var(--primary);">Central level:</strong> tested by <strong>response to systemic (enteral) medication</strong>
+        </div>
+        <figure class="clinical-img sm">
+            <img src="img/sensation/15.png" alt="Anatomical illustration of the trigeminal nerve: V1 ophthalmic (forehead/upper face), V2 maxillary (midface/upper jaw), V3 mandibular (lower face/jaw)">
+            <figcaption>Trigeminal nerve divisions: V1 Ophthalmic (red), V2 Maxillary (orange), V3 Mandibular (purple). Testing levels — peripheral (topical anesthetic), regional (nerve block), central (systemic medication).</figcaption>
+        </figure>
+    </div>
+
+    <div class="card">
+        <h3>Post-Traumatic Trigeminal Neuropathic Pain (PTTN)</h3>
+        <p><strong>Previously called:</strong> Anaesthesia dolorosa; painful post-traumatic trigeminal neuropathy</p>
+
+        <h4>ICOP Diagnostic Criteria (2020)</h4>
+        <ol style="list-style-type:upper-alpha;">
+            <li>Pain in a <strong>neuroanatomically plausible</strong> area within the distribution of one or both trigeminal nerves, persisting or recurring for <strong>&gt;3 months</strong>, fulfilling C and D</li>
+            <li>Both of:
+                <ul>
+                    <li>History of a mechanical, thermal, radiation or chemical <strong>injury</strong> to the peripheral trigeminal nerve(s)</li>
+                    <li>Diagnostic test <strong>confirmation of a lesion</strong> of the peripheral trigeminal nerve(s) explaining the pain</li>
+                </ul>
+            </li>
+            <li>Onset <strong>within 6 months</strong> after the injury</li>
+            <li>Associated with somatosensory symptoms and/or signs in the same neuroanatomically plausible distribution</li>
+            <li>Not better accounted for by another ICOP or ICHD-3 diagnosis</li>
+        </ol>
+
+        <div class="callout plain-english">
+            <div class="callout-title">In Plain English</div>
+            PTTN = "the nerve was injured, and now it hurts all the time." Think of a patient who got an IAN block for a molar extraction, and 6 months later they still have constant burning/aching in that area plus numbness or tingling. The nerve was physically damaged (by the needle, the surgery, or the inflammation), and instead of healing cleanly, it now sends constant pain signals. The diagnostic criteria essentially say: (1) the pain is where the trigeminal nerve goes, (2) there was an injury, (3) testing confirms nerve damage, (4) it started within 6 months of injury, and (5) there are other sensory changes (numbness, tingling) in the same area.
+        </div>
+    </div>
+
+    <div class="card">
+        <h3>Trigeminal Neuropathy vs. Trigeminal Neuralgia</h3>
+        <div class="table-wrap">
+            <table>
+                <thead><tr><th>Feature</th><th>Trigeminal Neuropathy</th><th>Trigeminal Neuralgia</th></tr></thead>
+                <tbody>
+                    <tr><td><strong>Pain character</strong></td><td>Constant with flare-ups, <strong>burning</strong></td><td>Paroxysmal, <strong>electric shock-like</strong></td></tr>
+                    <tr><td><strong>Duration</strong></td><td>Prolonged, continuous</td><td>Fraction of a second to 2 minutes</td></tr>
+                    <tr><td><strong>Trigger zones</strong></td><td>Usually absent</td><td>Present (innocuous stimuli), refractory period</td></tr>
+                    <tr><td><strong>Sensory findings</strong></td><td><strong>ABNORMAL</strong> (gain + loss of function)</td><td>Usually <strong>NORMAL</strong> exam</td></tr>
+                    <tr><td><strong>History of trauma</strong></td><td>YES (by definition for PTTN)</td><td>No</td></tr>
+                </tbody>
+            </table>
+        </div>
+        <div class="callout high-yield">
+            <div class="callout-title">High Yield Distinction</div>
+            <strong>Neuropathy</strong> = constant burning, abnormal sensory exam, history of trauma. <strong>Neuralgia</strong> = electric shocks lasting seconds, normal exam between attacks, trigger zones (e.g., light touch to lip triggers a shock). If the sensory exam is abnormal (numbness, altered sensation), it's neuropathy. If the exam is completely normal between attacks, it's neuralgia.
+        </div>
+        <p style="font-size:13px; color:var(--text-light);">Ref: International Classification of Orofacial Pain (ICOP) (2020). <em>Cephalalgia</em>. 40(2): 129&ndash;221.</p>
+    </div>
+
+    <div class="card">
+        <h3>Workup: Clinical Neurosensory Examination</h3>
+        <h4>History</h4>
+        <ul>
+            <li>Temporal relationship to trauma</li>
+            <li>Pain quality: <span class="hl">burning, aching, constant</span> vs. paroxysmal</li>
+            <li>Sensory symptoms: numbness, tingling, "different feeling"</li>
+            <li>Functional impact</li>
+        </ul>
+        <h4>Examination Tests</h4>
+        <div class="table-wrap">
+            <table>
+                <thead><tr><th>Test</th><th>What It Tests</th><th>Method</th></tr></thead>
+                <tbody>
+                    <tr><td><strong>Light touch</strong></td><td>A&beta; fibers (large myelinated)</td><td>Cotton wisp</td></tr>
+                    <tr><td><strong>Pinprick</strong></td><td>A&delta; fibers (small myelinated)</td><td>Sharp vs. dull discrimination</td></tr>
+                    <tr><td><strong>Two-point discrimination</strong></td><td>Receptor density / cortical representation</td><td>Compare affected vs. unaffected side</td></tr>
+                    <tr><td><strong>Thermal (cold)</strong></td><td>A&delta; fibers</td><td>Cold stimulus</td></tr>
+                    <tr><td><strong>Thermal (warm)</strong></td><td>C fibers (unmyelinated)</td><td>Warm stimulus</td></tr>
+                    <tr><td><strong>Mapping</strong></td><td>Extent of altered sensation</td><td>Draw the area of altered sensation</td></tr>
+                </tbody>
+            </table>
+        </div>
+        <div class="callout plain-english">
+            <div class="callout-title">In Plain English &mdash; Nerve Fiber Types</div>
+            Your nerves have different "wires" for different types of sensation:<br>
+            <strong>A&beta; fibers</strong> = the big, fast, insulated wires &mdash; carry light touch. Tested with cotton wisp. If damaged → numbness.<br>
+            <strong>A&delta; fibers</strong> = medium wires &mdash; carry sharp pain and cold. Tested with pinprick and cold. If damaged → can't tell sharp from dull, can't feel cold.<br>
+            <strong>C fibers</strong> = the small, slow, uninsulated wires &mdash; carry dull/burning pain and warmth. Tested with warm stimulus. If damaged → can't feel warmth, burning pain may paradoxically INCREASE (because inhibitory signals are lost).<br><br>
+            Always compare the affected side to the normal side. The goal is to map exactly which fiber types are damaged and how big the damaged area is.
+        </div>
+        <figure class="clinical-img md">
+            <img src="img/sensation/16.png" alt="Face diagram with V1/V2/V3 dermatome zones showing normal 2-point discrimination values in mm, plus disk-criminator tools">
+            <figcaption>Left: facial dermatome map with normal 2-point discrimination values (mm) for each zone. Right: disk-criminator tools used for two-point discrimination testing. Compare affected vs. unaffected side. (Sarhan et al., 2025; Costas et al., 1994)</figcaption>
+        </figure>
+        <p style="font-size:13px; color:var(--text-light);">Refs: Sarhan FR et al. (2025). J Clin Med. 14(14): 4884. Costas PD et al. (1994). Plast Reconstr Surg. 93(2): 311&ndash;317. Nolan MF (1985). Phys Ther. 65(2): 181&ndash;185.</p>
+    </div>
+
+    <!-- Anesthetic Challenge -->
+    <div class="card">
+        <h3>The Anesthetic Challenge: 2-Step Diagnostic Algorithm</h3>
+        <p>This is the systematic way to determine whether the pain generator is <strong>peripheral</strong> (in the tissue/nerve ending), <strong>regional</strong> (in the nerve trunk), or <strong>central</strong> (in the brain/spinal cord) &mdash; because the treatment is completely different for each.</p>
+
+        <h4>Step 1: Topical Anesthetic Challenge</h4>
+        <p>Apply <span class="dose">20% benzocaine or 5% lidocaine</span> to the affected area for 5 minutes. Reassess pain (VAS) at 15&ndash;30 minutes.</p>
+        <div class="table-wrap">
+            <table>
+                <thead style="background: #D35400;"><tr><th style="background:#D35400;">Response</th><th style="background:#D35400;">Interpretation</th><th style="background:#D35400;">Next Step</th><th style="background:#D35400;">Treatment</th></tr></thead>
+                <tbody>
+                    <tr><td><strong>&ge;50&ndash;70% relief</strong></td><td>Peripheral/superficial mechanism dominant</td><td>Treat with topicals</td><td><strong>Topical agents:</strong> Lidocaine 5% ointment, capsaicin cream, compounded topical analgesics</td></tr>
+                    <tr><td><strong>~30% relief</strong> (equivocal)</td><td>Mixed or deeper peripheral component</td><td>Escalate to diagnostic nerve block</td><td>Proceed to Step 2</td></tr>
+                    <tr><td><strong>&lt;30% relief</strong></td><td>Likely central mechanism</td><td>Consider nerve block to confirm, but expect limited response</td><td>Proceed to Step 2, prepare for systemic therapy</td></tr>
+                </tbody>
+            </table>
+        </div>
+
+        <h4>Step 2: Diagnostic Nerve Block (if topical equivocal or failed)</h4>
+        <p>IAN block or appropriate regional block with <span class="dose">2% lidocaine</span>. Confirm adequate anesthesia (lip/tongue numbness). Reassess pain.</p>
+        <div class="table-wrap">
+            <table>
+                <thead style="background: #7B2D8E;"><tr><th style="background:#7B2D8E;">Response</th><th style="background:#7B2D8E;">Interpretation</th><th style="background:#7B2D8E;">Treatment</th></tr></thead>
+                <tbody>
+                    <tr><td><strong>&ge;70% relief</strong></td><td>Peripheral generator confirmed</td><td><strong>Therapeutic nerve blocks:</strong> LA + steroid series every 6&ndash;8 weeks</td></tr>
+                    <tr><td><strong>30&ndash;70% relief</strong></td><td>Mixed peripheral + central</td><td><strong>Combination therapy:</strong> Nerve blocks + low-dose centrally-acting medication (TCA or gabapentinoid)</td></tr>
+                    <tr><td><strong>&lt;30% relief despite numbness</strong></td><td>Central sensitization dominant</td><td><strong>Centrally-acting medications:</strong> TCAs (amitriptyline), SNRIs (duloxetine), &alpha;2&delta;-ligands (gabapentin/pregabalin)</td></tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="callout high-yield">
+            <div class="callout-title">High Yield</div>
+            The most striking scenario: the nerve block makes the area <strong>completely numb</strong> (confirmed by testing &mdash; patient can't feel a thing) but the <strong>pain doesn't go away</strong>. That means the pain is NOT coming from the nerve &mdash; it's being generated in the brain itself. This is the hallmark of <strong>central sensitization</strong>. No amount of local treatment will help. You need centrally-acting systemic medications.
+        </div>
+        <p style="font-size:13px; color:var(--text-light);">Refs: Haroutounian S et al. (2014). Pain. 155(7): 1272&ndash;1279. Lawson E et al. (2025). Pain Med. 26(1): 1&ndash;15. Cruccu G et al. (2020). N Engl J Med. 383(8): 754&ndash;762. Chen YC, Cheng HT (2025). J Pain Res. 18: 1&ndash;10. Vlassakov KV et al. (2011). Anesth Analg. 112(3): 726&ndash;737.</p>
+    </div>
+</section>
+
+<!-- ══════════════════════ 8. SELF-INJURIOUS BEHAVIOR ══════════════════════ -->
+<section class="section" id="self-injury">
+    <div class="section-header">
+        <div class="section-num">8</div>
+        <h2>Self-Injurious Behavior</h2>
+    </div>
+
+    <div class="card">
+        <h3>Categories of Oral Self-Injury</h3>
+        <div class="table-wrap">
+            <table>
+                <thead><tr><th>Category</th><th>Examples</th></tr></thead>
+                <tbody>
+                    <tr><td><strong>Neurodevelopmental</strong></td><td>Autism spectrum disorder, intellectual disability, genetic syndromes (Lesch-Nyhan, Rett, Cornelia de Lange, Prader-Willi)</td></tr>
+                    <tr><td><strong>Neurologic/Hospital</strong></td><td>Coma/decerebrate state (loss of masticatory control), seizures/postictal states, encephalitis, stroke, TBI</td></tr>
+                    <tr><td><strong>Psychiatric</strong></td><td>OCD &amp; BFRBs, delusional infestation (Morgellons), stimulant use disorder, NSSI, factitious disorder</td></tr>
+                    <tr><td><strong>Congenital Pain Insensitivity</strong></td><td>CIPA (HSAN IV), SCN9A-CIP, HSAN II</td></tr>
+                </tbody>
+            </table>
+        </div>
+        <figure class="clinical-img sm">
+            <img src="img/sensation/17.png" alt="Self-injurious behavior: dental damage showing gingival destruction and finger-biting injury">
+            <figcaption>Self-injurious behavior clinical photos: (a) dental and gingival damage from repetitive self-injury; (b) oral tissue trauma from biting. (Maalem D et al., 2024)</figcaption>
+        </figure>
+    </div>
+
+    <!-- Riga-Fede -->
+    <div class="card">
+        <h3>Riga-Fede Disease</h3>
+        <p>Benign traumatic ulceration of oral mucosa from repetitive rubbing against <strong>primary teeth</strong> in infants.</p>
+        <h4>Typical Presentation</h4>
+        <ul>
+            <li>Healthy infant, <strong>6&ndash;15 months old</strong></li>
+            <li>Firm, verrucous plaque on <strong>ventral tongue</strong></li>
+            <li>Coincides with <strong>tooth eruption</strong></li>
+            <li>Responds to conservative treatment (smoothing tooth edges, protective barriers)</li>
+        </ul>
+        <div class="callout warning">
+            <div class="callout-title">Red Flag: Extensive RFD</div>
+            If the lesion involves <strong>both lip AND tongue</strong> and <strong>fails to respond to treatment</strong> &rarr; suspect an underlying <strong>pain insensitivity syndrome</strong> (CIPA, HSAN). A normal infant would stop rubbing because it hurts. An infant who can't feel pain will keep going.
+        </div>
+        <figure class="clinical-img md">
+            <img src="img/sensation/18.png" alt="Riga-Fede disease: verrucous plaques on ventral tongue of infants and finger ulceration from repetitive biting">
+            <figcaption>Riga-Fede disease. Top: firm, verrucous plaques on ventral tongue from repetitive rubbing against erupting primary teeth. Bottom: finger ulceration. (Lee et al., 2021; Zaenglein et al., 2002)</figcaption>
+        </figure>
+        <p style="font-size:13px; color:var(--text-light);">Refs: Lee JJ et al. (2021). Pediatr Emerg Care. 37(12): e1552&ndash;e1554. Zaenglein AL et al. (2002). J Am Acad Dermatol. 46(2): 312&ndash;315.</p>
+    </div>
+
+    <!-- ASD -->
+    <div class="card">
+        <h3>Autism Spectrum Disorder &amp; Self-Injurious Behavior</h3>
+        <ul>
+            <li>SIB affects <strong>26&ndash;50%</strong> of individuals with ASD</li>
+            <li>Meta-analysis: pooled prevalence <strong>42%</strong>; hand-hitting (23%) most common, self-cutting (3%) least common</li>
+        </ul>
+        <h4>The Pain Paradox in ASD <span class="tag alert">Important</span></h4>
+        <ul>
+            <li>Contrary to popular belief, many individuals with ASD show <strong>pain HYPERSENSITIVITY, not indifference</strong></li>
+            <li>Pain perception is <strong>highly variable</strong> &mdash; <strong>do not assume pain insensitivity</strong></li>
+            <li>Variability relates to "perceptual noise" rather than consistently elevated thresholds</li>
+        </ul>
+        <h4>Oral Manifestations</h4>
+        <ul>
+            <li>Biting lips, tongue, buccal mucosa, hands</li>
+            <li>Self-extraction of teeth</li>
+            <li>Mouthing objects causing mucosal trauma</li>
+            <li>Higher rates of dental trauma and bruxism (<strong>RR 4.23</strong>)</li>
+        </ul>
+        <div class="callout high-yield">
+            <div class="callout-title">High Yield</div>
+            <span class="hl">SIB in ASD is often a <strong>response to pain or distress elsewhere</strong>.</span> The self-injury may be communicating "something hurts" (a toothache, GI pain, headache) &mdash; not necessarily that the patient can't feel pain. Always <strong>rule out an underlying pain source</strong> before assuming the behavior is purely behavioral.
+        </div>
+        <p style="font-size:13px; color:var(--text-light);">Refs: Sarvas E et al. (2024). Pediatrics. 153(2): e2023065123. Steenfeldt-Kristensen C et al. (2020). J Autism Dev Disord. 50(11): 3855&ndash;3873. Hoffman T et al. (2023). Pain. 164(5): 1037&ndash;1046.</p>
+    </div>
+
+    <!-- Congenital Insensitivity -->
+    <div class="card">
+        <h3>Congenital Insensitivity to Pain</h3>
+        <p><strong>CIPA</strong> = Congenital Insensitivity to Pain with Anhidrosis. <strong>HSAN</strong> = Hereditary Sensory and Autonomic Neuropathy.</p>
+        <div class="table-wrap">
+            <table>
+                <thead><tr><th>Syndrome</th><th>Intellectual Disability</th><th>Distinguishing Features</th></tr></thead>
+                <tbody>
+                    <tr><td><strong>CIPA / HSAN IV</strong></td><td>Yes</td><td>Anhidrosis (can't sweat), recurrent fevers, dental anomalies</td></tr>
+                    <tr><td><strong>Lesch-Nyhan</strong></td><td>Severe developmental delay</td><td>Abnormal involuntary movements (dystonia, choreoathetosis)</td></tr>
+                    <tr><td><strong>SCN9A-CIP</strong></td><td>Normal intelligence</td><td>Anosmia (can't smell)</td></tr>
+                    <tr><td><strong>HSAN II</strong></td><td>Normal intelligence</td><td>Distal sensory loss (hands/feet more than face)</td></tr>
+                    <tr><td><strong>Familial Dysautonomia (HSAN III)</strong></td><td>Normal intelligence</td><td>Lack fungiform papillae, GI dysfunction, vomiting crises, recurrent pneumonia, cardiovascular instability</td></tr>
+                </tbody>
+            </table>
+        </div>
+        <h4>Oral Manifestations (All Types)</h4>
+        <ul>
+            <li>Tongue/lip <strong>self-mutilation</strong> beginning with tooth eruption</li>
+            <li>Painless oral ulcerations and infections</li>
+            <li><strong>Auto-extraction of teeth</strong></li>
+            <li>Risk of <strong>osteomyelitis</strong> (bone infection goes undetected because there's no pain signal)</li>
+        </ul>
+        <figure class="clinical-img md">
+            <img src="img/sensation/19.png" alt="Lesch-Nyhan syndrome: hand excoriations, severe perioral/intraoral destruction, tongue auto-amputation">
+            <figcaption>Lesch-Nyhan syndrome. Left: hand with self-inflicted excoriations/scarring. Center: severe perioral and intraoral destruction. Right: complete auto-amputation of the tongue. (Skelton H et al., 2016)</figcaption>
+        </figure>
+        <p style="font-size:13px; color:var(--text-light);">Refs: Kurth I (2021). GeneReviews. HSAN Type II. Schon KR et al. (2020). GeneReviews. Congenital Insensitivity to Pain Overview.</p>
+    </div>
+
+    <!-- Altered Consciousness -->
+    <div class="card">
+        <h3>Oral Self-Injury in Altered Consciousness</h3>
+        <h4>Mechanism</h4>
+        <p>Comatose and decerebrate patients lose cerebral control of the masticatory cycle, leading to <strong>discoordinate chewing movements</strong> and self-inflicted oral trauma.</p>
+        <h4>Common Presentations</h4>
+        <ul>
+            <li>Tongue lacerations or ulcerations</li>
+            <li>Lip biting with <strong>pyogenic granuloma</strong> or scar tissue formation</li>
+            <li>Bruxism with tooth damage, ETT (endotracheal tube) dislodgement</li>
+        </ul>
+        <h4>Associated Conditions</h4>
+        <ul>
+            <li>Encephalitis, intracerebral hemorrhage, TBI, hypoxic-ischemic encephalopathy, acute ischemic stroke</li>
+        </ul>
+        <div class="callout warning">
+            <div class="callout-title">Complications If Untreated</div>
+            Tongue amputation, aspiration pneumonia, difficulty with mouth care, infection. These patients need <strong>intraoral appliances</strong> (tongue stents, bite blocks) placed urgently.
+        </div>
+        <figure class="clinical-img sm">
+            <img src="img/sensation/20.png" alt="Lip biting injury with pyogenic granuloma formation in hospitalized patient with altered consciousness">
+            <figcaption>Oral self-injury in altered consciousness: lip biting with pyogenic granuloma/scar tissue formation. Results from discoordinate masticatory movements in comatose/decerebrate patients.</figcaption>
+        </figure>
+        <p style="font-size:13px; color:var(--text-light);">Refs: Hanson GE et al. (1975). Crit Care Med. 3(5): 200&ndash;202. Kobayashi T et al. (2005). J Oral Maxillofac Surg. 63(11): 1683&ndash;1686. Burke DJ et al. (2021). Curr Pain Headache Rep. 25(3): 18.</p>
+    </div>
+
+    <!-- Psychiatric Causes -->
+    <div class="card">
+        <h3>Psychiatric Causes of Oral Self-Injury</h3>
+
+        <details open>
+            <summary>Delusional Infestation (Ekbom Syndrome) / Morgellons Disease</summary>
+            <div class="detail-body">
+                <ul>
+                    <li><strong>Fixed false belief</strong> of infestation by pathogens (parasites, fibers, threads)</li>
+                    <li><strong>Oral manifestations:</strong> sensation of hair/threads between teeth, unusual perception of tongue and saliva</li>
+                    <li><strong>"Matchbox sign":</strong> patients bring specimens to appointments (lint, skin flakes, etc. in containers as "proof")</li>
+                    <li><strong>Prototypical patient:</strong> middle-aged woman, often isolated; younger if substance use involved</li>
+                    <li><strong>Treatment:</strong> low-dose antipsychotics</li>
+                </ul>
+                <figure class="clinical-img md">
+                    <img src="img/sensation/21.png" alt="Delusional infestation (Ekbom syndrome): extensive self-inflicted excoriations on back from patients attempting to remove perceived parasites">
+                    <figcaption>Delusional infestation: extensive self-inflicted skin excoriations on the back. Patients create these lesions attempting to "remove" the perceived parasites/fibers. (Freudenmann &amp; Lepping, 2009)</figcaption>
+                </figure>
+            </div>
+        </details>
+
+        <details>
+            <summary>Nonsuicidal Self-Injury (NSSI)</summary>
+            <div class="detail-body">
+                <ul>
+                    <li>Intentional self-damage to induce bleeding/bruising/pain <strong>without suicidal intent</strong></li>
+                    <li><strong>Oral sites:</strong> lips, tongue, buccal mucosa</li>
+                    <li>Associated with BPD, depression, anxiety</li>
+                    <li>Often preceded by negative feelings</li>
+                </ul>
+                <figure class="clinical-img sm">
+                    <img src="img/sensation/22.png" alt="Intraoral photo showing mucosal damage from self-injurious lip/cheek biting">
+                    <figcaption>Oral self-injury: lip/cheek biting damage. Note the mucosal trauma on the lower labial area from repetitive biting behavior.</figcaption>
+                </figure>
+            </div>
+        </details>
+
+        <details>
+            <summary>Factitious Disorder</summary>
+            <div class="detail-body">
+                <ul>
+                    <li>Intentional production of oral lesions (ulcers, periodontal destruction) <strong>for secondary gain</strong></li>
+                    <li>Patients appear <strong>"strikingly inconspicuous"</strong> on psychiatric assessment</li>
+                    <li><strong>Diagnosis clues:</strong> lesions inconsistent with stated history, failure to heal despite appropriate treatment</li>
+                </ul>
+            </div>
+        </details>
+
+        <h4>Primary, Secondary, and Tertiary Gain</h4>
+        <div class="table-wrap">
+            <table>
+                <thead><tr><th>Type</th><th>Definition</th><th>Example</th><th>Nature</th></tr></thead>
+                <tbody>
+                    <tr><td><strong>Primary Gain</strong></td><td>Internal psychological benefit from a symptom</td><td>Patient develops paralysis or pain that prevents them from facing a stressful situation, unconsciously reducing anxiety</td><td><strong>Unconscious.</strong> Patient is NOT aware their symptom serves a psychological function.</td></tr>
+                    <tr><td><strong>Secondary Gain</strong></td><td>External benefits from having an illness or symptom</td><td>Patient with chronic pain receives disability payments or avoids unwanted duties</td><td><strong>Mostly unconscious.</strong> If person exaggerates or fabricates intentionally, it's called <strong>malingering</strong>.</td></tr>
+                    <tr><td><strong>Tertiary Gain</strong></td><td>A third party gains from the patient's symptoms</td><td>Family member gains control over decisions, or caregiver benefits from job security caring for chronically ill person</td><td><strong>Can be conscious or unconscious</strong>, typically by third parties, not the patient.</td></tr>
+                </tbody>
+            </table>
+        </div>
+        <p style="font-size:13px; color:var(--text-light);">Refs: American Psychiatric Association (2022). DSM-5-TR. Sadock BJ et al. (2021). Kaplan &amp; Sadock's Synopsis of Psychiatry. Gatchel RJ et al. (2007). Psychol Bull. 133(4): 581&ndash;624.</p>
+    </div>
+
+    <!-- OCD / BFRBs -->
+    <div class="card">
+        <h3>OCD and Body-Focused Repetitive Behaviors (BFRBs)</h3>
+        <div class="vs-grid">
+            <div class="vs-card">
+                <h4>OCD with Contamination Obsessions</h4>
+                <ul>
+                    <li>Contamination obsessions &rarr; cleaning compulsions (most common OCD dimension)</li>
+                    <li><strong>Oral manifestations:</strong> excessive toothbrushing, compulsive mouthwash use</li>
+                    <li>Severe: rinsing with <strong>bleach</strong>, rubbing alcohol, other caustic agents</li>
+                    <li>Results: chemical burns, mucosal ulceration, gingival recession</li>
+                </ul>
+            </div>
+            <div class="vs-card right">
+                <h4>BFRBs &amp; Compulsive Oral Hygiene</h4>
+                <ul>
+                    <li>DSM-5: lip biting, cheek chewing = "other specified OCD-related disorders"</li>
+                    <li>Lip-cheek biting affects <strong>~8%</strong> of population at disorder level</li>
+                    <li>Overzealous toothbrushing &rarr; cervical abrasion, gingival recession, ulceration</li>
+                    <li>Patients persist despite pain due to mistaken health beliefs</li>
+                    <li>Often initiated in childhood during emotional turmoil</li>
+                </ul>
+            </div>
+        </div>
+        <figure class="clinical-img md">
+            <img src="img/sensation/23.png" alt="OCD oral damage: gingival recession and chemical burns from compulsive cleaning with caustic agents, cotton swab indicating chemical burn on labial mucosa">
+            <figcaption>OCD-related oral injury. Left: severe gingival recession and mucosal damage from compulsive cleaning with caustic agents (bleach, rubbing alcohol). Right: cotton swab indicating area of chemical-burn damage on lower labial mucosa.</figcaption>
+        </figure>
+        <p style="font-size:13px; color:var(--text-light);">Refs: APA (2022). DSM-5-TR. Hoffman RS et al. (2020). N Engl J Med. 382(18): 1739&ndash;1748. Moritz S et al. (2023). JAMA Dermatol. 159(3): 281&ndash;289.</p>
+    </div>
+
+    <!-- Exfoliative Cheilitis -->
+    <div class="card">
+        <h3>Exfoliative Cheilitis</h3>
+        <h4>Etiology: Factitious/Behavioral</h4>
+        <ul>
+            <li>Significant association with lip licking/biting behavior</li>
+            <li><strong>53%</strong> have parafunctional lip licking; <strong>40%</strong> have psychiatric disorders</li>
+            <li>Stress and psychiatric conditions associated with onset</li>
+        </ul>
+        <h4>Clinical Features</h4>
+        <p>Cyclical nature:</p>
+        <div class="flow">
+            <div class="flow-step">Scaling</div>
+            <div class="flow-arrow">&rarr;</div>
+            <div class="flow-step">Desquamation</div>
+            <div class="flow-arrow">&rarr;</div>
+            <div class="flow-step">Regeneration</div>
+            <div class="flow-arrow">&rarr;</div>
+            <div class="flow-step" style="border-color: var(--accent);">Repeat</div>
+        </div>
+        <h4>Management</h4>
+        <ul>
+            <li><strong>Lanolin</strong> (lip barrier)</li>
+            <li>Address underlying psychiatric comorbidity</li>
+            <li>Behavioral modification to stop lip licking/biting/rubbing</li>
+        </ul>
+        <figure class="clinical-img sm">
+            <img src="img/sensation/26.png" alt="Exfoliative cheilitis: lip peeling with visible desquamation, patient pulling at peeling tissue">
+            <figcaption>Exfoliative cheilitis: cyclical lip peeling with visible desquamation. Note association with lip licking/biting behavior. (Daley &amp; Gupta, 1995)</figcaption>
+        </figure>
+        <p style="font-size:13px; color:var(--text-light);">Refs: Daley TD, Gupta AK (1995). J Oral Pathol Med. 24(4): 177&ndash;179. Rogers RS, Bekic M (1997). Semin Cutan Med Surg. 16(4): 328&ndash;336. Blagec T et al. (2023). Oral Dis. 29(6): 2358&ndash;2366.</p>
+    </div>
+
+    <!-- Management of SIB -->
+    <div class="card">
+        <h3>Management of Oral Self-Injury</h3>
+        <h4>Assessment First</h4>
+        <ul>
+            <li>Thorough medical, developmental, and behavioral history</li>
+            <li>Severity, frequency, aggravating/relieving factors, antecedents</li>
+            <li><span class="hl-red">Rule out underlying pain source</span> (dental, GI, infection)</li>
+        </ul>
+
+        <h4>Self-Injury Severity Spectrum</h4>
+        <figure class="clinical-img sm">
+            <img src="img/sensation/24.png" alt="Self-injury severity spectrum: from nail biting (least severe) to auto-amputation of digits (most severe)">
+            <figcaption>Self-injury severity spectrum: nail biting &rarr; bruxism &rarr; hair pulling &rarr; scratching/picking &rarr; head-banging &rarr; biting soft tissue/digits &rarr; skin cutting/burning &rarr; auto-castration &rarr; auto-enucleation &rarr; auto-amputation.</figcaption>
+        </figure>
+
+        <h4>Nonpharmacologic Interventions</h4>
+        <ul>
+            <li>Behavioral modification, desensitization</li>
+            <li>Intraoral appliances (splints, mouth guards) &mdash; <strong>time-limited</strong></li>
+            <li>Tooth extraction &mdash; <strong>last resort only</strong></li>
+        </ul>
+
+        <h4>Pharmacologic Options (limited evidence, time-limited use)</h4>
+        <ul>
+            <li>Atypical antipsychotics (risperidone, aripiprazole)</li>
+            <li>&alpha;-adrenergic agonists (clonidine, guanfacine)</li>
+            <li>Botulinum toxin A for masticatory spasticity</li>
+        </ul>
+
+        <h4>Psychotherapy</h4>
+        <ul>
+            <li>Psychology referral (especially for medically unexplained symptoms)</li>
+            <li>Dialectical behavior therapy (DBT-A)</li>
+            <li>Cognitive behavioral therapy (CBT)</li>
+            <li>Habit replacement therapy (self-help RCT showed efficacy)</li>
+        </ul>
+        <p style="font-size:13px; color:var(--text-light);">Refs: Iffland M et al. (2023). Cochrane Database Syst Rev. 2023(7): CD013700. Calvo N et al. (2022). Eur Neuropsychopharmacol. 59: 1&ndash;12. Witt KG et al. (2021). Cochrane Database Syst Rev. 2021(3): CD013667.</p>
+    </div>
+
+    <!-- Hospital Management -->
+    <div class="card">
+        <h3>Management of Oral Self-Injury in Hospitalized Patients</h3>
+        <ul>
+            <li><strong>Intraoral appliances:</strong> Tongue stents, bite blocks, acrylic splints with headgear. Prevents discoordinate mandibular movements. Facilitates healing of existing lesions.</li>
+            <li><strong>Botulinum toxin A:</strong> Well-tolerated, safe, effective. Reduces spasticity, bruxism, and trauma.</li>
+            <li><strong>Surgical debridement:</strong> For established pyogenic granuloma or scar tissue. Excisional biopsy confirms diagnosis. No malignant potential for traumatic fibroma or pyogenic granuloma.</li>
+            <li><strong>Tooth extraction:</strong> Last resort when other measures fail.</li>
+        </ul>
+        <figure class="clinical-img sm">
+            <img src="img/sensation/25.png" alt="Intraoral appliances for hospitalized patients: acrylic bite block/tongue stent in situ, and surgical debridement of pyogenic granuloma">
+            <figcaption>Top: acrylic bite block/tongue stent appliance in situ — prevents discoordinate mandibular movements and facilitates healing. Bottom: surgical debridement with protective appliance. (Kiat-amnuay et al., 2008)</figcaption>
+        </figure>
+        <p style="font-size:13px; color:var(--text-light);">Refs: Kiat-amnuay S et al. (2008). J Prosthet Dent. 99(6): 421&ndash;424. Jack C, Skuba L, Zaparinuk D (2005). J Can Dent Assoc. 71(9): 661. Sarvas E et al. (2024). Pediatrics. 153(2): e2023065123.</p>
+    </div>
+</section>
+
+<!-- ══════════════════════ QUIZZES ══════════════════════ -->
+<section class="section" id="quizzes">
+    <div class="section-header">
+        <div class="section-num">Q</div>
+        <h2>Self-Test: Quiz Questions from Lecture</h2>
+    </div>
+
+    <div class="quiz-box" id="q1">
+        <div class="quiz-q">Q1: Central sensitization is best defined as:</div>
+        <ul class="quiz-options" data-correct="1">
+            <li onclick="handleQuiz(this, false)"><strong>A.</strong> Increased sensitivity of peripheral nociceptors after tissue injury</li>
+            <li onclick="handleQuiz(this, true)"><strong>B.</strong> Increased responsiveness of central neurons to normal or subthreshold input</li>
+            <li onclick="handleQuiz(this, false)"><strong>C.</strong> A psychological exaggeration of pain symptoms</li>
+            <li onclick="handleQuiz(this, false)"><strong>D.</strong> Increased release of endorphins in the spinal cord</li>
+        </ul>
+        <div class="quiz-explanation" id="q1-exp">
+            <strong>Correct: B.</strong> Central sensitization describes heightened excitability of nociceptive neurons in the central nervous system, resulting in amplified responses to normal or even subthreshold inputs and manifesting clinically as hyperalgesia and allodynia. Option A describes <em>peripheral</em> sensitization. Option C is incorrect &mdash; central sensitization is a real neurophysiological phenomenon, not psychological. Option D is backwards &mdash; endorphins inhibit pain, not amplify it. (Woolf CJ, 2011. <em>Pain</em>. 152(3 Suppl): S2&ndash;S15.)
+        </div>
+    </div>
+
+    <div class="quiz-box" id="q2">
+        <div class="quiz-q">Q2: A patient complains that everything tastes bitter for 3 months. Meds include lisinopril, metformin, sertraline. Oral exam is unremarkable. What's the FIRST thing you should evaluate?</div>
+        <ul class="quiz-options" data-correct="2">
+            <li onclick="handleQuiz(this, false)"><strong>A.</strong> Order taste testing</li>
+            <li onclick="handleQuiz(this, false)"><strong>B.</strong> Review his medications</li>
+            <li onclick="handleQuiz(this, true)"><strong>C.</strong> Examine his nose</li>
+            <li onclick="handleQuiz(this, false)"><strong>D.</strong> Check nutritional labs</li>
+        </ul>
+        <div class="quiz-explanation" id="q2-exp">
+            <strong>Correct: C.</strong> Because ~95% of "taste" disorders are actually <strong>olfactory dysfunction</strong>. Patients can't distinguish between smell and taste. What they perceive as "taste" is mostly retronasal olfaction. Examining the nose first (for polyps, congestion, infection) is the highest-yield first step. Medications (B) are important too (lisinopril is notorious for causing dysgeusia via zinc chelation), but the nose comes first because it's the most likely culprit.
+        </div>
+    </div>
+
+    <div class="quiz-box" id="q3">
+        <div class="quiz-q">Q3: Which of the following clinical phenomena reflects central sensitization in orofacial pain?</div>
+        <ul class="quiz-options" data-correct="0">
+            <li onclick="handleQuiz(this, true)"><strong>A.</strong> Hyperalgesia and allodynia persisting beyond local tissue healing</li>
+            <li onclick="handleQuiz(this, false)"><strong>B.</strong> Sharp electric pain in the mandibular nerve distribution</li>
+            <li onclick="handleQuiz(this, false)"><strong>C.</strong> Burning sensation with candidiasis lesions</li>
+            <li onclick="handleQuiz(this, false)"><strong>D.</strong> Decreased pain sensitivity after long-term opioid therapy</li>
+        </ul>
+        <div class="quiz-explanation" id="q3-exp">
+            <strong>Correct: A.</strong> Central sensitization leads to persistent hyperalgesia and allodynia <em>after the original tissue injury has healed</em>, due to increased excitability of central nociceptive neurons. The key word is "persisting beyond tissue healing" &mdash; the tissue is fine, but the pain continues because the CNS is still amplified. Option B describes trigeminal neuralgia (peripheral, paroxysmal). Option C is a local infection causing burning (not central). Option D describes opioid-induced tolerance/hyperalgesia, which is a separate phenomenon.
+        </div>
+    </div>
+</section>
+
+<!-- ══════════════════════ QUICK REFERENCE ══════════════════════ -->
+<section class="section" id="quick-ref">
+    <div class="section-header">
+        <div class="section-num">&Sigma;</div>
+        <h2>Quick Reference: Key Numbers &amp; Doses</h2>
+    </div>
+
+    <div class="card">
+        <div class="table-wrap">
+            <table>
+                <thead><tr><th>Topic</th><th>Key Facts</th></tr></thead>
+                <tbody>
+                    <tr><td><strong>BMS Demographics</strong></td><td>5F:1M, age 50&ndash;70, prevalence 1&ndash;3%</td></tr>
+                    <tr><td><strong>BMS Definition</strong></td><td>&gt;2 hrs/day, &gt;3 months, no visible lesion</td></tr>
+                    <tr><td><strong>BMS Subtypes</strong></td><td>Peripheral 50&ndash;65%, Central 20&ndash;40%</td></tr>
+                    <tr><td><strong>Topical Clonazepam</strong></td><td>0.5&ndash;1 mg, swish 3 min, spit, TID. GABA-A agonist. Best evidence.</td></tr>
+                    <tr><td><strong>ALA</strong></td><td>600 mg/day or 200 mg TID</td></tr>
+                    <tr><td><strong>Gabapentin</strong></td><td>300&ndash;3600 mg/day (start low, titrate)</td></tr>
+                    <tr><td><strong>Amitriptyline</strong></td><td>10&ndash;75 mg qhs</td></tr>
+                    <tr><td><strong>Dysgeusia: 95% Rule</strong></td><td>~95% of "taste" complaints are olfactory dysfunction</td></tr>
+                    <tr><td><strong>Zinc for Dysgeusia</strong></td><td>Zinc sulfate 220 mg/day or zinc gluconate 50 mg/day</td></tr>
+                    <tr><td><strong>Normal Saliva Production</strong></td><td>0.5&ndash;1.5 L/day (unstim: 0.1 mL/min)</td></tr>
+                    <tr><td><strong>Sialorrhea: Secondary</strong></td><td>~90% of cases. Normal production, impaired clearance.</td></tr>
+                    <tr><td><strong>Glycopyrrolate</strong></td><td>1 mg TID (sialorrhea first-line)</td></tr>
+                    <tr><td><strong>PTTN Criteria</strong></td><td>&gt;3 months, within 6 months of injury, confirmed nerve lesion</td></tr>
+                    <tr><td><strong>MSG Dose</strong></td><td>750 mg per 150 g serving, TID</td></tr>
+                    <tr><td><strong>Olfactory Training</strong></td><td>Rose, lemon, eucalyptus, clove. 2&times;/day &times; 3&ndash;6 months.</td></tr>
+                    <tr><td><strong>Anesthetic Challenge</strong></td><td>Step 1: 20% benzocaine/5% lido, 5 min. Step 2: IAN block with 2% lido.</td></tr>
+                    <tr><td><strong>SIB in ASD</strong></td><td>26&ndash;50% prevalence, pooled 42%. Dental trauma RR 4.23.</td></tr>
+                    <tr><td><strong>Exfoliative Cheilitis</strong></td><td>53% parafunctional lip licking, 40% psychiatric disorders. Treat: lanolin.</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</section>
+
+<hr class="divider">
+
+<footer style="text-align:center; padding: 24px 0; color:var(--text-light); font-size:13px;">
+    <p>Source: Dr. Laurel Henderson &mdash; Disorders of Sensation, OD 531, BU Goldman, Spring 2026</p>
+    <p>Study guide compiled from original lecture slides. All content extracted directly from source material.</p>
+    <p style="margin-top:8px; font-style:italic; color: var(--text-muted);">"Life is painful, but suffering is optional."</p>
+</footer>
+
+</main>
+
+<script>
+function handleQuiz(el, isCorrect) {
+    const parent = el.closest('.quiz-box');
+    const options = parent.querySelectorAll('.quiz-options li');
+    const alreadyAnswered = Array.from(options).some(o => o.classList.contains('correct') || o.classList.contains('incorrect'));
+    if (alreadyAnswered) return;
+
+    options.forEach(o => {
+        if (o === el) {
+            o.classList.add(isCorrect ? 'correct' : 'incorrect');
+        }
+    });
+
+    if (!isCorrect) {
+        options.forEach(o => {
+            if (o.getAttribute('onclick').includes('true')) {
+                o.classList.add('correct');
+            }
+        });
+    }
+
+    const expId = parent.id + '-exp';
+    const exp = document.getElementById(expId);
+    if (exp) {
+        exp.classList.add('visible');
+    }
+}
+
+// Sticky nav active state
+const navLinks = document.querySelectorAll('.nav-link');
+const sections = document.querySelectorAll('.section');
+
+function updateActiveNav() {
+    let current = '';
+    sections.forEach(sec => {
+        const rect = sec.getBoundingClientRect();
+        if (rect.top <= 120) current = sec.id;
+    });
+    navLinks.forEach(link => {
+        link.style.color = link.getAttribute('href') === '#' + current ? 'var(--primary)' : '';
+        link.style.borderBottomColor = link.getAttribute('href') === '#' + current ? 'var(--primary)' : 'transparent';
+    });
+}
+window.addEventListener('scroll', updateActiveNav, { passive: true });
+</script>
+
+</body>
+</html>
