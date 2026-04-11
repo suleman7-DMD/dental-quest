@@ -1,0 +1,2341 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>OD 531 — Systemic &amp; Syndromic Conditions | Study Guide</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Crimson+Pro:ital,wght@0,400;0,600;0,700;1,400&family=Outfit:wght@300;400;500;600;700&display=swap');
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --navy-950: #070e18;
+  --navy-900: #0c1929;
+  --navy-800: #132337;
+  --navy-700: #1a3650;
+  --navy-600: #1e4d6e;
+  --teal-700: #0a5e5e;
+  --teal-600: #0d7377;
+  --teal-500: #14919b;
+  --teal-400: #2dd4bf;
+  --teal-300: #5eead4;
+  --teal-100: #ccfbf1;
+  --teal-50: #f0fdfa;
+  --amber-700: #b45309;
+  --amber-600: #d97706;
+  --amber-500: #f59e0b;
+  --amber-100: #fef3c7;
+  --amber-50: #fffbeb;
+  --red-800: #991b1b;
+  --red-700: #b91c1c;
+  --red-600: #dc2626;
+  --red-100: #fee2e2;
+  --red-50: #fef2f2;
+  --green-700: #15803d;
+  --green-600: #16a34a;
+  --green-100: #dcfce7;
+  --green-50: #f0fdf4;
+  --purple-700: #6d28d9;
+  --purple-600: #7c3aed;
+  --purple-100: #ede9fe;
+  --purple-50: #f5f3ff;
+  --rose-700: #be123c;
+  --rose-600: #e11d48;
+  --rose-100: #ffe4e6;
+  --stone-50: #fafaf9;
+  --stone-100: #f5f5f4;
+  --stone-200: #e7e5e4;
+  --stone-300: #d6d3d1;
+  --stone-400: #a8a29e;
+  --stone-500: #78716c;
+  --stone-600: #57534e;
+  --stone-700: #44403c;
+  --stone-800: #292524;
+  --stone-900: #1c1917;
+  --font-display: 'Crimson Pro', Georgia, 'Times New Roman', serif;
+  --font-body: 'Outfit', -apple-system, BlinkMacSystemFont, sans-serif;
+  --sidebar-w: 272px;
+  --content-max: 920px;
+}
+
+html { scroll-behavior: smooth; font-size: 15px; }
+body {
+  font-family: var(--font-body);
+  color: var(--stone-800);
+  background: var(--stone-50);
+  line-height: 1.7;
+  font-weight: 400;
+}
+
+/* ── SIDEBAR ─────────────────────────────────── */
+.sidebar {
+  position: fixed; top: 0; left: 0;
+  width: var(--sidebar-w); height: 100vh;
+  background: linear-gradient(180deg, var(--navy-950) 0%, var(--navy-800) 100%);
+  overflow-y: auto; z-index: 100;
+  padding: 2rem 0;
+  border-right: 1px solid rgba(45,212,191,0.15);
+}
+.sidebar::-webkit-scrollbar { width: 4px; }
+.sidebar::-webkit-scrollbar-thumb { background: var(--teal-700); border-radius: 2px; }
+.sidebar-brand {
+  padding: 0 1.25rem 1.5rem;
+  border-bottom: 1px solid rgba(255,255,255,0.08);
+  margin-bottom: 1rem;
+}
+.sidebar-brand .course-tag {
+  font-family: var(--font-body);
+  font-size: 0.65rem; font-weight: 600;
+  letter-spacing: 0.15em; text-transform: uppercase;
+  color: var(--teal-400);
+  margin-bottom: 0.35rem;
+}
+.sidebar-brand h2 {
+  font-family: var(--font-display);
+  font-size: 1.15rem; font-weight: 700;
+  color: #fff; line-height: 1.3;
+}
+.sidebar nav { padding: 0 0.75rem; }
+.sidebar .nav-group { margin-bottom: 0.75rem; }
+.sidebar .nav-label {
+  font-size: 0.6rem; font-weight: 700;
+  letter-spacing: 0.18em; text-transform: uppercase;
+  color: var(--teal-500);
+  padding: 0.5rem 0.5rem 0.25rem;
+}
+.sidebar a {
+  display: block;
+  padding: 0.35rem 0.5rem;
+  font-size: 0.78rem; font-weight: 400;
+  color: rgba(255,255,255,0.6);
+  text-decoration: none;
+  border-radius: 6px;
+  transition: all 0.2s;
+  line-height: 1.4;
+}
+.sidebar a:hover {
+  color: #fff;
+  background: rgba(45,212,191,0.1);
+}
+.sidebar a.indent { padding-left: 1.2rem; font-size: 0.72rem; color: rgba(255,255,255,0.45); }
+.sidebar a.indent:hover { color: rgba(255,255,255,0.85); }
+
+/* ── MAIN ────────────────────────────────────── */
+.main {
+  margin-left: var(--sidebar-w);
+  min-height: 100vh;
+}
+
+/* ── HERO ────────────────────────────────────── */
+.hero {
+  background: linear-gradient(135deg, var(--navy-900) 0%, var(--navy-700) 50%, var(--teal-700) 100%);
+  padding: 4rem 3rem 3.5rem;
+  position: relative;
+  overflow: hidden;
+}
+.hero::before {
+  content: '';
+  position: absolute; top: -50%; right: -20%;
+  width: 600px; height: 600px;
+  background: radial-gradient(circle, rgba(45,212,191,0.12) 0%, transparent 70%);
+  border-radius: 50%;
+}
+.hero::after {
+  content: '';
+  position: absolute; bottom: -30%; left: 10%;
+  width: 400px; height: 400px;
+  background: radial-gradient(circle, rgba(45,212,191,0.08) 0%, transparent 70%);
+  border-radius: 50%;
+}
+.hero-content { position: relative; z-index: 1; max-width: var(--content-max); }
+.hero .tag {
+  display: inline-block;
+  font-size: 0.65rem; font-weight: 600;
+  letter-spacing: 0.2em; text-transform: uppercase;
+  color: var(--teal-300);
+  border: 1px solid rgba(45,212,191,0.3);
+  padding: 0.3rem 0.8rem;
+  border-radius: 20px;
+  margin-bottom: 1rem;
+}
+.hero h1 {
+  font-family: var(--font-display);
+  font-size: 2.8rem; font-weight: 700;
+  color: #fff; line-height: 1.15;
+  margin-bottom: 0.75rem;
+}
+.hero .subtitle {
+  font-size: 1.05rem; font-weight: 300;
+  color: rgba(255,255,255,0.7);
+  margin-bottom: 1.5rem;
+  max-width: 600px;
+}
+.hero-meta {
+  display: flex; gap: 2rem; flex-wrap: wrap;
+  font-size: 0.8rem; color: rgba(255,255,255,0.5);
+}
+.hero-meta span { display: flex; align-items: center; gap: 0.4rem; }
+
+/* ── CONTENT ─────────────────────────────────── */
+.content {
+  max-width: var(--content-max);
+  padding: 2.5rem 3rem 4rem;
+}
+
+/* ── SECTION HEADINGS ────────────────────────── */
+.part-header {
+  margin: 3rem 0 2rem;
+  padding: 1.5rem 0 1rem;
+  border-bottom: 2px solid var(--stone-200);
+}
+.part-header .part-tag {
+  font-size: 0.6rem; font-weight: 700;
+  letter-spacing: 0.2em; text-transform: uppercase;
+  color: var(--teal-600);
+  margin-bottom: 0.3rem;
+}
+.part-header h2 {
+  font-family: var(--font-display);
+  font-size: 2rem; font-weight: 700;
+  color: var(--navy-800);
+  line-height: 1.2;
+}
+
+.section {
+  margin-bottom: 3rem;
+  padding-bottom: 2.5rem;
+  border-bottom: 1px solid var(--stone-200);
+}
+.section:last-child { border-bottom: none; }
+
+.section-header {
+  display: flex; align-items: flex-start; gap: 0.75rem;
+  margin-bottom: 1.5rem;
+}
+.section-accent {
+  width: 4px; min-height: 2.5rem;
+  border-radius: 2px;
+  flex-shrink: 0;
+  margin-top: 0.25rem;
+}
+.section-header h3 {
+  font-family: var(--font-display);
+  font-size: 1.65rem; font-weight: 700;
+  color: var(--stone-900);
+  line-height: 1.25;
+}
+.section-header .condition-subtitle {
+  font-size: 0.85rem; font-weight: 400;
+  color: var(--stone-500);
+  margin-top: 0.15rem;
+}
+
+h4 {
+  font-family: var(--font-display);
+  font-size: 1.2rem; font-weight: 700;
+  color: var(--stone-800);
+  margin: 1.75rem 0 0.75rem;
+}
+h5 {
+  font-size: 0.9rem; font-weight: 600;
+  color: var(--stone-700);
+  margin: 1.25rem 0 0.5rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+p { margin-bottom: 0.85rem; }
+ul, ol { margin: 0.5rem 0 1rem 1.25rem; }
+li { margin-bottom: 0.35rem; }
+li ul, li ol { margin: 0.25rem 0 0.25rem 1.25rem; }
+strong { font-weight: 600; color: var(--stone-900); }
+
+/* ── QUICK REFERENCE BOX ─────────────────────── */
+.quick-ref {
+  background: linear-gradient(135deg, var(--navy-800), var(--navy-900));
+  border-radius: 12px;
+  padding: 1.5rem 1.75rem;
+  margin-bottom: 1.75rem;
+  color: rgba(255,255,255,0.85);
+  font-size: 0.85rem;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.75rem 2rem;
+}
+.quick-ref dt {
+  font-weight: 600; font-size: 0.68rem;
+  letter-spacing: 0.1em; text-transform: uppercase;
+  color: var(--teal-400);
+  margin-bottom: 0.15rem;
+}
+.quick-ref dd { margin-bottom: 0.5rem; }
+
+/* ── CALLOUT BOXES ───────────────────────────── */
+.callout {
+  border-radius: 8px;
+  padding: 1.15rem 1.35rem;
+  margin: 1.25rem 0;
+  font-size: 0.88rem;
+  position: relative;
+  border-left: 4px solid;
+}
+.callout .callout-title {
+  font-weight: 700; font-size: 0.72rem;
+  letter-spacing: 0.12em; text-transform: uppercase;
+  margin-bottom: 0.5rem;
+}
+.callout p:last-child, .callout ul:last-child { margin-bottom: 0; }
+
+.callout--explain {
+  background: var(--teal-50);
+  border-color: var(--teal-500);
+}
+.callout--explain .callout-title { color: var(--teal-700); }
+
+.callout--pearl {
+  background: var(--amber-50);
+  border-color: var(--amber-500);
+}
+.callout--pearl .callout-title { color: var(--amber-700); }
+
+.callout--patho {
+  background: var(--red-50);
+  border-color: var(--red-600);
+}
+.callout--patho .callout-title { color: var(--red-700); }
+
+.callout--management {
+  background: var(--green-50);
+  border-color: var(--green-600);
+}
+.callout--management .callout-title { color: var(--green-700); }
+
+.callout--warning {
+  background: var(--amber-50);
+  border-color: var(--amber-600);
+  border-left-width: 5px;
+}
+.callout--warning .callout-title { color: var(--amber-700); }
+
+.callout--exam {
+  background: var(--purple-50);
+  border-color: var(--purple-600);
+}
+.callout--exam .callout-title { color: var(--purple-700); }
+
+.callout--critical {
+  background: linear-gradient(135deg, var(--red-50), #fff5f5);
+  border-color: var(--red-700);
+  border-left-width: 5px;
+}
+.callout--critical .callout-title { color: var(--red-800); }
+
+/* ── BADGES ──────────────────────────────────── */
+.badge {
+  display: inline-block;
+  font-size: 0.62rem; font-weight: 700;
+  letter-spacing: 0.08em; text-transform: uppercase;
+  padding: 0.15rem 0.5rem;
+  border-radius: 4px;
+  vertical-align: middle;
+  line-height: 1.6;
+}
+.badge--patho { background: var(--red-600); color: #fff; }
+.badge--key { background: var(--amber-500); color: var(--stone-900); }
+.badge--specific { background: var(--purple-600); color: #fff; }
+.badge--tier1 { background: var(--red-600); color: #fff; }
+.badge--tier2 { background: var(--amber-600); color: #fff; }
+.badge--tier3 { background: var(--teal-600); color: #fff; }
+.badge--tier4 { background: var(--stone-400); color: #fff; }
+
+/* ── TABLES ──────────────────────────────────── */
+.table-wrap {
+  overflow-x: auto;
+  margin: 1.25rem 0;
+  border-radius: 8px;
+  border: 1px solid var(--stone-200);
+}
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.82rem;
+  line-height: 1.55;
+}
+thead th {
+  background: var(--navy-800);
+  color: #fff;
+  font-weight: 600;
+  padding: 0.75rem 1rem;
+  text-align: left;
+  font-size: 0.78rem;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+}
+thead th:first-child { border-radius: 7px 0 0 0; }
+thead th:last-child { border-radius: 0 7px 0 0; }
+tbody td {
+  padding: 0.65rem 1rem;
+  border-bottom: 1px solid var(--stone-100);
+  vertical-align: top;
+}
+tbody tr:hover { background: rgba(14,145,155,0.04); }
+tbody tr:last-child td { border-bottom: none; }
+td strong { color: var(--stone-900); }
+td .cell-note { font-size: 0.75rem; color: var(--stone-500); font-style: italic; }
+.table-wrap--teal thead th { background: var(--teal-700); }
+.table-wrap--green thead th { background: var(--green-700); }
+.table-wrap--amber thead th { background: var(--amber-700); }
+.table-wrap--purple thead th { background: var(--purple-700); }
+.table-wrap--rose thead th { background: var(--rose-700); }
+.table-wrap--red thead th { background: var(--red-700); }
+td.highlight-red { background: var(--red-50); }
+td.highlight-amber { background: var(--amber-50); }
+td.highlight-green { background: var(--green-50); }
+
+/* ── TIMELINE ────────────────────────────────── */
+.timeline {
+  display: flex; align-items: center;
+  gap: 0; margin: 1.5rem 0;
+  position: relative;
+  padding: 0 0.5rem;
+}
+.timeline::before {
+  content: '';
+  position: absolute;
+  top: 50%; left: 0.5rem; right: 0.5rem;
+  height: 3px;
+  background: var(--teal-600);
+  transform: translateY(-50%);
+  z-index: 0;
+}
+.timeline-point {
+  position: relative; z-index: 1;
+  text-align: center;
+  flex: 1;
+}
+.timeline-point .dot {
+  width: 14px; height: 14px;
+  background: var(--teal-600);
+  border: 3px solid var(--stone-50);
+  border-radius: 50%;
+  margin: 0 auto 0.5rem;
+  box-shadow: 0 0 0 2px var(--teal-600);
+}
+.timeline-point .tl-label {
+  font-weight: 700; font-size: 0.78rem;
+  color: var(--stone-900);
+}
+.timeline-point .tl-detail {
+  font-size: 0.72rem; color: var(--stone-500);
+  margin-top: 0.15rem;
+}
+
+/* ── COLUMNS ─────────────────────────────────── */
+.cols { display: grid; gap: 1.5rem; margin: 1rem 0; }
+.cols--2 { grid-template-columns: 1fr 1fr; }
+.cols--3 { grid-template-columns: 1fr 1fr 1fr; }
+
+/* ── TRIAGE CARDS ────────────────────────────── */
+.triage-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+  margin: 1.25rem 0;
+}
+.triage-card {
+  border-radius: 8px;
+  padding: 1rem 1.25rem;
+  border: 1px solid var(--stone-200);
+}
+.triage-card h5 {
+  margin: 0 0 0.5rem;
+  font-size: 0.75rem;
+}
+.triage-card ul { margin: 0; list-style: none; padding: 0; }
+.triage-card li {
+  font-size: 0.85rem;
+  padding: 0.2rem 0;
+  color: var(--stone-700);
+}
+.triage-card--t1 { background: var(--red-50); border-color: rgba(220,38,38,0.2); }
+.triage-card--t1 h5 { color: var(--red-700); }
+.triage-card--t2 { background: var(--amber-50); border-color: rgba(217,119,6,0.2); }
+.triage-card--t2 h5 { color: var(--amber-700); }
+.triage-card--t3 { background: var(--teal-50); border-color: rgba(13,115,119,0.2); }
+.triage-card--t3 h5 { color: var(--teal-700); }
+.triage-card--t4 { background: var(--stone-100); border-color: var(--stone-200); }
+.triage-card--t4 h5 { color: var(--stone-600); }
+
+/* ── COMPARISON SPLIT ────────────────────────── */
+.comparison {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0;
+  border-radius: 8px;
+  overflow: hidden;
+  margin: 1.25rem 0;
+  border: 1px solid var(--stone-200);
+}
+.comparison-side {
+  padding: 1.25rem 1.5rem;
+}
+.comparison-side:first-child { border-right: 1px solid var(--stone-200); }
+.comparison-side h5 { margin-top: 0; }
+
+/* ── MISC ────────────────────────────────────── */
+.ref-list {
+  font-size: 0.72rem;
+  color: var(--stone-400);
+  margin-top: 0.5rem;
+  font-style: italic;
+}
+.divider {
+  height: 1px;
+  background: var(--stone-200);
+  margin: 2rem 0;
+}
+.highlight { background: linear-gradient(180deg, transparent 55%, rgba(250,204,21,0.35) 55%); }
+
+/* ── FIGURES ─────────────────────────────────── */
+.fig {
+  margin: 1.5rem 0;
+  border-radius: 8px;
+  overflow: hidden;
+  border: 1px solid var(--stone-200);
+  background: #fff;
+}
+.fig img {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+.fig figcaption {
+  padding: 0.6rem 1rem;
+  font-size: 0.75rem;
+  color: var(--stone-500);
+  background: var(--stone-50);
+  border-top: 1px solid var(--stone-200);
+  line-height: 1.5;
+}
+.fig--sm { max-width: 420px; }
+.fig--md { max-width: 600px; }
+.fig--dark { background: var(--stone-900); border-color: var(--stone-700); }
+.fig--dark figcaption { background: var(--stone-800); border-color: var(--stone-700); color: var(--stone-400); }
+.fig--pair {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0;
+}
+.fig--pair img { border-radius: 0; }
+.text-red { color: var(--red-600); }
+.text-teal { color: var(--teal-600); }
+.text-amber { color: var(--amber-600); }
+.text-sm { font-size: 0.82rem; }
+.mt-0 { margin-top: 0; }
+
+/* ── PRINT ───────────────────────────────────── */
+@media print {
+  .sidebar { display: none; }
+  .main { margin-left: 0; }
+  .hero { padding: 2rem; background: var(--navy-800) !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  .content { padding: 1.5rem; max-width: none; }
+  .section { page-break-inside: avoid; }
+  .callout { page-break-inside: avoid; }
+  .table-wrap { page-break-inside: avoid; }
+  thead th { background: var(--navy-800) !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+}
+
+/* ── RESPONSIVE ──────────────────────────────── */
+@media (max-width: 1100px) {
+  .sidebar { display: none; }
+  .main { margin-left: 0; }
+  .hero { padding: 2.5rem 1.5rem; }
+  .hero h1 { font-size: 2rem; }
+  .content { padding: 1.5rem; }
+  .cols--2, .cols--3, .triage-grid, .comparison { grid-template-columns: 1fr; }
+  .comparison-side:first-child { border-right: none; border-bottom: 1px solid var(--stone-200); }
+  .quick-ref { grid-template-columns: 1fr; }
+}
+</style>
+</head>
+<body>
+
+<!-- ═══════════════════════════════════════════════ SIDEBAR ═══ -->
+<aside class="sidebar">
+  <div class="sidebar-brand">
+    <div class="course-tag">OD 531 &middot; Spring 2026</div>
+    <h2>Systemic &amp; Syndromic Conditions</h2>
+  </div>
+  <nav>
+    <div class="nav-group">
+      <div class="nav-label">Housekeeping</div>
+      <a href="#emicizumab">Emicizumab &amp; Hemophilia A</a>
+    </div>
+    <div class="nav-group">
+      <div class="nav-label">Part I &mdash; Oncology</div>
+      <a href="#onc-clearance">Pre-Transplant Clearance</a>
+      <a href="#onc-timing" class="indent">Timing &amp; Timeline</a>
+      <a href="#onc-golden-rule" class="indent">The Golden Rule</a>
+      <a href="#onc-treatment-table" class="indent">Treatment Comparison</a>
+      <a href="#onc-caries" class="indent">Caries Classification</a>
+      <a href="#onc-lesion-mgmt" class="indent">Lesion Management</a>
+      <a href="#onc-post-tx" class="indent">Post-Treatment Protocols</a>
+    </div>
+    <div class="nav-group">
+      <div class="nav-label">Part II &mdash; Conditions</div>
+      <a href="#triage">Condition Triage</a>
+      <a href="#lupus">Lupus Erythematosus</a>
+      <a href="#lupus-oral" class="indent">Oral Findings</a>
+      <a href="#lupus-vs-olp" class="indent">Lupus vs. Lichen Planus</a>
+      <a href="#lupus-workup" class="indent">Workup &amp; Criteria</a>
+      <a href="#lupus-mgmt" class="indent">Management</a>
+      <a href="#sarcoidosis">Sarcoidosis</a>
+      <a href="#sarc-oral" class="indent">Oral Findings</a>
+      <a href="#sarc-workup" class="indent">Workup &amp; Treatment</a>
+      <a href="#granulomas">Granulomas vs. Granulation</a>
+      <a href="#vitamins">Vitamin Deficiencies &amp; Toxicities</a>
+      <a href="#vit-def" class="indent">Deficiency Table</a>
+      <a href="#vit-tox" class="indent">Toxicity Table</a>
+      <a href="#vit-approach" class="indent">Clinical Approach</a>
+      <a href="#amyloidosis">Amyloidosis</a>
+      <a href="#amyloid-mgmt" class="indent">Diagnosis &amp; Management</a>
+      <a href="#pjs">Peutz-Jeghers Syndrome</a>
+      <a href="#gpa">GPA (Wegener)</a>
+      <a href="#gpa-findings" class="indent">Findings &amp; Strawberry Gingivitis</a>
+      <a href="#gpa-mgmt" class="indent">Diagnosis &amp; Management</a>
+      <a href="#saddle-nose">Saddle Nose DDx</a>
+    </div>
+  </nav>
+</aside>
+
+<!-- ═══════════════════════════════════════════════ MAIN ══════ -->
+<div class="main">
+
+<!-- ── HERO ──────────────────────────────────────────────────── -->
+<header class="hero">
+  <div class="hero-content">
+    <span class="tag">Study Guide &middot; OD 531</span>
+    <h1>Systemic &amp; Syndromic<br>Conditions</h1>
+    <p class="subtitle">Comprehensive study guide covering dental management of oncologic patients, autoimmune diseases, vitamin disorders, and syndromic conditions with oral manifestations. Extracted directly from lecture source material.</p>
+    <div class="hero-meta">
+      <span>Dr. Laurel Henderson, DDS, MS</span>
+      <span>BU Goldman &middot; Spring 2026</span>
+      <span>Lecture Date: 03/20/2026</span>
+    </div>
+  </div>
+</header>
+
+<!-- ── CONTENT ───────────────────────────────────────────────── -->
+<div class="content">
+
+<!-- ═══════════════════════════════════════════════════════════
+     HOUSEKEEPING: EMICIZUMAB
+     ═══════════════════════════════════════════════════════════ -->
+<section class="section" id="emicizumab">
+  <div class="section-header">
+    <div class="section-accent" style="background:var(--teal-500)"></div>
+    <div>
+      <h3>Emicizumab &amp; Hemophilia A</h3>
+      <div class="condition-subtitle">Housekeeping from previous lecture</div>
+    </div>
+  </div>
+
+  <div class="callout callout--explain">
+    <div class="callout-title">Plain English &mdash; What Is Hemophilia A?</div>
+    <p>Your blood clots through a <strong>cascade</strong> &mdash; a chain of proteins (called "factors") that activate each other like dominoes. <strong>Hemophilia A</strong> means you're <strong>missing Factor VIII</strong> (factor 8). Factor VIII normally acts as a "bridge" that helps Factor IXa (9a) activate Factor X (10) in the <em>intrinsic pathway</em> of the cascade. Without that bridge, the dominoes stop falling and your blood can't clot properly.</p>
+  </div>
+
+  <h4>Emicizumab (Hemlibra)</h4>
+
+  <figure class="fig fig--md">
+    <img src="sg-images/emicizumab-moa-cascade.png" alt="Mechanism of action of emicizumab showing bispecific antibody bridging FIXa and FX, plus coagulation cascade showing where Hemophilia A and B affect the intrinsic pathway">
+    <figcaption>Top: Emicizumab (bispecific antibody) bridges FIXa and FX to mimic FVIIIa cofactor function. Bottom: Coagulation cascade &mdash; red boxes show where Hemophilia A (Factor VIII) and Hemophilia B (Factor IX) disrupt the intrinsic pathway.</figcaption>
+  </figure>
+
+  <ul>
+    <li><strong>Only useful for Hemophilia A</strong> (Factor VIII deficiency) &mdash; does nothing for Hemophilia B (Factor IX deficiency)</li>
+    <li>It's a <strong>bispecific antibody</strong> &mdash; a Y-shaped antibody where each arm grabs a different target:
+      <ul>
+        <li>One arm grabs <strong>activated Factor IX (IXa)</strong></li>
+        <li>The other arm grabs <strong>Factor X</strong></li>
+        <li>By physically holding them together, it <strong>mimics the cofactor function of activated Factor VIII</strong></li>
+      </ul>
+    </li>
+  </ul>
+
+  <div class="callout callout--pearl">
+    <div class="callout-title">Clinical Pearl</div>
+    <p>Why doesn't it work for Hemophilia B? Because Hemophilia B is missing Factor IX itself. If there's no Factor IX for one arm of the antibody to grab, the bridge can't form. Emicizumab replaces Factor VIII's function &mdash; it does NOT replace Factor IX.</p>
+  </div>
+</section>
+
+
+<!-- ═══════════════════════════════════════════════════════════
+     PART I: ONCOLOGIC DENTAL MANAGEMENT
+     ═══════════════════════════════════════════════════════════ -->
+<div class="part-header" id="onc-clearance">
+  <div class="part-tag">Part I</div>
+  <h2>Dental Management of Oncologic Patients</h2>
+</div>
+
+<section class="section">
+  <div class="section-header">
+    <div class="section-accent" style="background:var(--red-600)"></div>
+    <div>
+      <h3>Pre-Transplant Dental Clearance = Infection Control</h3>
+      <div class="condition-subtitle">Why this matters for your oncology patients</div>
+    </div>
+  </div>
+
+  <div class="callout callout--explain">
+    <div class="callout-title">Plain English &mdash; Why Clearance?</div>
+    <p>When a patient is about to undergo bone marrow transplant, organ transplant, or start chemo/radiation, their immune system will be <strong>destroyed or severely suppressed</strong>. Any dental infection &mdash; even a completely asymptomatic one &mdash; becomes <strong>potentially lethal</strong> because they won't have white blood cells to fight it. Think of it as <em>"clearing the minefield before the army loses its armor."</em></p>
+  </div>
+
+  <ul>
+    <li>Odontogenic infections can be <strong>life-threatening during profound immunosuppression</strong></li>
+    <li>Only <strong>0.57%</strong> develop odontogenic complications <strong>with appropriate clearance</strong> &mdash; much higher without</li>
+    <li>Asymptomatic disease still matters &mdash; <strong>non-vital teeth</strong> and <strong>untreated periapical pathology must be eliminated</strong></li>
+  </ul>
+
+  <div class="callout callout--warning">
+    <div class="callout-title">Key Concept</div>
+    <p>Even if a tooth looks fine on exam and the patient has zero symptoms, a dead tooth with periapical radiolucency is a <strong>ticking time bomb</strong> in an immunosuppressed patient. It MUST be dealt with before treatment starts.</p>
+  </div>
+
+  <p class="ref-list">Mota &amp; Alves (2025). Clin Oral Investig, 29, 576. Hansen et al. (2021). Support Care Cancer, 29(4), 2231&ndash;2238.</p>
+</section>
+
+<!-- Timing & Clearance -->
+<section class="section" id="onc-timing">
+  <h4>Timing &amp; Clearance</h4>
+
+  <div class="timeline">
+    <div class="timeline-point">
+      <div class="dot"></div>
+      <div class="tl-label">Referral</div>
+      <div class="tl-detail">3&ndash;4 weeks before</div>
+    </div>
+    <div class="timeline-point">
+      <div class="dot"></div>
+      <div class="tl-label">Evaluation &amp; Treatment</div>
+      <div class="tl-detail">ASAP</div>
+    </div>
+    <div class="timeline-point">
+      <div class="dot"></div>
+      <div class="tl-label">Clearance</div>
+      <div class="tl-detail">&ge;10&ndash;14 days (ideally &ge;2 weeks) before conditioning</div>
+    </div>
+    <div class="timeline-point">
+      <div class="dot"></div>
+      <div class="tl-label">Transplant</div>
+      <div class="tl-detail">Day 0</div>
+    </div>
+  </div>
+
+  <figure class="fig">
+    <img src="sg-images/timing-clearance-timeline.png" alt="Timeline showing Referral 3-4 weeks before, Evaluation ASAP, Clearance 10-14 days before conditioning, Transplant Day 0">
+    <figcaption>Pre-transplant dental clearance timeline. Urgent patients: prioritize infection control even if treatment isn't ideal.</figcaption>
+  </figure>
+
+  <div class="callout callout--critical" id="onc-golden-rule">
+    <div class="callout-title">The Golden Rule</div>
+    <p><strong>NEVER delay oncologic treatment for dental work unless the tumor is slow-growing AND oncology agrees.</strong> The cancer will kill the patient faster than dental disease will.</p>
+  </div>
+
+  <div class="callout callout--pearl">
+    <div class="callout-title">Urgent Patients</div>
+    <p>Sometimes the cancer can't wait for ideal dental treatment. If someone needs their transplant NOW, <strong>prioritize infection control even if the treatment plan isn't ideal</strong>. Extract questionable teeth rather than attempting complex restorative work. Infection control &gt; perfect dentistry.</p>
+  </div>
+
+  <p class="ref-list">Tomblyn et al. (2009). Biol Blood Marrow Transplant, 15(10), 1143&ndash;1238.</p>
+</section>
+
+<!-- Treatment Comparison Table -->
+<section class="section" id="onc-treatment-table">
+  <h4>Treatment Types: Healing Windows &amp; Risk Periods</h4>
+
+  <div class="callout callout--explain">
+    <div class="callout-title">Plain English &mdash; Why Do These Differ?</div>
+    <p>Each cancer treatment destroys your immune system differently and for different durations. <strong>HSCT</strong> (bone marrow transplant) wipes out the entire immune system and regrows it &mdash; the "reboot" takes ~100 days. <strong>Standard chemo</strong> temporarily drops your counts between cycles but they recover. <strong>Radiation</strong> damages bone blood supply permanently in the treatment field. <strong>Bone-modifying agents</strong> (bisphosphonates/denosumab) shut down bone remodeling lifelong. Each requires a different dental strategy.</p>
+  </div>
+
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>Treatment Type</th>
+          <th>Healing Window Required</th>
+          <th>Highest Risk Period</th>
+          <th>Can Delay Treatment?</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>HSCT</strong><br><span class="cell-note">Bone marrow transplant</span></td>
+          <td>10&ndash;14 days pre-conditioning</td>
+          <td>Days 0&ndash;100 <span class="cell-note">(especially pre-engraftment)</span></td>
+          <td class="highlight-red"><strong>NO</strong></td>
+        </tr>
+        <tr>
+          <td><strong>Solid Organ Transplant</strong></td>
+          <td>None required</td>
+          <td>First 1&ndash;6 months post-transplant</td>
+          <td class="highlight-red"><strong>NO</strong></td>
+        </tr>
+        <tr>
+          <td><strong>Standard Chemotherapy</strong></td>
+          <td>None required</td>
+          <td>During neutropenia (ANC&nbsp;&lt;1000)</td>
+          <td class="highlight-amber"><strong>NO</strong> &mdash; but can do dental work between cycles</td>
+        </tr>
+        <tr>
+          <td><strong>Intensive Chemotherapy</strong></td>
+          <td>None required</td>
+          <td>Days 0&ndash;100 <span class="cell-note">(prolonged neutropenia)</span></td>
+          <td class="highlight-red"><strong>NO</strong></td>
+        </tr>
+        <tr>
+          <td><strong>Head &amp; Neck Radiation</strong></td>
+          <td>&ge;2 weeks pre-RT</td>
+          <td><strong>Lifelong</strong> (ORN risk)</td>
+          <td class="highlight-red"><strong>NO</strong></td>
+        </tr>
+        <tr>
+          <td><strong>Bone-Modifying Agents</strong><br><span class="cell-note">Bisphosphonates, denosumab</span></td>
+          <td>Complete healing before starting</td>
+          <td><strong>Lifelong</strong> (MRONJ risk 1.6&ndash;14.8%)</td>
+          <td class="highlight-amber"><strong>Maybe</strong> &mdash; coordinate with oncology</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="callout callout--explain">
+    <div class="callout-title">Key Terminology Explained</div>
+    <ul>
+      <li><strong>ANC</strong> = Absolute Neutrophil Count. Neutrophils are your infection-fighting white blood cells. Below 1000 = neutropenic = severely immunocompromised.</li>
+      <li><strong>ORN</strong> = Osteoradionecrosis. Radiation permanently damages blood vessels in bone. Extraction after radiation can create a wound that never heals because blood supply is destroyed. This risk is <em>lifelong</em>.</li>
+      <li><strong>MRONJ</strong> = Medication-Related Osteonecrosis of the Jaw. Bisphosphonates/denosumab shut down osteoclasts (cells that remodel bone). Extracting a tooth in bone that can't remodel = exposed, dead bone.</li>
+      <li><strong>Engraftment</strong> = When transplanted bone marrow stem cells start producing new blood cells. Before this happens (~Day +14&ndash;28), the patient has essentially zero immune system.</li>
+      <li><strong>Conditioning</strong> = The chemo/radiation given right before transplant to destroy the patient's existing bone marrow and make room for the donor cells.</li>
+    </ul>
+  </div>
+
+  <p class="ref-list">Peterson DE et al. (2024). J Clin Oncol. 42(11):1267&ndash;1291. Yarom N et al. (2019). J Clin Oncol. 37(25):2270&ndash;2290. Demant S, Dabelsteen S, Bj&oslash;rndal L. (2021). Int Endod J. 54(6):857&ndash;869.</p>
+</section>
+
+<!-- ADA Caries Classification -->
+<section class="section" id="onc-caries">
+  <h4>ADA Caries Classification System (ICDAS)</h4>
+
+  <div class="callout callout--explain">
+    <div class="callout-title">Why This Matters Here</div>
+    <p>Oncology dental clearance decisions depend on the <strong>depth of caries</strong>. A D1 (enamel-only) lesion gets conservative fluoride treatment. A D4 (pulpal involvement) gets extracted. You need to classify accurately because the wrong call could either leave infection behind (under-treating) or delay cancer treatment with unnecessary procedures (over-treating).</p>
+  </div>
+
+  <figure class="fig">
+    <img src="sg-images/ada-caries-classification.png" alt="ADA Caries Classification System showing clinical photos of Sound through Advanced caries on occlusal, smooth, and radiographic surfaces with ICDAS codes 0-6">
+    <figcaption>ADA Caries Classification System (Young et al., 2015). Shows clinical appearance on occlusal surfaces, smooth surfaces, and radiographic presentation for each severity level from Sound (ICDAS 0) to Advanced (ICDAS 5&ndash;6).</figcaption>
+  </figure>
+
+  <div class="table-wrap table-wrap--teal">
+    <table>
+      <thead>
+        <tr>
+          <th>Classification</th>
+          <th>Clinical Presentation</th>
+          <th>ICDAS Codes</th>
+          <th>Radiographic</th>
+          <th>Infected Dentin?</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>Sound</strong></td>
+          <td>No detectable lesion. Normal color, translucency, gloss.</td>
+          <td>ICDAS 0</td>
+          <td>No radiolucency (E0/RO)</td>
+          <td>None</td>
+        </tr>
+        <tr>
+          <td><strong>Initial</strong></td>
+          <td>Earliest detectable. Enamel or shallow demineralization. Visually noncavitated. May only be visible after drying. White/brown spot.</td>
+          <td>ICDAS 1&ndash;2</td>
+          <td>May extend to DEJ or outer 1/3 dentin (E1&ndash;D1)</td>
+          <td>Unlikely</td>
+        </tr>
+        <tr>
+          <td><strong>Moderate</strong></td>
+          <td>Visible enamel breakdown. Early cavitation, shallow cavitation, microcavitation.</td>
+          <td>ICDAS 3&ndash;4</td>
+          <td>Middle 1/3 of dentin (D2/RB4)</td>
+          <td>Possible</td>
+        </tr>
+        <tr>
+          <td><strong>Advanced</strong></td>
+          <td>Fully cavitated. Deep dentin exposed. Severely demineralized.</td>
+          <td>ICDAS 5&ndash;6</td>
+          <td>Inner 1/3 of dentin (D3/RC5)</td>
+          <td>Present</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <p class="ref-list">Young DA et al. (2015). J Am Dent Assoc. 146(2):79&ndash;86.</p>
+</section>
+
+<!-- Lesion Management by Treatment Type -->
+<section class="section" id="onc-lesion-mgmt">
+  <h4>Lesion Management by Treatment Type</h4>
+
+  <p>This table is the clinical decision matrix &mdash; it tells you exactly what to do with each type of dental problem depending on the patient's cancer treatment.</p>
+
+  <div class="table-wrap table-wrap--green" style="font-size:0.78rem">
+    <table>
+      <thead>
+        <tr>
+          <th style="min-width:130px">Lesion</th>
+          <th>HSCT</th>
+          <th>Solid Organ Transplant</th>
+          <th>Standard Chemo</th>
+          <th>Head &amp; Neck RT</th>
+          <th>Bone-Modifying Agents</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>D1 (Enamel)</strong></td>
+          <td>SDF + 5000ppm F</td>
+          <td>SDF + 5000ppm F</td>
+          <td>Fluoride varnish</td>
+          <td>Fluoride varnish</td>
+          <td>Fluoride varnish</td>
+        </tr>
+        <tr>
+          <td><strong>D2 (Dentin, not deep)</strong></td>
+          <td>SDF + ITR if hyposalivation; extract if rampant caries</td>
+          <td>SDF + ITR acceptable</td>
+          <td>Observe or restore if time</td>
+          <td>Restore if time; SDF if not</td>
+          <td>Restore before starting BMA</td>
+        </tr>
+        <tr>
+          <td><strong>D3 (Deep, radio-dense zone)</strong></td>
+          <td><strong>Extract</strong></td>
+          <td>Extract or restore if 2&ndash;3 days available</td>
+          <td>Restore if time; observe if asymptomatic</td>
+          <td>Pre-RT: Extract if in RT field<br>Post-RT: Endo + coronectomy preferred</td>
+          <td>Pre-BMA: Extract<br>On BMA: Endo + coronectomy preferred</td>
+        </tr>
+        <tr>
+          <td><strong>D4 (Pulpal involvement)</strong></td>
+          <td><strong>Extract</strong></td>
+          <td><strong>Extract</strong></td>
+          <td>Extract or endo</td>
+          <td>Pre-RT: Extract<br>Post-RT: Endo + coronectomy preferred</td>
+          <td>Pre-BMA: Extract<br>On BMA: Endo + coronectomy preferred</td>
+        </tr>
+        <tr>
+          <td><strong>Severe periodontitis (&ge;6mm pockets)</strong></td>
+          <td><strong>Extract</strong></td>
+          <td><strong>Extract</strong></td>
+          <td>Observe</td>
+          <td>Extract if in RT field</td>
+          <td>Extract before starting</td>
+        </tr>
+        <tr>
+          <td><strong>Partially impacted 3rd molars</strong></td>
+          <td>Extract if pericoronitis hx</td>
+          <td>Consider extraction</td>
+          <td>Observe</td>
+          <td>Pre-RT: Extract if time<br>Post-RT: Coronectomy if symptomatic</td>
+          <td>Extract before starting; coronectomy + endo if already on BMA</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="callout callout--explain">
+    <div class="callout-title">Why Coronectomy Over Extraction Post-RT and On BMA?</div>
+    <p><strong>Coronectomy</strong> = removing the crown of the tooth but intentionally <strong>leaving the roots in the bone</strong>. Why? Because extracting creates an open wound in bone that needs to heal. In irradiated bone (ORN risk) or bisphosphonate-treated bone (MRONJ risk), that wound may <em>never heal</em> because the bone's blood supply or remodeling capacity is permanently impaired. By leaving roots in place, you avoid creating the wound while still removing the source of pain and caries.</p>
+    <p><strong>SDF</strong> = Silver Diamine Fluoride. Arrests active caries without drilling. The silver kills bacteria, the fluoride remineralizes. Turns the lesion black (cosmetic downside) but stops progression &mdash; perfect when you need to control caries fast and invasive treatment is risky.</p>
+    <p><strong>ITR</strong> = Interim Therapeutic Restoration. A temporary filling (usually glass ionomer) placed without full cavity preparation. Quick, minimally invasive, releases fluoride. Buys time until the patient can receive definitive treatment.</p>
+  </div>
+
+  <p class="ref-list">Raber-Durlacher JE et al. (2013). Support Care Cancer. 21(11):3053&ndash;3060. Peterson DE et al. (2024). J Clin Oncol. 42(11):1267&ndash;1291.</p>
+</section>
+
+<!-- Post-Treatment Dental Care -->
+<section class="section" id="onc-post-tx">
+  <h4>Post-Treatment Dental Care &amp; Protocols</h4>
+
+  <div class="table-wrap table-wrap--teal">
+    <table>
+      <thead>
+        <tr>
+          <th style="min-width:120px">Treatment</th>
+          <th>Safe for Elective Dental Work</th>
+          <th>Extraction Precautions</th>
+          <th>Preventive Protocol</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>HSCT</strong></td>
+          <td>ANC &gt;1000, platelets &gt;50K, ideally day +100</td>
+          <td>Avoid during neutropenia</td>
+          <td>5000ppm F daily; chlorhexidine rinse</td>
+        </tr>
+        <tr>
+          <td><strong>Solid Organ</strong></td>
+          <td>After 6 months (immunosuppression tapered)</td>
+          <td>Check with transplant team first month</td>
+          <td>5000ppm F if xerostomia</td>
+        </tr>
+        <tr>
+          <td><strong>Chemotherapy</strong></td>
+          <td>Between cycles if ANC &gt;1000, platelets &gt;50K</td>
+          <td>CBC day of procedure</td>
+          <td>5000ppm F daily; saline/bicarb rinses</td>
+        </tr>
+        <tr>
+          <td><strong>Head &amp; Neck RT</strong></td>
+          <td>Anytime with precautions; <strong>avoid high-dose areas (&ge;50 Gy)</strong></td>
+          <td>Antibiotics pre/post-extraction; <strong>pentoxifylline 400mg BID + tocopherol 1000 IU daily</strong></td>
+          <td><strong>Daily 1.1% NaF gel or varnish 3x/year (LIFELONG)</strong></td>
+        </tr>
+        <tr>
+          <td><strong>Bone-Modifying Agents</strong> <span class="cell-note">(oncologic dose)</span></td>
+          <td><strong>Elective surgery contraindicated</strong></td>
+          <td>If must extract: close monitoring q6&ndash;8 weeks until healed</td>
+          <td>Dental exam q6 months; address modifiable risks</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="callout callout--explain">
+    <div class="callout-title">Key Concepts Explained</div>
+    <ul>
+      <li><strong>Day +100:</strong> After HSCT, this is roughly when the new bone marrow (engraftment) is established and producing enough immune cells. Before this, the patient is profoundly immunosuppressed.</li>
+      <li><strong>Pentoxifylline + Tocopherol (PENTOCLO protocol):</strong> Pentoxifylline improves blood flow in small vessels; tocopherol (vitamin E) reduces oxidative damage. Together they help irradiated bone heal better. This is the standard of care for extractions in irradiated fields.</li>
+      <li><strong>Why lifelong fluoride after H&amp;N RT?</strong> Radiation damages salivary glands &rarr; permanent xerostomia &rarr; saliva's buffering and remineralization capacity is destroyed &rarr; rampant "radiation caries" develops rapidly. Lifelong prescription fluoride prevents this.</li>
+      <li><strong>Why is BMA elective surgery contraindicated?</strong> Bisphosphonates bind to bone and have half-lives of <em>years to decades</em>. Even after stopping the drug, the bone can't remodel normally. Any surgical wound in jaw bone risks MRONJ &mdash; exposed necrotic bone that doesn't heal.</li>
+    </ul>
+  </div>
+
+  <p class="ref-list">Peterson DE et al. (2024). J Clin Oncol. 42(11):1267&ndash;1291. Yarom N et al. (2019). J Clin Oncol. 37(25):2270&ndash;2290. Demant S et al. (2021). Int Endod J. 54(6):857&ndash;869.</p>
+</section>
+
+
+<!-- ═══════════════════════════════════════════════════════════
+     PART II: SYSTEMIC & SYNDROMIC CONDITIONS
+     ═══════════════════════════════════════════════════════════ -->
+<div class="part-header" id="triage">
+  <div class="part-tag">Part II</div>
+  <h2>Systemic &amp; Syndromic Conditions</h2>
+</div>
+
+<!-- Condition Triage -->
+<section class="section">
+  <div class="section-header">
+    <div class="section-accent" style="background:var(--stone-500)"></div>
+    <div>
+      <h3>Condition Triage</h3>
+      <div class="condition-subtitle">Priority ranking from the lecture</div>
+    </div>
+  </div>
+
+  <div class="triage-grid">
+    <div class="triage-card triage-card--t1">
+      <h5><span class="badge badge--tier1">Tier 1</span> High Priority</h5>
+      <ul>
+        <li><strong>Lupus Erythematosus</strong></li>
+        <li><strong>Vitamin Deficiencies</strong></li>
+        <li><strong>Sarcoidosis</strong></li>
+      </ul>
+    </div>
+    <div class="triage-card triage-card--t2">
+      <h5><span class="badge badge--tier2">Tier 2</span> Moderate Priority</h5>
+      <ul>
+        <li><strong>GPA</strong> (Wegener)</li>
+        <li><strong>Amyloidosis</strong></li>
+        <li><strong>Peutz-Jeghers Syndrome</strong></li>
+      </ul>
+    </div>
+    <div class="triage-card triage-card--t3">
+      <h5><span class="badge badge--tier3">Tier 3</span> Lower Priority</h5>
+      <ul>
+        <li>Ehlers-Danlos Syndrome</li>
+        <li>Hypothyroidism / Hyperthyroidism</li>
+        <li>Hereditary Hemorrhagic Telangiectasia</li>
+        <li>Cowden Syndrome</li>
+        <li>Addison Disease</li>
+      </ul>
+    </div>
+    <div class="triage-card triage-card--t4">
+      <h5><span class="badge badge--tier4">Tier 4</span> Minimal Coverage</h5>
+      <ul>
+        <li>CREST Syndrome</li>
+        <li>Reactive Arthritis (Reiter)</li>
+        <li>Multiple Hamartoma Syndrome</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+
+<!-- ═══════════════════════════════════════════════════════════
+     LUPUS ERYTHEMATOSUS
+     ═══════════════════════════════════════════════════════════ -->
+<section class="section" id="lupus">
+  <div class="section-header">
+    <div class="section-accent" style="background:var(--rose-600)"></div>
+    <div>
+      <h3>Lupus Erythematosus</h3>
+      <div class="condition-subtitle">Tier 1 &mdash; High Priority</div>
+    </div>
+  </div>
+
+  <div class="quick-ref">
+    <div><dt>What Is It</dt><dd>Chronic autoimmune disease where the body attacks its own tissues</dd></div>
+    <div><dt>Demographics</dt><dd>90% female, typically ages 15&ndash;44</dd></div>
+    <div><dt>Key Oral Finding</dt><dd>Ulcers on hard palate/buccal mucosa; discoid lesions with radiating striae</dd></div>
+    <div><dt>Most Specific Antibody</dt><dd>Anti-Sm (Smith) &mdash; 10&ndash;30% of patients but highly specific for lupus</dd></div>
+  </div>
+
+  <div class="callout callout--explain">
+    <div class="callout-title">Plain English &mdash; What Is Lupus?</div>
+    <p>Normally your immune system makes antibodies that attack <em>foreign</em> things &mdash; bacteria, viruses, etc. In lupus, the immune system gets confused and makes <strong>autoantibodies</strong> that attack your <em>own</em> cells and tissues. These autoantibodies target the <strong>nucleus</strong> of your cells (that's why the screening test is called <strong>ANA</strong> &mdash; Anti-Nuclear Antibody). Since every organ has cells with nuclei, lupus can attack virtually <em>anything</em> &mdash; skin, joints, kidneys, heart, lungs, brain, blood.</p>
+  </div>
+
+  <figure class="fig fig--sm">
+    <img src="sg-images/sle-body-diagram.png" alt="Diagram of systemic lupus erythematosus showing multi-organ involvement including butterfly rash, pleural effusions, heart problems, lupus nephritis, arthritis, and Raynaud's phenomenon">
+    <figcaption>SLE multi-organ involvement. Symptoms may vary widely between individuals. (A.D.A.M.)</figcaption>
+  </figure>
+
+  <h4>Two Forms</h4>
+  <div class="comparison">
+    <div class="comparison-side" style="background:var(--rose-100)">
+      <h5 class="mt-0" style="color:var(--rose-700)">Systemic Lupus (SLE)</h5>
+      <ul class="text-sm">
+        <li>Multi-organ involvement: skin, joints, kidneys, lungs, heart, CNS, blood</li>
+        <li>Can be life-threatening</li>
+        <li>Requires systemic treatment</li>
+      </ul>
+    </div>
+    <div class="comparison-side">
+      <h5 class="mt-0" style="color:var(--stone-600)">Discoid Lupus (DLE)</h5>
+      <ul class="text-sm">
+        <li>Cutaneous (skin) form only</li>
+        <li>Characteristic discoid (disc-shaped) skin lesions</li>
+        <li>Does not involve internal organs</li>
+      </ul>
+    </div>
+  </div>
+
+  <h4>Systemic Manifestations &mdash; Why You Care as a Dentist</h4>
+  <ul>
+    <li><strong>Hematologic:</strong> Thrombocytopenia (low platelets &rarr; bleeding risk), neutropenia (low WBCs &rarr; infection risk), hemolytic anemia</li>
+    <li><strong>Renal:</strong> Lupus nephritis in ~40% &rarr; 10% progress to end-stage renal disease (ESRD) <em>&rarr; affects drug dosing, may be on dialysis</em></li>
+    <li><strong>Cardiac:</strong> Pericarditis (~25%), valve disease</li>
+    <li><strong>Pulmonary:</strong> Pleuritis (16%), interstitial lung disease</li>
+    <li><strong>Neuropsychiatric:</strong> Involvement in ~50% &mdash; seizures, psychosis, cognitive dysfunction</li>
+    <li><strong>Medications:</strong> Immunosuppressants, steroids, anticoagulants &mdash; <em>all affect dental management</em></li>
+  </ul>
+
+  <div class="callout callout--warning">
+    <div class="callout-title">Before Any Procedure on a Lupus Patient</div>
+    <p>Know their: <strong>platelet count</strong> (bleeding risk), <strong>ANC</strong> (infection risk), <strong>renal function</strong> (drug metabolism), <strong>anticoagulation status</strong> (bleeding risk). Don't just look in the mouth &mdash; check the medical history thoroughly.</p>
+  </div>
+
+  <h4 id="lupus-oral">Oral Manifestations</h4>
+  <ul>
+    <li><strong>Oral Ulcers:</strong>
+      <ul>
+        <li>Can be <strong>painless or painful</strong></li>
+        <li>Classically on <strong>hard palate and buccal mucosa</strong></li>
+        <li>Part of the SLE classification criteria (worth 2 points)</li>
+      </ul>
+    </li>
+    <li><strong>Discoid Lesions:</strong>
+      <ul>
+        <li><strong>Erythema (redness) + radiating white striae</strong></li>
+        <li>This is where it gets confusing &mdash; these look similar to oral lichen planus (OLP)</li>
+      </ul>
+    </li>
+    <li><strong>Hyposalivation:</strong>
+      <ul>
+        <li><strong>Secondary Sj&ouml;gren overlap is common</strong> &mdash; lupus and Sj&ouml;gren's often occur together</li>
+        <li>Leads to dry mouth, increased caries risk</li>
+      </ul>
+    </li>
+    <li><strong>Increased caries and periodontal disease</strong> &mdash; secondary to altered salivary flow</li>
+    <li><strong>Lichenoid drug reactions</strong> from <strong>hydroxychloroquine</strong> and <strong>NSAIDs</strong> &mdash; look like lichen planus but caused by the medication</li>
+  </ul>
+
+  <h4 id="lupus-vs-olp">How to Tell Oral Lupus from Oral Lichen Planus (OLP)</h4>
+
+  <div class="callout callout--exam">
+    <div class="callout-title">High-Yield Comparison &mdash; Commonly Tested</div>
+    <p>Both lupus and lichen planus can cause white striae and erythema in the mouth. Here's how to tell them apart:</p>
+  </div>
+
+  <div class="table-wrap table-wrap--rose">
+    <table>
+      <thead>
+        <tr>
+          <th>Feature</th>
+          <th>Oral Lupus</th>
+          <th>Oral Lichen Planus</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>Striae Pattern</strong></td>
+          <td class="highlight-red"><strong>Radiating from center</strong> (like sun rays)</td>
+          <td><strong>Reticular/lacy</strong> (Wickham striae &mdash; interlacing network)</td>
+        </tr>
+        <tr>
+          <td><strong>Center of Lesion</strong></td>
+          <td class="highlight-red"><strong>Erythema or ulceration</strong> (the center is damaged)</td>
+          <td><strong>Usually intact</strong> (center preserved)</td>
+        </tr>
+        <tr>
+          <td><strong>DIF (Direct Immunofluorescence)</strong></td>
+          <td class="highlight-red"><strong>Granular IgG/IgM/C3 &mdash; "Lupus Band"</strong></td>
+          <td><strong>Fibrinogen at DEJ</strong></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <figure class="fig fig--dark">
+    <img src="sg-images/lupus-vs-olp-dif-clinical.png" alt="Comparison of oral lupus vs oral lichen planus showing DIF lupus band (green fluorescence), comparison table, and clinical photos of both conditions">
+    <figcaption>Left: Oral Lupus vs OLP comparison table and DIF images &mdash; (A) Lupus band showing granular IgG/IgM/C3 fluorescence along basement membrane, (B) normal control. Right: Clinical photos of oral lupus showing radiating striae and central erythema/ulceration. (Joshi et al., 2026; Chanprapaph et al., 2021)</figcaption>
+  </figure>
+
+  <div class="callout callout--explain">
+    <div class="callout-title">What Is DIF and the "Lupus Band"?</div>
+    <p><strong>DIF (Direct Immunofluorescence)</strong> is a lab technique where you take a biopsy, stain it with fluorescent antibodies, and look at it under a special microscope. The fluorescent antibodies stick to immune complexes in the tissue and glow under UV light.</p>
+    <p>In <strong>lupus</strong>, you see a continuous <strong>granular band of IgG, IgM, and C3</strong> (antibodies and complement proteins) deposited along the basement membrane zone. This glowing band is called the <strong>"Lupus Band"</strong> &mdash; it's the immune system's attack on the tissue made visible.</p>
+    <p>In <strong>lichen planus</strong>, you see <strong>fibrinogen</strong> (a clotting protein) deposited at the DEJ (dentinoenamel junction area / basement membrane). Different protein, different pattern &mdash; that's how you distinguish them.</p>
+  </div>
+
+  <h4 id="lupus-workup">Workup &amp; Diagnosis</h4>
+
+  <h5>Biopsy</h5>
+  <ul>
+    <li><strong>H&amp;E</strong> (standard histology) <strong>+ DIF</strong> (immunofluorescence) &mdash; you need both</li>
+    <li>DIF shows the characteristic granular lupus band</li>
+  </ul>
+
+  <h5>If You Suspect New Lupus Diagnosis &mdash; Refer to Rheumatology</h5>
+  <ul>
+    <li><strong>ANA (Antinuclear Antibody):</strong> <span class="highlight">Best screening test</span> &mdash; very sensitive but not specific. A positive ANA doesn't mean lupus, but a negative ANA essentially rules it out.</li>
+    <li><strong>Anti-dsDNA Antibody:</strong> <span class="highlight">60&ndash;80% of active lupus patients; specific for lupus.</span> Levels correlate with disease activity &mdash; they go up during flares.</li>
+    <li><strong>Anti-Sm (Smith) Antibody:</strong> Only in <strong>10&ndash;30%</strong> of patients, but <span class="badge badge--specific">Most Specific</span> for lupus. If it's positive, it's almost certainly lupus.</li>
+    <li><strong>CBC, CMP, complement levels</strong> (C3, C4 &mdash; consumed in active lupus)</li>
+  </ul>
+
+  <div class="callout callout--pearl">
+    <div class="callout-title">Memory Trick: ANA vs. Anti-dsDNA vs. Anti-Sm</div>
+    <ul>
+      <li><strong>ANA</strong> = casts a wide net (sensitive, not specific) &mdash; catches lupus but also catches other autoimmune diseases</li>
+      <li><strong>Anti-dsDNA</strong> = medium net (more specific, correlates with disease activity/flares)</li>
+      <li><strong>Anti-Sm</strong> = laser-guided (most specific, but misses 70&ndash;90% of patients because it's only in 10&ndash;30%)</li>
+    </ul>
+  </div>
+
+  <h5>SLE Classification Criteria (2019 EULAR/ACR)</h5>
+  <p><strong>Entry criterion:</strong> ANA titer &ge;1:80 on HEp-2 cells (ever). If absent &rarr; do not classify as SLE.</p>
+  <p>If ANA positive &rarr; apply additive criteria across domains. Need <strong>&ge;10 points + at least one clinical criterion</strong> to classify as SLE.</p>
+
+  <div class="table-wrap table-wrap--rose" style="font-size:0.78rem">
+    <table>
+      <thead>
+        <tr>
+          <th>Clinical Domain</th>
+          <th>Criteria</th>
+          <th>Weight</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td><strong>Constitutional</strong></td><td>Fever</td><td>2</td></tr>
+        <tr><td rowspan="3"><strong>Hematologic</strong></td><td>Leukopenia</td><td>3</td></tr>
+        <tr><td>Thrombocytopenia</td><td>4</td></tr>
+        <tr><td>Autoimmune hemolysis</td><td>4</td></tr>
+        <tr><td rowspan="3"><strong>Neuropsychiatric</strong></td><td>Delirium</td><td>2</td></tr>
+        <tr><td>Psychosis</td><td>3</td></tr>
+        <tr><td>Seizure</td><td>5</td></tr>
+        <tr><td rowspan="4"><strong>Mucocutaneous</strong></td><td>Non-scarring alopecia</td><td>2</td></tr>
+        <tr><td><strong>Oral ulcers</strong></td><td><strong>2</strong></td></tr>
+        <tr><td>Subacute cutaneous OR discoid lupus</td><td>4</td></tr>
+        <tr><td>Acute cutaneous lupus</td><td>6</td></tr>
+        <tr><td rowspan="2"><strong>Serosal</strong></td><td>Pleural or pericardial effusion</td><td>5</td></tr>
+        <tr><td>Acute pericarditis</td><td>6</td></tr>
+        <tr><td><strong>Musculoskeletal</strong></td><td>Joint involvement</td><td>6</td></tr>
+        <tr><td rowspan="3"><strong>Renal</strong></td><td>Proteinuria &gt;0.5g/24h</td><td>4</td></tr>
+        <tr><td>Renal biopsy Class II or V lupus nephritis</td><td>8</td></tr>
+        <tr><td>Renal biopsy Class III or IV lupus nephritis</td><td>10</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="table-wrap table-wrap--purple" style="font-size:0.78rem">
+    <table>
+      <thead>
+        <tr>
+          <th>Immunology Domain</th>
+          <th>Criteria</th>
+          <th>Weight</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td rowspan="2"><strong>Antiphospholipid antibodies</strong></td><td>Anti-cardiolipin OR Anti-&beta;2GP1 antibodies</td><td rowspan="2">2</td></tr>
+        <tr><td>Lupus anticoagulant</td></tr>
+        <tr><td rowspan="2"><strong>Complement proteins</strong></td><td>Low C3 OR low C4</td><td>3</td></tr>
+        <tr><td>Low C3 AND low C4</td><td>4</td></tr>
+        <tr><td rowspan="2"><strong>SLE-specific antibodies</strong></td><td>Anti-dsDNA antibody</td><td>6</td></tr>
+        <tr><td>Anti-Smith antibody</td><td>6</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <figure class="fig fig--md">
+    <img src="sg-images/sle-classification-criteria.png" alt="2019 EULAR/ACR SLE Classification Criteria showing entry criterion ANA ≥1:80, additive clinical and immunology domains with point weights, and threshold of ≥10 points">
+    <figcaption>2019 EULAR/ACR SLE Classification Criteria. Entry criterion: ANA &ge;1:80. Score &ge;10 points with at least one clinical criterion = classify as SLE. (Aringer et al., 2019)</figcaption>
+  </figure>
+
+  <p class="ref-list">Aringer M et al. (2019). Arthritis Rheumatol. 71(9):1400&ndash;1412.</p>
+
+  <h4 id="lupus-mgmt">Management of Oral Lupus Lesions</h4>
+
+  <div class="callout callout--management">
+    <div class="callout-title">Treatment Ladder</div>
+    <ul>
+      <li><strong>Topical (1st line):</strong>
+        <ul>
+          <li>Generalized involvement: <strong>Dexamethasone rinse</strong></li>
+          <li>Focal or multifocal: <strong>Fluocinonide 0.05%</strong> or <strong>Tacrolimus 0.1%</strong></li>
+        </ul>
+      </li>
+      <li><strong>Intralesional</strong> (for stubborn lesions): <strong>Triamcinolone 40 mg/mL</strong></li>
+      <li><strong>Systemic:</strong> <strong>Hydroxychloroquine</strong> (this is the cornerstone systemic therapy for lupus &mdash; originally an antimalarial drug)</li>
+      <li><strong>All patients:</strong> <strong>Smoking cessation + sun protection</strong></li>
+    </ul>
+  </div>
+
+  <figure class="fig fig--sm">
+    <img src="sg-images/lupus-uvb-pathogenesis.png" alt="Flowchart showing how natural or artificial UVB triggers skin autoimmune inflammation leading to Cutaneous Lupus Erythematosus (CLE) which can progress via circulation to Systemic Lupus Erythematosus (SLE) with lupus arthritis, nephritis, and neuropsychiatric involvement">
+    <figcaption>Pathogenesis of lupus: UVB radiation triggers skin autoimmune inflammation (CLE), which can disseminate systemically via circulation to cause SLE affecting joints, kidneys, and brain. (He et al., 2025; created in BioRender)</figcaption>
+  </figure>
+
+  <div class="callout callout--explain">
+    <div class="callout-title">Why Sun Protection?</div>
+    <p>UV light (both natural and artificial UVB) triggers lupus flares. UV radiation causes skin cell damage &rarr; exposes nuclear antigens &rarr; stimulates the autoimmune response. This can trigger <strong>both</strong> skin (cutaneous lupus) <strong>and</strong> systemic flares. Every lupus patient should avoid prolonged sun exposure and use high-SPF sunscreen.</p>
+  </div>
+
+  <p class="ref-list">Siegel CH, Sammaritano LR. (2024). JAMA. 332(4):326&ndash;337. He J et al. (2025). J Autoimmun. 153:103393. Jessop S et al. (2017). Cochrane Database Syst Rev. 2017(5):CD002954.</p>
+</section>
+
+
+<!-- ═══════════════════════════════════════════════════════════
+     SARCOIDOSIS
+     ═══════════════════════════════════════════════════════════ -->
+<section class="section" id="sarcoidosis">
+  <div class="section-header">
+    <div class="section-accent" style="background:var(--amber-500)"></div>
+    <div>
+      <h3>Sarcoidosis</h3>
+      <div class="condition-subtitle">Tier 1 &mdash; High Priority</div>
+    </div>
+  </div>
+
+  <div class="quick-ref">
+    <div><dt>What Is It</dt><dd>Multisystem granulomatous disease of unknown cause</dd></div>
+    <div><dt>Hallmark</dt><dd>Noncaseating granulomas (no central necrosis)</dd></div>
+    <div><dt>Demographics</dt><dd>Peak onset 25&ndash;35; higher prevalence in Black patients</dd></div>
+    <div><dt>Key Lab</dt><dd>ACE (angiotensin converting enzyme) elevated in ~60%</dd></div>
+    <div><dt>Key Imaging</dt><dd>Bilateral hilar adenopathy on CXR &mdash; highly specific</dd></div>
+    <div><dt>Oral Significance</dt><dd>Oral lesions may be the FIRST sign of systemic sarcoidosis</dd></div>
+  </div>
+
+  <div class="callout callout--explain">
+    <div class="callout-title">Plain English &mdash; What Is Sarcoidosis?</div>
+    <p>Sarcoidosis is a disease where your immune system forms tiny clusters of inflammatory cells called <strong>granulomas</strong> in various organs &mdash; nobody knows exactly why. It's like your immune system is fighting an invisible enemy and building little "fortresses" (granulomas) throughout your body. The lungs are involved in &gt;90% of cases, but it can hit virtually any organ. The granulomas are <strong>noncaseating</strong> &mdash; meaning they don't have the cheesy central dead zone you see in tuberculosis. About half of patients get better on their own; about a third develop chronic disease.</p>
+  </div>
+
+  <figure class="fig fig--sm">
+    <img src="sg-images/sarcoidosis-body-diagram.png" alt="Sarcoidosis body diagram showing affected organs: eyes, lymph nodes, lungs, heart, liver and spleen, skin, and joints with associated symptoms">
+    <figcaption>Sarcoidosis multi-organ involvement. Scarring and granulomas affect lungs (&gt;90%), eyes, lymph nodes, heart, liver/spleen, skin, and joints.</figcaption>
+  </figure>
+
+  <ul>
+    <li>Lungs involved in <strong>&gt;90%</strong> of cases; can affect virtually any organ</li>
+    <li>~50% have spontaneous remission; ~1/3 develop chronic disease</li>
+    <li><strong>Cardiac/neurologic involvement &rarr; increased mortality</strong></li>
+  </ul>
+
+  <h4>Systemic Manifestations</h4>
+  <ul>
+    <li><strong>Pulmonary (&gt;90%):</strong> Cough, dyspnea, bilateral hilar adenopathy</li>
+    <li><strong>Skin:</strong> Lupus pernio (violaceous plaques on nose/cheeks/ears), erythema nodosum (tender red nodules on shins), papules/plaques</li>
+    <li><strong>Eyes (20&ndash;25%):</strong> Uveitis, sicca symptoms (dry eyes &mdash; similar to Sj&ouml;gren's overlap)</li>
+    <li><strong>Cardiac (10&ndash;20%):</strong> Arrhythmias, cardiomyopathy</li>
+    <li><strong>Neurologic (10&ndash;25%):</strong> Cranial nerve palsies, neuropathy</li>
+    <li><strong>Medications:</strong> Steroids, methotrexate, biologics &mdash; affects dental management</li>
+  </ul>
+
+  <h4 id="sarc-oral">Oral Manifestations</h4>
+
+  <div class="callout callout--patho">
+    <div class="callout-title">Critical Point</div>
+    <p>Oral lesions may be the <strong>first sign</strong> of systemic sarcoidosis &mdash; if you see these findings, <strong>always screen for pulmonary involvement</strong>. You could be the first provider to catch this disease.</p>
+  </div>
+
+  <ul>
+    <li><strong>Soft tissue:</strong> Nodules, ulcers, swelling of tongue, lips, gingiva, palate</li>
+    <li><strong>Bone:</strong> Alveolar bone loss, tooth mobility (granulomas can form in bone)</li>
+    <li><strong>Salivary glands:</strong> Parotid swelling, hyposalivation</li>
+    <li><strong>Gingiva:</strong> Gingivitis, gingival enlargement</li>
+  </ul>
+
+  <figure class="fig fig--dark">
+    <img src="sg-images/sarcoidosis-skin-oral-photos.png" alt="Clinical photos of sarcoidosis: lupus pernio on face, erythema nodosum on forearms and fingers, and oral sarcoidosis showing lip, gingival, and tongue involvement">
+    <figcaption>Left: Cutaneous sarcoidosis &mdash; lupus pernio (violaceous nodules on face), erythema nodosum (forearms), papular lesions (fingers). Right: Oral sarcoidosis &mdash; lip swelling, gingival granularity/enlargement, and tongue nodules. (Stagaki et al., 2009; Zhang &amp; Zhang, 2022; Poate et al., 2008; Motswaledi et al., 2014)</figcaption>
+  </figure>
+
+  <div class="callout callout--explain">
+    <div class="callout-title">What Does Oral Sarcoidosis Look Like?</div>
+    <p>The lecture showed clinical photos of: swollen, granular-textured <strong>lip</strong> involvement, <strong>gingival</strong> erythema and enlargement, and raised <strong>tongue nodules/papules</strong>. The lesions are firm and may be the same color as surrounding mucosa or slightly erythematous. They can mimic many other conditions, which is why biopsy is essential.</p>
+  </div>
+
+  <h4 id="sarc-workup">Workup</h4>
+  <ul>
+    <li><strong>Biopsy:</strong> Shows noncaseating granulomas. <em>Must exclude TB and fungal infection</em> (both can also cause granulomas, but they're caseating/necrotizing)</li>
+    <li><strong>Chest X-ray / CT:</strong> Bilateral hilar adenopathy &mdash; <span class="highlight">highly specific</span> for sarcoidosis</li>
+    <li><strong>Labs:</strong>
+      <ul>
+        <li><strong>ACE (Angiotensin Converting Enzyme):</strong> Elevated in ~60% of sarcoidosis patients. The granulomas themselves produce ACE.</li>
+        <li>CBC, CMP, calcium (sarcoid granulomas can produce excess vitamin D &rarr; hypercalcemia)</li>
+      </ul>
+    </li>
+    <li><strong>Refer to pulmonology/rheumatology</strong> for systemic workup</li>
+    </ul>
+
+    <figure class="fig fig--sm">
+      <img src="sg-images/sarcoidosis-cxr-hilar.png" alt="Chest X-ray showing bilateral hilar adenopathy with blue arrows pointing to symmetrically enlarged lymph nodes at the lung hila">
+      <figcaption>Chest X-ray: Bilateral hilar adenopathy (blue arrows) &mdash; highly specific for sarcoidosis. (Kamath et al., 2023; Crouser et al., 2020)</figcaption>
+    </figure>
+
+    <ul>
+    <li><strong>Before dental procedures:</strong> Know if on immunosuppressants; check CBC if on methotrexate</li>
+  </ul>
+
+  <h4>Treatment</h4>
+  <div class="callout callout--management">
+    <div class="callout-title">Treatment Approach</div>
+    <ul>
+      <li><strong>Observation</strong> for asymptomatic oral lesions (remember: ~50% remit spontaneously)</li>
+      <li><strong>Corticosteroids:</strong>
+        <ul>
+          <li>Systemic prednisone 20&ndash;40 mg/day</li>
+          <li>Topicals are <strong>not proven to be successful</strong> for sarcoidosis (unlike lupus)</li>
+        </ul>
+      </li>
+      <li><strong>Steroid-sparing agents:</strong>
+        <ul>
+          <li>Methotrexate</li>
+          <li>Hydroxychloroquine (especially for cutaneous/oral disease)</li>
+        </ul>
+      </li>
+      <li><strong>Surgery:</strong> For localized, symptomatic lesions only</li>
+    </ul>
+  </div>
+
+  <figure class="fig fig--md">
+    <img src="sg-images/sarcoidosis-treatment-algorithm.png" alt="Sarcoidosis treatment algorithm flowchart showing decision pathway from diagnosis through symptomatic vs asymptomatic branches to anti-inflammatory therapy, wait and watch, supportive therapy, and rehabilitation options">
+    <figcaption>Sarcoidosis treatment algorithm. Symptomatic patients with inflammation, risk of organ defect, or high burden &rarr; anti-inflammatory therapy (prednisone &plusmn; immunosuppressant &plusmn; biologics). Asymptomatic patients &rarr; watch unless organ function is in danger. (Drent et al., 2021)</figcaption>
+  </figure>
+
+  <p class="ref-list">Partin M et al. (2024). Am Fam Physician. 109(3):239&ndash;247. Drent M, Crouser ED, Grunewald J. (2021). N Engl J Med. 385(11):1018&ndash;1032. Bouaziz A et al. (2012). QJM. 105(8):755&ndash;762.</p>
+</section>
+
+
+<!-- ═══════════════════════════════════════════════════════════
+     GRANULATION TISSUE vs GRANULOMAS
+     ═══════════════════════════════════════════════════════════ -->
+<section class="section" id="granulomas">
+  <div class="section-header">
+    <div class="section-accent" style="background:var(--stone-500)"></div>
+    <div>
+      <h3>Granulation Tissue vs. Granulomas</h3>
+      <div class="condition-subtitle">Commonly confused terminology</div>
+    </div>
+  </div>
+
+  <div class="callout callout--explain">
+    <div class="callout-title">Why This Section Exists</div>
+    <p>Students constantly confuse these terms. They sound similar but are completely different things. And a <strong>pyogenic granuloma is NOT a granuloma</strong> &mdash; it's a misnomer. Let's clear this up.</p>
+  </div>
+
+  <div class="comparison">
+    <div class="comparison-side" style="background:var(--green-50)">
+      <h5 class="mt-0" style="color:var(--green-700)">Granulation Tissue</h5>
+      <ul class="text-sm">
+        <li>A <strong>clinical term</strong> (what you see with your eyes), not histologic</li>
+        <li>Describes the <strong>grainy appearance of healing tissue</strong></li>
+        <li>Classically found in <strong>extraction sockets</strong> during normal healing</li>
+        <li>It's a GOOD thing &mdash; it means the wound is healing</li>
+        <li>Made of new blood vessels + fibroblasts + inflammatory cells</li>
+      </ul>
+    </div>
+    <div class="comparison-side">
+      <h5 class="mt-0" style="color:var(--stone-700)">Granulomas</h5>
+      <ul class="text-sm">
+        <li>A <strong>histologic finding</strong> (what you see under the microscope)</li>
+        <li>Clusters of <strong>macrophages</strong> and <strong>giant cells</strong> in chronic inflammation</li>
+        <li><strong>Pyogenic granuloma is NOT a granuloma</strong> &mdash; it's a vascular proliferation (misnomer)</li>
+        <li>Indicates the immune system is trying to wall off something it can't destroy</li>
+      </ul>
+    </div>
+  </div>
+
+  <figure class="fig fig--md">
+    <img src="sg-images/granuloma-types-photo.png" alt="Left: Clinical photo of granulation tissue in an extraction socket. Right: Table comparing granuloma types - caseating, non-caseating, suppurative, and foreign body - with key features and associated conditions">
+    <figcaption>Left: Granulation tissue in an extraction socket (normal healing &mdash; clinical term, not histologic). Right: Types of granulomatous disease with key histologic features and associated conditions. (Politis et al., 2016)</figcaption>
+  </figure>
+
+  <h4>Types of Granulomatous Disease</h4>
+
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>Type</th>
+          <th>Key Feature</th>
+          <th>Think&hellip;</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>Caseating (necrotizing)</strong></td>
+          <td>Central necrosis (cheesy dead center)</td>
+          <td>TB, syphilis, deep fungal infection, GPA</td>
+        </tr>
+        <tr>
+          <td><strong>Non-caseating</strong></td>
+          <td>No necrosis ("naked granulomas" &mdash; few surrounding lymphocytes)</td>
+          <td><strong>Sarcoidosis</strong>, Crohn disease, OFG (orofacial granulomatosis)</td>
+        </tr>
+        <tr>
+          <td><strong>Suppurative</strong></td>
+          <td>Neutrophils / abscess within granuloma</td>
+          <td>Bartonella (cat scratch), fungi</td>
+        </tr>
+        <tr>
+          <td><strong>Foreign body</strong></td>
+          <td>Foreign material visible within granuloma</td>
+          <td>Dermal filler, food particles, suture material, injuries</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="callout callout--pearl">
+    <div class="callout-title">Board-Friendly Summary</div>
+    <p><strong>Caseating = infectious (TB, syphilis, fungi, GPA).</strong> Think "cheese = disease."<br>
+    <strong>Non-caseating = sarcoidosis (or Crohn).</strong> The immune system is fighting but there's no pathogen to kill, so no necrosis.<br>
+    <strong>Suppurative = abscess + granuloma together.</strong> Bartonella is the classic cause.<br>
+    <strong>Foreign body = you can see the culprit under the microscope.</strong></p>
+  </div>
+
+  <p class="ref-list">Politis C et al. (2016). Front Physiol. 7:507.</p>
+</section>
+
+
+<!-- ═══════════════════════════════════════════════════════════
+     VITAMIN DEFICIENCIES & TOXICITIES
+     ═══════════════════════════════════════════════════════════ -->
+<section class="section" id="vitamins">
+  <div class="section-header">
+    <div class="section-accent" style="background:var(--green-600)"></div>
+    <div>
+      <h3>Vitamin Deficiencies &amp; Toxicities</h3>
+      <div class="condition-subtitle">Tier 1 &mdash; High Priority</div>
+    </div>
+  </div>
+
+  <div class="callout callout--explain">
+    <div class="callout-title">Why This Matters for Dentists</div>
+    <p>Vitamin deficiencies cause <strong>characteristic oral findings</strong> that may be the <strong>first clinical sign</strong> of deficiency. As a dentist, you may be the first provider to notice glossitis, angular cheilitis, or gingival bleeding that signals a systemic nutritional problem. You're not diagnosing the vitamin deficiency &mdash; you're recognizing the oral signs and referring for workup.</p>
+  </div>
+
+  <h5>Who Gets Vitamin Deficiencies?</h5>
+  <ul>
+    <li><strong>Common in:</strong> People with alcohol use disorder (AUD), older adults, malabsorption syndromes, post-bariatric surgery, restrictive diets</li>
+    <li><strong>High-risk populations for restrictive diets:</strong> Autism spectrum disorder, ARFID, OCD, schizophrenia, depression, institutionalized, incarcerated, unhoused, refugee populations</li>
+  </ul>
+
+  <div class="callout callout--warning">
+    <div class="callout-title">Two-Way Street</div>
+    <p><strong>B12, iron, vitamin C &rarr; deficiency</strong> causes oral manifestations.<br>
+    <strong>Vitamin A, B6, D, zinc, B12 &rarr; toxicity</strong> from over-supplementation causes problems too. Unsupervised supplementation is increasingly common and dangerous.</p>
+  </div>
+
+  <h4 id="vit-def">Vitamin Deficiencies</h4>
+
+  <div class="table-wrap table-wrap--green">
+    <table>
+      <thead>
+        <tr>
+          <th style="min-width:100px">Deficiency</th>
+          <th>Systemic Manifestations</th>
+          <th>Oral Manifestations</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>Vitamin B12</strong></td>
+          <td>
+            <ul style="margin:0;padding-left:1rem">
+              <li>Megaloblastic anemia (big immature RBCs)</li>
+              <li>Neurologic: paresthesias, ataxia, cognitive decline</li>
+            </ul>
+          </td>
+          <td>
+            <ul style="margin:0;padding-left:1rem">
+              <li><strong>Glossitis</strong> &mdash; atrophic or <span class="badge badge--key">"Beefy Red"</span> tongue</li>
+              <li>Angular cheilitis</li>
+              <li>Burning sensation</li>
+              <li>RAS (recurrent aphthous stomatitis)</li>
+            </ul>
+          </td>
+        </tr>
+        <tr>
+          <td><strong>Iron</strong></td>
+          <td>
+            <ul style="margin:0;padding-left:1rem">
+              <li>Microcytic anemia (small pale RBCs)</li>
+              <li>Fatigue</li>
+              <li>Koilonychia (spoon-shaped nails)</li>
+              <li>Pica (craving non-food items like ice)</li>
+            </ul>
+          </td>
+          <td>
+            <ul style="margin:0;padding-left:1rem">
+              <li>Atrophic glossitis</li>
+              <li>Angular cheilitis</li>
+              <li>Mucosal pallor</li>
+              <li><span class="badge badge--key">Plummer-Vinson syndrome</span></li>
+            </ul>
+          </td>
+        </tr>
+        <tr>
+          <td><strong>Vitamin C (Scurvy)</strong></td>
+          <td>
+            <ul style="margin:0;padding-left:1rem">
+              <li>Fatigue</li>
+              <li>Perifollicular petechiae (bleeding around hair follicles)</li>
+              <li>Corkscrew hairs</li>
+              <li>Poor wound healing</li>
+            </ul>
+          </td>
+          <td>
+            <ul style="margin:0;padding-left:1rem">
+              <li><strong>Scorbutic gingivitis:</strong></li>
+              <li style="list-style:none;padding-left:1rem">
+                <span class="badge badge--patho">Pathognomonic</span> Edematous, hemorrhagic, <strong>violaceous</strong> (purple) gingiva
+              </li>
+              <li>Periodontal destruction with tooth mobility</li>
+            </ul>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <figure class="fig fig--dark">
+    <img src="sg-images/vitamin-deficiency-photos.png" alt="Clinical photos showing B12 deficiency glossitis with beefy red atrophic tongue, iron deficiency with pale atrophic tongue, koilonychia (spoon nails), and vitamin C deficiency scurvy with hemorrhagic violaceous gingivitis and periodontal destruction">
+    <figcaption>Top row: B12 deficiency &mdash; atrophic "beefy red" glossitis (loss of papillae, smooth red tongue); pale/atrophic tongue variant. Bottom row: Koilonychia (spoon nails, iron deficiency), scorbutic gingivitis (hemorrhagic, violaceous, edematous gingiva from vitamin C deficiency/scurvy). (Zhou et al., 2018; Robinson &amp; Loh, 2019)</figcaption>
+  </figure>
+
+  <div class="callout callout--explain">
+    <div class="callout-title">Key Concepts Explained</div>
+    <ul>
+      <li><strong>"Beefy red" tongue (B12):</strong> The tongue loses its papillae (atrophy) and becomes smooth and intensely red. This is because B12 is needed for normal epithelial cell turnover. Without it, the rapidly dividing lingual papillae can't regenerate.</li>
+      <li><strong>Plummer-Vinson syndrome (Iron):</strong> A triad of <em>iron deficiency anemia + dysphagia (difficulty swallowing) + esophageal webs</em>. The esophageal webs are thin mucosal membranes that partially obstruct the esophagus. Important because it increases the risk of esophageal squamous cell carcinoma.</li>
+      <li><strong>Why does scurvy destroy gingiva?</strong> Vitamin C is essential for <strong>collagen synthesis</strong> (specifically, it's a cofactor for prolyl and lysyl hydroxylase, the enzymes that crosslink collagen fibers). Without collagen crosslinking, connective tissue falls apart. The gingiva is highly vascular connective tissue &rarr; it swells, bleeds, and turns purple. Teeth lose periodontal support and become mobile.</li>
+      <li><strong>Megaloblastic vs. microcytic anemia:</strong> B12 deficiency makes cells that are <em>too big</em> (mega = big) because they can't divide properly. Iron deficiency makes cells that are <em>too small</em> (micro = small) because there's not enough hemoglobin to fill them.</li>
+    </ul>
+  </div>
+
+  <h4 id="vit-tox">Vitamin Toxicities</h4>
+
+  <div class="table-wrap table-wrap--amber">
+    <table>
+      <thead>
+        <tr>
+          <th>Excess</th>
+          <th>Source</th>
+          <th>Systemic Manifestations</th>
+          <th>Oral Manifestations</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>Vitamin A</strong></td>
+          <td>Supplements; excessive liver intake</td>
+          <td>Hepatotoxicity; increased ICP (intracranial pressure); teratogenicity</td>
+          <td><span class="highlight">Cheilitis, lip fissures; mucosal dryness and/or desquamation</span></td>
+        </tr>
+        <tr>
+          <td><strong>Vitamin B6</strong></td>
+          <td>Supplements (&gt;50 mg/day long-term)</td>
+          <td>Sensory neuropathy &mdash; <strong>may be irreversible</strong></td>
+          <td><span class="highlight">Dysesthesia (abnormal sensation); burning sensation</span></td>
+        </tr>
+        <tr>
+          <td><strong>Vitamin B12</strong></td>
+          <td>High-dose supplements</td>
+          <td>Acne; anxiety (rare)</td>
+          <td><span class="highlight">Dysgeusia (altered taste)</span></td>
+        </tr>
+        <tr>
+          <td><strong>Vitamin D</strong></td>
+          <td>Supplements (&gt;10,000 IU/day)</td>
+          <td>Hypercalcemia; nephrolithiasis (kidney stones)</td>
+          <td>No direct oral manifestations</td>
+        </tr>
+        <tr>
+          <td><strong>Zinc</strong></td>
+          <td>Supplements (&gt;40 mg/day long-term)</td>
+          <td>Copper deficiency &rarr; anemia, neutropenia, neuropathy</td>
+          <td><span class="highlight">Dysgeusia; GI upset</span></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="callout callout--pearl">
+    <div class="callout-title">Clinical Pearl &mdash; Zinc &amp; Copper</div>
+    <p>Zinc and copper compete for the same absorption pathway in the gut. Taking too much zinc <strong>blocks copper absorption</strong>, causing copper deficiency. Copper deficiency then causes anemia, neutropenia, and neuropathy &mdash; mimicking B12 deficiency. Always ask patients about supplement use.</p>
+  </div>
+
+  <h4 id="vit-approach">Clinical Approach</h4>
+
+  <div class="cols cols--2">
+    <div>
+      <h5>Workup</h5>
+      <p><strong>If deficiency suspected:</strong></p>
+      <ul class="text-sm">
+        <li>CBC with differential</li>
+        <li>Reticulocyte count</li>
+        <li>B12 level</li>
+        <li>Folate level</li>
+        <li>Iron studies (ferritin, total iron binding capacity)</li>
+        <li>Vitamin C level</li>
+      </ul>
+      <p><strong>If toxicity suspected:</strong></p>
+      <ul class="text-sm">
+        <li>Vitamin A level</li>
+        <li>B6 (plasma pyridoxal 5'-phosphate / PLP)</li>
+        <li>25(OH)D</li>
+        <li>Calcium</li>
+        <li>Zinc</li>
+        <li>Copper</li>
+      </ul>
+    </div>
+    <div>
+      <h5>Treatment</h5>
+      <p><strong>Deficiency:</strong></p>
+      <ul class="text-sm">
+        <li><strong>B12:</strong> 1000 &mu;g IM/SQ (preferred if malabsorption) or oral high-dose if adherence is high</li>
+        <li><strong>Iron:</strong> Ferrous sulfate 325 mg daily; IV if intolerant</li>
+        <li><strong>Vitamin C:</strong> 500&ndash;1000 mg daily &mdash; <strong>rapid improvement within days</strong></li>
+        <li style="list-style:none"><em>Dietary modification: ketchup, pizza, potatoes are equivalent in vitamin C to an orange or tangerine!</em></li>
+      </ul>
+      <p><strong>Toxicity:</strong></p>
+      <ul class="text-sm">
+        <li><strong>Stop the offending supplement</strong></li>
+        <li>Most symptoms are reversible</li>
+        <li><strong>Exception: B6 neuropathy may persist</strong> even after stopping</li>
+      </ul>
+    </div>
+  </div>
+
+  <p class="ref-list">Stabler SP. (2013). N Engl J Med. 368(2):149&ndash;160. Pasricha SR et al. (2021). Lancet. 397(10270):233&ndash;248. Lopez A et al. (2016). Lancet. 387(10021):907&ndash;916.</p>
+</section>
+
+
+<!-- ═══════════════════════════════════════════════════════════
+     AMYLOIDOSIS
+     ═══════════════════════════════════════════════════════════ -->
+<section class="section" id="amyloidosis">
+  <div class="section-header">
+    <div class="section-accent" style="background:var(--purple-600)"></div>
+    <div>
+      <h3>Amyloidosis</h3>
+      <div class="condition-subtitle">Tier 2 &mdash; Moderate Priority</div>
+    </div>
+  </div>
+
+  <div class="quick-ref">
+    <div><dt>What Is It</dt><dd>Extracellular deposition of misfolded protein fibrils in tissues</dd></div>
+    <div><dt>Key Oral Finding</dt><dd>Macroglossia (enlarged tongue) in ~15&ndash;20% of AL type</dd></div>
+    <div><dt>Pathognomonic Sign</dt><dd>Periorbital purpura ("raccoon eyes")</dd></div>
+    <div><dt>Diagnostic Stain</dt><dd>Congo red &rarr; apple-green birefringence under polarized light</dd></div>
+  </div>
+
+  <div class="callout callout--explain">
+    <div class="callout-title">Plain English &mdash; What Is Amyloidosis?</div>
+    <p>Proteins normally fold into precise 3D shapes to function. In amyloidosis, certain proteins <strong>misfold</strong> into abnormal, insoluble fibrils that <strong>deposit in tissues throughout the body</strong>. Think of it like plaque building up in pipes &mdash; the deposits physically interfere with organ function. The type of amyloidosis depends on <em>which</em> protein is misfolding.</p>
+  </div>
+
+  <h4>Types Relevant to Oral Medicine</h4>
+
+  <div class="table-wrap table-wrap--purple" style="font-size:0.82rem">
+    <table>
+      <thead>
+        <tr>
+          <th>Type</th>
+          <th>Protein Source</th>
+          <th>Key Association</th>
+          <th>Where It Deposits</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>AL (Primary)</strong><br><span class="badge badge--key">Most Common</span></td>
+          <td>Immunoglobulin <strong>light chains</strong> from bone marrow plasma cell disorders</td>
+          <td><strong>Multiple myeloma</strong></td>
+          <td>Tongue, heart, kidneys, nerves, liver. <strong>Has oral manifestations.</strong> Clotting Factor X is adsorbed (bound) to amyloid fibrils &rarr; bleeding risk.</td>
+        </tr>
+        <tr>
+          <td><strong>AA (Secondary)</strong></td>
+          <td>Serum amyloid A protein from chronic inflammation</td>
+          <td>Rheumatoid arthritis, IBD, chronic infections</td>
+          <td>Kidneys, spleen, liver, thyroid, heart</td>
+        </tr>
+        <tr>
+          <td><strong>A&beta;2M (Dialysis)</strong></td>
+          <td>&beta;2-macroglobulin that can't be cleared by diseased kidneys</td>
+          <td>Long-term dialysis patients</td>
+          <td>Bones, joints, tendons; <span class="highlight">rarely deposits in TMJ</span></td>
+        </tr>
+        <tr>
+          <td><strong>ATTR (Transthyretin)</strong></td>
+          <td>Transthyretin protein (hereditary or wild-type)</td>
+          <td>Cardiac amyloidosis</td>
+          <td>Primarily heart</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <figure class="fig">
+    <img src="sg-images/amyloidosis-overview-macroglossia.png" alt="Amyloidosis overview slide showing four types (AL, AA, Aβ2M, ATTR) with key details, and clinical photos A-D showing macroglossia in AL amyloidosis patients">
+    <figcaption>Amyloidosis types and oral significance. Photos A&ndash;D: Macroglossia in AL amyloidosis &mdash; the tongue is physically enlarged by amyloid protein deposits. May be the first clinical sign. (Xue et al., 2023; Tao et al., 2023)</figcaption>
+  </figure>
+
+  <div class="callout callout--patho">
+    <div class="callout-title">Why AL Amyloidosis Matters Most for Oral Medicine</div>
+    <p><strong>Macroglossia</strong> (enlarged tongue) occurs in ~15&ndash;20% of AL amyloidosis and may be the <strong>first clinical sign</strong>. An <strong>oral biopsy</strong> can diagnose systemic amyloidosis even without other oral symptoms. You could save a life by recognizing this.</p>
+  </div>
+
+  <h4>Manifestations</h4>
+
+  <div class="table-wrap table-wrap--purple">
+    <table>
+      <thead>
+        <tr>
+          <th>Systemic Manifestations</th>
+          <th>Oral Manifestations</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Nephrotic syndrome: proteinuria, edema</td>
+          <td><strong>Macroglossia</strong> (tongue physically enlarged by protein deposits)</td>
+        </tr>
+        <tr>
+          <td>Restrictive cardiomyopathy: heart failure</td>
+          <td><strong>Hemorrhagic lesions:</strong> petechiae, ecchymoses, hematomas<br><span class="cell-note">Due to Factor X deficiency (Factor X is adsorbed to amyloid fibrils, removing it from circulation)</span></td>
+        </tr>
+        <tr>
+          <td>Peripheral neuropathy</td>
+          <td><strong>Papules/nodules:</strong> waxy, firm; on tongue, buccal mucosa, lips</td>
+        </tr>
+        <tr>
+          <td>Hepatomegaly</td>
+          <td>Hyposalivation</td>
+        </tr>
+        <tr>
+          <td><strong>Periorbital purpura ("raccoon eyes")</strong> <span class="badge badge--patho">Pathognomonic</span></td>
+          <td>Submandibular gland enlargement</td>
+        </tr>
+        <tr>
+          <td>Carpal tunnel syndrome</td>
+          <td>Jaw claudication (rare)</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <figure class="fig">
+    <img src="sg-images/amyloidosis-manifestations-raccoon.png" alt="Amyloidosis manifestations table showing systemic and oral findings, with clinical photo of periorbital purpura (raccoon eyes) which is pathognomonic for amyloidosis">
+    <figcaption>Amyloidosis manifestations with pathognomonic periorbital purpura ("raccoon eyes") &mdash; bilateral bruising from amyloid-weakened blood vessel walls. Note: Factor X deficiency causes hemorrhagic oral lesions because Factor X is adsorbed to amyloid fibrils. (Gertz &amp; Dispenzieri, 2020; Sanchorawala, 2024)</figcaption>
+  </figure>
+
+  <div class="callout callout--explain">
+    <div class="callout-title">Why the "Raccoon Eyes"?</div>
+    <p>Amyloid deposits weaken blood vessel walls. Minor trauma (even something as gentle as rubbing your eyes or bearing down during a bowel movement) causes the fragile vessels around the eyes to rupture, producing the characteristic bilateral periorbital bruising. This is <strong>pathognomonic</strong> &mdash; meaning if you see it, amyloidosis should be at the top of your differential.</p>
+  </div>
+
+  <h4 id="amyloid-mgmt">Diagnosis &amp; Clinical Management</h4>
+
+  <h5>Diagnosis</h5>
+  <ul>
+    <li><strong>Incisional biopsy or labial salivary gland biopsy</strong>
+      <ul>
+        <li>Can diagnose systemic amyloidosis <strong>even without oral symptoms</strong></li>
+        <li>Sensitivity: 58&ndash;86%</li>
+      </ul>
+    </li>
+    <li><span class="badge badge--patho">Pathognomonic</span> <strong>Congo red stain &rarr; apple-green birefringence under polarized light</strong>
+      <ul>
+        <li>Congo red dye binds to amyloid fibrils. Under regular light, it appears red-orange. Under <strong>polarized light</strong>, amyloid shows <strong>apple-green birefringence</strong> (it glows green). This is the gold standard diagnostic finding.</li>
+      </ul>
+    </li>
+    <li><strong>If AL amyloidosis suspected:</strong> serum/urine protein electrophoresis (SPEP/SUEP), free light chains, bone marrow biopsy</li>
+  </ul>
+
+  <h5>Before Oral Procedures</h5>
+  <ul>
+    <li><strong>Bleeding risk:</strong> Factor X deficiency (adsorbed to amyloid) &rarr; check PT/PTT, platelet count</li>
+    <li><strong>Cardiac status:</strong> Restrictive cardiomyopathy &rarr; may need cardiac consultation</li>
+    <li><strong>Renal function:</strong> Nephrotic syndrome &rarr; affects drug dosing</li>
+  </ul>
+
+  <h5>Treatment</h5>
+  <ul>
+    <li>Managed by <strong>heme/onc</strong> (hematology/oncology)</li>
+    <li><strong>AL amyloidosis:</strong> Chemotherapy (daratumumab-based regimens), autoHSCT (autologous stem cell transplant)</li>
+    <li><strong>Prognosis:</strong> Median survival <strong>6 months</strong> if untreated with cardiac involvement &mdash; this is an aggressive disease</li>
+  </ul>
+
+  <p class="ref-list">Gertz MA, Dispenzieri A. (2020). JAMA. 324(1):79&ndash;89. Sanchorawala V. (2024). N Engl J Med. 390(5):456&ndash;467. Xue N et al. (2023). Oral Surg Oral Med Oral Pathol Oral Radiol. 136(4):e49&ndash;e55.</p>
+</section>
+
+
+<!-- ═══════════════════════════════════════════════════════════
+     PEUTZ-JEGHERS SYNDROME
+     ═══════════════════════════════════════════════════════════ -->
+<section class="section" id="pjs">
+  <div class="section-header">
+    <div class="section-accent" style="background:var(--rose-600)"></div>
+    <div>
+      <h3>Peutz-Jeghers Syndrome (PJS)</h3>
+      <div class="condition-subtitle">Tier 2 &mdash; Moderate Priority</div>
+    </div>
+  </div>
+
+  <div class="quick-ref">
+    <div><dt>Genetics</dt><dd>STK11/LKB1 (tumor suppressor) gene mutation</dd></div>
+    <div><dt>Classic Triad</dt><dd>Mucocutaneous pigmentation + GI polyps + increased cancer risk</dd></div>
+    <div><dt>Cancer Risk</dt><dd>93% lifetime cancer risk (GI, breast, pancreas, ovary, lung)</dd></div>
+    <div><dt>Oral Significance</dt><dd>Perioral melanotic macules may be the FIRST sign, appearing in childhood</dd></div>
+  </div>
+
+  <div class="callout callout--explain">
+    <div class="callout-title">Plain English &mdash; What Is Peutz-Jeghers?</div>
+    <p>PJS is caused by a mutation in <strong>STK11/LKB1</strong>, a <strong>tumor suppressor gene</strong>. When this gene is broken, you get two problems: (1) <strong>hamartomatous polyps</strong> grow throughout the GI tract (hamartomas are benign overgrowths of normal tissue), and (2) cancer risk skyrockets to <strong>93% lifetime</strong>. The oral finding that tips you off is a pattern of <strong>dark spots (melanotic macules) around the lips and inside the mouth</strong>, often appearing in early childhood, years before any GI symptoms develop.</p>
+  </div>
+
+  <h4>Findings</h4>
+
+  <div class="table-wrap table-wrap--rose">
+    <table>
+      <thead>
+        <tr>
+          <th>Systemic Manifestations</th>
+          <th>Oral Manifestations</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>GI hamartomatous polyps</td>
+          <td><strong>Perioral melanotic macules</strong> &mdash; lips, vermilion border</td>
+        </tr>
+        <tr>
+          <td>Intussusception, GI obstruction, bleeding</td>
+          <td><strong>Intraoral pigmentation</strong> &mdash; buccal mucosa, gingiva, palate</td>
+        </tr>
+        <tr>
+          <td><strong>93% lifetime cancer risk</strong> (GI, breast, pancreas, ovary, lung)</td>
+          <td>Macules are <strong>dark blue-brown, 1&ndash;5 mm</strong></td>
+        </tr>
+        <tr>
+          <td>Polyps appear in childhood/adolescence</td>
+          <td>Pigmentation appears in <strong>infancy/early childhood</strong></td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>Lip lesions may <strong>fade after puberty</strong>; intraoral lesions <strong>persist</strong></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <figure class="fig fig--sm">
+    <img src="sg-images/pjs-clinical-photos.png" alt="Clinical photos of Peutz-Jeghers syndrome showing perioral melanotic macules on lips and intraoral pigmentation, plus endoscopic view of GI hamartomatous polyp">
+    <figcaption>PJS clinical findings. Top: Perioral melanotic macules (dark blue-brown, 1&ndash;5mm) on lips and vermilion border. Bottom: Endoscopic view of GI hamartomatous polyp. Oral pigmentation appears in infancy/childhood, often before GI symptoms. (Kopacova, 2021)</figcaption>
+  </figure>
+
+  <h4>Diagnosis &amp; Differential</h4>
+
+  <h5>Diagnostic Features (Need any one)</h5>
+  <ul>
+    <li>&ge;2 characteristic mucocutaneous pigmented macules</li>
+    <li>&ge;2 PJS-type hamartomatous polyps in GI tract</li>
+    <li>Family history of PJS</li>
+  </ul>
+
+  <h5>DDx for Perioral Pigmentation &mdash; This Comes Up on Exams</h5>
+
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>Condition</th>
+          <th>How to Distinguish from PJS</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>Racial/physiologic pigmentation</strong></td>
+          <td>Diffuse, symmetric, involves attached gingiva. No polyps, no cancer risk.</td>
+        </tr>
+        <tr>
+          <td><strong>Addison disease</strong></td>
+          <td>Generalized hyperpigmentation (skin folds, mucosa). Systemic symptoms: fatigue, weight loss, hypotension. Due to excess ACTH stimulating melanocytes.</td>
+        </tr>
+        <tr>
+          <td><strong>Laugier-Hunziker syndrome</strong></td>
+          <td>Benign. Similar perioral + nail pigmentation but <strong>no polyps and no cancer risk</strong>. Diagnosis of exclusion.</td>
+        </tr>
+        <tr>
+          <td><strong>Melanotic macule (oral)</strong></td>
+          <td>Usually <strong>solitary</strong>, on lower lip. Benign. PJS has <em>multiple</em> macules.</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h4>Management</h4>
+
+  <div class="callout callout--management">
+    <div class="callout-title">Cancer Surveillance (This is Why Recognition Matters)</div>
+    <ul>
+      <li><strong>Upper/lower endoscopy</strong> starting age 8&ndash;10, then every 2&ndash;3 years</li>
+      <li><strong>Breast MRI</strong>, pancreatic surveillance, gynecologic screening</li>
+    </ul>
+  </div>
+
+  <h5>Oral Medicine Role</h5>
+  <ul>
+    <li><strong>Recognize the pattern</strong> of perioral + intraoral melanotic macules</li>
+    <li><strong>Ask about GI symptoms:</strong> abdominal pain, bleeding, obstruction</li>
+    <li><strong>Refer to genetics/GI</strong></li>
+    <li><strong>No treatment needed for oral lesions</strong> &mdash; they're cosmetic only (laser if patient desires)</li>
+  </ul>
+
+  <div class="callout callout--pearl">
+    <div class="callout-title">Why This Matters</div>
+    <p>A child comes in for a dental visit with dark spots around their lips and on their buccal mucosa. The parents haven't noticed anything unusual. You recognize the pattern as possible PJS, ask about GI symptoms, and refer. That referral triggers surveillance that catches a GI cancer early. <strong>This is oral medicine at its most impactful &mdash; you're not treating the spots, you're saving a life.</strong></p>
+  </div>
+
+  <p class="ref-list">Kopacova M. (2021). Curr Opin Gastroenterol. 37(3):245&ndash;254.</p>
+</section>
+
+
+<!-- ═══════════════════════════════════════════════════════════
+     GPA (WEGENER)
+     ═══════════════════════════════════════════════════════════ -->
+<section class="section" id="gpa">
+  <div class="section-header">
+    <div class="section-accent" style="background:var(--red-600)"></div>
+    <div>
+      <h3>Granulomatosis with Polyangiitis (GPA)</h3>
+      <div class="condition-subtitle">Tier 2 &mdash; Moderate Priority &middot; Formerly "Wegener's Granulomatosis"</div>
+    </div>
+  </div>
+
+  <div class="quick-ref">
+    <div><dt>What Is It</dt><dd>ANCA-associated small vessel vasculitis</dd></div>
+    <div><dt>Classic Triad</dt><dd>Upper respiratory + Lower respiratory + Kidneys (glomerulonephritis)</dd></div>
+    <div><dt>Pathognomonic Oral Sign</dt><dd>Strawberry gingivitis</dd></div>
+    <div><dt>Key Antibody</dt><dd>PR3-ANCA (c-ANCA) positive in &gt;85% with systemic involvement</dd></div>
+    <div><dt>Prognosis</dt><dd>Untreated = fatal. Early immunosuppression dramatically improves outcomes.</dd></div>
+    <div><dt>Oral Prevalence</dt><dd>Oral manifestations in 6&ndash;13%; first sign in only 2%</dd></div>
+  </div>
+
+  <div class="callout callout--explain">
+    <div class="callout-title">Plain English &mdash; What Is GPA?</div>
+    <p>GPA is a disease where the immune system attacks <strong>small blood vessels</strong> (vasculitis) throughout the body. <strong>ANCA</strong> stands for Anti-Neutrophil Cytoplasmic Antibody &mdash; the immune system makes antibodies against proteins inside neutrophils (your own white blood cells). When these antibodies activate neutrophils inappropriately, the neutrophils attack the walls of small blood vessels, causing inflammation and tissue destruction. The disease classically targets three areas: the <strong>sinuses/nose</strong> (upper respiratory), the <strong>lungs</strong> (lower respiratory), and the <strong>kidneys</strong> (glomerulonephritis). Without treatment, GPA is <strong>fatal</strong>.</p>
+  </div>
+
+  <div class="callout callout--critical">
+    <div class="callout-title">Critical Point</div>
+    <p><strong>Untreated GPA = fatal.</strong> Early immunosuppression dramatically improves prognosis. Recognition is critical even though oral manifestations are the first sign in only 2% of patients.</p>
+  </div>
+
+  <h4 id="gpa-findings">Findings</h4>
+
+  <div class="table-wrap table-wrap--red">
+    <table>
+      <thead>
+        <tr>
+          <th>Systemic Manifestations</th>
+          <th>Oral Manifestations</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>Sinusitis</strong> &mdash; chronic, destructive; <strong>saddle nose deformity</strong></td>
+          <td>
+            <span class="badge badge--patho">Pathognomonic</span> <strong>Strawberry gingivitis</strong><br>
+            <ul style="margin:0.25rem 0 0 1rem">
+              <li>Erythematous to violaceous</li>
+              <li>Hyperplastic (swollen, enlarged)</li>
+              <li>Petechial (tiny red dots)</li>
+            </ul>
+          </td>
+        </tr>
+        <tr>
+          <td><strong>Pulmonary nodules/cavities</strong> &rarr; hemoptysis</td>
+          <td><strong>Mucosal ulceration</strong> &mdash; nonspecific, rapidly progressive</td>
+        </tr>
+        <tr>
+          <td><strong>Glomerulonephritis</strong> &mdash; hematuria, renal failure</td>
+          <td><strong>Alveolar bone necrosis</strong>, tooth loss</td>
+        </tr>
+        <tr>
+          <td><strong>Subglottic stenosis</strong> &mdash; stridor (high-pitched whistling)</td>
+          <td><strong>Palatal perforation</strong>, oro-antral communication</td>
+        </tr>
+        <tr>
+          <td><strong>Otitis media</strong> &mdash; conductive hearing loss</td>
+          <td></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <figure class="fig fig--sm fig--dark">
+    <img src="sg-images/gpa-strawberry-gingivitis.png" alt="Clinical photo of strawberry gingivitis in GPA showing erythematous to violaceous, hyperplastic, petechial gingiva">
+    <figcaption>Strawberry gingivitis &mdash; pathognomonic for GPA. The gingiva is erythematous to violaceous, hyperplastic (swollen/overgrown), and covered in petechiae, giving it a strawberry-like surface texture. (Ghiasi, 2017)</figcaption>
+  </figure>
+
+  <div class="callout callout--explain">
+    <div class="callout-title">What Does "Strawberry Gingivitis" Look Like?</div>
+    <p>The lecture showed a dramatic clinical photo: the gingiva is <strong>bright red to purple</strong> (erythematous to violaceous), <strong>swollen/overgrown</strong> (hyperplastic), and covered in <strong>tiny red dots</strong> (petechiae) &mdash; giving it a texture that resembles the surface of a strawberry. This appearance is <span class="badge badge--patho">pathognomonic</span> for GPA. If you see gingiva that looks like a strawberry, GPA should be at the top of your differential &mdash; even though it's rare (6&ndash;13% of GPA patients).</p>
+  </div>
+
+  <div class="callout callout--explain">
+    <div class="callout-title">What Is a Saddle Nose Deformity?</div>
+    <p>GPA causes chronic destructive sinusitis that can erode the <strong>nasal septum cartilage</strong>. When the septum collapses, the bridge of the nose sinks inward, creating a "saddled" or concave profile. The lecture also showed a photo of <strong>palatal perforation</strong> from GPA &mdash; the destructive inflammation literally eats through the hard palate, creating a communication between the mouth and the nasal/sinus cavity.</p>
+  </div>
+
+  <h4 id="gpa-mgmt">Diagnosis &amp; Management</h4>
+
+  <h5>Diagnosis</h5>
+  <ul>
+    <li><span class="highlight"><strong>Gingival biopsy rarely shows classic necrotizing granulomatous vasculitis</strong></span> &mdash; the histology from gingiva is often nonspecific. You need other tissue.</li>
+    <li><strong>PR3-ANCA (c-ANCA):</strong> <span class="highlight">highly specific</span> for GPA. The "c" stands for cytoplasmic pattern on immunofluorescence.</li>
+    <li><strong>Urinalysis:</strong> hematuria, proteinuria (kidney involvement)</li>
+    <li><strong>Chest imaging:</strong> pulmonary nodules/cavities</li>
+    <li><strong>Biopsy:</strong> <em>Nasal or lung tissue is more diagnostic than gingiva</em></li>
+  </ul>
+
+  <h5>Treatment (Managed by Rheumatology)</h5>
+  <div class="callout callout--management">
+    <div class="callout-title">Treatment Protocol</div>
+    <ul>
+      <li><strong>Induction:</strong> Cyclophosphamide or rituximab + high-dose corticosteroids</li>
+      <li><strong>Maintenance:</strong> Rituximab, azathioprine, or methotrexate</li>
+    </ul>
+  </div>
+
+  <h5>Oral Medicine Role</h5>
+  <ul>
+    <li><strong>Recognize strawberry gingivitis</strong> &mdash; your awareness could lead to a life-saving diagnosis</li>
+    <li><strong>Coordinate care:</strong> patients will be immunosuppressed; check CBC before procedures</li>
+    <li><strong>Local management:</strong> oral lesions typically resolve with systemic treatment; ILST (intralesional steroid therapy) can be used for recalcitrant ulcers or nodules</li>
+  </ul>
+
+  <p class="ref-list">Ghiasi M. (2017). N Engl J Med. 377(21):2073.</p>
+</section>
+
+
+<!-- ═══════════════════════════════════════════════════════════
+     SADDLE NOSE DDx
+     ═══════════════════════════════════════════════════════════ -->
+<section class="section" id="saddle-nose">
+  <div class="section-header">
+    <div class="section-accent" style="background:var(--stone-500)"></div>
+    <div>
+      <h3>Saddle Nose Defect &mdash; Differential Diagnosis</h3>
+      <div class="condition-subtitle">When the nasal bridge collapses</div>
+    </div>
+  </div>
+
+  <div class="cols cols--2">
+    <div>
+      <h5>Most Likely Causes</h5>
+      <ul>
+        <li><strong>Granulomatosis with polyangiitis (GPA)</strong></li>
+        <li>Relapsing polychondritis</li>
+        <li>Traumatic injury with septal hematoma/necrosis</li>
+        <li>Cocaine-induced septal destruction</li>
+        <li>Iatrogenic / post-surgical collapse</li>
+      </ul>
+    </div>
+    <div>
+      <h5>Important Not to Miss</h5>
+      <ul>
+        <li>Skeletal dysplasias (not true saddle nose; depressed ridge)
+          <ul><li>Achondroplasia</li></ul>
+        </li>
+        <li>Nasal septal abscess</li>
+        <li>Invasive fungal infection (mucormycosis)</li>
+        <li>Congenital syphilis</li>
+        <li>Leprosy (Hansen disease)</li>
+      </ul>
+    </div>
+  </div>
+
+  <figure class="fig fig--sm fig--dark">
+    <img src="sg-images/saddle-nose-palatal-perforation.png" alt="Top: Intraoral photo showing palatal perforation from GPA with oro-antral communication. Bottom: Profile photo showing saddle nose deformity from nasal septum destruction">
+    <figcaption>Top: Palatal perforation from GPA &mdash; destructive inflammation has eroded through the hard palate creating an oro-antral communication. Bottom: Saddle nose deformity &mdash; collapse of the nasal bridge from destruction of the nasal septum cartilage.</figcaption>
+  </figure>
+
+  <div class="callout callout--pearl">
+    <div class="callout-title">Clinical Pearl</div>
+    <p>When you see a saddle nose deformity, your first thought should be <strong>GPA</strong> (especially if the patient also has sinusitis, respiratory symptoms, or oral findings). But always ask about <strong>cocaine use</strong> &mdash; cocaine causes vasoconstriction and ischemic necrosis of the nasal septum, producing a similar-looking defect. And don't forget <strong>mucormycosis</strong> in immunocompromised patients (especially uncontrolled diabetics) &mdash; the fungus invades blood vessels and destroys tissue rapidly.</p>
+  </div>
+</section>
+
+
+<!-- ═══════════════════════════════════════════════════════════
+     FINAL SUMMARY
+     ═══════════════════════════════════════════════════════════ -->
+<section class="section">
+  <div class="section-header">
+    <div class="section-accent" style="background:var(--teal-500)"></div>
+    <div>
+      <h3>Rapid Review &mdash; Pathognomonic Findings</h3>
+      <div class="condition-subtitle">If you remember nothing else, remember these</div>
+    </div>
+  </div>
+
+  <div class="table-wrap table-wrap--teal">
+    <table>
+      <thead>
+        <tr>
+          <th>Finding</th>
+          <th>Condition</th>
+          <th>What It Looks Like</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>Strawberry gingivitis</strong></td>
+          <td>GPA (Wegener)</td>
+          <td>Erythematous-violaceous, hyperplastic, petechial gingiva</td>
+        </tr>
+        <tr>
+          <td><strong>Periorbital purpura ("raccoon eyes")</strong></td>
+          <td>AL Amyloidosis</td>
+          <td>Bilateral bruising around the eyes from fragile vessels</td>
+        </tr>
+        <tr>
+          <td><strong>Congo red &rarr; apple-green birefringence</strong></td>
+          <td>Amyloidosis (any type)</td>
+          <td>Green glow under polarized light microscopy</td>
+        </tr>
+        <tr>
+          <td><strong>Lupus band on DIF</strong></td>
+          <td>Lupus Erythematosus</td>
+          <td>Granular IgG/IgM/C3 along basement membrane</td>
+        </tr>
+        <tr>
+          <td><strong>Scorbutic gingivitis</strong></td>
+          <td>Vitamin C deficiency (Scurvy)</td>
+          <td>Edematous, hemorrhagic, violaceous (purple) gingiva</td>
+        </tr>
+        <tr>
+          <td><strong>Bilateral hilar adenopathy on CXR</strong></td>
+          <td>Sarcoidosis</td>
+          <td>Symmetrically enlarged lymph nodes at lung hilum</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>Antibody</th>
+          <th>Condition</th>
+          <th>Clinical Significance</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>ANA</strong></td>
+          <td>SLE (screening)</td>
+          <td>Best screening test; sensitive but not specific</td>
+        </tr>
+        <tr>
+          <td><strong>Anti-dsDNA</strong></td>
+          <td>SLE (active disease)</td>
+          <td>60&ndash;80% of active lupus; specific; correlates with flares</td>
+        </tr>
+        <tr>
+          <td><strong>Anti-Sm (Smith)</strong></td>
+          <td>SLE</td>
+          <td>10&ndash;30% of patients; MOST SPECIFIC for lupus</td>
+        </tr>
+        <tr>
+          <td><strong>PR3-ANCA (c-ANCA)</strong></td>
+          <td>GPA</td>
+          <td>&gt;85% with systemic involvement; highly specific</td>
+        </tr>
+        <tr>
+          <td><strong>ACE</strong> (enzyme, not antibody)</td>
+          <td>Sarcoidosis</td>
+          <td>Elevated in ~60%; produced by granulomas themselves</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- Source -->
+<section style="margin-top:2rem; padding:1.5rem; background:var(--stone-100); border-radius:8px; font-size:0.78rem; color:var(--stone-500);">
+  <p style="margin-bottom:0.5rem"><strong>Source:</strong> Systemic and Syndromic Conditions. Dr. Laurel Henderson, DDS, MS. OD 531 Spring 2026, BU Henry M. Goldman School of Dental Medicine. Lecture date: 03/20/2026.</p>
+  <p style="margin-bottom:0.5rem"><strong>Note on images:</strong> Clinical photographs from the lecture slides (oral lupus, sarcoidosis nodules, vitamin deficiency glossitis, amyloid macroglossia, PJS macules, GPA strawberry gingivitis, saddle nose, Congo red stain, bilateral hilar adenopathy CXR, coagulation cascade, etc.) are not embedded in this study guide. Review these alongside the original PDF for visual correlation.</p>
+  <p style="margin-bottom:0"><strong>Disclaimer:</strong> This study guide extracts and explains content from the lecture source material. Foundational explanations are provided for comprehension but all clinical facts, statistics, and treatment protocols are directly from the lecture slides. No information has been fabricated.</p>
+</section>
+
+</div><!-- /content -->
+</div><!-- /main -->
+
+</body>
+</html>
