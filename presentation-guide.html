@@ -3,351 +3,273 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Slides 1-7 Presentation Guide — Suleman</title>
+<title>Slides 1-7 | Presentation Guide</title>
 <style>
-* { box-sizing: border-box; margin: 0; padding: 0; }
-body { font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; background: #f5f5f5; color: #1a1a2e; line-height: 1.55; padding: 24px; max-width: 1200px; margin: 0 auto; }
-h1 { font-size: 28px; text-align: center; margin-bottom: 8px; color: #0d2137; }
-.subtitle { text-align: center; color: #666; margin-bottom: 32px; font-size: 15px; }
-
-/* Vocab box at top */
-.vocab-box { background: #0d2137; color: #e0e0e0; border-radius: 12px; padding: 24px 28px; margin-bottom: 36px; }
-.vocab-box h2 { color: #4dd0e1; font-size: 18px; margin-bottom: 12px; }
-.vocab-box .term { display: inline-block; background: rgba(255,255,255,0.1); border-radius: 6px; padding: 6px 12px; margin: 4px 6px 4px 0; font-size: 13px; }
-.vocab-box .term b { color: #ffab40; }
-.vocab-box p { font-size: 13.5px; margin-top: 8px; line-height: 1.6; }
-
-/* Each slide section */
-.slide-section { background: #fff; border-radius: 14px; box-shadow: 0 2px 12px rgba(0,0,0,0.08); margin-bottom: 36px; overflow: hidden; }
-.slide-header { background: #0d2137; color: #4dd0e1; padding: 12px 24px; font-size: 14px; font-weight: 700; letter-spacing: 0.5px; }
-.slide-body { display: grid; grid-template-columns: 1fr 340px; gap: 0; }
-@media (max-width: 900px) { .slide-body { grid-template-columns: 1fr; } }
-
-.slide-main { padding: 24px 28px; }
-.slide-sidebar { background: #f0f7fa; padding: 24px 20px; border-left: 3px solid #4dd0e1; font-size: 13px; }
-.slide-sidebar h4 { color: #0d2137; font-size: 14px; margin-bottom: 8px; border-bottom: 1px solid #cde; padding-bottom: 4px; }
-.slide-sidebar p, .slide-sidebar li { margin-bottom: 6px; }
-.slide-sidebar ul { padding-left: 16px; }
-.slide-sidebar .def { background: #e3f2fd; border-radius: 6px; padding: 8px 10px; margin-bottom: 8px; font-size: 12.5px; }
-.slide-sidebar .def b { color: #0d47a1; }
-.slide-sidebar .study-card { background: #fff; border: 1px solid #d0e0e8; border-radius: 8px; padding: 10px 12px; margin-bottom: 10px; }
-.slide-sidebar .study-card h5 { font-size: 13px; color: #00695c; margin-bottom: 4px; }
-.slide-sidebar .study-card p { font-size: 12px; color: #444; margin: 0; }
-.slide-sidebar .weight { display: inline-block; font-size: 11px; font-weight: 700; border-radius: 4px; padding: 2px 8px; margin-top: 4px; }
-.weight-high { background: #c8e6c9; color: #1b5e20; }
-.weight-med { background: #fff9c4; color: #f57f17; }
-.weight-low { background: #ffcdd2; color: #b71c1c; }
-
-/* Script styling */
-.script-label { font-size: 11px; text-transform: uppercase; letter-spacing: 1.5px; color: #999; margin-bottom: 6px; font-weight: 700; }
-.script { background: #fffde7; border-left: 4px solid #ffab40; padding: 16px 20px; border-radius: 0 8px 8px 0; font-size: 15px; line-height: 1.7; color: #333; margin-bottom: 16px; }
-.script em { font-style: normal; color: #d84315; font-weight: 600; }
-.script strong { color: #0d2137; }
-.transition { font-size: 13px; color: #7b1fa2; font-style: italic; margin-top: 8px; }
-
-/* Big idea callout */
-.big-idea { background: linear-gradient(135deg, #e8f5e9, #c8e6c9); border-radius: 8px; padding: 12px 16px; margin-top: 12px; font-size: 14px; font-weight: 600; color: #1b5e20; }
-.big-idea::before { content: "BIG IDEA: "; font-size: 11px; letter-spacing: 1px; display: block; margin-bottom: 2px; color: #2e7d32; }
-
-.time { font-size: 12px; color: #888; font-weight: 600; }
+:root{--navy:#0d2137;--teal:#4dd0e1;--gold:#ffab40;--red:#e53935;--green:#43a047;--purple:#7b1fa2;--script-bg:#fffde7;--cue:#d84315;--sidebar:#f0f7fa}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,'SF Pro Text',system-ui,sans-serif;background:#f5f5f5;color:#1a1a2e;line-height:1.55;padding:12px;max-width:1100px;margin:0 auto;-webkit-text-size-adjust:100%}
+h1{font-size:22px;text-align:center;color:var(--navy);margin-bottom:4px}
+.sub{text-align:center;color:#888;font-size:13px;margin-bottom:16px}
+.vocab{background:var(--navy);color:#ccc;border-radius:12px;padding:16px;margin-bottom:20px}
+.vocab h2{color:var(--teal);font-size:15px;margin-bottom:8px}
+.vg{display:grid;grid-template-columns:1fr 1fr;gap:4px 12px}
+@media(max-width:600px){.vg{grid-template-columns:1fr}}
+.vg .v{font-size:12px;padding:4px 0;border-bottom:1px solid rgba(255,255,255,.07)}
+.vg .v b{color:var(--gold)}
+.vocab .an{margin-top:10px;font-size:12px;color:#aaa;font-style:italic}
+.slide{background:#fff;border-radius:14px;box-shadow:0 2px 16px rgba(0,0,0,.08);margin-bottom:24px;overflow:hidden}
+.sn{background:var(--navy);color:var(--teal);padding:10px 16px;font-size:13px;font-weight:700;display:flex;justify-content:space-between;align-items:center}
+.sn .t{color:var(--gold);font-size:11px}
+.si{width:100%;display:block;border-bottom:3px solid var(--teal)}
+.sc{padding:16px}
+.sl{font-size:10px;text-transform:uppercase;letter-spacing:1.5px;color:#999;font-weight:700;margin-bottom:6px}
+.script{background:var(--script-bg);border-left:4px solid var(--gold);padding:14px 16px;border-radius:0 10px 10px 0;font-size:15px;line-height:1.75;color:#222;margin-bottom:12px}
+@media(max-width:600px){.script{font-size:16px;line-height:1.8}}
+.script .c{color:var(--cue);font-weight:700}
+.script .s{color:var(--red);font-weight:800;font-size:1.05em}
+.script .k{background:#e8f5e9;padding:1px 5px;border-radius:4px;font-weight:700;color:#1b5e20}
+.script .n{color:#1565c0;font-weight:700}
+.script .p{display:block;text-align:center;color:#bbb;font-size:11px;letter-spacing:2px;margin:6px 0}
+.script .tr{color:var(--purple);font-style:italic;font-size:14px}
+.bi{background:linear-gradient(135deg,#e8f5e9,#c8e6c9);border-radius:10px;padding:12px 14px;font-size:14px;font-weight:700;color:#1b5e20;margin-bottom:14px}
+.bi::before{content:"TAKEAWAY";display:block;font-size:10px;letter-spacing:1.5px;color:#388e3c;margin-bottom:2px}
+.notes{background:var(--sidebar);border-radius:10px;padding:14px;margin-bottom:8px}
+.notes h4{font-size:13px;color:var(--navy);margin-bottom:8px;border-bottom:2px solid var(--teal);padding-bottom:4px}
+.notes p,.notes li{font-size:12.5px;margin-bottom:5px;color:#444}
+.notes ul{padding-left:16px}
+.def{background:#e3f2fd;border-radius:6px;padding:8px 10px;margin-bottom:8px;font-size:12px}
+.def b{color:#0d47a1}
+.st{background:#fff;border:1px solid #d0e0e8;border-radius:8px;padding:10px 12px;margin-bottom:8px}
+.st h5{font-size:12.5px;color:#00695c;margin-bottom:3px}
+.st p{font-size:11.5px;color:#555;margin:0;line-height:1.5}
+.wt{display:inline-block;font-size:10px;font-weight:700;border-radius:4px;padding:2px 8px;margin-top:4px}
+.wh{background:#c8e6c9;color:#1b5e20}
+.wm{background:#fff9c4;color:#f57f17}
+.qa{background:#fce4ec;border-radius:10px;padding:14px;margin-top:8px}
+.qa h4{font-size:13px;color:var(--red);margin-bottom:8px}
+.qa li{font-size:12px;margin-bottom:6px}
+.qa b{color:#c62828}
+.ft{text-align:center;padding:20px;color:#aaa;font-size:12px}
+.imp{border:3px solid var(--red)}
+.imp .sn{background:var(--red)}
+.closer{border:3px solid var(--navy)}
 </style>
 </head>
 <body>
+<h1>Presentation Guide &mdash; Slides 1&ndash;7</h1>
+<p class="sub">Suleman Shaikh &bull; Group 45 &bull; BU Goldman Spring 2026</p>
 
-<h1>Beyond the TMD Exam &mdash; Slides 1&ndash;7 Presentation Guide</h1>
-<p class="subtitle">Suleman Shaikh &bull; Critical Thinking Group 45 &bull; BU Goldman Spring 2026<br><span class="time">Target time: ~8&ndash;10 minutes for all 7 slides</span></p>
-
-<!-- VOCAB BOX -->
-<div class="vocab-box">
-  <h2>Key Terms You Must Know</h2>
-  <div class="term"><b>OFP</b> = Orofacial Pain &mdash; any pain in the face, mouth, or jaws</div>
-  <div class="term"><b>TMD</b> = Temporomandibular Disorders &mdash; pain/dysfunction of jaw muscles &amp; TMJ</div>
-  <div class="term"><b>DC/TMD</b> = Diagnostic Criteria for TMD &mdash; the gold-standard clinical exam protocol (2014)</div>
-  <div class="term"><b>PIFP</b> = Persistent Idiopathic Facial Pain &mdash; chronic face pain with NO identifiable cause (diagnosis of exclusion)</div>
-  <div class="term"><b>AO</b> = Atypical Odontalgia &mdash; phantom tooth pain; subtype of PIFP localized to teeth/sockets</div>
-  <div class="term"><b>Sensitivity</b> = Can the test catch people who HAVE the disease? (true positive rate)</div>
-  <div class="term"><b>Specificity</b> = Can the test correctly clear people who DON'T have it? (true negative rate)</div>
-  <div class="term"><b>PPV</b> = Positive Predictive Value &mdash; if you test positive, what's the chance you actually have it?</div>
-  <div class="term"><b>NPV</b> = Negative Predictive Value &mdash; if you test negative, what's the chance you're actually clear?</div>
-  <div class="term"><b>AUROC</b> = Area Under the ROC Curve &mdash; overall accuracy score (0.5 = coin flip, 0.7&ndash;0.8 = good, &gt;0.9 = excellent)</div>
-  <div class="term"><b>3Q/TMD</b> = Three yes/no screening questions for TMD (Swedish, used in routine dental checkups)</div>
-  <div class="term"><b>TMD Pain Screener</b> = 6-item (or 3-item) validated questionnaire by Gonzalez et al. (part of DC/TMD system)</div>
-  <div class="term"><b>RCT</b> = Root Canal Treatment (endodontic context, not randomized controlled trial here)</div>
-  <p style="margin-top:12px;">Think of <b>sensitivity</b> like a metal detector &mdash; does it beep when metal is there? <b>Specificity</b> = does it stay quiet when there's no metal? High sensitivity + low specificity = the detector beeps at everything, including bottle caps.</p>
+<div class="vocab">
+<h2>Key Terms Cheat Sheet</h2>
+<div class="vg">
+<div class="v"><b>OFP</b> &mdash; Orofacial pain: any pain in face/mouth/jaws</div>
+<div class="v"><b>TMD</b> &mdash; Temporomandibular disorders: jaw muscle/joint pain</div>
+<div class="v"><b>DC/TMD</b> &mdash; Gold-standard clinical TMD exam protocol (2014)</div>
+<div class="v"><b>PIFP</b> &mdash; Persistent idiopathic facial pain: chronic face pain, no cause found</div>
+<div class="v"><b>AO</b> &mdash; Atypical odontalgia: phantom tooth pain, subtype of PIFP</div>
+<div class="v"><b>Sensitivity</b> &mdash; Can the test catch people who HAVE it?</div>
+<div class="v"><b>Specificity</b> &mdash; Can it correctly clear people who DON'T?</div>
+<div class="v"><b>AUROC</b> &mdash; Overall accuracy: 0.5=coin flip, 0.7+=good, 0.9+=excellent</div>
+<div class="v"><b>PPV / NPV</b> &mdash; If +, chance you have it / If -, chance you're clear</div>
+<div class="v"><b>3Q/TMD</b> &mdash; 3 yes/no screening Qs (Swedish dental system)</div>
+<div class="v"><b>TMD Pain Screener</b> &mdash; 6-item questionnaire by Gonzalez (DC/TMD system)</div>
+<div class="v"><b>RCT</b> &mdash; Root canal treatment (not randomized controlled trial)</div>
+</div>
+<p class="an">Sensitivity = smoke detector going off when there's fire. Specificity = staying quiet when you're just cooking. High Se + low Sp = beeps at everything including burnt toast.</p>
 </div>
 
-<!-- ===================== SLIDE 1 ===================== -->
-<div class="slide-section">
-  <div class="slide-header">SLIDE 1 &mdash; Title Slide &nbsp; <span class="time">(~30 seconds)</span></div>
-  <div class="slide-body">
-    <div class="slide-main">
-      <div class="script-label">Your Script</div>
-      <div class="script">
-        Good morning everyone. Our group is presenting on the question: <strong>Beyond the TMD Exam</strong> &mdash; does a full clinical assessment lead to more accurate orofacial pain diagnosis?
-        <br><br>
-        I'm Suleman, and I'll walk you through the first half of our evidence &mdash; specifically, the screening tools, their limitations, and a critical blind spot in endodontics. Then my group members will cover the clinical exam evidence, the human cost data, and our final answer to the PICO.
-      </div>
-      <div class="big-idea">We're arguing that a TMD-only exam misses too much. You need the full picture.</div>
-    </div>
-    <div class="slide-sidebar">
-      <h4>What to know</h4>
-      <p>This is just your intro. Be confident, make eye contact, speak slowly. Don't rush this.</p>
-      <p>The title "Beyond the TMD Exam" frames the whole talk: TMD exams are useful but not sufficient alone.</p>
-    </div>
-  </div>
+<!-- SLIDE 1 -->
+<div class="slide">
+<div class="sn">SLIDE 1 &mdash; TITLE <span class="t">~30 sec</span></div>
+<img class="si" src="slides/1.png" alt="Slide 1">
+<div class="sc">
+<div class="sl">SAY THIS</div>
+<div class="script">
+Good morning everyone. Our group is presenting on the question: <span class="c">Beyond the TMD Exam</span> &mdash; does a full clinical assessment lead to more accurate orofacial pain diagnosis?
+<span class="p">&bull; &bull; &bull;</span>
+I'm Suleman, and I'll walk you through the first half &mdash; the screening tools, their limitations, and a critical blind spot in endodontics. Then my group members will cover the exam evidence, the human cost, and our conclusions.
 </div>
+<div class="bi">A TMD-only exam misses too much. You need the full picture.</div>
+<div class="notes"><h4>Presenter Notes</h4><p>Just your intro. Stand tall, pause after "orofacial pain diagnosis," make eye contact. Don't rush.</p></div>
+</div></div>
 
-<!-- ===================== SLIDE 2 ===================== -->
-<div class="slide-section">
-  <div class="slide-header">SLIDE 2 &mdash; Our Clinical Question (PICO) &nbsp; <span class="time">(~45 seconds)</span></div>
-  <div class="slide-body">
-    <div class="slide-main">
-      <div class="script-label">Your Script</div>
-      <div class="script">
-        Here's our clinical question in PICO format.
-        <br><br>
-        <strong>Population:</strong> patients presenting with orofacial pain &mdash; that's any pain in the face, mouth, or jaws.
-        <br>
-        <strong>Intervention:</strong> a full clinical assessment &mdash; meaning a comprehensive workup that looks at dental, TMD, neurological, and musculoskeletal causes.
-        <br>
-        <strong>Comparison:</strong> a TMD exam alone &mdash; a limited, isolated evaluation.
-        <br>
-        <strong>Outcome:</strong> more accurate diagnosis of the actual pain etiology.
-        <br><br>
-        So the question is: <em>In patients with orofacial pain, does performing a full clinical assessment, compared to a TMD exam alone, lead to a more accurate diagnosis?</em>
-      </div>
-    </div>
-    <div class="slide-sidebar">
-      <h4>PICO explained simply</h4>
-      <div class="def"><b>PICO</b> is a framework for asking clinical research questions. P = who are we studying, I = what's the new approach, C = what's the current/standard approach, O = what do we hope improves.</div>
-      <p>"Full clinical assessment" = history + dental exam + TMD exam + cranial nerve screen + neurovascular check + psychosocial factors. Basically everything.</p>
-      <p>"TMD exam alone" = just checking the jaw muscles and TMJ, ignoring other possible causes of the pain.</p>
-    </div>
-  </div>
+<!-- SLIDE 2 -->
+<div class="slide">
+<div class="sn">SLIDE 2 &mdash; OUR CLINICAL QUESTION (PICO) <span class="t">~45 sec</span></div>
+<img class="si" src="slides/2.png" alt="Slide 2">
+<div class="sc">
+<div class="sl">SAY THIS</div>
+<div class="script">
+Here's our clinical question in PICO format.
+<span class="p">&bull; &bull; &bull;</span>
+<span class="c">Population:</span> patients presenting with orofacial pain &mdash; any pain in the face, mouth, or jaws.<br>
+<span class="c">Intervention:</span> a full clinical assessment &mdash; comprehensive workup covering dental, TMD, neurological, and musculoskeletal causes.<br>
+<span class="c">Comparison:</span> a TMD exam alone &mdash; a limited, isolated evaluation.<br>
+<span class="c">Outcome:</span> more accurate diagnosis of the actual pain etiology.
+<span class="p">&bull; &bull; &bull;</span>
+The question: <span class="k">In patients with orofacial pain, does a full clinical assessment compared to a TMD exam alone lead to a more accurate diagnosis?</span>
 </div>
-
-<!-- ===================== SLIDE 3 ===================== -->
-<div class="slide-section">
-  <div class="slide-header">SLIDE 3 &mdash; Why This Matters &nbsp; <span class="time">(~1 minute)</span></div>
-  <div class="slide-body">
-    <div class="slide-main">
-      <div class="script-label">Your Script</div>
-      <div class="script">
-        Before we look at the evidence, let me show you why this question matters clinically. These are real numbers from our literature review.
-        <br><br>
-        Patients with persistent idiopathic facial pain and atypical odontalgia wait an average of <em>nearly 35 months</em> &mdash; almost 3 years &mdash; before getting a correct diagnosis.
-        <br><br>
-        <em>One hundred percent</em> of these patients received at least one incorrect diagnosis before the right one.
-        <br><br>
-        And <em>73% of atypical odontalgia patients</em> underwent unnecessary, irreversible dental procedures &mdash; root canals, extractions &mdash; on teeth that were never the problem.
-        <br><br>
-        The core issue is this: orofacial pain is not one disease. It spans odontogenic, TMD, neuropathic, vascular, and idiopathic causes. When clinicians rely on a narrow exam &mdash; just TMD, or just dental pathology &mdash; conditions like PIFP, atypical odontalgia, and tension-type headache get missed. Patients cycle through multiple providers, getting ineffective medications and irreversible procedures, while their pain persists.
-      </div>
-      <div class="big-idea">Narrow exams cause years of misdiagnosis, unnecessary surgery, and patient suffering.</div>
-    </div>
-    <div class="slide-sidebar">
-      <h4>Where these stats come from</h4>
-      <div class="study-card">
-        <h5>Study 5 &mdash; Xiao et al. (2020)</h5>
-        <p>394 PIFP/AO patients in Beijing. 34.8 month avg delay, median 7 consultations, 5 ineffective prescriptions. AO patients had 73.3% unnecessary dental procedures. Every single patient was misdiagnosed at least once.</p>
-        <span class="weight weight-high">HIGH WEIGHT &mdash; largest study on PIFP misdiagnosis</span>
-      </div>
-      <div class="study-card">
-        <h5>Study 4 &mdash; Hassona et al. (2019)</h5>
-        <p>34 PIFP patients in Jordan. 19.3 month avg delay. 3.7 providers consulted. 73.5% unnecessary procedures. Intraoral pain = longer delay (22.6 vs 16.1 months). None were ever referred to an OFP specialist.</p>
-        <span class="weight weight-med">MEDIUM WEIGHT &mdash; small sample but first to detail the diagnostic journey</span>
-      </div>
-      <div class="def"><b>PIFP</b> = chronic face pain with no identifiable cause. Dull, aching, poorly localized, daily for >2hrs, >3 months. Diagnosed only after everything else is ruled out.</div>
-      <div class="def"><b>AO (Atypical Odontalgia)</b> = PIFP subtype where pain feels like it's in a tooth or extraction socket, but there's nothing wrong dentally. Patients keep getting root canals on healthy teeth.</div>
-    </div>
-  </div>
+<div class="notes"><h4>Definitions</h4>
+<div class="def"><b>Full clinical assessment</b> = thorough history + dental exam + TMD exam + cranial nerve screen + neurovascular check + psychosocial factors. Everything.</div>
+<div class="def"><b>TMD exam alone</b> = only checking jaw muscles and TMJ. Ignoring teeth, nerves, headache, idiopathic causes.</div>
+<div class="def"><b>PICO</b> = framework for clinical questions. P=who, I=new approach, C=current approach, O=what improves.</div>
 </div>
+</div></div>
 
-<!-- ===================== SLIDE 4 ===================== -->
-<div class="slide-section">
-  <div class="slide-header">SLIDE 4 &mdash; Can Questionnaires Catch TMD? &nbsp; <span class="time">(~1.5 minutes)</span></div>
-  <div class="slide-body">
-    <div class="slide-main">
-      <div class="script-label">Your Script</div>
-      <div class="script">
-        So our first question was: can screening questionnaires identify TMD? We reviewed four studies.
-        <br><br>
-        <strong>Gerstner 1994</strong> developed a 13-item questionnaire. It showed excellent numbers &mdash; up to 98% sensitivity and 100% specificity &mdash; for separating TMD patients from healthy controls. But it <em>could not differentiate TMD from tension-type headache</em>. Great at catching TMD, blind to non-TMD causes.
-        <br><br>
-        <strong>Macfarlane 2004</strong> used a population-based approach with over 1,500 people in the UK. Using six questionnaire variables, they built a statistical model that sorted OFP into three broad categories: musculoligamentous, dentoalveolar, and neurological/vascular. Useful for epidemiology, but needs further clinical validation.
-        <br><br>
-        <strong>Lovgren 2016</strong> validated the <strong>3Q/TMD</strong> &mdash; three simple yes/no questions about weekly jaw pain, pain on function, and jaw locking &mdash; in over 7,800 Swedish adults. 74% of positives actually had TMD versus only 16% of negatives. Simple, cost-effective, valid for flagging.
-        <br><br>
-        <strong>Gonzalez 2011</strong> developed the <strong>TMD Pain Screener</strong> &mdash; both 3-item and 6-item versions. In validation: <em>99% sensitivity, 97% specificity</em>, AUC 0.98&ndash;0.99. Near perfect. <em>But</em> &mdash; they excluded tooth pain patients entirely. When they separately tested an odontogenic pain group, 26&ndash;29% scored positive. That's a significant false-positive rate.
-        <br><br>
-        <strong>The key pattern:</strong> screening tools excel at detecting TMD, but they struggle to differentiate it from non-TMD orofacial pain.
-      </div>
-    </div>
-    <div class="slide-sidebar">
-      <h4>Studies on this slide</h4>
-      <div class="study-card">
-        <h5>Study 1 &mdash; Gerstner (1994)</h5>
-        <p>13-item questionnaire. n=307 (TMD, headache, controls). Great at TMD vs healthy. Failed at TMD vs headache. ROC analysis.</p>
-        <span class="weight weight-med">MEDIUM &mdash; foundational but old, no gold-standard reference</span>
-      </div>
-      <div class="study-card">
-        <h5>Study 2 &mdash; Macfarlane (2004)</h5>
-        <p>UK population survey, n=1510. Used multinomial logistic regression with 6 predictors. Could sort OFP into 3 broad types. Kappa=0.5 (moderate).</p>
-        <span class="weight weight-med">MEDIUM &mdash; population-based but moderate accuracy, needs validation</span>
-      </div>
-      <div class="study-card">
-        <h5>Study 3 &mdash; Lovgren (2016)</h5>
-        <p>7,831 Swedish adults screened with 3Q/TMD at routine checkups. 300 examined with DC/TMD. 74% of positives had TMD. NPV excellent (0.92&ndash;0.99) in general practice.</p>
-        <span class="weight weight-high">HIGH &mdash; large real-world sample, validated against DC/TMD</span>
-      </div>
-      <div class="study-card">
-        <h5>Study 8 &mdash; Gonzalez (2011)</h5>
-        <p>The ORIGINAL TMD Pain Screener paper. n=504. Psychometric development from 49 items. 99% Se, 97% Sp. AUC 0.98&ndash;0.99. But excluded tooth pain patients from primary analysis. 26&ndash;29% false positive in odontogenic group.</p>
-        <span class="weight weight-high">HIGH &mdash; gold standard development paper, but clean-population limitation is critical for our argument</span>
-      </div>
-      <div class="def"><b>3Q/TMD</b> = 3 questions: (1) Weekly pain in temple/face/jaw? (2) Weekly pain on opening/chewing? (3) Weekly jaw locking? Answering yes to any = "3Q-positive."</div>
-      <div class="def"><b>TMD Pain Screener</b> = 6 questions: pain duration, jaw stiffness on waking, and whether 4 jaw activities change the pain. Score 0&ndash;7. Cutoff of 3+ = positive screen.</div>
-    </div>
-  </div>
+<!-- SLIDE 3 -->
+<div class="slide">
+<div class="sn">SLIDE 3 &mdash; WHY THIS MATTERS <span class="t">~1 min</span></div>
+<img class="si" src="slides/3.png" alt="Slide 3">
+<div class="sc">
+<div class="sl">SAY THIS</div>
+<div class="script">
+Before we look at evidence, here's why this matters clinically. Real numbers from our lit review.
+<span class="p">&bull; &bull; &bull;</span>
+Patients with PIFP and atypical odontalgia wait <span class="s">nearly 35 months</span> &mdash; almost 3 years &mdash; before getting a correct diagnosis.
+<span class="p">&bull; &bull; &bull;</span>
+<span class="s">One hundred percent</span> received at least one wrong diagnosis first.
+<span class="p">&bull; &bull; &bull;</span>
+And <span class="s">73%</span> of AO patients underwent unnecessary <span class="c">irreversible</span> dental procedures &mdash; root canals, extractions &mdash; on teeth that were never the problem.
+<span class="p">&bull; &bull; &bull;</span>
+The core issue: orofacial pain is <span class="c">not one disease</span>. It spans odontogenic, TMD, neuropathic, vascular, and idiopathic causes. When clinicians rely on a narrow exam, conditions like PIFP, AO, and tension headache get missed. Patients cycle through providers getting ineffective meds and irreversible procedures while their pain persists.
 </div>
-
-<!-- ===================== SLIDE 5 ===================== -->
-<div class="slide-section">
-  <div class="slide-header">SLIDE 5 &mdash; The Specificity Problem &nbsp; <span class="time">(~1.5 minutes) &mdash; MOST IMPORTANT SLIDE</span></div>
-  <div class="slide-body">
-    <div class="slide-main">
-      <div class="script-label">Your Script</div>
-      <div class="script">
-        This is the most important table in our presentation. We're tracking the <em>same</em> 6-question TMD Pain Screener across three studies with three different populations.
-        <br><br>
-        <strong>Gonzalez 2011</strong> &mdash; clean research groups, pre-sorted diagnoses, tooth pain excluded: <em>99% sensitivity, 97% specificity</em>, AUROC 0.98&ndash;0.99. Beautiful numbers.
-        <br><br>
-        <strong>Fonseca Alonso 2017</strong> &mdash; now we put TMD patients head-to-head against odontogenic pain patients. Same screener. Sensitivity stays decent at ~92%, but <em>specificity crashes to ~59%</em>. Why? Because the symptom overlap between tooth pain and TMD is enormous. Patients can't tell the difference, and neither can the questionnaire.
-        <br><br>
-        <strong>Daline 2024</strong> &mdash; real-world endodontic patients with actual toothaches. Sensitivity 85%, <em>specificity drops to 52%</em>, AUROC 0.71. And 46% of these patients had DUAL etiology &mdash; both endo AND TMD pain at the same time.
-        <br><br>
-        The takeaway: <em>as patient complexity increases, specificity collapses</em>. This screener was designed in clean populations. In the real world where patients have overlapping pain, it loses nearly half its specificity. A positive screen means "this could be TMD, or it could be tooth pain mimicking TMD." <strong>Only a full clinical assessment can resolve that ambiguity. A screener flags &mdash; it doesn't diagnose.</strong>
-      </div>
-      <div class="big-idea">Same test, different populations = dramatically different accuracy. Specificity collapses from 97% to 52% when real patients replace research subjects.</div>
-    </div>
-    <div class="slide-sidebar">
-      <h4>The three studies compared</h4>
-      <div class="study-card">
-        <h5>Gonzalez (2011) &mdash; "Clean"</h5>
-        <p>n=504. Groups were pre-sorted: TMD pain, healthy controls, nonpainful TMJ, headache. Tooth pain excluded. Se 99%, Sp 97%.</p>
-        <span class="weight weight-high">HIGH quality but artificial conditions</span>
-      </div>
-      <div class="study-card">
-        <h5>Alonso (2017) &mdash; "Mixed"</h5>
-        <p>n=71. TMD vs odontogenic only. Se ~92%, Sp ~59%. Patients with dual diagnoses excluded. Still, overlap killed specificity.</p>
-        <span class="weight weight-med">MEDIUM &mdash; small sample, thesis, but clinically revealing</span>
-      </div>
-      <div class="study-card">
-        <h5>Daline (2024) &mdash; "Real World"</h5>
-        <p>n=100 consecutive endo patients. Se 85%, Sp 52%, AUROC 0.71. 54% had TMD. 46% had BOTH endo + TMD. Examiner was dual-board-certified (OFP + endo).</p>
-        <span class="weight weight-high">HIGH &mdash; most clinically relevant, consecutive real patients</span>
-      </div>
-      <div class="def"><b>Why does specificity drop?</b> Because tooth pain and TMD pain feel similar to patients. They both cause aching in the jaw area, pain on chewing, and pain on waking. Patients endorse the screener items even when the problem is purely dental.</div>
-      <div class="def"><b>AUROC 0.71</b> = "useful" accuracy (like a C+ grade). 0.81 (with added pain intensity) = "very good" (B+). The original 0.98 was like an A+, but only in an artificial setting.</div>
-    </div>
-  </div>
+<div class="bi">Narrow exams cause years of misdiagnosis, unnecessary surgery, and suffering.</div>
+<div class="notes"><h4>Where These Numbers Come From</h4>
+<div class="st"><h5>Study 5 &mdash; Xiao et al. (2020) &bull; J Pain Res</h5>
+<p>394 PIFP/AO patients, 4 Beijing hospitals. <b>34.8 mo</b> avg delay. Median <b>7 consultations</b>, <b>5 ineffective prescriptions</b>. AO: 73.3% unnecessary dental procedures. 100% misdiagnosed at least once.</p>
+<span class="wt wh">HIGH WEIGHT &mdash; largest PIFP misdiagnosis study</span></div>
+<div class="st"><h5>Study 4 &mdash; Hassona et al. (2019) &bull; OSOMOP&amp;R</h5>
+<p>34 PIFP patients, Jordan. <b>19.3 mo</b> delay. 3.7 providers, 2.3 misdiagnoses. 73.5% unnecessary procedures. NONE referred to OFP specialist.</p>
+<span class="wt wm">MEDIUM &mdash; small but first to detail the diagnostic journey</span></div>
+<div class="def"><b>PIFP</b> = chronic face pain, daily >2hrs, >3 months, no cause found. Diagnosis of EXCLUSION.</div>
+<div class="def"><b>AO</b> = PIFP subtype where pain feels like a toothache but there's nothing wrong with the tooth.</div>
 </div>
+</div></div>
 
-<!-- ===================== SLIDE 6 ===================== -->
-<div class="slide-section">
-  <div class="slide-header">SLIDE 6 &mdash; Screeners Meet the Real World &nbsp; <span class="time">(~1.5 minutes)</span></div>
-  <div class="slide-body">
-    <div class="slide-main">
-      <div class="script-label">Your Script</div>
-      <div class="script">
-        Three more studies reinforce this.
-        <br><br>
-        <strong>Daline 2024</strong> again &mdash; 100 endo patients, 54% actually had painful TMD but came in for a "toothache." The screener alone had useful but limited accuracy. But here's the interesting part: when they added just one more data point &mdash; the patient's <em>current pain intensity rating</em> &mdash; AUROC jumped from 0.71 to 0.81. Even a small addition of clinical information meaningfully improves the screen. The takeaway here is that over half of "toothaches" in endo may actually be TMD. A screener can flag them before irreversible treatment.
-        <br><br>
-        <strong>Lovgren 2018</strong> &mdash; same 3Q/TMD questions from 2016, but now tested in a <em>specialist</em> OFP clinic in Amsterdam with 449 referred patients. Sensitivity stayed high, but <em>specificity dropped dramatically</em> because these referred patients have neuropathic pain, atypical odontalgia, chronic dental pain &mdash; they all answer "yes" to pain questions but DON'T have TMD. However, <em>negative responses reliably ruled OUT TMD</em>, which is clinically useful.
-        <br><br>
-        <strong>Alonso's thesis</strong> at University of Minnesota tested both the dental pain questionnaire and the TMD screener head-to-head in odontogenic versus TMD patients. Neither had acceptable specificity. The symptom overlap was just too great.
-        <br><br>
-        This is what we call <strong>the Screening Paradox</strong>: screeners are sensitive &mdash; they catch TMD well. But orofacial pain etiologies overlap so much that a positive screen still can't tell you the exact diagnosis. A comprehensive clinical assessment remains essential for definitive differential diagnosis.
-      </div>
-    </div>
-    <div class="slide-sidebar">
-      <h4>Studies on this slide</h4>
-      <div class="study-card">
-        <h5>Study 7 &mdash; Daline (2024)</h5>
-        <p>Screener + pain intensity NRS = AUROC 0.81. Key stat: 8% of endo patients had TMD as the SOLE source of their "tooth pain." They had nothing wrong with the tooth.</p>
-        <span class="weight weight-high">HIGH &mdash; first to validate screener IN endo patients with tooth pain</span>
-      </div>
-      <div class="study-card">
-        <h5>Study 9 &mdash; Lovgren (2018)</h5>
-        <p>3Q/TMD in specialist Amsterdam clinic. n=449 referred patients. Se 0.83&ndash;0.94 but Sp only 0.41&ndash;0.55. Q3 (locking): Se 0.48 but Sp 0.96. In specialist settings, screeners direct the differential, not confirm diagnosis.</p>
-        <span class="weight weight-high">HIGH &mdash; shows population-dependence of diagnostic accuracy</span>
-      </div>
-      <div class="study-card">
-        <h5>Study 11 &mdash; Alonso (2016 thesis)</h5>
-        <p>n=71 (34 odontogenic, 37 TMD). DePaQ: Se 85%, Sp 11%. TMD Screener: Se 92%, Sp 59%. Neither acceptable for differentiating the two conditions.</p>
-        <span class="weight weight-med">MEDIUM &mdash; small thesis study, but directly tests our question</span>
-      </div>
-      <div class="def"><b>The Screening Paradox in plain English:</b> A screener is like a smoke detector. It goes off when there's smoke, but it can't tell you if it's a kitchen fire, a candle, or burnt toast. You still need to go look. Same thing here &mdash; the screener says "something's going on with the jaw area" but can't distinguish TMD from dental pain from PIFP.</div>
-    </div>
-  </div>
+<!-- SLIDE 4 -->
+<div class="slide">
+<div class="sn">SLIDE 4 &mdash; CAN QUESTIONNAIRES CATCH TMD? <span class="t">~1.5 min</span></div>
+<img class="si" src="slides/4.png" alt="Slide 4">
+<div class="sc">
+<div class="sl">SAY THIS</div>
+<div class="script">
+First question: can screening questionnaires identify TMD? Four studies.
+<span class="p">&bull; &bull; &bull;</span>
+<span class="n">Gerstner 1994</span> &mdash; 13-item questionnaire. Up to <span class="s">98% sensitivity, 100% specificity</span> for TMD vs healthy controls. But <span class="c">could NOT differentiate TMD from tension-type headache</span>. Great at catching TMD, blind to non-TMD.
+<span class="p">&bull; &bull; &bull;</span>
+<span class="n">Macfarlane 2004</span> &mdash; 1,500+ people UK. Model sorted OFP into three buckets: musculoligamentous 7%, dentoalveolar 7%, neurological/vascular 6%. Useful for epi, needs validation.
+<span class="p">&bull; &bull; &bull;</span>
+<span class="n">Lovgren 2016</span> &mdash; <span class="k">3Q/TMD</span> &mdash; three yes/no questions &mdash; 7,800+ Swedish adults. <span class="s">74% of positives</span> had TMD vs 16% of negatives. Simple, cost-effective, valid for flagging.
+<span class="p">&bull; &bull; &bull;</span>
+<span class="n">Gonzalez 2011</span> &mdash; developed the <span class="k">TMD Pain Screener</span>: <span class="s">99% sensitivity, 97% specificity</span>, AUC 0.98&ndash;0.99. Near perfect. <span class="c">But</span> &mdash; excluded tooth pain patients. Odontogenic group tested separately: <span class="s">26&ndash;29% false positive</span>.
+<span class="p">&bull; &bull; &bull;</span>
+<span class="k">Key pattern: screening tools excel at detecting TMD &mdash; but struggle to differentiate it from non-TMD pain.</span>
 </div>
-
-<!-- ===================== SLIDE 7 ===================== -->
-<div class="slide-section">
-  <div class="slide-header">SLIDE 7 &mdash; The Endodontic Blind Spot &nbsp; <span class="time">(~1.5 minutes) &mdash; YOUR CLOSER</span></div>
-  <div class="slide-body">
-    <div class="slide-main">
-      <div class="script-label">Your Script</div>
-      <div class="script">
-        I want to end my section with what I think is the most clinically striking finding. This is Daline 2024 from UNC &mdash; 100 consecutive patients seeking endodontic treatment for tooth pain.
-        <br><br>
-        <em>54%</em> had painful TMD on DC/TMD exam. More than half.
-        <br>
-        <em>46%</em> had DUAL etiology &mdash; both endodontic AND TMD pain at the same time.
-        <br>
-        In <em>20%</em>, TMD contributed to their chief complaint.
-        <br>
-        And in <em>8%</em>, TMD was the <strong>sole source</strong> of their "tooth pain." There was nothing wrong with the tooth.
-        <br><br>
-        Think about what that means clinically. Without a TMD assessment, an endodontist performing a root canal on that 8% will see a "failed" root canal &mdash; not because the procedure failed, but because <em>the wrong pain source was treated</em>.
-        <br><br>
-        Even at AUROC 0.81 &mdash; the best accuracy they could achieve &mdash; the study explicitly states that a positive screen <em>must</em> be followed by a comprehensive DC/TMD examination. The screener is a triage tool, not a diagnosis.
-        <br><br>
-        And one more number: <em>72% of TMD-positive patients had BOTH myalgia AND arthralgia</em> &mdash; meaning chronic, multi-structural masticatory pain that a tooth-focused exam would never detect.
-        <br><br>
-        This is the endodontic blind spot &mdash; and it perfectly sets up why a full clinical assessment, not just a dental workup, not just a TMD check, is the only way to get the diagnosis right.
-        <br><br>
-        <span class="transition">I'll hand it off to [next person] who will walk you through the clinical exam evidence and the human cost data.</span>
-      </div>
-      <div class="big-idea">54% of "toothache" patients actually had TMD. 8% had nothing wrong with the tooth at all. Without a full assessment, you treat the wrong thing.</div>
-    </div>
-    <div class="slide-sidebar">
-      <h4>The key study</h4>
-      <div class="study-card">
-        <h5>Study 7 &mdash; Daline et al. (2024)</h5>
-        <p><b>J Endodontics, UNC Chapel Hill.</b> 100 patients, cross-sectional. Examiner was board-certified in BOTH OFP and endodontics. DC/TMD exam + full endo workup on every patient. Blinded to screener results.</p>
-        <p style="margin-top:6px;"><b>54%</b> TMD prevalence. <b>46%</b> dual etiology. <b>20%</b> TMD contributed to chief complaint. <b>8%</b> TMD was sole source.</p>
-        <p style="margin-top:6px;"><b>72%</b> of TMD+ patients had both myalgia AND arthralgia (multi-structural).</p>
-        <p style="margin-top:6px;">Screener alone: AUROC 0.71. With pain intensity: 0.81. Study says positive screen still requires full DC/TMD exam.</p>
-        <span class="weight weight-high">HIGHEST WEIGHT in your section &mdash; most clinically impactful, real consecutive patients, dual-board examiner</span>
-      </div>
-      <div class="def"><b>Myalgia</b> = muscle pain in the masticatory muscles. <b>Arthralgia</b> = pain in the TMJ itself. Having BOTH means the whole masticatory system is involved, not just one structure.</div>
-      <div class="def"><b>Why 8% matters so much:</b> If you do a root canal on a tooth that has no pathology, the patient still has pain afterward. They come back. You retreat. Still pain. Eventually the tooth gets extracted. Still pain. This is the "diagnostic odyssey" &mdash; all because the jaw was never examined.</div>
-
-      <h4 style="margin-top:16px;">Potential Q&amp;A</h4>
-      <ul>
-        <li><b>"What's DC/TMD?"</b> &mdash; Gold-standard criteria from 2014. Requires: (1) jaw pain in last 30 days, (2) pain modified by function, (3) familiar pain reproduced on opening or palpation.</li>
-        <li><b>"Why is specificity so low in endo?"</b> &mdash; Patients can't distinguish tooth vs jaw pain. Both cause aching, both hurt on chewing, both cause morning stiffness. The questionnaire items overlap.</li>
-        <li><b>"What should we do clinically?"</b> &mdash; Use 6Q screener + pain NRS as intake triage. If positive, do DC/TMD exam BEFORE any irreversible procedure. If dental workup is negative, expand differential to PIFP, neuropathic pain, etc.</li>
-      </ul>
-    </div>
-  </div>
+<div class="bi">Screeners catch TMD well. But they can't tell TMD apart from tooth pain, headache, or PIFP.</div>
+<div class="notes"><h4>All 4 Studies</h4>
+<div class="st"><h5>Study 1 &mdash; Gerstner (1994)</h5><p>13-item Q. n=307. TMD vs controls: excellent. TMD vs headache: failed.</p><span class="wt wm">MEDIUM &mdash; old, no gold-standard reference</span></div>
+<div class="st"><h5>Study 2 &mdash; Macfarlane (2004)</h5><p>UK, n=1510. Multinomial logistic regression, 6 predictors. Sorted OFP into 3 types. Kappa=0.5.</p><span class="wt wm">MEDIUM &mdash; only study classifying ALL OFP types</span></div>
+<div class="st"><h5>Study 3 &mdash; Lovgren (2016)</h5><p>7,831 adults, routine checkups. 300 examined with DC/TMD. NPV 0.92-0.99 in general practice.</p><span class="wt wh">HIGH &mdash; huge real-world sample, validated vs DC/TMD</span></div>
+<div class="st"><h5>Study 8 &mdash; Gonzalez (2011)</h5><p>ORIGINAL TMD Pain Screener. n=504. From 49 items to 6. Se 99%, Sp 97%. Excluded tooth pain. 26-29% false+ in odontogenic group.</p><span class="wt wh">HIGH &mdash; the screener everyone uses; its limitation is our argument</span></div>
+<div class="def"><b>3Q/TMD</b> = (1) Weekly jaw/face/temple pain? (2) Pain on opening/chewing? (3) Jaw locking? Yes to any = positive.</div>
+<div class="def"><b>TMD Pain Screener</b> = 6 items: pain duration, morning stiffness, 4 jaw activities that change pain. Score 0-7. Cutoff 3+ = positive.</div>
 </div>
+</div></div>
 
-<div style="text-align:center; padding: 24px; color: #888; font-size: 13px;">
-  Good luck today. You know this material better than you think. Speak slowly, make eye contact, hit the bold numbers hard.
+<!-- SLIDE 5 -->
+<div class="slide imp">
+<div class="sn">SLIDE 5 &mdash; THE SPECIFICITY PROBLEM &mdash; MOST IMPORTANT <span class="t">~1.5 min</span></div>
+<img class="si" src="slides/5.png" alt="Slide 5">
+<div class="sc">
+<div class="sl">SAY THIS &mdash; NAIL THIS SLIDE</div>
+<div class="script">
+This is the most important table in our presentation. We're tracking the <span class="c">same</span> 6-question TMD Pain Screener across three studies, three populations.
+<span class="p">&bull; &bull; &bull;</span>
+<span class="n">Gonzalez 2011</span> &mdash; clean research groups, pre-sorted, tooth pain excluded: <span class="s">99% sensitivity, 97% specificity</span>, AUROC 0.98&ndash;0.99. Beautiful.
+<span class="p">&bull; &bull; &bull;</span>
+<span class="n">Fonseca Alonso 2017</span> &mdash; TMD vs odontogenic head-to-head. Same screener. Sensitivity ~92%, but <span class="s">specificity crashes to ~59%</span>. Symptom overlap is enormous.
+<span class="p">&bull; &bull; &bull;</span>
+<span class="n">Daline 2024</span> &mdash; real endo patients with toothaches. Sensitivity 85%, <span class="s">specificity 52%</span>, AUROC 0.71. <span class="s">46% had DUAL etiology</span>.
+<span class="p">&bull; &bull; &bull;</span>
+The takeaway: <span class="k">as patient complexity increases, specificity collapses</span>. Designed in clean populations, loses half its specificity in the real world. A positive screen means "could be TMD or tooth pain mimicking TMD." <span class="c">Only a full clinical assessment resolves that. A screener flags &mdash; it doesn't diagnose.</span>
 </div>
+<div class="bi">Same test + harder patients = specificity drops 97% &rarr; 52%. Clean research ≠ real practice.</div>
+<div class="notes"><h4>The Three Populations</h4>
+<div class="st"><h5>Gonzalez (2011) &mdash; "Clean Lab"</h5><p>Pre-sorted. Tooth pain excluded. Se 99%, Sp 97%. Artificial perfection.</p></div>
+<div class="st"><h5>Alonso (2017) &mdash; "Mixed"</h5><p>n=71. TMD vs odontogenic. Sp ~59%. Too much symptom overlap.</p></div>
+<div class="st"><h5>Daline (2024) &mdash; "Real World"</h5><p>n=100 consecutive endo. Sp 52%. 46% dual. Dual-board examiner.</p></div>
+<div class="def"><b>Why Sp drops:</b> Tooth pain and TMD both cause jaw aching, pain on chewing, morning stiffness. Patients endorse same items for either condition.</div>
+<div class="def"><b>AUROC grades:</b> 0.98=A+, 0.71=C+, 0.81=B+. The A+ only happened in artificial settings.</div>
+</div>
+</div></div>
 
+<!-- SLIDE 6 -->
+<div class="slide">
+<div class="sn">SLIDE 6 &mdash; SCREENERS MEET THE REAL WORLD <span class="t">~1.5 min</span></div>
+<img class="si" src="slides/6.png" alt="Slide 6">
+<div class="sc">
+<div class="sl">SAY THIS</div>
+<div class="script">
+Three more studies reinforce this.
+<span class="p">&bull; &bull; &bull;</span>
+<span class="n">Daline 2024</span> &mdash; 100 endo patients, <span class="s">54% had painful TMD</span> but came in for "toothache." Screener alone: AUROC 0.71. Adding <span class="c">one data point</span> &mdash; current pain intensity &mdash; <span class="s">AUROC jumped to 0.81</span>. Even small clinical info improves the screen. Takeaway: over half of "toothaches" in endo may be TMD. A screener can flag before irreversible treatment.
+<span class="p">&bull; &bull; &bull;</span>
+<span class="n">Lovgren 2018</span> &mdash; same 3Q/TMD, now in a <span class="c">specialist</span> Amsterdam clinic, 449 patients. Sensitivity high, <span class="s">specificity dropped dramatically</span>. Referred patients have neuropathic pain, AO, chronic dental pain &mdash; they say "yes" to pain questions but don't have TMD. But <span class="k">negative responses reliably ruled OUT TMD</span>.
+<span class="p">&bull; &bull; &bull;</span>
+<span class="n">Alonso's thesis</span> at UMN &mdash; tested dental pain questionnaire AND TMD screener. Neither had acceptable specificity. Overlap too great.
+<span class="p">&bull; &bull; &bull;</span>
+<span class="k">The Screening Paradox</span>: screeners catch TMD well, but orofacial pain overlaps so much that a positive screen <span class="c">still can't tell you the exact diagnosis</span>. Comprehensive assessment remains essential.
+</div>
+<div class="bi">The Screening Paradox: screeners detect, but only a full workup diagnoses. Like a smoke detector that beeps but can't tell you what's burning.</div>
+<div class="notes"><h4>Studies</h4>
+<div class="st"><h5>Study 7 &mdash; Daline (2024)</h5><p>Adding NRS pain intensity: AUROC 0.71&rarr;0.81. 8% had TMD as SOLE source of "tooth pain."</p><span class="wt wh">HIGH &mdash; first to validate screener IN endo</span></div>
+<div class="st"><h5>Study 9 &mdash; Lovgren (2018)</h5><p>3Q/TMD in specialist Amsterdam clinic. n=449. Se 0.83-0.94, Sp 0.41-0.55. Screeners direct differential in specialist settings.</p><span class="wt wh">HIGH &mdash; proves accuracy is population-dependent</span></div>
+<div class="st"><h5>Study 11 &mdash; Alonso (2016)</h5><p>n=71. DePaQ: Se 85%, Sp 11%. TMD Screener: Se 92%, Sp 59%. Neither adequate.</p><span class="wt wm">MEDIUM &mdash; small but directly tests our question</span></div>
+</div>
+</div></div>
+
+<!-- SLIDE 7 -->
+<div class="slide closer">
+<div class="sn" style="background:linear-gradient(135deg,var(--navy),#1a3a5c)">SLIDE 7 &mdash; THE ENDODONTIC BLIND SPOT (YOUR CLOSER) <span class="t">~1.5 min</span></div>
+<img class="si" src="slides/7.png" alt="Slide 7">
+<div class="sc">
+<div class="sl">SAY THIS &mdash; LAND THE ENDING</div>
+<div class="script">
+I want to end with the most clinically striking finding. <span class="n">Daline 2024</span>, UNC &mdash; 100 consecutive patients seeking endo treatment for tooth pain.
+<span class="p">&bull; &bull; &bull;</span>
+<span class="s">54%</span> had painful TMD on DC/TMD exam. More than half.<br>
+<span class="s">46%</span> had DUAL etiology &mdash; both endo AND TMD simultaneously.<br>
+<span class="s">20%</span> &mdash; TMD contributed to the chief complaint.<br>
+<span class="s">8%</span> &mdash; TMD was the <span class="c">sole source</span> of their "tooth pain." <span class="c">Nothing was wrong with the tooth.</span>
+<span class="p">&bull; &bull; &bull;</span>
+Think about that. Without a TMD assessment, an endodontist performing a root canal on that 8% will see a "failed" RCT &mdash; not because the procedure failed, but because <span class="c">the wrong pain source was treated</span>.
+<span class="p">&bull; &bull; &bull;</span>
+Even at AUROC 0.81, the study states a positive screen <span class="c">must</span> be followed by comprehensive DC/TMD examination. The screener is triage, not diagnosis.
+<span class="p">&bull; &bull; &bull;</span>
+One more: <span class="s">72% of TMD-positive patients had BOTH myalgia AND arthralgia</span> &mdash; chronic, multi-structural masticatory pain a tooth-focused exam would <span class="c">never</span> detect.
+<span class="p">&bull; &bull; &bull;</span>
+This is the endodontic blind spot. It's why a full clinical assessment &mdash; not just dental, not just TMD &mdash; is <span class="k">the only way to get it right</span>.
+<span class="p">&bull; &bull; &bull;</span>
+<span class="tr">I'll hand it off to [next person] for the clinical exam evidence and human cost data.</span>
+</div>
+<div class="bi">54% of "toothache" patients had TMD. 8% had nothing wrong with the tooth. Without a full assessment, you treat the wrong thing.</div>
+<div class="qa"><h4>If You Get Questions</h4>
+<ul>
+<li><b>"What's DC/TMD?"</b> &mdash; Gold standard (2014): jaw pain last 30 days + modified by function + reproduced on opening/palpation.</li>
+<li><b>"Why is specificity low?"</b> &mdash; Tooth and jaw pain feel the same to patients. Both ache, both hurt on chewing, both cause morning stiffness.</li>
+<li><b>"What to do clinically?"</b> &mdash; 6Q screener + pain NRS as intake triage. Positive = DC/TMD exam BEFORE irreversible procedures.</li>
+<li><b>"Myalgia vs arthralgia?"</b> &mdash; Myalgia = muscle pain (masseter/temporalis). Arthralgia = TMJ pain. Both = whole system involved.</li>
+<li><b>"Why does 8% matter?"</b> &mdash; RCT on healthy tooth &rarr; still hurts &rarr; retreat &rarr; still hurts &rarr; extract &rarr; STILL hurts. All because jaw was never examined.</li>
+</ul></div>
+<div class="notes"><h4>Anchor Study</h4>
+<div class="st"><h5>Study 7 &mdash; Daline et al. (2024) &bull; J Endod &bull; UNC</h5>
+<p>n=100 consecutive. Examiner dual-board OFP+endo. Blinded. Full DC/TMD + full endo workup.</p>
+<p><b>54%</b> TMD. <b>46%</b> dual. <b>20%</b> TMD contributed. <b>8%</b> TMD sole source. <b>72%</b> myalgia+arthralgia.</p>
+<p>Screener: AUROC 0.71. +pain intensity: 0.81. Positive screen must be followed by full exam.</p>
+<span class="wt wh">HIGHEST WEIGHT &mdash; your section's anchor</span></div>
+</div>
+</div></div>
+
+<div class="ft">Speak slowly. Hit the red numbers hard. Make eye contact on the orange phrases. You got this.</div>
 </body>
 </html>
