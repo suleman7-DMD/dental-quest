@@ -1474,6 +1474,12 @@ td.hl-amber { background: var(--accent-light); }
             <span class="tab-short">Card</span>
             <span class="progress-pct" id="pct-notecard">0%</span>
         </a>
+        <a class="progress-tab" href="#sec-notecard-v2" style="--tab-color: #C8923E" onclick="scrollToGuide(event, 'sec-notecard-v2')">
+            <span class="tab-dot"></span>
+            <span class="tab-label">Notecard v2</span>
+            <span class="tab-short">Bonus</span>
+            <span class="progress-pct" id="pct-notecard-v2">0%</span>
+        </a>
     </nav>
 </div>
 
@@ -7718,7 +7724,7 @@ function scrollToGuide(e, id) {
     const tabs = document.querySelectorAll('.progress-tab');
     const fill = document.getElementById('progressFill');
     const backTop = document.getElementById('backTop');
-    const keys = ['hematologic', 'oncology', 'systemic', 'sensation', 'notecard'];
+    const keys = ['hematologic', 'oncology', 'systemic', 'sensation', 'notecard', 'notecard-v2'];
 
     function updateProgress() {
         const scrollTop = window.scrollY;
