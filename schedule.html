@@ -1,0 +1,1621 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=5">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#0F1419">
+<meta name="format-detection" content="telephone=no">
+<title>Runway to Fort Myers — Apr 22 → May 18, 2026</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0F1419;
+    --surface: #1A1F26;
+    --surface-2: #242B35;
+    --surface-elev: #2A323D;
+    --border: #2E3742;
+    --border-dim: rgba(120, 135, 155, 0.10);
+    --text: #E8EAED;
+    --text-dim: #9AA0A6;
+    --text-mute: #5F6773;
+
+    --bu: #E63946;
+    --bu-bg: rgba(230, 57, 70, 0.14);
+    --bu-border: rgba(230, 57, 70, 0.38);
+    --bu-text: #FCA5A5;
+
+    --chi: #4A9EFF;
+    --chi-bg: rgba(74, 158, 255, 0.14);
+    --chi-border: rgba(74, 158, 255, 0.38);
+    --chi-text: #93C5FD;
+
+    --road: #B084F0;
+    --road-bg: rgba(176, 132, 240, 0.14);
+    --road-border: rgba(176, 132, 240, 0.38);
+    --road-text: #D6B8FF;
+
+    --fhc: #4ADE80;
+    --fhc-bg: rgba(74, 222, 128, 0.14);
+    --fhc-border: rgba(74, 222, 128, 0.38);
+    --fhc-text: #86EFAC;
+
+    --gold: #F5C145;
+    --gold-bg: rgba(245, 193, 69, 0.14);
+    --gold-border: rgba(245, 193, 69, 0.38);
+
+    --radius: 10px;
+    --radius-sm: 6px;
+    --hour-height: 26px;
+  }
+
+  *, *::before, *::after {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  html {
+    -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
+  }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+    font-size: 14px;
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+    overflow-x: hidden;
+    padding: max(28px, env(safe-area-inset-top)) max(20px, env(safe-area-inset-right)) max(56px, env(safe-area-inset-bottom)) max(20px, env(safe-area-inset-left));
+    min-height: 100vh;
+    min-height: 100dvh;
+    touch-action: manipulation;
+  }
+
+  .container { max-width: 1600px; margin: 0 auto; }
+
+  header.top {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    padding-bottom: 20px;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 24px;
+    flex-wrap: wrap;
+    gap: 14px;
+  }
+
+  h1 {
+    font-family: 'Fraunces', serif;
+    font-weight: 500;
+    font-size: clamp(26px, 5vw, 42px);
+    letter-spacing: -0.02em;
+    line-height: 1;
+  }
+  h1 span { color: var(--bu); }
+
+  .meta {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10.5px;
+    color: var(--text-dim);
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    text-align: right;
+  }
+  .meta .count {
+    color: var(--gold);
+    font-size: clamp(24px, 4.5vw, 32px);
+    font-weight: 700;
+    display: block;
+    letter-spacing: 0;
+    line-height: 1;
+    margin: 4px 0 2px;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px 18px;
+    padding: 12px 16px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    margin-bottom: 24px;
+  }
+  .legend-item {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10.5px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--text-dim);
+  }
+  .dot { width: 10px; height: 10px; border-radius: 2px; flex-shrink: 0; }
+
+  /* ===== WEEKS & GRID ===== */
+  .week { margin-bottom: 28px; }
+
+  .week-header {
+    display: flex;
+    align-items: baseline;
+    gap: 14px;
+    margin-bottom: 10px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--border);
+    flex-wrap: wrap;
+  }
+  .week-title {
+    font-family: 'Fraunces', serif;
+    font-weight: 600;
+    font-size: clamp(18px, 3vw, 22px);
+    letter-spacing: -0.01em;
+  }
+  .week-range {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10.5px;
+    color: var(--text-mute);
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+  }
+  .week-note {
+    margin-left: auto;
+    font-family: 'Fraunces', serif;
+    font-style: italic;
+    font-size: 13px;
+    color: var(--text-dim);
+  }
+
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 8px;
+  }
+
+  /* ===== DAY CARD ===== */
+  .day {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 10px 8px 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    position: relative;
+    transition: border-color 0.18s ease, transform 0.18s ease;
+  }
+  @media (hover: hover) {
+    .day:hover { border-color: var(--text-mute); transform: translateY(-1px); }
+  }
+
+  .day-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    padding: 0 2px 8px;
+    border-bottom: 1px solid var(--border);
+  }
+  .dow {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.22em;
+    color: var(--text-mute);
+    font-weight: 600;
+  }
+  .date {
+    font-family: 'Fraunces', serif;
+    font-weight: 600;
+    font-size: 18px;
+    line-height: 1;
+  }
+
+  .day.off {
+    background: repeating-linear-gradient(
+      135deg,
+      var(--surface),
+      var(--surface) 6px,
+      var(--surface-2) 6px,
+      var(--surface-2) 7px
+    );
+    min-height: 110px;
+  }
+  .day.off .date { color: var(--text-mute); }
+  .off-tag {
+    margin: auto 0;
+    text-align: center;
+    font-family: 'Fraunces', serif;
+    font-style: italic;
+    color: var(--text-mute);
+    font-size: 13px;
+    letter-spacing: 0.02em;
+  }
+
+  /* Pinned (non-timed) items above the grid */
+  .day-pins {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+  .day-pins:empty { display: none; }
+
+  /* Hourly grid body */
+  .day-grid {
+    display: grid;
+    grid-template-columns: 22px 1fr;
+    gap: 3px;
+    margin-top: 2px;
+  }
+  .hours {
+    display: grid;
+    grid-template-rows: repeat(12, var(--hour-height));
+    padding-top: 0;
+  }
+  .hours span {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9px;
+    color: var(--text-mute);
+    text-align: right;
+    padding-right: 3px;
+    transform: translateY(-5px);
+    letter-spacing: 0.02em;
+    line-height: 1;
+    font-variant-numeric: tabular-nums;
+  }
+  .track {
+    position: relative;
+    background-image: linear-gradient(to bottom, var(--border-dim) 1px, transparent 1px);
+    background-size: 100% var(--hour-height);
+    background-repeat: repeat-y;
+    height: calc(var(--hour-height) * 12);
+    border-top: 1px solid var(--border);
+    border-bottom: 1px solid var(--border);
+    border-left: 1px solid var(--border-dim);
+    border-radius: 2px;
+  }
+
+  /* ===== APPOINTMENTS ===== */
+  .appt {
+    border-radius: 5px;
+    padding: 5px 7px;
+    font-size: 11.5px;
+    line-height: 1.3;
+    border-left: 3px solid;
+    overflow: hidden;
+  }
+  .appt .t {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9.5px;
+    font-weight: 700;
+    letter-spacing: 0.03em;
+    opacity: 0.92;
+    display: block;
+    margin-bottom: 1px;
+  }
+  .appt .n {
+    font-weight: 600;
+    font-size: 11.5px;
+    display: block;
+    line-height: 1.28;
+  }
+  .appt .s {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9px;
+    color: var(--text-dim);
+    letter-spacing: 0.02em;
+    display: block;
+    margin-top: 2px;
+  }
+
+  /* Timed = absolutely positioned inside .track */
+  .appt.timed {
+    position: absolute;
+    left: 1px;
+    right: 1px;
+    top: calc((var(--s) - 8) * var(--hour-height));
+    height: calc((var(--e) - var(--s)) * var(--hour-height) - 1px);
+    min-height: 16px;
+    padding: 3px 6px;
+  }
+  .appt.timed.short {
+    padding: 2px 5px;
+  }
+  .appt.timed.short .s { display: none; }
+
+  .appt.bu { background: var(--bu-bg); border-color: var(--bu); }
+  .appt.bu .n { color: var(--bu-text); }
+  .appt.chi { background: var(--chi-bg); border-color: var(--chi); }
+  .appt.chi .n { color: var(--chi-text); }
+  .appt.road { background: var(--road-bg); border-color: var(--road); }
+  .appt.road .n { color: var(--road-text); }
+  .appt.fhc { background: var(--fhc-bg); border-color: var(--fhc); }
+  .appt.fhc .n { color: var(--fhc-text); }
+  .appt.gold { background: var(--gold-bg); border-color: var(--gold); }
+  .appt.gold .n { color: var(--gold); }
+
+  .appt.dim { opacity: 0.58; }
+  .appt.late { border-style: dashed; }
+
+  /* ===== HERO ===== */
+  .hero {
+    margin-top: 36px;
+    padding: 32px;
+    background: linear-gradient(135deg, var(--fhc-bg), var(--surface));
+    border: 1px solid var(--fhc-border);
+    border-radius: 12px;
+    display: grid;
+    grid-template-columns: 1fr 1.3fr;
+    gap: 32px;
+    align-items: start;
+  }
+  .hero-eyebrow {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10.5px;
+    letter-spacing: 0.22em;
+    color: var(--fhc);
+    text-transform: uppercase;
+    margin-bottom: 12px;
+  }
+  .hero h2 {
+    font-family: 'Fraunces', serif;
+    font-weight: 500;
+    font-size: clamp(30px, 5.5vw, 52px);
+    line-height: 1;
+    letter-spacing: -0.02em;
+    margin-bottom: 10px;
+  }
+  .hero h2 span { font-style: italic; color: var(--fhc); }
+  .hero-date {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12.5px;
+    letter-spacing: 0.18em;
+    color: var(--text-dim);
+    margin-bottom: 18px;
+  }
+  .hero-lede {
+    font-family: 'Fraunces', serif;
+    font-style: italic;
+    font-size: 16px;
+    color: var(--text-dim);
+    line-height: 1.55;
+  }
+  .timeline {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    padding-left: 18px;
+    border-left: 1px solid var(--border);
+  }
+  .step {
+    display: grid;
+    grid-template-columns: 80px 1fr;
+    gap: 12px;
+    padding: 10px 0;
+    border-bottom: 1px dashed var(--border);
+  }
+  .step:last-child { border-bottom: none; }
+  .step .tm {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11.5px;
+    font-weight: 700;
+    color: var(--fhc);
+  }
+  .step .ti strong {
+    display: block;
+    font-weight: 600;
+    margin-bottom: 2px;
+    font-size: 13.5px;
+  }
+  .step .ti em {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10.5px;
+    color: var(--text-mute);
+    font-style: normal;
+    letter-spacing: 0.03em;
+  }
+
+  .hero-card {
+    margin-top: 18px;
+    padding: 14px 16px;
+    background: rgba(15, 20, 25, 0.5);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+  }
+  .hero-card-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--fhc);
+    font-weight: 700;
+    margin-bottom: 8px;
+  }
+  .hero-card-addr {
+    font-family: 'Fraunces', serif;
+    font-size: 14.5px;
+    font-weight: 500;
+    margin-bottom: 12px;
+    color: var(--text);
+    line-height: 1.35;
+  }
+  .hero-card-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 6px 10px;
+  }
+  .hero-card-grid > div {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 6px 10px;
+    background: var(--surface);
+    border-radius: 4px;
+    font-size: 11.5px;
+    gap: 8px;
+  }
+  .hero-card-grid span {
+    color: var(--text-dim);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+  .hero-card-grid code {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11.5px;
+    font-weight: 700;
+    color: var(--fhc);
+  }
+
+  .hero-contacts {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .contact {
+    padding: 10px 12px;
+    background: var(--surface);
+    border-radius: 6px;
+    border-left: 2px solid var(--fhc);
+  }
+  .contact strong {
+    display: block;
+    font-size: 13.5px;
+    font-weight: 600;
+    color: var(--text);
+    margin-bottom: 2px;
+  }
+  .contact em {
+    display: block;
+    font-style: normal;
+    font-size: 10.5px;
+    color: var(--text-dim);
+    letter-spacing: 0.04em;
+    margin-bottom: 4px;
+  }
+  .contact code {
+    display: block;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10.5px;
+    color: var(--fhc);
+    word-break: break-word;
+  }
+
+  .hero-section-title {
+    font-family: 'Fraunces', serif;
+    font-weight: 600;
+    font-size: 15.5px;
+    color: var(--fhc);
+    margin-bottom: 10px;
+    padding-bottom: 6px;
+    border-bottom: 1px solid var(--border);
+    letter-spacing: -0.01em;
+  }
+
+  .bring-list {
+    list-style: none;
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px;
+  }
+  .bring-list li {
+    display: flex;
+    gap: 10px;
+    align-items: flex-start;
+    padding: 8px 10px;
+    background: var(--surface);
+    border-radius: 6px;
+    font-size: 11.5px;
+    line-height: 1.35;
+  }
+  .bring-list li span {
+    font-size: 16px;
+    flex-shrink: 0;
+    line-height: 1.2;
+  }
+  .bring-list li strong {
+    font-weight: 600;
+    color: var(--text);
+    display: block;
+    font-size: 12.5px;
+  }
+  .bring-list li div { color: var(--text-dim); font-size: 10.5px; }
+
+  .fixed-dates {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px;
+  }
+  .fixed-dates > div {
+    padding: 10px 12px;
+    background: var(--surface);
+    border-radius: 6px;
+    border-left: 2px solid var(--fhc);
+  }
+  .fixed-dates span {
+    display: block;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--text-dim);
+    margin-bottom: 3px;
+  }
+  .fixed-dates strong {
+    font-family: 'Fraunces', serif;
+    font-weight: 600;
+    font-size: 13.5px;
+    color: var(--fhc);
+  }
+
+  /* ===== TRAVEL HERO VARIANT ===== */
+  .hero-road {
+    background: linear-gradient(135deg, var(--road-bg), var(--surface));
+    border-color: var(--road-border);
+  }
+  .hero-road .hero-eyebrow { color: var(--road); }
+  .hero-road h2 span { color: var(--road); }
+  .hero-road .step .tm { color: var(--road); }
+  .hero-road .hero-section-title { color: var(--road); }
+  .hero-card-road { border-left: 3px solid var(--road); }
+  .hero-card-road .hero-card-label { color: var(--road); }
+
+  .route-stats {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 8px;
+    margin-top: 18px;
+    margin-bottom: 4px;
+  }
+  .route-stats > div {
+    padding: 12px 8px;
+    background: var(--surface);
+    border-radius: 6px;
+    border-top: 2px solid var(--road);
+    text-align: center;
+  }
+  .route-stats .num {
+    display: block;
+    font-family: 'Fraunces', serif;
+    font-weight: 600;
+    font-size: clamp(18px, 3vw, 22px);
+    color: var(--road);
+    line-height: 1;
+    margin-bottom: 4px;
+    font-variant-numeric: tabular-nums;
+  }
+  .route-stats .lbl {
+    display: block;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--text-dim);
+  }
+
+  .leg-stats {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 6px;
+    margin-bottom: 10px;
+  }
+  .leg-stats > div {
+    background: var(--surface);
+    padding: 6px 6px;
+    border-radius: 4px;
+    text-align: center;
+  }
+  .leg-stats span {
+    display: block;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--text-dim);
+    margin-bottom: 2px;
+  }
+  .leg-stats strong {
+    display: block;
+    font-family: 'Fraunces', serif;
+    font-weight: 600;
+    font-size: 12.5px;
+    color: var(--road);
+  }
+
+  .leg-steps {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+  .leg-steps li {
+    display: flex;
+    gap: 10px;
+    padding: 5px 8px;
+    background: var(--surface);
+    border-radius: 4px;
+    font-size: 11.5px;
+    line-height: 1.3;
+    color: var(--text-dim);
+  }
+  .leg-steps code {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10.5px;
+    font-weight: 700;
+    color: var(--road);
+    min-width: 86px;
+    letter-spacing: 0.03em;
+  }
+
+  .med-plan {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .med-row {
+    display: grid;
+    grid-template-columns: 56px 1fr;
+    gap: 12px;
+    align-items: center;
+    padding: 10px 12px;
+    background: var(--surface);
+    border-radius: 6px;
+    border-left: 2px solid var(--road);
+  }
+  .med-row.warn {
+    border-left-color: var(--bu);
+    background: rgba(230, 57, 70, 0.08);
+  }
+  .med-time {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12.5px;
+    font-weight: 700;
+    color: var(--road);
+    text-align: center;
+  }
+  .med-row.warn .med-time { color: var(--bu); font-size: 18px; }
+  .med-body strong {
+    display: block;
+    font-size: 12.5px;
+    font-weight: 600;
+    color: var(--text);
+    margin-bottom: 2px;
+  }
+  .med-body em {
+    display: block;
+    font-style: normal;
+    font-size: 10.5px;
+    color: var(--text-dim);
+    font-family: 'JetBrains Mono', monospace;
+    letter-spacing: 0.02em;
+  }
+
+  .hotel-tier {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+  }
+  .tier {
+    padding: 12px;
+    background: var(--surface);
+    border-radius: 6px;
+    border-top: 3px solid var(--road);
+    position: relative;
+  }
+  .tier-tag {
+    display: inline-block;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9px;
+    letter-spacing: 0.16em;
+    background: var(--road);
+    color: var(--bg);
+    padding: 2px 6px;
+    border-radius: 2px;
+    font-weight: 700;
+    margin-bottom: 8px;
+  }
+  .tier-tag.budget { background: var(--text-mute); }
+  .tier strong {
+    display: block;
+    font-size: 12.5px;
+    color: var(--text);
+    font-weight: 600;
+    margin-bottom: 4px;
+  }
+  .tier-price {
+    font-family: 'Fraunces', serif;
+    font-size: 17px;
+    font-weight: 600;
+    color: var(--road);
+    margin-bottom: 4px;
+  }
+  .tier em {
+    display: block;
+    font-style: normal;
+    font-size: 10.5px;
+    color: var(--text-dim);
+    font-family: 'JetBrains Mono', monospace;
+    letter-spacing: 0.02em;
+  }
+
+  .hero-ledger {
+    grid-column: 1 / -1;
+    margin-top: 18px;
+    padding: 22px;
+    background: rgba(15, 20, 25, 0.55);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+  }
+  .ledger-head {
+    padding-bottom: 12px;
+    margin-bottom: 16px;
+    border-bottom: 1px solid var(--border);
+  }
+  .ledger-sub {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10.5px;
+    color: var(--text-dim);
+    letter-spacing: 0.02em;
+    margin-top: 6px;
+    line-height: 1.5;
+  }
+  .ledger-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+  }
+  .ledger-block {
+    padding: 12px 14px;
+    background: var(--surface);
+    border-radius: 8px;
+    border-top: 2px solid var(--road);
+  }
+  .ledger-cat {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10.5px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--road);
+    font-weight: 700;
+    margin-bottom: 10px;
+    padding-bottom: 8px;
+    border-bottom: 1px dashed var(--border);
+  }
+  .ledger-line {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 12px;
+    padding: 5px 0;
+    font-size: 12px;
+    line-height: 1.4;
+  }
+  .ledger-line span { color: var(--text-dim); flex: 1; }
+  .ledger-line strong {
+    font-family: 'JetBrains Mono', monospace;
+    font-weight: 700;
+    color: var(--text);
+    font-size: 12.5px;
+    font-variant-numeric: tabular-nums;
+  }
+  .ledger-line em.refund,
+  .ledger-line em.tbd {
+    font-style: normal;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    padding: 1px 5px;
+    border-radius: 3px;
+    margin-left: 4px;
+  }
+  .ledger-line em.refund { color: var(--fhc); background: var(--fhc-bg); }
+  .ledger-line em.tbd { color: var(--gold); background: var(--gold-bg); }
+
+  .ledger-sum {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 8px;
+    padding-top: 8px;
+    border-top: 1px solid var(--border);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10.5px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+  }
+  .ledger-sum span { color: var(--text-mute); }
+  .ledger-sum strong { color: var(--road); font-size: 12.5px; }
+
+  .ledger-total {
+    margin-top: 18px;
+    padding: 16px 20px;
+    background: linear-gradient(90deg, var(--road-bg), transparent);
+    border: 1px solid var(--road-border);
+    border-radius: 8px;
+  }
+  .total-line {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    padding-bottom: 10px;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 10px;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+  .total-label {
+    font-family: 'Fraunces', serif;
+    font-weight: 500;
+    font-size: 17px;
+    color: var(--text);
+  }
+  .total-value {
+    font-family: 'Fraunces', serif;
+    font-weight: 700;
+    font-size: clamp(22px, 4vw, 30px);
+    color: var(--road);
+    letter-spacing: -0.01em;
+    font-variant-numeric: tabular-nums;
+  }
+  .total-sub {
+    display: flex;
+    justify-content: space-between;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11.5px;
+    color: var(--text-dim);
+    padding: 3px 0;
+    letter-spacing: 0.02em;
+    gap: 10px;
+  }
+  .total-sub strong { color: var(--fhc); font-weight: 700; }
+  .total-sub:last-child strong { color: var(--road); font-size: 14px; font-family: 'Fraunces', serif; }
+
+  .deadlines {
+    margin-top: 32px;
+    padding: 18px 20px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+  }
+  .deadlines h3 {
+    font-family: 'Fraunces', serif;
+    font-weight: 600;
+    font-size: 17px;
+    margin-bottom: 12px;
+    color: var(--gold);
+  }
+  .dl-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 10px;
+  }
+  .dl {
+    padding: 10px 12px;
+    background: var(--surface-2);
+    border-left: 3px solid var(--gold);
+    border-radius: 4px;
+  }
+  .dl .when {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    color: var(--gold);
+    text-transform: uppercase;
+    display: block;
+    margin-bottom: 4px;
+  }
+  .dl .what { font-size: 12.5px; color: var(--text); }
+
+  /* ===== BREAKPOINTS ===== */
+  @media (max-width: 1200px) {
+    .grid { grid-template-columns: repeat(4, 1fr); }
+    .hero { grid-template-columns: 1fr; gap: 24px; }
+    .ledger-grid { grid-template-columns: repeat(2, 1fr); }
+    .route-stats { grid-template-columns: repeat(2, 1fr); }
+  }
+
+  @media (max-width: 780px) {
+    .grid { grid-template-columns: repeat(2, 1fr); gap: 7px; }
+    .hotel-tier { grid-template-columns: 1fr; }
+    .hero { padding: 22px; }
+    .hero-ledger { padding: 16px; }
+    .ledger-grid { grid-template-columns: 1fr; }
+  }
+
+  @media (max-width: 560px) {
+    :root { --hour-height: 32px; }
+    body { padding-left: 14px; padding-right: 14px; }
+    .grid { grid-template-columns: 1fr; gap: 10px; }
+    .day { padding: 12px 12px 14px; }
+    .day-grid { grid-template-columns: 26px 1fr; gap: 4px; }
+    .hours span { font-size: 9.5px; padding-right: 5px; }
+    .appt .n { font-size: 13px; }
+    .appt .t { font-size: 10px; }
+    .appt .s { font-size: 10px; }
+    header.top { flex-direction: column; align-items: flex-start; }
+    .meta { text-align: left; }
+    .week-header { gap: 8px; }
+    .week-note { margin-left: 0; width: 100%; font-size: 12.5px; }
+    .bring-list, .fixed-dates, .hero-card-grid { grid-template-columns: 1fr; }
+    .leg-stats { grid-template-columns: repeat(2, 1fr); }
+    .route-stats { grid-template-columns: repeat(2, 1fr); }
+    .leg-steps code { min-width: 76px; font-size: 10px; }
+    .hero { padding: 20px 16px; gap: 22px; }
+    .hero-ledger { padding: 14px; }
+    .step { grid-template-columns: 70px 1fr; gap: 10px; padding: 8px 0; }
+    .deadlines { padding: 16px; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
+  }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(6px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  .week, .hero, .deadlines { animation: fadeIn 0.4s ease both; }
+  .week:nth-of-type(2) { animation-delay: 0.04s; }
+  .week:nth-of-type(3) { animation-delay: 0.08s; }
+  .week:nth-of-type(4) { animation-delay: 0.12s; }
+  .week:nth-of-type(5) { animation-delay: 0.16s; }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <header class="top">
+    <h1>Runway to <span>Fort Myers</span></h1>
+    <div class="meta">
+      Days to FHC Orientation
+      <span class="count" id="countdown">25</span>
+      Apr 22 → May 18, 2026
+    </div>
+  </header>
+
+  <div class="legend">
+    <div class="legend-item"><span class="dot" style="background:var(--bu)"></span>BU Clinical</div>
+    <div class="legend-item"><span class="dot" style="background:var(--chi)"></span>Chicago / DMV</div>
+    <div class="legend-item"><span class="dot" style="background:var(--road)"></span>Road / Travel</div>
+    <div class="legend-item"><span class="dot" style="background:var(--fhc)"></span>FHC Florida</div>
+    <div class="legend-item"><span class="dot" style="background:var(--gold)"></span>Key Deadline</div>
+    <div class="legend-item"><span class="dot" style="background:repeating-linear-gradient(135deg,var(--surface),var(--surface) 3px,var(--surface-2) 3px,var(--surface-2) 4px)"></span>Off</div>
+  </div>
+
+  <!-- WEEK 1 -->
+  <section class="week">
+    <div class="week-header">
+      <div class="week-title">Week 1</div>
+      <div class="week-range">Apr 20 — 26</div>
+      <div class="week-note">opening stretch · PR2 delivery</div>
+    </div>
+    <div class="grid">
+      <div class="day off"><div class="day-head"><div class="dow">MON</div><div class="date">20</div></div><div class="off-tag">—</div></div>
+      <div class="day off"><div class="day-head"><div class="dow">TUE</div><div class="date">21</div></div><div class="off-tag">—</div></div>
+
+      <div class="day">
+        <div class="day-head"><div class="dow">WED</div><div class="date">22</div></div>
+        <div class="day-pins">
+          <div class="appt gold"><span class="t">ALL DAY</span><span class="n">Prep for PR Part 2</span><span class="s">work required beforehand</span></div>
+        </div>
+        <div class="day-grid">
+          <div class="hours"><span>8a</span><span>9a</span><span>10a</span><span>11a</span><span>12p</span><span>1p</span><span>2p</span><span>3p</span><span>4p</span><span>5p</span><span>6p</span><span>7p</span></div>
+          <div class="track"></div>
+        </div>
+      </div>
+
+      <div class="day">
+        <div class="day-head"><div class="dow">THU</div><div class="date">23</div></div>
+        <div class="day-grid">
+          <div class="hours"><span>8a</span><span>9a</span><span>10a</span><span>11a</span><span>12p</span><span>1p</span><span>2p</span><span>3p</span><span>4p</span><span>5p</span><span>6p</span><span>7p</span></div>
+          <div class="track">
+            <div class="appt bu timed" style="--s:10;--e:11"><span class="t">10:00 – 11:00 AM</span><span class="n">PR Part 2 w/ Sam</span><span class="s">gp-sum-review · 35% GD 640</span></div>
+            <div class="appt bu timed" style="--s:13;--e:14"><span class="t">1:00 – 2:00 PM</span><span class="n">Treatment Plan Apt</span></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="day">
+        <div class="day-head"><div class="dow">FRI</div><div class="date">24</div></div>
+        <div class="day-grid">
+          <div class="hours"><span>8a</span><span>9a</span><span>10a</span><span>11a</span><span>12p</span><span>1p</span><span>2p</span><span>3p</span><span>4p</span><span>5p</span><span>6p</span><span>7p</span></div>
+          <div class="track">
+            <div class="appt bu timed short" style="--s:8.5;--e:9.5"><span class="t">8:30 AM</span><span class="n">Nababi, Maimouna</span><span class="s">Tx Plan · 9D · Dr. Maseli</span></div>
+            <div class="appt bu timed" style="--s:12.5;--e:15.5"><span class="t">12:30 – 3:30 PM</span><span class="n">Oral Radiology Makeup</span></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="day off"><div class="day-head"><div class="dow">SAT</div><div class="date">25</div></div><div class="off-tag">Off</div></div>
+      <div class="day off"><div class="day-head"><div class="dow">SUN</div><div class="date">26</div></div><div class="off-tag">Off</div></div>
+    </div>
+  </section>
+
+  <!-- WEEK 2 -->
+  <section class="week">
+    <div class="week-header">
+      <div class="week-title">Week 2</div>
+      <div class="week-range">Apr 27 — May 3</div>
+      <div class="week-note">data collection rotation · blocks all clinic</div>
+    </div>
+    <div class="grid">
+      <div class="day">
+        <div class="day-head"><div class="dow">MON</div><div class="date">27</div></div>
+        <div class="day-grid">
+          <div class="hours"><span>8a</span><span>9a</span><span>10a</span><span>11a</span><span>12p</span><span>1p</span><span>2p</span><span>3p</span><span>4p</span><span>5p</span><span>6p</span><span>7p</span></div>
+          <div class="track">
+            <div class="appt bu timed" style="--s:8.5;--e:15"><span class="t">8:30 AM – 3:00 PM</span><span class="n">Data Collection · Day 1</span><span class="s">orientation · protocol review · chart IDs</span></div>
+            <div class="appt bu timed" style="--s:15.25;--e:16"><span class="t">3:15 – 4:00 PM</span><span class="n">PR Part 2 w/ Dr. Maseli</span></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="day">
+        <div class="day-head"><div class="dow">TUE</div><div class="date">28</div></div>
+        <div class="day-grid">
+          <div class="hours"><span>8a</span><span>9a</span><span>10a</span><span>11a</span><span>12p</span><span>1p</span><span>2p</span><span>3p</span><span>4p</span><span>5p</span><span>6p</span><span>7p</span></div>
+          <div class="track">
+            <div class="appt bu timed" style="--s:8.5;--e:15"><span class="t">8:30 AM – 3:00 PM</span><span class="n">Data Collection · Day 2</span><span class="s">chart reviews · screening</span></div>
+            <div class="appt bu timed" style="--s:15.25;--e:16.25"><span class="t">3:15 – 4:15 PM</span><span class="n">Infection Control Pres.</span><span class="s">+ bench test · Dr. Saxena</span></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="day">
+        <div class="day-head"><div class="dow">WED</div><div class="date">29</div></div>
+        <div class="day-grid">
+          <div class="hours"><span>8a</span><span>9a</span><span>10a</span><span>11a</span><span>12p</span><span>1p</span><span>2p</span><span>3p</span><span>4p</span><span>5p</span><span>6p</span><span>7p</span></div>
+          <div class="track">
+            <div class="appt bu timed" style="--s:8.5;--e:15"><span class="t">8:30 AM – 3:00 PM</span><span class="n">Data Collection · Day 3</span><span class="s">calibration · data entry · mid-week QA</span></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="day">
+        <div class="day-head"><div class="dow">THU</div><div class="date">30</div></div>
+        <div class="day-pins">
+          <div class="appt gold"><span class="t">🚨 DEADLINE · EOD</span><span class="n">FHC App + ID + Internet Agmt due</span><span class="s">→ Lnarvaez@fhcswf.org · PDF + typed</span></div>
+        </div>
+        <div class="day-grid">
+          <div class="hours"><span>8a</span><span>9a</span><span>10a</span><span>11a</span><span>12p</span><span>1p</span><span>2p</span><span>3p</span><span>4p</span><span>5p</span><span>6p</span><span>7p</span></div>
+          <div class="track">
+            <div class="appt bu timed" style="--s:8.5;--e:15"><span class="t">8:30 AM – 3:00 PM</span><span class="n">Data Collection · Day 4</span><span class="s">continued collection + entry</span></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="day">
+        <div class="day-head"><div class="dow">FRI</div><div class="date">01</div></div>
+        <div class="day-pins">
+          <div class="appt bu dim"><span class="t">BACKUP SLOT</span><span class="n">Potential Joe reschedule</span><span class="s">confirm w/ OS · call off DC if needed</span></div>
+        </div>
+        <div class="day-grid">
+          <div class="hours"><span>8a</span><span>9a</span><span>10a</span><span>11a</span><span>12p</span><span>1p</span><span>2p</span><span>3p</span><span>4p</span><span>5p</span><span>6p</span><span>7p</span></div>
+          <div class="track">
+            <div class="appt bu timed" style="--s:8.5;--e:15"><span class="t">8:30 AM – 3:00 PM</span><span class="n">Data Collection · Day 5 (final)</span><span class="s">wrap-up · dataset lock</span></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="day">
+        <div class="day-head"><div class="dow">SAT</div><div class="date">02</div></div>
+        <div class="day-grid">
+          <div class="hours"><span>8a</span><span>9a</span><span>10a</span><span>11a</span><span>12p</span><span>1p</span><span>2p</span><span>3p</span><span>4p</span><span>5p</span><span>6p</span><span>7p</span></div>
+          <div class="track">
+            <div class="appt bu timed short" style="--s:8.5;--e:9.5"><span class="t">8:30 AM</span><span class="n">Krima, Mohamed</span><span class="s">Prophy D1110 · 9F</span></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="day off"><div class="day-head"><div class="dow">SUN</div><div class="date">03</div></div><div class="off-tag">Off</div></div>
+    </div>
+  </section>
+
+  <!-- WEEK 3 -->
+  <section class="week">
+    <div class="week-header">
+      <div class="week-title">Week 3</div>
+      <div class="week-range">May 4 — 10</div>
+      <div class="week-note">Boston finish → Chicago DMV trip</div>
+    </div>
+    <div class="grid">
+      <div class="day">
+        <div class="day-head"><div class="dow">MON</div><div class="date">04</div></div>
+        <div class="day-grid">
+          <div class="hours"><span>8a</span><span>9a</span><span>10a</span><span>11a</span><span>12p</span><span>1p</span><span>2p</span><span>3p</span><span>4p</span><span>5p</span><span>6p</span><span>7p</span></div>
+          <div class="track">
+            <div class="appt bu timed short" style="--s:8.5;--e:9.5"><span class="t">8:30 AM</span><span class="n">Goncalves, Rany</span><span class="s">LOE D0140 · 9J</span></div>
+            <div class="appt bu timed" style="--s:12.5;--e:14"><span class="t">12:30 – 2:00 PM</span><span class="n">Woods, Annette</span><span class="s">Tx Plan · 9D · Dr. Maseli</span></div>
+            <div class="appt bu timed" style="--s:16;--e:17"><span class="t">4:00 – 5:00 PM</span><span class="n">Radiology OSCE</span></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="day">
+        <div class="day-head"><div class="dow">TUE</div><div class="date">05</div></div>
+        <div class="day-grid">
+          <div class="hours"><span>8a</span><span>9a</span><span>10a</span><span>11a</span><span>12p</span><span>1p</span><span>2p</span><span>3p</span><span>4p</span><span>5p</span><span>6p</span><span>7p</span></div>
+          <div class="track">
+            <div class="appt bu timed dim" style="--s:10;--e:13.5"><span class="t">10:00 AM – 1:30 PM</span><span class="n">Facial Neuromod Lec.</span><span class="s">skippable</span></div>
+            <div class="appt bu timed short" style="--s:16;--e:17"><span class="t">4:00 PM</span><span class="n">Sanor, Tata</span><span class="s">POE D0120 · 9I</span></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="day">
+        <div class="day-head"><div class="dow">WED</div><div class="date">06</div></div>
+        <div class="day-grid">
+          <div class="hours"><span>8a</span><span>9a</span><span>10a</span><span>11a</span><span>12p</span><span>1p</span><span>2p</span><span>3p</span><span>4p</span><span>5p</span><span>6p</span><span>7p</span></div>
+          <div class="track">
+            <div class="appt bu timed" style="--s:12.5;--e:14"><span class="t">12:30 – 2:00 PM</span><span class="n">Oral Med Midterm Makeup</span></div>
+            <div class="appt chi timed short" style="--s:18.5;--e:19.5"><span class="t">6:30 PM</span><span class="n">JetBlue BOS → ORD</span><span class="s">one-way · fly to Chicago</span></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="day">
+        <div class="day-head"><div class="dow">THU</div><div class="date">07</div></div>
+        <div class="day-pins">
+          <div class="appt chi"><span class="t">AM</span><span class="n">IL DMV</span><span class="s">renew license + plate sticker</span></div>
+        </div>
+        <div class="day-grid">
+          <div class="hours"><span>8a</span><span>9a</span><span>10a</span><span>11a</span><span>12p</span><span>1p</span><span>2p</span><span>3p</span><span>4p</span><span>5p</span><span>6p</span><span>7p</span></div>
+          <div class="track"></div>
+        </div>
+      </div>
+
+      <div class="day">
+        <div class="day-head"><div class="dow">FRI</div><div class="date">08</div></div>
+        <div class="day-pins">
+          <div class="appt chi"><span class="t">ALL DAY</span><span class="n">Chicago · family time</span></div>
+        </div>
+        <div class="day-grid">
+          <div class="hours"><span>8a</span><span>9a</span><span>10a</span><span>11a</span><span>12p</span><span>1p</span><span>2p</span><span>3p</span><span>4p</span><span>5p</span><span>6p</span><span>7p</span></div>
+          <div class="track">
+            <div class="appt bu timed dim" style="--s:9;--e:11"><span class="t">9:00 – 11:00 AM</span><span class="n">Khan, Juanita · SROSS</span><span class="s">D6010 · working to drop</span></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="day off">
+        <div class="day-head"><div class="dow">SAT</div><div class="date">09</div></div>
+        <div class="off-tag">Chicago</div>
+      </div>
+
+      <div class="day off">
+        <div class="day-head"><div class="dow">SUN</div><div class="date">10</div></div>
+        <div class="off-tag">Chicago</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- WEEK 4 -->
+  <section class="week">
+    <div class="week-header">
+      <div class="week-title">Week 4</div>
+      <div class="week-range">May 11 — 17</div>
+      <div class="week-note">return · Joe case · D3 deadline · drive south</div>
+    </div>
+    <div class="grid">
+      <div class="day">
+        <div class="day-head"><div class="dow">MON</div><div class="date">11</div></div>
+        <div class="day-pins">
+          <div class="appt chi late"><span class="t">11:00 PM EDT</span><span class="n">Arrive Boston</span><span class="s">late-night landing</span></div>
+        </div>
+        <div class="day-grid">
+          <div class="hours"><span>8a</span><span>9a</span><span>10a</span><span>11a</span><span>12p</span><span>1p</span><span>2p</span><span>3p</span><span>4p</span><span>5p</span><span>6p</span><span>7p</span></div>
+          <div class="track">
+            <div class="appt chi timed short" style="--s:19;--e:20"><span class="t">7:00 PM CDT</span><span class="n">Depart Chicago</span></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="day">
+        <div class="day-head"><div class="dow">TUE</div><div class="date">12</div></div>
+        <div class="day-grid">
+          <div class="hours"><span>8a</span><span>9a</span><span>10a</span><span>11a</span><span>12p</span><span>1p</span><span>2p</span><span>3p</span><span>4p</span><span>5p</span><span>6p</span><span>7p</span></div>
+          <div class="track">
+            <div class="appt bu timed short" style="--s:9.5;--e:10"><span class="t">9:30 – 10:00 AM</span><span class="n">Miller, Ethan · ETOMCHAK</span><span class="s">D8040 · Invisalign tray</span></div>
+            <div class="appt bu timed" style="--s:10;--e:12"><span class="t">10:00 AM</span><span class="n">Rosario, Jose — Extractions</span><span class="s">cd-units-total</span></div>
+            <div class="appt bu timed" style="--s:13;--e:16"><span class="t">1:00 PM</span><span class="n">Rosario — CD Insertion</span><span class="s">cd-sum-insert · 0/1 SUMMATIVE</span></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="day">
+        <div class="day-head"><div class="dow">WED</div><div class="date">13</div></div>
+        <div class="day-grid">
+          <div class="hours"><span>8a</span><span>9a</span><span>10a</span><span>11a</span><span>12p</span><span>1p</span><span>2p</span><span>3p</span><span>4p</span><span>5p</span><span>6p</span><span>7p</span></div>
+          <div class="track">
+            <div class="appt bu timed short" style="--s:9;--e:10"><span class="t">9:00 AM</span><span class="n">Rosario — 24-hr Adjust</span><span class="s">cd-form-adjust · cd-sum-adjust</span></div>
+            <div class="appt gold timed" style="--s:12.5;--e:14"><span class="t">12:30 – 2:00 PM</span><span class="n">Pre-Externship Final PR</span><span class="s">w/ Dr. Maseli · last BU PR</span></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="day">
+        <div class="day-head"><div class="dow">THU</div><div class="date">14</div></div>
+        <div class="day-pins">
+          <div class="appt road"><span class="t">ALL DAY</span><span class="n">Packing + Prep</span><span class="s">load the Acura · final FL checks</span></div>
+          <div class="appt bu"><span class="t">TASK</span><span class="n">Facial Injec Take-Home</span></div>
+        </div>
+        <div class="day-grid">
+          <div class="hours"><span>8a</span><span>9a</span><span>10a</span><span>11a</span><span>12p</span><span>1p</span><span>2p</span><span>3p</span><span>4p</span><span>5p</span><span>6p</span><span>7p</span></div>
+          <div class="track"></div>
+        </div>
+      </div>
+
+      <div class="day">
+        <div class="day-head"><div class="dow">FRI</div><div class="date">15</div></div>
+        <div class="day-pins">
+          <div class="appt gold"><span class="t">🚨 D3 DEADLINE</span><span class="n">Submit Facial Injec Take-Home</span></div>
+          <div class="appt road"><span class="t">ALL DAY</span><span class="n">Packing + Final Wrap-up</span><span class="s">last BU tasks · pre-trip service</span></div>
+        </div>
+        <div class="day-grid">
+          <div class="hours"><span>8a</span><span>9a</span><span>10a</span><span>11a</span><span>12p</span><span>1p</span><span>2p</span><span>3p</span><span>4p</span><span>5p</span><span>6p</span><span>7p</span></div>
+          <div class="track"></div>
+        </div>
+      </div>
+
+      <div class="day">
+        <div class="day-head"><div class="dow">SAT</div><div class="date">16</div></div>
+        <div class="day-pins">
+          <div class="appt road"><span class="t">ALL DAY</span><span class="n">Drive Day 1 · BOS → Carolinas</span><span class="s">overnight stop · ~700 mi</span></div>
+        </div>
+        <div class="day-grid">
+          <div class="hours"><span>8a</span><span>9a</span><span>10a</span><span>11a</span><span>12p</span><span>1p</span><span>2p</span><span>3p</span><span>4p</span><span>5p</span><span>6p</span><span>7p</span></div>
+          <div class="track"></div>
+        </div>
+      </div>
+
+      <div class="day">
+        <div class="day-head"><div class="dow">SUN</div><div class="date">17</div></div>
+        <div class="day-pins">
+          <div class="appt road"><span class="t">ALL DAY</span><span class="n">Drive Day 2 · Carolinas → Fort Myers</span><span class="s">arrive The Ashlar · Apt 1817</span></div>
+        </div>
+        <div class="day-grid">
+          <div class="hours"><span>8a</span><span>9a</span><span>10a</span><span>11a</span><span>12p</span><span>1p</span><span>2p</span><span>3p</span><span>4p</span><span>5p</span><span>6p</span><span>7p</span></div>
+          <div class="track"></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- TRAVEL HERO -->
+  <section class="hero hero-road">
+    <div class="hero-left">
+      <div class="hero-eyebrow">Fri May 15 – Sat May 16, 2026</div>
+      <h2>The <span>Drive.</span></h2>
+      <div class="hero-date">Boston → Fort Myers · I-95 spine · 1 overnight</div>
+      <p class="hero-lede">One overnight is the right call for 1,500 miles. Two wastes a day, zero is dangerous. Leave Friday, arrive Saturday evening — all of Sunday to decompress before Monday 8 AM orientation.</p>
+
+      <div class="route-stats">
+        <div><span class="num">1,500</span><span class="lbl">Total miles</span></div>
+        <div><span class="num">~23h</span><span class="lbl">Drive time</span></div>
+        <div><span class="num">2</span><span class="lbl">Days</span></div>
+        <div><span class="num">1</span><span class="lbl">Overnight</span></div>
+      </div>
+
+      <div class="hero-card hero-card-road">
+        <div class="hero-card-label">Day 1 · Fri May 15</div>
+        <div class="hero-card-addr">Boston → Rocky Mount, NC</div>
+        <div class="leg-stats">
+          <div><span>Miles</span><strong>~720</strong></div>
+          <div><span>Drive</span><strong>~11.5h</strong></div>
+          <div><span>Depart</span><strong>5:00 AM</strong></div>
+          <div><span>Arrive</span><strong>5:30 PM</strong></div>
+        </div>
+        <ul class="leg-steps">
+          <li><code>04:30</code> Wake · Adderall + food</li>
+          <li><code>05:00</code> Rolling · I-90 → I-84 → I-95</li>
+          <li><code>08:30–09:30</code> NYC metro (tail of rush)</li>
+          <li><code>14:00–15:00</code> DC/Baltimore · beat the 3–6 PM chokepoint</li>
+          <li><code>17:30–18:30</code> Rocky Mount arrival · lights out 9 PM</li>
+        </ul>
+      </div>
+
+      <div class="hero-card hero-card-road">
+        <div class="hero-card-label">Day 2 · Sat May 16</div>
+        <div class="hero-card-addr">Rocky Mount → Fort Myers</div>
+        <div class="leg-stats">
+          <div><span>Miles</span><strong>~780</strong></div>
+          <div><span>Drive</span><strong>~12h</strong></div>
+          <div><span>Depart</span><strong>5:00 AM</strong></div>
+          <div><span>Arrive</span><strong>5:30–7 PM</strong></div>
+        </div>
+        <ul class="leg-steps">
+          <li><code>04:30</code> Wake · Adderall + food</li>
+          <li><code>05:00</code> I-95 south toward Jacksonville</li>
+          <li><code>11:00</code> Jacksonville · brief I-10 W → I-75 S</li>
+          <li><code>—</code> Skip I-4/Orlando · stay on I-75</li>
+          <li><code>17:30–19:00</code> Arrive The Ashlar · Apt 1817</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="hero-right">
+      <div class="hero-section-title">Adderall Timing · Both Days</div>
+      <div class="med-plan">
+        <div class="med-row">
+          <div class="med-time">04:30</div>
+          <div class="med-body"><strong>Full 50mg (30+20) at wake</strong><em>same split, shifted earlier</em></div>
+        </div>
+        <div class="med-row">
+          <div class="med-time">08–15</div>
+          <div class="med-body"><strong>Peak cognition window</strong><em>hardest driving stretches land here</em></div>
+        </div>
+        <div class="med-row">
+          <div class="med-time">16–18</div>
+          <div class="med-body"><strong>Taper · use as stop cue</strong><em>not a clock · pull off when it fades</em></div>
+        </div>
+        <div class="med-row warn">
+          <div class="med-time">!</div>
+          <div class="med-body"><strong>Do not redose</strong><em>Day 2 quality = f(Day 1 sleep)</em></div>
+        </div>
+        <div class="med-row warn">
+          <div class="med-time">10:00</div>
+          <div class="med-body"><strong>Hard caffeine cutoff</strong><em>anything after = wrecked 9 PM lights-out</em></div>
+        </div>
+      </div>
+
+      <div class="hero-section-title" style="margin-top: 24px;">Pre-Trip · ILX @ 140k</div>
+      <ul class="bring-list">
+        <li><span>🛞</span><div><strong>Tire pressure + tread depth</strong></div></li>
+        <li><span>🛢️</span><div><strong>Oil level · top off if low</strong></div></li>
+        <li><span>💧</span><div><strong>Coolant · FL heat prep</strong></div></li>
+        <li><span>🆘</span><div><strong>Confirm spare inflated</strong></div></li>
+        <li><span>⚙️</span><div><strong>Belts + hoses check</strong></div></li>
+        <li><span>⛽</span><div><strong>Fill premium Thu night</strong></div></li>
+      </ul>
+
+      <div class="hero-section-title" style="margin-top: 24px;">Rocky Mount Overnight · I-95 Exits 138/141</div>
+      <div class="hotel-tier">
+        <div class="tier">
+          <span class="tier-tag">RELIABLE</span>
+          <strong>Holiday Inn Express · Hampton Inn · Fairfield Inn</strong>
+          <div class="tier-price">$90–120 / night</div>
+          <em>Best sleep-to-dollar · book this week</em>
+        </div>
+        <div class="tier">
+          <span class="tier-tag budget">ROCK BOTTOM</span>
+          <strong>Super 8 · Days Inn</strong>
+          <div class="tier-price">$55–75 / night</div>
+          <em>Fine for one night of sleep</em>
+        </div>
+      </div>
+    </div>
+
+    <!-- FULL-WIDTH COST LEDGER -->
+    <div class="hero-ledger">
+      <div class="ledger-head">
+        <div class="hero-section-title" style="margin:0; border:none; padding:0;">Total Cost Ledger · Apr 22 → May 18</div>
+        <div class="ledger-sub">Premium fuel reflects April 2026 spike (regular $4.09 · premium ~$4.80/gal) from Strait of Hormuz closure</div>
+      </div>
+
+      <div class="ledger-grid">
+        <div class="ledger-block">
+          <div class="ledger-cat">🔧 Pre-Trip Prep</div>
+          <div class="ledger-line"><span>Ell-Bern MA emissions inspection</span><strong>$35</strong></div>
+          <div class="ledger-line"><span>ILX pre-trip service (fluids, tires, spare)</span><strong>$50–100</strong></div>
+          <div class="ledger-sum"><span>Subtotal</span><strong>$85–135</strong></div>
+        </div>
+
+        <div class="ledger-block">
+          <div class="ledger-cat">🚗 The Drive</div>
+          <div class="ledger-line"><span>Premium fuel · 50 gal × $4.80</span><strong>$240</strong></div>
+          <div class="ledger-line"><span>Tolls (MA Pike, GWB, NJ/DE/MD)</span><strong>$45</strong></div>
+          <div class="ledger-line"><span>Rocky Mount hotel (midrange)</span><strong>$90–120</strong></div>
+          <div class="ledger-line"><span>Food en route (2 days)</span><strong>$40–80</strong></div>
+          <div class="ledger-line"><span>Buffer / unexpected</span><strong>$50</strong></div>
+          <div class="ledger-sum"><span>Subtotal</span><strong>$465–535</strong></div>
+        </div>
+
+        <div class="ledger-block">
+          <div class="ledger-cat">✈️ Chicago Trip · May 6–11</div>
+          <div class="ledger-line"><span>JetBlue BOS → ORD (booked)</span><strong>~$200</strong></div>
+          <div class="ledger-line"><span>JetBlue ORD → BOS (booked)</span><strong>~$200</strong></div>
+          <div class="ledger-line"><span>Ground transport + food</span><strong>$100</strong></div>
+          <div class="ledger-sum"><span>Subtotal</span><strong>~$500</strong></div>
+        </div>
+
+        <div class="ledger-block">
+          <div class="ledger-cat">🪪 IL DMV + Plates</div>
+          <div class="ledger-line"><span>Driver's license renewal (in-person)</span><strong>$30</strong></div>
+          <div class="ledger-line"><span>Plate renewal sticker</span><strong>$151</strong></div>
+          <div class="ledger-sum"><span>Subtotal</span><strong>$181</strong></div>
+        </div>
+
+        <div class="ledger-block">
+          <div class="ledger-cat">🏠 FHC Move-In · May 18</div>
+          <div class="ledger-line"><span>Cleaning deposit · <em class="refund">refundable</em></span><strong>$150</strong></div>
+          <div class="ledger-line"><span>Queen sheets + pillows (if new)</span><strong>$100</strong></div>
+          <div class="ledger-line"><span>Northland admin fee · <em class="tbd">confirm w/ Daisy</em></span><strong>$0 / $200</strong></div>
+          <div class="ledger-sum"><span>Subtotal</span><strong>$250–450</strong></div>
+        </div>
+
+        <div class="ledger-block">
+          <div class="ledger-cat">🛒 FL Setup · Week 1</div>
+          <div class="ledger-line"><span>Initial grocery run</span><strong>$150</strong></div>
+          <div class="ledger-line"><span>First week gas (site commute)</span><strong>$60</strong></div>
+          <div class="ledger-sum"><span>Subtotal</span><strong>$210</strong></div>
+        </div>
+      </div>
+
+      <div class="ledger-total">
+        <div class="total-line">
+          <span class="total-label">Estimated Total Outlay</span>
+          <span class="total-value">$1,691 – $2,011</span>
+        </div>
+        <div class="total-sub">
+          <span>Refundable if terms met</span>
+          <strong>– $150</strong>
+        </div>
+        <div class="total-sub">
+          <span>Net after deposit return</span>
+          <strong>$1,541 – $1,861</strong>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- HERO MAY 18 -->
+  <section class="hero">
+    <div class="hero-left">
+      <div class="hero-eyebrow">Mon · May 18, 2026</div>
+      <h2>Florida <span>begins.</span></h2>
+      <div class="hero-date">Fort Myers · Rotation 1 · through Jul 25</div>
+      <p class="hero-lede">Arrive crisp, no wrinkles. Site assignment is decided today — the 8 AM with Daisy and the 10:30 with Dr. Natali are your two windows.</p>
+
+      <div class="hero-card">
+        <div class="hero-card-label">The Ashlar · Apt 1817</div>
+        <div class="hero-card-addr">13001 Corbel Circle, Fort Myers, FL 33907</div>
+        <div class="hero-card-grid">
+          <div><span>Gate</span><code>#1300</code></div>
+          <div><span>Door</span><code>515545</code></div>
+          <div><span>Lock box</span><code>316</code></div>
+          <div><span>Wi-Fi</span><code>budental</code></div>
+          <div><span>Mailbox</span><code>#327</code></div>
+          <div><span>Leasing</span><code>239-432-0606</code></div>
+        </div>
+      </div>
+
+      <div class="hero-card">
+        <div class="hero-card-label">Key Contacts</div>
+        <div class="hero-contacts">
+          <div class="contact">
+            <strong>Dr. Anabel Natali</strong>
+            <em>Chief Dental Director</em>
+            <code>Aynatali@fhcswf.org</code>
+          </div>
+          <div class="contact">
+            <strong>Daisy Ojeda</strong>
+            <em>Asst. VP Dental Services</em>
+            <code>Dojeda@fhcswf.org</code>
+            <code>239-931-3876 (direct)</code>
+          </div>
+          <div class="contact">
+            <strong>Linette Narvaez</strong>
+            <em>Program Coordinator</em>
+            <code>Lnarvaez@fhcswf.org</code>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="hero-right">
+      <div class="hero-section-title">Orientation Day · May 18</div>
+      <div class="timeline">
+        <div class="step">
+          <div class="tm">8:00 AM</div>
+          <div class="ti"><strong>Orientation w/ Daisy Ojeda</strong><em>2270 Colonial Blvd, Fort Myers, FL 33907 · 3rd/4th floor</em></div>
+        </div>
+        <div class="step">
+          <div class="tm">9:00 AM</div>
+          <div class="ti"><strong>HR Paperwork w/ Gina Radicchi</strong><em>new-hire intake · forms review</em></div>
+        </div>
+        <div class="step">
+          <div class="tm">10:00 AM</div>
+          <div class="ti"><strong>Safety Orientation w/ Peter Rodrigo</strong><em>FHC safety specialist · OSHA / clinical</em></div>
+        </div>
+        <div class="step">
+          <div class="tm">10:30 AM</div>
+          <div class="ti"><strong>First Day Training w/ Dr. Natali</strong><em>Estero Dental · 19701 S. Tamiami Trail, Fort Myers FL 33908</em></div>
+        </div>
+        <div class="step">
+          <div class="tm">SAME DAY</div>
+          <div class="ti"><strong>Drug Screen · FHC is drug-free</strong><em>flush anything that could false-positive in advance</em></div>
+        </div>
+        <div class="step">
+          <div class="tm">SAME DAY</div>
+          <div class="ti"><strong>$150 Cleaning Deposit Due</strong><em>cash or check only · refundable on move-out</em></div>
+        </div>
+        <div class="step">
+          <div class="tm">SAME DAY</div>
+          <div class="ti"><strong>Site Assignment Announced</strong><em>9 locations · you'll report there May 19</em></div>
+        </div>
+      </div>
+
+      <div class="hero-section-title" style="margin-top: 24px;">What to Bring · Day One</div>
+      <ul class="bring-list">
+        <li><span>👔</span><div><strong>Business professional</strong> · crisp, no wrinkles</div></li>
+        <li><span>💰</span><div><strong>$150 cash or check</strong> · cleaning deposit</div></li>
+        <li><span>🆔</span><div><strong>Photo ID</strong> · HR intake + drug screen</div></li>
+        <li><span>📄</span><div><strong>Move-in checklist</strong> · fillable portion done</div></li>
+      </ul>
+
+      <div class="hero-section-title" style="margin-top: 24px;">For the Apartment</div>
+      <ul class="bring-list">
+        <li><span>🛏️</span><div><strong>Queen sheets + pillows</strong> · quilts not provided</div></li>
+        <li><span>🧥</span><div><strong>Business casual</strong> · end-of-rotation case pres.</div></li>
+        <li><span>👟</span><div><strong>Clinical shoes + 3–4 scrubs</strong> · PPE by FHC</div></li>
+        <li><span>☔</span><div><strong>Rain jacket + moisture-wick tees</strong> · 80%+ humid</div></li>
+      </ul>
+
+      <div class="hero-section-title" style="margin-top: 24px;">Fixed Rotation Dates</div>
+      <div class="fixed-dates">
+        <div><span>Move-in window</span><strong>Sat May 16</strong></div>
+        <div><span>Orientation</span><strong>Mon May 18 · 8 AM</strong></div>
+        <div><span>Apt inspection</span><strong>Week of Jul 20</strong></div>
+        <div><span>Move-out</span><strong>Sat Jul 25 · 10 AM</strong></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- DEADLINES -->
+  <section class="deadlines">
+    <h3>Fixed deadlines · do not miss</h3>
+    <div class="dl-grid">
+      <div class="dl"><span class="when">Thu Apr 23</span><span class="what">PR Part 2 (35% GD 640)</span></div>
+      <div class="dl"><span class="when">Thu Apr 30</span><span class="what">FHC paperwork to Linette (PDF, typed)</span></div>
+      <div class="dl"><span class="when">Tue May 12</span><span class="what">Rosario CD insertion — 0/1 summative</span></div>
+      <div class="dl"><span class="when">Fri May 15</span><span class="what">Facial Injec take-home · D3 deadline</span></div>
+      <div class="dl"><span class="when">Mon May 18</span><span class="what">Orientation 8 AM · $150 cash/check</span></div>
+    </div>
+  </section>
+
+</div>
+
+<script>
+(function(){
+  var el = document.getElementById('countdown');
+  if (!el) return;
+  var target = new Date(2026, 4, 18);
+  var today = new Date();
+  today.setHours(0,0,0,0);
+  var ms = target - today;
+  var days = Math.max(0, Math.round(ms / 86400000));
+  el.textContent = days;
+})();
+</script>
+</body>
+</html>
