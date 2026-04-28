@@ -540,6 +540,24 @@ function migrateToUnifiedPatientStore() {
             }
         });
 
+        // Remap patientTodoBoard patient-keyed entries
+        var todoBoard = roadmapData.patientTodoBoard;
+        if (todoBoard?.patients && typeof todoBoard.patients === 'object') {
+            Object.keys(idRemapTable).forEach(function(oldId) {
+                var newId = idRemapTable[oldId];
+                if (!todoBoard.patients[oldId]) return;
+                if (todoBoard.patients[newId]) {
+                    todoBoard.patients[newId] = mergePatientTodoBoard(
+                        { patients: { [newId]: todoBoard.patients[newId] } },
+                        { patients: { [oldId]: todoBoard.patients[oldId] } }
+                    ).patients[newId];
+                } else {
+                    todoBoard.patients[newId] = todoBoard.patients[oldId];
+                }
+                delete todoBoard.patients[oldId];
+            });
+        }
+
         // Remap autoLinkReviewQueue[].patientId
         getValues(roadmapData.clinicalData.autoLinkReviewQueue).forEach(function(q) {
             if (q.patientId && idRemapTable[q.patientId]) {
@@ -1336,10 +1354,15 @@ function savePatientField(element) {
     safeLocalStorageSet(STORAGE_KEY, JSON.stringify(roadmapData));
     saveData();
     // Propagate for fields that affect downstream views (sidebar, roster, dashboard)
+    var propagated = false;
     if (field === 'name' || field === 'activeStatus' || field === 'lastVisit' || field === 'phone' || field === 'reliability') {
         if (typeof propagateClinicalChanges === 'function') {
             propagateClinicalChanges({ patients: true, dashboard: true, calendars: false, source: 'savePatientField' });
+            propagated = true;
         }
+    }
+    if (!propagated && typeof renderPatientTodoTab === 'function') {
+        try { renderPatientTodoTab(); } catch(e) { console.error('[Patients] renderPatientTodoTab error:', e); }
     }
 }
 
@@ -1352,6 +1375,12 @@ function resetNextVisitToAuto(patientId) {
     clinicalDataDirty = true;
     safeLocalStorageSet(STORAGE_KEY, JSON.stringify(roadmapData));
     saveData();
+    if (typeof renderMiniReview === 'function') {
+        try { renderMiniReview(); } catch(e) { console.error('[Patients] renderMiniReview error:', e); }
+    }
+    if (typeof renderPatientTodoTab === 'function') {
+        try { renderPatientTodoTab(); } catch(e) { console.error('[Patients] renderPatientTodoTab error:', e); }
+    }
     renderPatientRecord(patientId);
 }
 
@@ -2949,6 +2978,24 @@ function migrateLeadingZeroDedup() {
                     task.patientId = idRemapTable[task.patientId];
                 }
             });
+
+            // Remap patientTodoBoard patient-keyed entries
+            var todoBoard = roadmapData.patientTodoBoard;
+            if (todoBoard?.patients && typeof todoBoard.patients === 'object') {
+                Object.keys(idRemapTable).forEach(function(oldId) {
+                    var newId = idRemapTable[oldId];
+                    if (!todoBoard.patients[oldId]) return;
+                    if (todoBoard.patients[newId]) {
+                        todoBoard.patients[newId] = mergePatientTodoBoard(
+                            { patients: { [newId]: todoBoard.patients[newId] } },
+                            { patients: { [oldId]: todoBoard.patients[oldId] } }
+                        ).patients[newId];
+                    } else {
+                        todoBoard.patients[newId] = todoBoard.patients[oldId];
+                    }
+                    delete todoBoard.patients[oldId];
+                });
+            }
 
             // Remap autoLinkReviewQueue[].patientId
             var arlq = getValues(roadmapData.clinicalData.autoLinkReviewQueue);

@@ -1743,6 +1743,7 @@ function initUI() {
     try { initClinicalTab(); } catch(e) { console.error('initClinicalTab error:', e); }
     try { renderCompetencies(); } catch(e) { console.error('renderCompetencies error:', e); }
     try { renderMiniReview(); } catch(e) { console.error('renderMiniReview error:', e); }
+    try { renderPatientTodoTab(); } catch(e) { console.error('renderPatientTodoTab error:', e); }
 
     // One-time perio noise cleanup
     if (typeof migratePerioNoiseCleanup === 'function') {

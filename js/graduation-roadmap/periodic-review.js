@@ -1602,10 +1602,15 @@ function prSavePatientField(patientId, fieldName, value) {
     saveData();
 
     // Propagate to downstream views (sidebar, mini review, countdown radar)
+    var propagated = false;
     if (['name', 'reliability', 'activeStatus', 'phone', 'lastVisit'].indexOf(fieldName) >= 0) {
         if (typeof propagateClinicalChanges === 'function') {
             propagateClinicalChanges({ patients: true });
+            propagated = true;
         }
+    }
+    if (!propagated && typeof renderPatientTodoTab === 'function') {
+        try { renderPatientTodoTab(); } catch(e) { console.error('[PR] renderPatientTodoTab error:', e); }
     }
 }
 

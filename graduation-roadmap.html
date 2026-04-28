@@ -7804,6 +7804,293 @@
             .pts-stat-chip { font-size: 0.72em; }
         }
 
+        /* ==================== PATIENT TODO TAB ==================== */
+        #tab-patienttodos {
+            background: #f7f5ef;
+            padding: 20px;
+            font-family: 'Inter', 'Segoe UI', sans-serif;
+            color: #17212b;
+        }
+        .pttd-header {
+            display: flex;
+            align-items: flex-end;
+            justify-content: space-between;
+            gap: 12px;
+            margin-bottom: 14px;
+            padding-bottom: 12px;
+            border-bottom: 2px solid #e2e0d8;
+            flex-wrap: wrap;
+        }
+        .pttd-title h2 {
+            margin: 0;
+            font-size: 1.3em;
+            color: #17212b;
+            font-weight: 700;
+        }
+        .pttd-title p {
+            margin: 4px 0 0;
+            color: #62707c;
+            font-size: 0.88em;
+        }
+        .pttd-meta {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+        .pttd-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: #fff;
+            border: 1px solid #e2e0d8;
+            border-radius: 999px;
+            padding: 6px 10px;
+            color: #475569;
+            font-size: 0.78em;
+            font-weight: 600;
+        }
+        .pttd-toggle-hidden {
+            background: #fff;
+            border: 1px solid #d6d0c5;
+            border-radius: 999px;
+            padding: 7px 12px;
+            color: #1a7f79;
+            font-size: 0.78em;
+            font-weight: 700;
+            cursor: pointer;
+        }
+        .pttd-hidden-panel {
+            background: #fff;
+            border: 1px solid #e2e0d8;
+            border-radius: 10px;
+            padding: 10px 12px;
+            margin-bottom: 12px;
+        }
+        .pttd-hidden-title {
+            font-size: 0.78em;
+            font-weight: 700;
+            color: #62707c;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            margin-bottom: 8px;
+        }
+        .pttd-hidden-list {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        .pttd-hidden-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 8px;
+            background: #f8f7f3;
+            border-radius: 8px;
+            padding: 8px 10px;
+        }
+        .pttd-hidden-name {
+            color: #17212b;
+            font-size: 0.86em;
+            font-weight: 600;
+        }
+        .pttd-hidden-chart {
+            color: #62707c;
+            font-size: 0.78em;
+            margin-left: 6px;
+        }
+        .pttd-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        .pttd-card {
+            background: #fff;
+            border-radius: 10px;
+            border: 1px solid #e2e0d8;
+            padding: 12px 14px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+        }
+        .pttd-card-header {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 12px;
+        }
+        .pttd-identity {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+        .pttd-rel-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            flex-shrink: 0;
+        }
+        .pttd-rel-green { background: #22c55e; }
+        .pttd-rel-yellow { background: #f59e0b; }
+        .pttd-rel-red { background: #ef4444; }
+        .pttd-name {
+            font-size: 0.98em;
+            font-weight: 700;
+            color: #17212b;
+        }
+        .pttd-chart,
+        .pttd-phone {
+            font-size: 0.78em;
+            color: #62707c;
+        }
+        .pttd-phone { color: #6366f1; }
+        .pttd-hide-btn,
+        .pttd-action-btn {
+            background: #fff;
+            border: 1px solid #d6d0c5;
+            border-radius: 8px;
+            padding: 6px 10px;
+            color: #475569;
+            font-size: 0.76em;
+            font-weight: 700;
+            cursor: pointer;
+            flex-shrink: 0;
+        }
+        .pttd-hide-btn {
+            color: #92400e;
+            background: #fffaf0;
+            border-color: #f0d8a8;
+        }
+        .pttd-grid {
+            display: grid;
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+            gap: 8px;
+            margin-top: 10px;
+        }
+        .pttd-kv {
+            background: #f8f7f3;
+            border-radius: 7px;
+            padding: 7px 9px;
+            min-width: 0;
+        }
+        .pttd-kv.pttd-summary {
+            grid-column: 1 / -1;
+        }
+        .pttd-kv-label {
+            font-size: 0.66em;
+            color: #62707c;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            font-weight: 700;
+            margin-bottom: 3px;
+        }
+        .pttd-kv-value {
+            font-size: 0.82em;
+            color: #17212b;
+            line-height: 1.35;
+            white-space: pre-wrap;
+            word-break: break-word;
+        }
+        .pttd-kv-value.pttd-none {
+            color: #b45309;
+            font-style: italic;
+        }
+        .pttd-summary-text {
+            font-size: 0.82em;
+            color: #334155;
+            line-height: 1.45;
+        }
+        .pttd-tasks {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            margin-top: 10px;
+        }
+        .pttd-task-row {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: #fcfbf8;
+            border: 1px solid #ece7dd;
+            border-radius: 8px;
+            padding: 7px 8px;
+        }
+        .pttd-task-check {
+            width: 16px;
+            height: 16px;
+            accent-color: #1a7f79;
+            flex-shrink: 0;
+        }
+        .pttd-task-input {
+            flex: 1;
+            border: none;
+            background: transparent;
+            color: #17212b;
+            font-size: 0.86em;
+            line-height: 1.35;
+            outline: none;
+            min-width: 0;
+        }
+        .pttd-task-input.pttd-done {
+            color: #94a3b8;
+            text-decoration: line-through;
+        }
+        .pttd-task-empty {
+            color: #94a3b8;
+            font-style: italic;
+            font-size: 0.8em;
+            padding: 2px 0 4px 2px;
+        }
+        .pttd-add-row {
+            display: flex;
+            gap: 8px;
+            margin-top: 6px;
+        }
+        .pttd-add-input {
+            flex: 1;
+            border: 1px solid #ddd8cc;
+            border-radius: 8px;
+            padding: 9px 11px;
+            background: #f8f7f3;
+            color: #17212b;
+            font-size: 0.84em;
+            outline: none;
+        }
+        .pttd-add-input:focus,
+        .pttd-task-input:focus {
+            box-shadow: 0 0 0 2px rgba(26, 127, 121, 0.12);
+        }
+        .pttd-add-btn {
+            background: #1a7f79;
+            color: #fff;
+            border: none;
+            border-radius: 8px;
+            padding: 9px 14px;
+            font-size: 0.8em;
+            font-weight: 700;
+            cursor: pointer;
+            white-space: nowrap;
+        }
+        .pttd-empty {
+            background: #fff;
+            border: 1px solid #e2e0d8;
+            border-radius: 10px;
+            padding: 20px;
+            text-align: center;
+            color: #94a3b8;
+        }
+        @media (max-width: 768px) {
+            #tab-patienttodos { padding: 12px; }
+            .pttd-grid { grid-template-columns: 1fr; }
+            .pttd-card { padding: 10px 12px; }
+            .pttd-card-header { flex-direction: column; }
+            .pttd-add-row { flex-direction: column; }
+            .pttd-add-btn,
+            .pttd-hide-btn,
+            .pttd-action-btn,
+            .pttd-toggle-hidden { width: 100%; }
+            .pttd-hidden-row { flex-direction: column; align-items: flex-start; }
+        }
+
         /* ==================== MINI REVIEW TAB ==================== */
         #tab-minireview {
             background: #f7f5ef;
@@ -8418,9 +8705,10 @@
         </div>
     </div>
 
-    <!-- Tab Navigation (7-tab layout) -->
+    <!-- Tab Navigation -->
     <div class="tab-nav" style="display:flex; gap:4px; overflow-x:auto; padding:8px; background:#0f172a; position:sticky; top:0; z-index:100;">
         <button class="tab-btn active" onclick="switchTab('missioncontrol', event)">🎯 Mission Control</button>
+        <button class="tab-btn" onclick="switchTab('patienttodos', event)">📝 Patient To-Do</button>
         <button class="tab-btn" onclick="switchTab('patients', event)">🩺 Patients</button>
         <button class="tab-btn" onclick="switchTab('competencies', event)">📊 Competencies</button>
         <button class="tab-btn" onclick="switchTab('clinical', event)">🏥 Clinical</button>
@@ -8437,6 +8725,11 @@
     <!-- ==================== MISSION CONTROL TAB ==================== -->
     <div id="tab-missioncontrol" class="tab-content active">
         <!-- Populated by renderDashboard() in init.js -->
+    </div>
+
+    <!-- ==================== PATIENT TODO TAB ==================== -->
+    <div id="tab-patienttodos" class="tab-content">
+        <!-- Populated by renderPatientTodoTab() in patient-todo-tab.js -->
     </div>
 
     <!-- ==================== PATIENTS TAB ==================== -->
@@ -11258,6 +11551,7 @@ NOTES: ...
     <script src="js/graduation-roadmap/exam-content.js?v=20260403"></script>
     <script src="js/graduation-roadmap/clinical.js?v=20260405b"></script>
     <script src="js/graduation-roadmap/patients.js?v=20260405"></script>
+    <script src="js/graduation-roadmap/patient-todo-tab.js?v=20260428"></script>
     <script src="js/graduation-roadmap/import-system.js?v=20260403"></script>
     <script src="js/graduation-roadmap/daily-planner.js?v=20260403"></script>
     <script src="js/graduation-roadmap/monthly-planner.js?v=20260403"></script>

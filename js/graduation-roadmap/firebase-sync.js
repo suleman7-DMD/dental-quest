@@ -386,6 +386,30 @@ function reconstructState(source, options) {
         };
     }
 
+    // --- Patient To-Do Board ---
+    var patientTodoDeletedIds = !isSourceWins
+        ? { ...(s.clinicalData?.deletedPatientRecordIds || {}), ...(f.clinicalData?.deletedPatientRecordIds || {}) }
+        : (s.clinicalData?.deletedPatientRecordIds || {});
+    if (isSourceWins) {
+        result.patientTodoBoard = mergePatientTodoBoard(
+            s.patientTodoBoard || f.patientTodoBoard || { patients: {}, lastUpdated: null },
+            {},
+            patientTodoDeletedIds
+        );
+    } else if (isStoredWins) {
+        result.patientTodoBoard = mergePatientTodoBoard(
+            s.patientTodoBoard,
+            f.patientTodoBoard,
+            patientTodoDeletedIds
+        );
+    } else {
+        result.patientTodoBoard = mergePatientTodoBoard(
+            f.patientTodoBoard,
+            s.patientTodoBoard,
+            patientTodoDeletedIds
+        );
+    }
+
     // --- Daily Planner ---
     result.dailyPlanner = migrateDailyPlannerBlocks(s.dailyPlanner || f.dailyPlanner);
 
@@ -552,9 +576,18 @@ function mergeRemoteCollectionsIntoLocal(data) {
     if (!data) return;
 
     // Fix #2: Collect locally-deleted IDs so addMissing won't resurrect them
-    var deletedApts = roadmapData.clinicalData?.deletedAppointmentIds || {};
-    var deletedProcs = roadmapData.clinicalData?.deletedProcedureIds || {};
-    var deletedPRs = roadmapData.clinicalData?.deletedPatientRecordIds || {};
+    var deletedApts = {
+        ...(roadmapData.clinicalData?.deletedAppointmentIds || {}),
+        ...(data.clinicalData?.deletedAppointmentIds || {})
+    };
+    var deletedProcs = {
+        ...(roadmapData.clinicalData?.deletedProcedureIds || {}),
+        ...(data.clinicalData?.deletedProcedureIds || {})
+    };
+    var deletedPRs = {
+        ...(roadmapData.clinicalData?.deletedPatientRecordIds || {}),
+        ...(data.clinicalData?.deletedPatientRecordIds || {})
+    };
 
     // Helper: add remote entries that don't exist locally (local wins for conflicts)
     // Optional 3rd param: set of deleted IDs to skip (prevents resurrection of deleted records)
@@ -670,6 +703,12 @@ function mergeRemoteCollectionsIntoLocal(data) {
         addMissing(roadmapData.todoList.items, data.todoList.items);
         roadmapData.todoList._nextSeq = Math.max(roadmapData.todoList._nextSeq || 1, data.todoList._nextSeq || 1);
     }
+
+    roadmapData.patientTodoBoard = mergePatientTodoBoard(
+        roadmapData.patientTodoBoard,
+        data.patientTodoBoard,
+        deletedPRs
+    );
 
     // Grades: deep merge (add remote course grades that don't exist locally)
     if (data.grades) {
@@ -1989,6 +2028,7 @@ function isValidAppData(data) {
         data.monthlyPlanner ||
         data.clinicalData ||
         data.dailyPlanner ||
+        data.patientTodoBoard ||
         data.exams ||
         data.courses ||
         data.grades ||
@@ -2438,6 +2478,10 @@ function validateStateIntegrity(data) {
     // todoList must be object (not undefined) — can be empty
     if (data.todoList !== undefined && (typeof data.todoList !== 'object' || data.todoList === null)) {
         errors.push('todoList is not an object');
+    }
+    if (data.patientTodoBoard !== undefined && (typeof data.patientTodoBoard !== 'object' || data.patientTodoBoard === null)) {
+        console.error('[GUARD-F] patientTodoBoard is not an object');
+        errors.push('patientTodoBoard is not an object');
     }
     // periodicReviews can be undefined (defaults) or object — reject anything else
     if (data.periodicReviews !== undefined && data.periodicReviews !== null && typeof data.periodicReviews !== 'object') {
