@@ -63,8 +63,8 @@ function patientTodoGetSummary(patient) {
         patient?.txSummaryBU
     ];
     for (var i = 0; i < candidates.length; i++) {
-        var snippet = patientTodoFirstSnippet(candidates[i], 180);
-        if (snippet) return snippet;
+        var cleaned = patientTodoCleanText(candidates[i]);
+        if (cleaned) return cleaned;
     }
     return '';
 }
@@ -331,31 +331,41 @@ function renderPatientTodoTab() {
         html += '<div class="pttd-identity">';
         html += '<span class="pttd-rel-dot pttd-rel-' + escapeHtml(reliability) + '"></span>';
         html += '<span class="pttd-name">' + escapeHtml(patient.name || 'Unnamed') + '</span>';
-        html += '<span class="pttd-chart">#' + escapeHtml(patient.chartNumber || '') + '</span>';
+        if (patient.chartNumber) {
+            html += '<span class="pttd-badge pttd-chart">#' + escapeHtml(patient.chartNumber) + '</span>';
+        }
         if (phoneDisplay) {
-            html += '<span class="pttd-phone">☎ ' + escapeHtml(phoneDisplay) + '</span>';
+            html += '<span class="pttd-badge pttd-phone">' + escapeHtml(phoneDisplay) + '</span>';
         }
         html += '</div>';
-        html += '<button class="pttd-hide-btn" onclick="patientTodoHidePatient(\'' + safePatientId + '\')">Remove</button>';
+        html += '<button class="pttd-hide-btn" onclick="patientTodoHidePatient(\'' + safePatientId + '\')" title="Remove from this tab">×</button>';
         html += '</div>';
 
-        html += '<div class="pttd-grid">';
-        html += '<div class="pttd-kv"><div class="pttd-kv-label">Pt Name</div><div class="pttd-kv-value">' + escapeHtml(patient.name || '') + '</div></div>';
-        html += '<div class="pttd-kv"><div class="pttd-kv-label">Chart #</div><div class="pttd-kv-value">' + escapeHtml(patient.chartNumber || '') + '</div></div>';
-        html += '<div class="pttd-kv"><div class="pttd-kv-label">Phone</div><div class="pttd-kv-value">' + escapeHtml(phoneDisplay || '') + '</div></div>';
-        html += '<div class="pttd-kv"><div class="pttd-kv-label">Last Visit</div><div class="pttd-kv-value">' + escapeHtml(lastVisit.date || '') + (lastVisit.detail ? '<br>' + escapeHtml(lastVisit.detail) : '') + '</div></div>';
-        html += '<div class="pttd-kv"><div class="pttd-kv-label">Next Visit</div><div class="pttd-kv-value' + ((!nextVisit.detail && nextVisit.date === 'No apt scheduled') ? ' pttd-none' : '') + '">' + escapeHtml(nextVisit.date || '') + (nextVisit.detail ? '<br>' + escapeHtml(nextVisit.detail) : '') + '</div></div>';
-        html += '<div class="pttd-kv pttd-summary"><div class="pttd-kv-label">Treatment Summary</div><div class="pttd-summary-text">' + escapeHtml(summary || '') + '</div></div>';
-        html += '</div>';
+        var ctxRows = [];
+        var lastCombined = [lastVisit.date, lastVisit.detail].filter(Boolean).join(' · ');
+        if (lastCombined) {
+            ctxRows.push('<div class="pttd-ctx-row"><span class="pttd-ctx-label">Last</span><span class="pttd-ctx-value">' + escapeHtml(lastCombined) + '</span></div>');
+        }
+        var noApt = nextVisit.date === 'No apt scheduled' && !nextVisit.detail;
+        var nextCombined = noApt ? 'No apt scheduled' : [nextVisit.date, nextVisit.detail].filter(Boolean).join(' · ');
+        if (nextCombined) {
+            ctxRows.push('<div class="pttd-ctx-row"><span class="pttd-ctx-label">Next</span><span class="pttd-ctx-value' + (noApt ? ' pttd-none' : '') + '">' + escapeHtml(nextCombined) + '</span></div>');
+        }
+        if (summary) {
+            ctxRows.push('<div class="pttd-ctx-row pttd-ctx-plan"><span class="pttd-ctx-label">Tx</span><span class="pttd-ctx-value pttd-ctx-multiline">' + escapeHtml(summary) + '</span></div>');
+        }
+        if (ctxRows.length > 0) {
+            html += '<div class="pttd-context">' + ctxRows.join('') + '</div>';
+        }
 
         html += '<div class="pttd-tasks">';
         if (tasks.length === 0) {
-            html += '<div class="pttd-task-empty">No tasks yet for this patient.</div>';
+            html += '<div class="pttd-task-empty">No tasks yet</div>';
         }
 
         tasks.forEach(function(task) {
             var safeTaskId = String(task.id || '').replace(/['"\\]/g, '');
-            html += '<div class="pttd-task-row">';
+            html += '<div class="pttd-task-row' + (task.done ? ' pttd-row-done' : '') + '">';
             html += '<input class="pttd-task-check" type="checkbox" ' + (task.done ? 'checked ' : '') + 'onclick="patientTodoToggleTask(\'' + safePatientId + '\', \'' + safeTaskId + '\')">';
             html += '<input class="pttd-task-input' + (task.done ? ' pttd-done' : '') + '" type="text" '
                 + 'value="' + escapeHtml(task.text || '') + '" '
@@ -364,13 +374,13 @@ function renderPatientTodoTab() {
                 + 'data-task-id="' + escapeHtml(task.id || '') + '" '
                 + 'onkeydown="patientTodoTaskKeyHandler(event)" '
                 + 'onblur="patientTodoSaveTaskText(this)">';
-            html += '<button class="pttd-action-btn" onclick="patientTodoDeleteTask(\'' + safePatientId + '\', \'' + safeTaskId + '\')">Delete</button>';
+            html += '<button class="pttd-task-del" onclick="patientTodoDeleteTask(\'' + safePatientId + '\', \'' + safeTaskId + '\')" title="Delete task">×</button>';
             html += '</div>';
         });
 
         html += '<div class="pttd-add-row">';
-        html += '<input id="pttd-new-' + domId + '" class="pttd-add-input" type="text" placeholder="Add a task for this patient..." onkeydown="patientTodoHandleAddKey(event, \'' + safePatientId + '\')">';
-        html += '<button class="pttd-add-btn" onclick="patientTodoAddTask(\'' + safePatientId + '\')">+ Add Task</button>';
+        html += '<input id="pttd-new-' + domId + '" class="pttd-add-input" type="text" placeholder="Add task..." onkeydown="patientTodoHandleAddKey(event, \'' + safePatientId + '\')">';
+        html += '<button class="pttd-add-btn" onclick="patientTodoAddTask(\'' + safePatientId + '\')">Add</button>';
         html += '</div>';
         html += '</div>';
         html += '</div>';
@@ -378,4 +388,9 @@ function renderPatientTodoTab() {
     html += '</div>';
 
     container.innerHTML = html;
+
+    container.querySelectorAll('.pttd-task-input').forEach(function(input) {
+        var stored = input.getAttribute('data-original') || '';
+        if (input.value !== stored) input.value = stored;
+    });
 }

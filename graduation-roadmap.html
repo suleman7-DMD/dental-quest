@@ -7806,8 +7806,8 @@
 
         /* ==================== PATIENT TODO TAB ==================== */
         #tab-patienttodos {
-            background: #f7f5ef;
-            padding: 20px;
+            background: #f6f4ed;
+            padding: 22px 24px 40px;
             font-family: 'Inter', 'Segoe UI', sans-serif;
             color: #17212b;
         }
@@ -7815,90 +7815,108 @@
             display: flex;
             align-items: flex-end;
             justify-content: space-between;
-            gap: 12px;
-            margin-bottom: 14px;
-            padding-bottom: 12px;
-            border-bottom: 2px solid #e2e0d8;
+            gap: 16px;
+            margin-bottom: 18px;
+            padding-bottom: 14px;
+            border-bottom: 1px solid #e7e3d8;
             flex-wrap: wrap;
         }
         .pttd-title h2 {
             margin: 0;
-            font-size: 1.3em;
-            color: #17212b;
+            font-size: 1.35em;
+            color: #1a2332;
             font-weight: 700;
+            letter-spacing: -0.01em;
         }
         .pttd-title p {
-            margin: 4px 0 0;
-            color: #62707c;
-            font-size: 0.88em;
+            margin: 3px 0 0;
+            color: #6b7785;
+            font-size: 0.84em;
+            line-height: 1.4;
         }
         .pttd-meta {
             display: flex;
-            gap: 8px;
+            gap: 6px;
             flex-wrap: wrap;
             align-items: center;
         }
         .pttd-pill {
             display: inline-flex;
             align-items: center;
-            gap: 6px;
+            gap: 5px;
             background: #fff;
-            border: 1px solid #e2e0d8;
+            border: 1px solid #e7e3d8;
             border-radius: 999px;
-            padding: 6px 10px;
+            padding: 5px 11px;
             color: #475569;
-            font-size: 0.78em;
+            font-size: 0.74em;
             font-weight: 600;
+            letter-spacing: 0.01em;
         }
         .pttd-toggle-hidden {
             background: #fff;
             border: 1px solid #d6d0c5;
             border-radius: 999px;
-            padding: 7px 12px;
+            padding: 5px 12px;
             color: #1a7f79;
-            font-size: 0.78em;
+            font-size: 0.74em;
             font-weight: 700;
             cursor: pointer;
+            transition: background 0.15s, border-color 0.15s;
         }
+        .pttd-toggle-hidden:hover { background: #f0fbfa; border-color: #1a7f79; }
         .pttd-hidden-panel {
             background: #fff;
-            border: 1px solid #e2e0d8;
-            border-radius: 10px;
-            padding: 10px 12px;
-            margin-bottom: 12px;
+            border: 1px solid #e7e3d8;
+            border-radius: 12px;
+            padding: 12px 14px;
+            margin-bottom: 14px;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.03);
         }
         .pttd-hidden-title {
-            font-size: 0.78em;
+            font-size: 0.7em;
             font-weight: 700;
-            color: #62707c;
+            color: #94a3b8;
             text-transform: uppercase;
-            letter-spacing: 0.06em;
+            letter-spacing: 0.08em;
             margin-bottom: 8px;
         }
         .pttd-hidden-list {
             display: flex;
             flex-direction: column;
-            gap: 8px;
+            gap: 6px;
         }
         .pttd-hidden-row {
             display: flex;
             align-items: center;
             justify-content: space-between;
-            gap: 8px;
-            background: #f8f7f3;
+            gap: 10px;
+            background: #faf8f3;
             border-radius: 8px;
-            padding: 8px 10px;
+            padding: 7px 10px;
         }
         .pttd-hidden-name {
-            color: #17212b;
-            font-size: 0.86em;
+            color: #1a2332;
+            font-size: 0.84em;
             font-weight: 600;
         }
         .pttd-hidden-chart {
-            color: #62707c;
-            font-size: 0.78em;
-            margin-left: 6px;
+            color: #94a3b8;
+            font-size: 0.74em;
+            margin-left: 5px;
         }
+        .pttd-action-btn {
+            background: #fff;
+            border: 1px solid #d6d0c5;
+            border-radius: 7px;
+            padding: 4px 10px;
+            color: #1a7f79;
+            font-size: 0.72em;
+            font-weight: 700;
+            cursor: pointer;
+            transition: background 0.15s;
+        }
+        .pttd-action-btn:hover { background: #f0fbfa; }
         .pttd-list {
             display: flex;
             flex-direction: column;
@@ -7906,189 +7924,258 @@
         }
         .pttd-card {
             background: #fff;
-            border-radius: 10px;
-            border: 1px solid #e2e0d8;
-            padding: 12px 14px;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+            border-radius: 12px;
+            border: 1px solid #e7e3d8;
+            padding: 13px 16px 14px;
+            box-shadow: 0 1px 2px rgba(20,30,40,0.03);
+            transition: box-shadow 0.18s, border-color 0.18s;
+        }
+        .pttd-card:hover {
+            box-shadow: 0 3px 10px rgba(20,30,40,0.06);
+            border-color: #d6d0c5;
         }
         .pttd-card-header {
             display: flex;
-            align-items: flex-start;
+            align-items: center;
             justify-content: space-between;
-            gap: 12px;
+            gap: 10px;
         }
         .pttd-identity {
             display: flex;
             align-items: center;
             gap: 8px;
             flex-wrap: wrap;
-        }
-        .pttd-rel-dot {
-            width: 10px;
-            height: 10px;
-            border-radius: 50%;
-            flex-shrink: 0;
-        }
-        .pttd-rel-green { background: #22c55e; }
-        .pttd-rel-yellow { background: #f59e0b; }
-        .pttd-rel-red { background: #ef4444; }
-        .pttd-name {
-            font-size: 0.98em;
-            font-weight: 700;
-            color: #17212b;
-        }
-        .pttd-chart,
-        .pttd-phone {
-            font-size: 0.78em;
-            color: #62707c;
-        }
-        .pttd-phone { color: #6366f1; }
-        .pttd-hide-btn,
-        .pttd-action-btn {
-            background: #fff;
-            border: 1px solid #d6d0c5;
-            border-radius: 8px;
-            padding: 6px 10px;
-            color: #475569;
-            font-size: 0.76em;
-            font-weight: 700;
-            cursor: pointer;
-            flex-shrink: 0;
-        }
-        .pttd-hide-btn {
-            color: #92400e;
-            background: #fffaf0;
-            border-color: #f0d8a8;
-        }
-        .pttd-grid {
-            display: grid;
-            grid-template-columns: repeat(4, minmax(0, 1fr));
-            gap: 8px;
-            margin-top: 10px;
-        }
-        .pttd-kv {
-            background: #f8f7f3;
-            border-radius: 7px;
-            padding: 7px 9px;
             min-width: 0;
         }
-        .pttd-kv.pttd-summary {
-            grid-column: 1 / -1;
+        .pttd-rel-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            flex-shrink: 0;
+            box-shadow: 0 0 0 2px rgba(255,255,255,0.85);
         }
-        .pttd-kv-label {
-            font-size: 0.66em;
-            color: #62707c;
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
+        .pttd-rel-green { background: #16a34a; }
+        .pttd-rel-yellow { background: #eab308; }
+        .pttd-rel-red { background: #dc2626; }
+        .pttd-name {
+            font-size: 1.02em;
             font-weight: 700;
-            margin-bottom: 3px;
+            color: #0f172a;
+            letter-spacing: -0.005em;
         }
-        .pttd-kv-value {
-            font-size: 0.82em;
-            color: #17212b;
-            line-height: 1.35;
-            white-space: pre-wrap;
-            word-break: break-word;
+        .pttd-badge {
+            display: inline-flex;
+            align-items: center;
+            font-size: 0.68em;
+            font-weight: 600;
+            padding: 2px 7px;
+            border-radius: 5px;
+            letter-spacing: 0.02em;
         }
-        .pttd-kv-value.pttd-none {
+        .pttd-badge.pttd-chart {
+            background: #f1efe7;
+            color: #6b7785;
+        }
+        .pttd-badge.pttd-phone {
+            background: #eef2ff;
+            color: #4f46e5;
+            font-variant-numeric: tabular-nums;
+        }
+        .pttd-hide-btn {
+            background: transparent;
+            border: none;
+            color: #c4bfae;
+            font-size: 1.4em;
+            line-height: 1;
+            font-weight: 400;
+            cursor: pointer;
+            width: 24px;
+            height: 24px;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            transition: background 0.15s, color 0.15s;
+        }
+        .pttd-hide-btn:hover {
+            background: #fef2f2;
+            color: #dc2626;
+        }
+        .pttd-context {
+            margin-top: 7px;
+            padding: 7px 10px;
+            background: #faf8f3;
+            border-radius: 8px;
+            display: flex;
+            flex-direction: column;
+            gap: 3px;
+            font-size: 0.72em;
+            line-height: 1.45;
+            color: #475569;
+        }
+        .pttd-ctx-row {
+            display: flex;
+            align-items: baseline;
+            gap: 8px;
+        }
+        .pttd-ctx-label {
+            flex-shrink: 0;
+            width: 26px;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            font-weight: 700;
+            font-size: 0.86em;
+            color: #94a3b8;
+        }
+        .pttd-ctx-value {
+            color: #475569;
+            font-weight: 500;
+            min-width: 0;
+            flex: 1;
+        }
+        .pttd-ctx-value.pttd-none {
             color: #b45309;
             font-style: italic;
+            font-weight: 500;
         }
-        .pttd-summary-text {
-            font-size: 0.82em;
+        .pttd-ctx-multiline {
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            line-height: 1.5;
             color: #334155;
-            line-height: 1.45;
         }
+        .pttd-ctx-plan { margin-top: 1px; }
         .pttd-tasks {
             display: flex;
             flex-direction: column;
-            gap: 6px;
-            margin-top: 10px;
+            gap: 5px;
+            margin-top: 11px;
         }
         .pttd-task-row {
             display: flex;
             align-items: center;
-            gap: 8px;
-            background: #fcfbf8;
+            gap: 9px;
+            background: #fdfcf9;
             border: 1px solid #ece7dd;
             border-radius: 8px;
-            padding: 7px 8px;
+            padding: 7px 9px;
+            transition: border-color 0.15s, background 0.15s;
+        }
+        .pttd-task-row:hover { border-color: #d6d0c5; background: #fff; }
+        .pttd-task-row.pttd-row-done {
+            background: #f5f4ee;
+            border-color: #ece7dd;
         }
         .pttd-task-check {
-            width: 16px;
-            height: 16px;
+            width: 15px;
+            height: 15px;
             accent-color: #1a7f79;
             flex-shrink: 0;
+            cursor: pointer;
         }
         .pttd-task-input {
             flex: 1;
             border: none;
             background: transparent;
-            color: #17212b;
-            font-size: 0.86em;
+            color: #1a2332;
+            font-size: 0.88em;
+            font-weight: 500;
             line-height: 1.35;
             outline: none;
             min-width: 0;
+            padding: 1px 0;
         }
         .pttd-task-input.pttd-done {
             color: #94a3b8;
             text-decoration: line-through;
+            font-weight: 400;
+        }
+        .pttd-task-del {
+            background: transparent;
+            border: none;
+            color: #c4bfae;
+            font-size: 1.15em;
+            line-height: 1;
+            cursor: pointer;
+            width: 20px;
+            height: 20px;
+            border-radius: 5px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            opacity: 0.6;
+            transition: background 0.15s, color 0.15s, opacity 0.15s;
+        }
+        .pttd-task-row:hover .pttd-task-del { opacity: 1; }
+        .pttd-task-del:hover {
+            background: #fef2f2;
+            color: #dc2626;
         }
         .pttd-task-empty {
-            color: #94a3b8;
+            color: #aab2bf;
             font-style: italic;
-            font-size: 0.8em;
-            padding: 2px 0 4px 2px;
+            font-size: 0.78em;
+            padding: 1px 0 2px 2px;
         }
         .pttd-add-row {
             display: flex;
-            gap: 8px;
-            margin-top: 6px;
+            gap: 6px;
+            margin-top: 7px;
         }
         .pttd-add-input {
             flex: 1;
-            border: 1px solid #ddd8cc;
+            border: 1px solid #e2ddd0;
             border-radius: 8px;
-            padding: 9px 11px;
-            background: #f8f7f3;
-            color: #17212b;
+            padding: 8px 11px;
+            background: #faf8f3;
+            color: #1a2332;
             font-size: 0.84em;
             outline: none;
+            transition: border-color 0.15s, background 0.15s, box-shadow 0.15s;
         }
+        .pttd-add-input::placeholder { color: #aab2bf; }
         .pttd-add-input:focus,
         .pttd-task-input:focus {
-            box-shadow: 0 0 0 2px rgba(26, 127, 121, 0.12);
+            background: #fff;
+            border-color: #1a7f79;
+            box-shadow: 0 0 0 3px rgba(26, 127, 121, 0.12);
         }
+        .pttd-task-input:focus { background: #fff; }
         .pttd-add-btn {
             background: #1a7f79;
             color: #fff;
             border: none;
             border-radius: 8px;
-            padding: 9px 14px;
-            font-size: 0.8em;
+            padding: 8px 16px;
+            font-size: 0.78em;
             font-weight: 700;
+            letter-spacing: 0.02em;
             cursor: pointer;
             white-space: nowrap;
+            transition: background 0.15s, transform 0.05s;
         }
+        .pttd-add-btn:hover { background: #166762; }
+        .pttd-add-btn:active { transform: translateY(1px); }
         .pttd-empty {
             background: #fff;
-            border: 1px solid #e2e0d8;
-            border-radius: 10px;
-            padding: 20px;
+            border: 1px dashed #d6d0c5;
+            border-radius: 12px;
+            padding: 32px 20px;
             text-align: center;
             color: #94a3b8;
+            font-size: 0.92em;
         }
         @media (max-width: 768px) {
-            #tab-patienttodos { padding: 12px; }
-            .pttd-grid { grid-template-columns: 1fr; }
-            .pttd-card { padding: 10px 12px; }
-            .pttd-card-header { flex-direction: column; }
+            #tab-patienttodos { padding: 14px 14px 28px; }
+            .pttd-card { padding: 11px 13px; }
+            .pttd-card-header { gap: 8px; }
+            .pttd-context { font-size: 0.7em; }
+            .pttd-ctx-label { width: 24px; }
             .pttd-add-row { flex-direction: column; }
-            .pttd-add-btn,
-            .pttd-hide-btn,
-            .pttd-action-btn,
-            .pttd-toggle-hidden { width: 100%; }
-            .pttd-hidden-row { flex-direction: column; align-items: flex-start; }
+            .pttd-add-btn { width: 100%; }
+            .pttd-hidden-row { flex-direction: column; align-items: flex-start; gap: 6px; }
         }
 
         /* ==================== MINI REVIEW TAB ==================== */
@@ -8707,8 +8794,8 @@
 
     <!-- Tab Navigation -->
     <div class="tab-nav" style="display:flex; gap:4px; overflow-x:auto; padding:8px; background:#0f172a; position:sticky; top:0; z-index:100;">
-        <button class="tab-btn active" onclick="switchTab('missioncontrol', event)">🎯 Mission Control</button>
-        <button class="tab-btn" onclick="switchTab('patienttodos', event)">📝 Patient To-Do</button>
+        <button class="tab-btn active" onclick="switchTab('patienttodos', event)">📝 Patient To-Do</button>
+        <button class="tab-btn" onclick="switchTab('missioncontrol', event)">🎯 Mission Control</button>
         <button class="tab-btn" onclick="switchTab('patients', event)">🩺 Patients</button>
         <button class="tab-btn" onclick="switchTab('competencies', event)">📊 Competencies</button>
         <button class="tab-btn" onclick="switchTab('clinical', event)">🏥 Clinical</button>
@@ -8722,14 +8809,14 @@
         <button class="tab-btn" onclick="switchTab('troubleshooting', event)" style="background:#dc2626;">🔍 Troubleshoot</button>
     </div>
 
-    <!-- ==================== MISSION CONTROL TAB ==================== -->
-    <div id="tab-missioncontrol" class="tab-content active">
-        <!-- Populated by renderDashboard() in init.js -->
+    <!-- ==================== PATIENT TODO TAB ==================== -->
+    <div id="tab-patienttodos" class="tab-content active">
+        <!-- Populated by renderPatientTodoTab() in patient-todo-tab.js -->
     </div>
 
-    <!-- ==================== PATIENT TODO TAB ==================== -->
-    <div id="tab-patienttodos" class="tab-content">
-        <!-- Populated by renderPatientTodoTab() in patient-todo-tab.js -->
+    <!-- ==================== MISSION CONTROL TAB ==================== -->
+    <div id="tab-missioncontrol" class="tab-content">
+        <!-- Populated by renderDashboard() in init.js -->
     </div>
 
     <!-- ==================== PATIENTS TAB ==================== -->
@@ -11551,7 +11638,7 @@ NOTES: ...
     <script src="js/graduation-roadmap/exam-content.js?v=20260403"></script>
     <script src="js/graduation-roadmap/clinical.js?v=20260405b"></script>
     <script src="js/graduation-roadmap/patients.js?v=20260405"></script>
-    <script src="js/graduation-roadmap/patient-todo-tab.js?v=20260428"></script>
+    <script src="js/graduation-roadmap/patient-todo-tab.js?v=20260428b"></script>
     <script src="js/graduation-roadmap/import-system.js?v=20260403"></script>
     <script src="js/graduation-roadmap/daily-planner.js?v=20260403"></script>
     <script src="js/graduation-roadmap/monthly-planner.js?v=20260403"></script>
