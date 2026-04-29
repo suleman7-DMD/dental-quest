@@ -107,6 +107,11 @@ let roadmapData = {
         patients: {},           // Object keyed by patientId: { [patientId]: { hidden, tasks, ... } }
         lastUpdated: null
     },
+    // General-purpose to-do list (landing tab)
+    generalTodoBoard: {
+        tasks: {},              // Object keyed by task ID: { id, text, done, createdAt, ... }
+        lastUpdated: null
+    },
     // Exams array for cross-app integration (Body Comp Tracker pulls this)
     exams: {},  // Object with ID keys for Firebase safety
     // Graduation prep tracking
@@ -215,6 +220,10 @@ function getDefaultRoadmapData() {
             patients: {},
             lastUpdated: null
         },
+        generalTodoBoard: {
+            tasks: {},
+            lastUpdated: null
+        },
         exams: {},
         graduationPrep: {
             externship: { startDate: null, endDate: null, patients: {}, logistics: '', notes: '' },
@@ -317,6 +326,7 @@ function isEmptyState(data) {
     const hasMissingNotes = getCount(data.clinicalData?.missingNotes) > 0;
     const hasTodoItems = getCount(data.todoList?.items) > 0;
     const hasPatientTodoBoard = getCount(data.patientTodoBoard?.patients) > 0;
+    const hasGeneralTodoBoard = getCount(data.generalTodoBoard?.tasks) > 0;
     var hasDailyPlannerContent = (data.dailyPlanner?.focus ?? '') !== '' ||
                                  (data.dailyPlanner?.notes ?? '') !== '' ||
                                  (data.dailyPlanner?.pomodorosCompleted ?? 0) > 0;
@@ -355,7 +365,7 @@ function isEmptyState(data) {
            !hasNotes && !hasPatients && !hasCompletedDeadlines &&
            !hasExamStudyProgress && !hasGrades && !hasEditedDeadlines &&
            !hasPatientRecords && !hasDashboardSnapshots && !hasCompletedProcedures && !hasCompetencies &&
-           !hasMissingNotes && !hasTodoItems && !hasPatientTodoBoard && !hasDailyPlannerContent &&
+           !hasMissingNotes && !hasTodoItems && !hasPatientTodoBoard && !hasGeneralTodoBoard && !hasDailyPlannerContent &&
            !hasPeriodicReview && !hasGraduationPrep && !hasClinicHeadlines && !hasDeletedRecords;
 }
 
@@ -503,6 +513,54 @@ function mergePatientTodoBoard(preferredBoard, fallbackBoard, deletedPatientIds)
             lastUpdated: lastUpdated,
             tasks: tasks
         };
+    });
+
+    return merged;
+}
+
+function getGeneralTodoBoard() {
+    if (!roadmapData.generalTodoBoard || typeof roadmapData.generalTodoBoard !== 'object' || Array.isArray(roadmapData.generalTodoBoard)) {
+        roadmapData.generalTodoBoard = { tasks: {}, lastUpdated: null };
+    }
+    if (!roadmapData.generalTodoBoard.tasks || typeof roadmapData.generalTodoBoard.tasks !== 'object' || Array.isArray(roadmapData.generalTodoBoard.tasks)) {
+        roadmapData.generalTodoBoard.tasks = {};
+    }
+    Object.keys(roadmapData.generalTodoBoard.tasks).forEach(function(taskId) {
+        roadmapData.generalTodoBoard.tasks[taskId] = clonePatientTodoTask(roadmapData.generalTodoBoard.tasks[taskId]);
+    });
+    roadmapData.generalTodoBoard.lastUpdated = roadmapData.generalTodoBoard.lastUpdated ?? null;
+    return roadmapData.generalTodoBoard;
+}
+
+function mergeGeneralTodoBoard(preferredBoard, fallbackBoard) {
+    var preferred = (preferredBoard && typeof preferredBoard === 'object') ? preferredBoard : {};
+    var fallback = (fallbackBoard && typeof fallbackBoard === 'object') ? fallbackBoard : {};
+    var preferredTasks = (preferred.tasks && typeof preferred.tasks === 'object' && !Array.isArray(preferred.tasks)) ? preferred.tasks : {};
+    var fallbackTasks = (fallback.tasks && typeof fallback.tasks === 'object' && !Array.isArray(fallback.tasks)) ? fallback.tasks : {};
+    var merged = {
+        tasks: {},
+        lastUpdated: preferred.lastUpdated ?? fallback.lastUpdated ?? null
+    };
+
+    if (preferred.lastUpdated && fallback.lastUpdated) {
+        merged.lastUpdated = preferred.lastUpdated > fallback.lastUpdated ? preferred.lastUpdated : fallback.lastUpdated;
+    }
+
+    var taskIds = new Set([
+        ...Object.keys(preferredTasks),
+        ...Object.keys(fallbackTasks)
+    ]);
+
+    taskIds.forEach(function(taskId) {
+        var primaryTask = preferredTasks[taskId];
+        var secondaryTask = fallbackTasks[taskId];
+        if (primaryTask && secondaryTask) {
+            var primaryStamp = primaryTask.updatedAt || primaryTask.deletedAt || primaryTask.completedAt || primaryTask.createdAt || '';
+            var secondaryStamp = secondaryTask.updatedAt || secondaryTask.deletedAt || secondaryTask.completedAt || secondaryTask.createdAt || '';
+            merged.tasks[taskId] = clonePatientTodoTask(secondaryStamp > primaryStamp ? secondaryTask : primaryTask);
+        } else {
+            merged.tasks[taskId] = clonePatientTodoTask(primaryTask || secondaryTask);
+        }
     });
 
     return merged;
@@ -1027,6 +1085,7 @@ function switchTab(tabId, evt) {
     if (resolvedTabId === 'competencies' && typeof renderCompetencies === 'function') renderCompetencies();
     if (resolvedTabId === 'patients' && typeof initPatientsTab === 'function') initPatientsTab();
     if (resolvedTabId === 'patienttodos' && typeof renderPatientTodoTab === 'function') renderPatientTodoTab();
+    if (resolvedTabId === 'generaltodo' && typeof renderGeneralTodoTab === 'function') renderGeneralTodoTab();
     if (resolvedTabId === 'periodicreview' && typeof initPeriodicReview === 'function') initPeriodicReview();
     if (resolvedTabId === 'minireview' && typeof renderMiniReview === 'function') renderMiniReview();
     if (resolvedTabId === 'troubleshooting' && typeof renderTroubleshooting === 'function') renderTroubleshooting();

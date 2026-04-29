@@ -7804,6 +7804,183 @@
             .pts-stat-chip { font-size: 0.72em; }
         }
 
+        /* ==================== GENERAL TODO TAB ==================== */
+        #tab-generaltodo {
+            background: #f6f4ed;
+            padding: 22px 24px 40px;
+            font-family: 'Inter', 'Segoe UI', sans-serif;
+            color: #17212b;
+        }
+        .gtd-header {
+            display: flex;
+            align-items: flex-end;
+            justify-content: space-between;
+            gap: 16px;
+            margin-bottom: 18px;
+            padding-bottom: 14px;
+            border-bottom: 1px solid #e7e3d8;
+            flex-wrap: wrap;
+        }
+        .gtd-title h2 {
+            margin: 0;
+            font-size: 1.35em;
+            color: #1a2332;
+            font-weight: 700;
+            letter-spacing: -0.01em;
+        }
+        .gtd-title p {
+            margin: 3px 0 0;
+            color: #6b7785;
+            font-size: 0.84em;
+            line-height: 1.4;
+        }
+        .gtd-meta {
+            display: flex;
+            gap: 6px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+        .gtd-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            background: #fff;
+            border: 1px solid #e7e3d8;
+            border-radius: 999px;
+            padding: 5px 11px;
+            color: #475569;
+            font-size: 0.74em;
+            font-weight: 600;
+            letter-spacing: 0.01em;
+        }
+        .gtd-pill-done {
+            color: #16a34a;
+            border-color: rgba(22,163,74,0.2);
+        }
+        .gtd-add-row {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 16px;
+        }
+        .gtd-add-input {
+            flex: 1;
+            border: 1px solid #e2ddd0;
+            border-radius: 10px;
+            padding: 11px 14px;
+            background: #fff;
+            color: #1a2332;
+            font-size: 0.92em;
+            outline: none;
+            transition: border-color 0.15s, box-shadow 0.15s;
+        }
+        .gtd-add-input::placeholder { color: #aab2bf; }
+        .gtd-add-input:focus {
+            border-color: #1a7f79;
+            box-shadow: 0 0 0 3px rgba(26, 127, 121, 0.12);
+        }
+        .gtd-add-btn {
+            background: #1a7f79;
+            color: #fff;
+            border: none;
+            border-radius: 10px;
+            padding: 11px 22px;
+            font-size: 0.85em;
+            font-weight: 700;
+            letter-spacing: 0.02em;
+            cursor: pointer;
+            white-space: nowrap;
+            transition: background 0.15s, transform 0.05s;
+        }
+        .gtd-add-btn:hover { background: #166762; }
+        .gtd-add-btn:active { transform: translateY(1px); }
+        .gtd-list {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+        .gtd-task-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background: #fff;
+            border: 1px solid #e7e3d8;
+            border-radius: 10px;
+            padding: 10px 12px;
+            transition: border-color 0.15s, background 0.15s, box-shadow 0.15s;
+        }
+        .gtd-task-row:hover {
+            border-color: #d6d0c5;
+            box-shadow: 0 1px 4px rgba(20,30,40,0.04);
+        }
+        .gtd-task-row.gtd-row-done {
+            background: #f5f4ee;
+            border-color: #ece7dd;
+        }
+        .gtd-task-check {
+            width: 18px;
+            height: 18px;
+            accent-color: #1a7f79;
+            flex-shrink: 0;
+            cursor: pointer;
+        }
+        .gtd-task-input {
+            flex: 1;
+            border: none;
+            background: transparent;
+            color: #1a2332;
+            font-size: 0.92em;
+            font-weight: 500;
+            line-height: 1.4;
+            outline: none;
+            min-width: 0;
+            padding: 2px 0;
+        }
+        .gtd-task-input:focus {
+            background: #fff;
+        }
+        .gtd-task-input.gtd-done {
+            color: #94a3b8;
+            text-decoration: line-through;
+            font-weight: 400;
+        }
+        .gtd-task-del {
+            background: transparent;
+            border: none;
+            color: #c4bfae;
+            font-size: 1.2em;
+            line-height: 1;
+            cursor: pointer;
+            width: 24px;
+            height: 24px;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            opacity: 0;
+            transition: background 0.15s, color 0.15s, opacity 0.15s;
+        }
+        .gtd-task-row:hover .gtd-task-del { opacity: 1; }
+        .gtd-task-del:hover {
+            background: #fef2f2;
+            color: #dc2626;
+        }
+        .gtd-empty {
+            background: #fff;
+            border: 1px dashed #d6d0c5;
+            border-radius: 12px;
+            padding: 40px 20px;
+            text-align: center;
+            color: #94a3b8;
+            font-size: 0.92em;
+        }
+        @media (max-width: 768px) {
+            #tab-generaltodo { padding: 14px 14px 28px; }
+            .gtd-add-row { flex-direction: column; }
+            .gtd-add-btn { width: 100%; }
+            .gtd-task-row { padding: 9px 10px; }
+        }
+
         /* ==================== PATIENT TODO TAB ==================== */
         #tab-patienttodos {
             background: #f6f4ed;
@@ -8794,7 +8971,8 @@
 
     <!-- Tab Navigation -->
     <div class="tab-nav" style="display:flex; gap:4px; overflow-x:auto; padding:8px; background:#0f172a; position:sticky; top:0; z-index:100;">
-        <button class="tab-btn active" onclick="switchTab('patienttodos', event)">📝 Patient To-Do</button>
+        <button class="tab-btn active" onclick="switchTab('generaltodo', event)">✅ To-Do</button>
+        <button class="tab-btn" onclick="switchTab('patienttodos', event)">📝 Patient To-Do</button>
         <button class="tab-btn" onclick="switchTab('missioncontrol', event)">🎯 Mission Control</button>
         <button class="tab-btn" onclick="switchTab('patients', event)">🩺 Patients</button>
         <button class="tab-btn" onclick="switchTab('competencies', event)">📊 Competencies</button>
@@ -8809,8 +8987,13 @@
         <button class="tab-btn" onclick="switchTab('troubleshooting', event)" style="background:#dc2626;">🔍 Troubleshoot</button>
     </div>
 
+    <!-- ==================== GENERAL TODO TAB ==================== -->
+    <div id="tab-generaltodo" class="tab-content active">
+        <!-- Populated by renderGeneralTodoTab() in general-todo-tab.js -->
+    </div>
+
     <!-- ==================== PATIENT TODO TAB ==================== -->
-    <div id="tab-patienttodos" class="tab-content active">
+    <div id="tab-patienttodos" class="tab-content">
         <!-- Populated by renderPatientTodoTab() in patient-todo-tab.js -->
     </div>
 
@@ -11639,6 +11822,7 @@ NOTES: ...
     <script src="js/graduation-roadmap/clinical.js?v=20260405b"></script>
     <script src="js/graduation-roadmap/patients.js?v=20260405"></script>
     <script src="js/graduation-roadmap/patient-todo-tab.js?v=20260428b"></script>
+    <script src="js/graduation-roadmap/general-todo-tab.js?v=20260428"></script>
     <script src="js/graduation-roadmap/import-system.js?v=20260403"></script>
     <script src="js/graduation-roadmap/daily-planner.js?v=20260403"></script>
     <script src="js/graduation-roadmap/monthly-planner.js?v=20260403"></script>

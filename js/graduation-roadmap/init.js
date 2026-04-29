@@ -1744,6 +1744,7 @@ function initUI() {
     try { renderCompetencies(); } catch(e) { console.error('renderCompetencies error:', e); }
     try { renderMiniReview(); } catch(e) { console.error('renderMiniReview error:', e); }
     try { renderPatientTodoTab(); } catch(e) { console.error('renderPatientTodoTab error:', e); }
+    try { renderGeneralTodoTab(); } catch(e) { console.error('renderGeneralTodoTab error:', e); }
 
     // One-time perio noise cleanup
     if (typeof migratePerioNoiseCleanup === 'function') {

@@ -410,6 +410,24 @@ function reconstructState(source, options) {
         );
     }
 
+    // --- General To-Do Board ---
+    if (isSourceWins) {
+        result.generalTodoBoard = mergeGeneralTodoBoard(
+            s.generalTodoBoard || f.generalTodoBoard || { tasks: {}, lastUpdated: null },
+            {}
+        );
+    } else if (isStoredWins) {
+        result.generalTodoBoard = mergeGeneralTodoBoard(
+            s.generalTodoBoard,
+            f.generalTodoBoard
+        );
+    } else {
+        result.generalTodoBoard = mergeGeneralTodoBoard(
+            f.generalTodoBoard,
+            s.generalTodoBoard
+        );
+    }
+
     // --- Daily Planner ---
     result.dailyPlanner = migrateDailyPlannerBlocks(s.dailyPlanner || f.dailyPlanner);
 
@@ -708,6 +726,11 @@ function mergeRemoteCollectionsIntoLocal(data) {
         roadmapData.patientTodoBoard,
         data.patientTodoBoard,
         deletedPRs
+    );
+
+    roadmapData.generalTodoBoard = mergeGeneralTodoBoard(
+        roadmapData.generalTodoBoard,
+        data.generalTodoBoard
     );
 
     // Grades: deep merge (add remote course grades that don't exist locally)
@@ -2029,6 +2052,7 @@ function isValidAppData(data) {
         data.clinicalData ||
         data.dailyPlanner ||
         data.patientTodoBoard ||
+        data.generalTodoBoard ||
         data.exams ||
         data.courses ||
         data.grades ||
@@ -2482,6 +2506,10 @@ function validateStateIntegrity(data) {
     if (data.patientTodoBoard !== undefined && (typeof data.patientTodoBoard !== 'object' || data.patientTodoBoard === null)) {
         console.error('[GUARD-F] patientTodoBoard is not an object');
         errors.push('patientTodoBoard is not an object');
+    }
+    if (data.generalTodoBoard !== undefined && (typeof data.generalTodoBoard !== 'object' || data.generalTodoBoard === null)) {
+        console.error('[GUARD-F] generalTodoBoard is not an object');
+        errors.push('generalTodoBoard is not an object');
     }
     // periodicReviews can be undefined (defaults) or object — reject anything else
     if (data.periodicReviews !== undefined && data.periodicReviews !== null && typeof data.periodicReviews !== 'object') {
