@@ -298,6 +298,53 @@ figure.clinical-img figcaption strong { color: var(--primary-dark); }
 .tag.t-pathology { background: var(--danger-light); color: var(--danger); border: 1px solid var(--danger); }
 .tag.t-error { background: var(--accent-light); color: var(--accent-dark); border: 1px solid var(--accent); }
 
+/* STICKY IMAGE — pin figure at top of viewport while answer text scrolls.
+   When the next figure scrolls into view it pushes the current one out and pins itself.
+   Disabled on narrow screens and in print so the image always sits inline. */
+@media (min-width: 901px) {
+    figure.clinical-img {
+        position: sticky;
+        top: 12px;
+        z-index: 5;
+        max-height: calc(100vh - 24px);
+        display: flex;
+        flex-direction: column;
+    }
+    figure.clinical-img img {
+        max-height: calc(100vh - 200px);
+        object-fit: contain;
+        flex: 0 0 auto;
+    }
+    figure.clinical-img figcaption {
+        max-height: 160px;
+        overflow-y: auto;
+        flex: 0 1 auto;
+    }
+    /* Two consecutive figures (no answer between) should NOT both stick — let the
+       second one scroll naturally so the first is not hidden behind it. */
+    figure.clinical-img + figure.clinical-img {
+        position: static;
+        max-height: none;
+    }
+    figure.clinical-img + figure.clinical-img img {
+        max-height: none;
+    }
+    figure.clinical-img + figure.clinical-img figcaption {
+        max-height: none;
+        overflow: visible;
+    }
+}
+@media print {
+    figure.clinical-img,
+    figure.clinical-img + figure.clinical-img {
+        position: static;
+        max-height: none;
+        display: block;
+    }
+    figure.clinical-img img { max-height: none; }
+    figure.clinical-img figcaption { max-height: none; overflow: visible; }
+}
+
 /* MOBILE */
 @media (max-width: 700px) {
     .hero { padding: 40px 20px 32px; }
@@ -368,7 +415,7 @@ figure.clinical-img figcaption strong { color: var(--primary-dark); }
       <div class="answer-key">
         <ol>
           <li><strong>Top-Right (radiolucencies on bicuspids) &rarr; Cervical burnout</strong> <span class="tag t-anatomy">Anatomy / Optical artifact</span>. The cervical region has thin enamel ending at the CEJ with no overlying enamel cap and only thin root dentin against alveolar bone &mdash; differential x-ray attenuation creates a triangular radiolucent band that mimics interproximal caries. Distinguishing feature: the radiolucency is <strong>uniform along the entire cervix</strong>, has <strong>no break in the enamel</strong>, and runs <strong>parallel to the CEJ</strong>. True Class II caries is a discrete notch <em>below</em> the contact, not a continuous band.</li>
-          <li><strong>Bottom-Left (rounded radiolucency at apex) &rarr; Developing tooth crypt / dental follicle</strong> of the unerupted permanent successor (likely the second permanent molar follicle in this mixed-dentition film). The follicle is a normal radiolucent sac surrounding the crown of an unerupted tooth, bounded by a thin corticated rim &mdash; <em>not</em> a periapical lesion on the erupting tooth.</li>
+          <li><strong>Bottom-Left (rounded radiolucency at apex) &rarr; Dental papilla</strong> at the apex of the developing root of the erupting tooth. The papilla is the radiolucent ectomesenchymal core inside the developing tooth that gives rise to pulp and dentin; on a PA it appears as a well-defined rounded radiolucency at the apex of an immature root, bounded by the corticated bony crypt wall (the dental crypt). <strong>Not</strong> a periapical lesion. <em>Sister landmarks &mdash;</em> the <strong>dental follicle</strong> is the radiolucent sac surrounding the <em>crown</em> of an unerupted tooth, and the <strong>dental crypt</strong> is the surrounding bony cavity (its corticated wall is what you see).</li>
           <li><strong>Bottom-Right (diagonal radiopaque line) &rarr; External oblique ridge</strong>. The external oblique ridge is the inferior continuation of the anterior border of the ascending ramus, running anteroinferiorly along the buccal cortex of the mandibular molars. On a PA it superimposes on the third-molar root as a thin radiopaque diagonal line. Do not confuse with the mylohyoid (internal oblique) ridge, which sits more apically/lingually.</li>
         </ol>
       </div>
@@ -1454,7 +1501,7 @@ figure.clinical-img figcaption strong { color: var(--primary-dark); }
         <figcaption><span class="slide-tag">Slide 44</span><strong>Red curving lines with arrows tracing the thinner / more medial of two parallel diagonal radiopaque lines descending from the ramus down into the mandibular body bilaterally.</strong></figcaption>
       </figure>
       <div class="answer-key">
-        <p><strong>Answer:</strong> <strong>Internal oblique ridge (mylohyoid line)</strong> &mdash; ridge on the lingual surface of the mandible for mylohyoid muscle attachment. Runs from the ramus to the molar region. Slightly higher and more medial than the external oblique ridge on a pan.</p>
+        <p><strong>Answer:</strong> <strong>Internal oblique ridge (mylohyoid line)</strong> &mdash; ridge on the lingual surface of the mandible for mylohyoid muscle attachment. Runs from the ramus down to the molar region. On a pano, projects <strong>lower and more medial</strong> than the external oblique ridge.</p>
         <p style="margin-top:6px;"><strong>Together with the external oblique ridge:</strong> the two appear as parallel radiopaque lines descending into the mandibular body &mdash; the upper/lateral one is external, the lower/medial one is internal (mylohyoid).</p>
       </div>
 
@@ -1552,10 +1599,10 @@ figure.clinical-img figcaption strong { color: var(--primary-dark); }
       <div class="answer-key"><p><strong>Tongue on palate at exposure:</strong> eliminates the palatoglossal air space. Without this, a black radiolucent stripe is projected over the maxillary anterior root apices and can mimic apical pathology. <strong>Tell every pano patient: &ldquo;swallow, tongue up to the roof of your mouth, hold it there.&rdquo;</strong></p></div>
 
       <figure class="clinical-img" data-slide="59">
-        <img src="images/radio-osce/59-pano-ear-lobe.png" alt="Pano with marker on the soft tissue density of the ear lobe at the lateral edges of the image" loading="lazy">
-        <figcaption><span class="slide-tag">Slide 59</span><strong>Marker on the soft-tissue density of the ear lobe at the lateral edges of the image</strong>, near the condyle/mastoid region.</figcaption>
+        <img src="images/radio-osce/59-pano-ear-lobe.png" alt="Pano with marker on the soft-tissue density of the ear lobe superimposed over the ramus near the condyle/mastoid region" loading="lazy">
+        <figcaption><span class="slide-tag">Slide 59</span><strong>Marker on the round soft-tissue density of the ear lobe superimposed over the posterior ramus / mastoid region bilaterally.</strong></figcaption>
       </figure>
-      <div class="answer-key"><p><strong>Answer:</strong> <strong>Ear lobe (auricle)</strong> &mdash; soft-tissue radiopacity at the lateral margins of the pano. Has nothing to do with dental anatomy; just helps confirm head positioning was symmetric.</p></div>
+      <div class="answer-key"><p><strong>Answer:</strong> <strong>Ear lobe</strong> (lobule of the auricle &mdash; <em>not</em> the entire auricle, which is the whole external ear) &mdash; rounded soft-tissue radiopacity projected over the posterior ramus and mastoid region. Has nothing to do with dental anatomy; just helps confirm head positioning was symmetric.</p></div>
 
       <figure class="clinical-img" data-slide="60">
         <img src="images/radio-osce/60-pano-orthodontics-brackets-3.png" alt="Third pano of orthodontic patient with full brackets" loading="lazy">
@@ -1742,31 +1789,32 @@ figure.clinical-img figcaption strong { color: var(--primary-dark); }
 
   <!-- ════════════════ 7.C PANO #1 — TOP LEFT ════════════════ -->
   <div class="card always-open">
-    <div class="card-header"><span class="card-title">7C. Pano #1 (Top Left) &mdash; "Frowning Curve"</span></div>
+    <div class="card-header"><span class="card-title">7C. Pano #1 (Top Left) &mdash; "Exaggerated Smile / Chin Down"</span></div>
     <div class="card-body">
       <div class="panel-grid">
         <div class="panel-row">
           <p><strong>What you see:</strong></p>
           <ul>
-            <li>Occlusal plane curves <strong>downward at the periphery</strong> (∩-shape, "frowning curve").</li>
-            <li>Maxillary anterior teeth appear <strong>elongated and blurred</strong>.</li>
-            <li><strong>Hard-palate radiopaque band</strong> superimposed on the apices of the maxillary teeth.</li>
-            <li>Mandibular condyles ride <strong>high near the top edge</strong> of the film, sometimes cut off.</li>
+            <li>Occlusal plane curves <strong>upward at the periphery</strong> (U-shape, exaggerated "smile curve").</li>
+            <li>Mandibular anterior teeth appear <strong>foreshortened, crowded, and blurred</strong>.</li>
+            <li>Mandibular condyles ride <strong>high and are cut off at the top edge</strong> of the film &mdash; the canonical chin-down sign.</li>
+            <li>Maxillary anteriors lack elongation; <strong>no hard-palate band</strong> across the apices (rules out chin up).</li>
           </ul>
         </div>
         <div class="panel-row">
           <p><strong>Algorithm walk-through:</strong></p>
           <ul>
-            <li>Q1 (occlusal plane): frowning &rarr; <strong>chin up</strong>.</li>
-            <li>Q2&ndash;5: not the dominant finding.</li>
+            <li>Q1 (occlusal plane): exaggerated U-smile &rarr; <strong>chin down</strong>.</li>
+            <li>Confirm with condyle position: cut off at the <em>top</em> of the image = chin down (chin up pushes condyles laterally toward the sides, not the top).</li>
+            <li>Q2&ndash;5: no focal-trough drift, no ghost spine, no palatoglossal artifact.</li>
           </ul>
         </div>
       </div>
       <div class="answer-key">
-        <p><strong>Answer: Chin up (Frankfort plane angled downward).</strong> The Frankfort horizontal is tilted nose-up, so the maxillary apices project upward into the hard-palate shadow and the occlusal plane traces a frown. Reposition: bring chin <em>down</em> until the Frankfort plane is parallel to the floor (or use the chin-rest indicator line).</p>
+        <p><strong>Answer: Chin down (Frankfort plane angled nose-down).</strong> Chin tucked toward the chest. The mandibular arch is driven superiorly, condyles ride off the top of the image, mandibular anteriors foreshorten, and the occlusal plane traces an exaggerated U-shaped smile. Reposition: <em>raise</em> the chin until the Frankfort plane is parallel to the floor (or use the chin-rest indicator line).</p>
       </div>
       <div class="high-yield">
-        <p><strong>One-liner:</strong> "Frowning occlusal plane + hard palate over max apices = <em>chin up</em>."</p>
+        <p><strong>One-liner:</strong> "Exaggerated smile (U) + condyles cut off top + foreshortened mand anteriors = <em>chin down</em>."</p>
       </div>
     </div>
   </div>
@@ -1837,34 +1885,35 @@ figure.clinical-img figcaption strong { color: var(--primary-dark); }
 
   <!-- ════════════════ 7.F PANO #4 — BOTTOM RIGHT ════════════════ -->
   <div class="card always-open">
-    <div class="card-header"><span class="card-title">7F. Pano #4 (Bottom Right) &mdash; "Tongue Not on Palate"</span></div>
+    <div class="card-header"><span class="card-title">7F. Pano #4 (Bottom Right) &mdash; "Chin Down + Tongue Not on Palate"</span></div>
     <div class="card-body">
       <div class="panel-grid">
         <div class="panel-row">
           <p><strong>What you see:</strong></p>
           <ul>
-            <li><strong>Dark, sharply demarcated radiolucent band/V-shape</strong> superimposed across the apices of the maxillary teeth.</li>
-            <li>Maxillary roots and surrounding bone are <strong>obscured by the radiolucency</strong> &mdash; can mimic apical pathology.</li>
-            <li>Posterior teeth and mandibular structures are reasonably positioned otherwise.</li>
-            <li>Curve of the occlusal plane is roughly normal.</li>
+            <li>Occlusal plane shows an <strong>exaggerated upward smile (U-shape)</strong> &mdash; the dominant positioning error is <strong>chin down</strong>.</li>
+            <li>Mandibular condyles ride <strong>high and are cut off at the top</strong> of the image (or pushed far superiorly).</li>
+            <li><strong>Mandibular anteriors are foreshortened</strong> and crowded against the lower border of the film.</li>
+            <li><strong>Secondary error:</strong> a dark radiolucent V/band crosses the maxillary apices &mdash; the <strong>palatoglossal airspace</strong> from tongue not pressed against the palate.</li>
           </ul>
         </div>
         <div class="panel-row">
           <p><strong>Algorithm walk-through:</strong></p>
           <ul>
-            <li>Q5: dark band/V over maxillary apices &rarr; <strong>palatoglossal airspace</strong> = tongue not on palate.</li>
-            <li>Q1&ndash;4: occlusal curve normal, no ghost spine, no obvious chin error.</li>
+            <li>Q1: occlusal curve = exaggerated U smile &rarr; <strong>chin down (dominant)</strong>; condyles riding off the top edge confirms it.</li>
+            <li>Q5: dark band/V over maxillary apices &rarr; <strong>palatoglossal airspace</strong> = tongue not on palate (secondary).</li>
+            <li>Two coexisting errors &mdash; name both.</li>
           </ul>
         </div>
       </div>
       <div class="answer-key">
-        <p><strong>Answer: Tongue not on palate (palatoglossal airspace artifact).</strong> When the patient fails to press the dorsum of the tongue against the hard palate during exposure, the air gap projects as a dark radiolucent band across the maxillary apices. <strong>Mimics periapical pathology</strong> &mdash; do not misdiagnose. Reposition / re-coach: ask patient to "place the tongue against the roof of the mouth and keep it there" before pressing the exposure button.</p>
+        <p><strong>Answer: Chin down (dominant) + Tongue not on palate (secondary).</strong> The Frankfort plane is angled nose-down, producing the U-smile occlusal curve, foreshortened mandibular anteriors, and condyles cut off at the top of the image. Simultaneously, the dorsum of the tongue is not pressed against the hard palate, so the palatoglossal air gap projects as a dark radiolucent V across the maxillary apices &mdash; this <strong>mimics periapical pathology</strong>. Reposition: <em>raise the chin to Frankfort-parallel</em> AND coach the patient to "place the tongue against the roof of the mouth and keep it there" before exposure.</p>
       </div>
       <div class="pitfall">
-        <p><strong>Do NOT mistake this for:</strong> bilateral periapical lesions, generalized bone loss, or sinus pathology. The give-away is the <em>sharp linear/V-shaped border</em> and the fact that it crosses anatomy at a non-anatomical level. Re-shoot with proper tongue position and the radiolucency disappears.</p>
+        <p><strong>Do NOT mistake the dark V for:</strong> bilateral periapical lesions, generalized bone loss, or sinus pathology. The give-away is the <em>sharp linear/V-shaped border</em> crossing anatomy at a non-anatomical level. And do NOT call this image "just tongue off palate" &mdash; the chin-down error is the dominant geometric finding and must be named first.</p>
       </div>
       <div class="high-yield">
-        <p><strong>One-liner:</strong> "Dark V over max apices = <em>tongue off palate</em>."</p>
+        <p><strong>One-liner:</strong> "Exaggerated smile + condyles off top = <em>chin down</em>; dark V over max apices = <em>tongue off palate</em> (two errors)."</p>
       </div>
     </div>
   </div>
@@ -1886,9 +1935,9 @@ figure.clinical-img figcaption strong { color: var(--primary-dark); }
           <tbody>
             <tr style="border-bottom:1px solid #ddd;">
               <td style="padding:0.4rem;"><strong>#1 Top-Left</strong></td>
-              <td style="padding:0.4rem;">Chin up</td>
-              <td style="padding:0.4rem;">Frowning curve + hard palate over max apices</td>
-              <td style="padding:0.4rem;">Tilt chin down to Frankfort-parallel</td>
+              <td style="padding:0.4rem;">Chin down</td>
+              <td style="padding:0.4rem;">Exaggerated smile (U) + condyles cut off top + foreshortened mand anteriors</td>
+              <td style="padding:0.4rem;">Raise chin to Frankfort-parallel</td>
             </tr>
             <tr style="border-bottom:1px solid #ddd;">
               <td style="padding:0.4rem;"><strong>#2 Top-Right</strong></td>
@@ -1904,9 +1953,9 @@ figure.clinical-img figcaption strong { color: var(--primary-dark); }
             </tr>
             <tr>
               <td style="padding:0.4rem;"><strong>#4 Bottom-Right</strong></td>
-              <td style="padding:0.4rem;">Tongue not on palate</td>
-              <td style="padding:0.4rem;">Dark V/band over max apices (palatoglossal airspace)</td>
-              <td style="padding:0.4rem;">Coach: tongue to roof of mouth, hold during exposure</td>
+              <td style="padding:0.4rem;">Chin down + tongue not on palate</td>
+              <td style="padding:0.4rem;">Exaggerated smile (U) + condyles high; dark V/band over max apices</td>
+              <td style="padding:0.4rem;">Raise chin to Frankfort-parallel; coach tongue to palate</td>
             </tr>
           </tbody>
         </table>
@@ -1934,12 +1983,12 @@ figure.clinical-img figcaption strong { color: var(--primary-dark); }
             <tr style="border-bottom:1px solid #ddd;">
               <td style="padding:0.4rem;"><strong>Chin up</strong></td>
               <td style="padding:0.4rem;">Frankfort plane tipped nose-up</td>
-              <td style="padding:0.4rem;">∩ frowning curve, hard palate over max apices, condyles cut off top</td>
+              <td style="padding:0.4rem;">∩ frowning curve, hard palate projects over max apices, condyles pushed <strong>laterally</strong> toward or off the sides of the image</td>
             </tr>
             <tr style="border-bottom:1px solid #ddd;">
               <td style="padding:0.4rem;"><strong>Chin down</strong></td>
               <td style="padding:0.4rem;">Frankfort plane tipped nose-down</td>
-              <td style="padding:0.4rem;">U exaggerated smile, mandibular incisors blurred/narrow, condyles cut off bottom or sides</td>
+              <td style="padding:0.4rem;">U exaggerated smile, mandibular anteriors foreshortened and blurred, condyles cut off at the <strong>top</strong> of the image (riding superiorly)</td>
             </tr>
             <tr style="border-bottom:1px solid #ddd;">
               <td style="padding:0.4rem;"><strong>Slumping</strong></td>
