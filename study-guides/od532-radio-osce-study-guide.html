@@ -306,32 +306,44 @@ figure.clinical-img figcaption strong { color: var(--primary-dark); }
 .tag.t-pathology { background: var(--danger-light); color: var(--danger); border: 1px solid var(--danger); }
 .tag.t-error { background: var(--accent-light); color: var(--accent-dark); border: 1px solid var(--accent); }
 
-/* STICKY IMAGE — pin figure below the sticky nav while answer text scrolls.
-   Includes -webkit-sticky for iOS Safari/Brave. Active from iPad portrait up.
-   top offset clears the .nav-sticky bar at the top of the page. */
-@media (min-width: 700px) {
-    figure.clinical-img {
-        position: -webkit-sticky;
-        position: sticky;
-        top: 56px;
-        z-index: 5;
-        max-height: calc(100vh - 72px);
-        display: flex;
-        flex-direction: column;
-        background: #0e0e10;
-    }
-    figure.clinical-img img {
-        max-height: calc(100vh - 220px);
-        min-height: 0;
-        object-fit: contain;
-        flex: 1 1 auto;
-    }
-    figure.clinical-img figcaption {
-        max-height: 140px;
-        overflow-y: auto;
-        flex: 0 0 auto;
-    }
+/* STICKY IMAGE — pin figure below the sticky nav while answer text scrolls past.
+   Each figure pins at top until the next figure (or end of its parent .card-content
+   / .card-body) scrolls into view, then it releases and the next one pins.
+
+   IMPORTANT: position: sticky is broken if ANY ancestor has overflow != visible.
+   That's why html/body cannot use overflow-x: hidden here, and why .container,
+   .section, .card, .card-content, .card-body all need overflow: visible. */
+html, body {
+    overflow-x: clip;
+    max-width: 100%;
 }
+body { word-wrap: break-word; overflow-wrap: break-word; }
+.container, section.section, .card, .card-content, .card-body {
+    overflow: visible;
+}
+
+figure.clinical-img {
+    position: -webkit-sticky;
+    position: sticky;
+    top: 56px;
+    z-index: 5;
+    max-height: calc(100vh - 72px);
+    display: flex;
+    flex-direction: column;
+    background: #0e0e10;
+}
+figure.clinical-img img {
+    max-height: calc(100vh - 220px);
+    min-height: 0;
+    object-fit: contain;
+    flex: 1 1 auto;
+}
+figure.clinical-img figcaption {
+    max-height: 140px;
+    overflow-y: auto;
+    flex: 0 0 auto;
+}
+
 @media print {
     figure.clinical-img {
         position: static;
@@ -342,17 +354,20 @@ figure.clinical-img figcaption strong { color: var(--primary-dark); }
     figure.clinical-img figcaption { max-height: none; overflow: visible; }
 }
 
-/* MOBILE */
+/* MOBILE — keep sticky but reduce image height so descriptions remain visible */
 @media (max-width: 700px) {
     .hero { padding: 40px 20px 32px; }
     .hero h1 { font-size: 28px; line-height: 1.2; word-wrap: break-word; }
     .hero-sub, .hero-meta { font-size: 14px; }
     .container { padding: 24px 16px 60px; }
     .card { padding: 20px; }
-    figure.clinical-img figcaption { font-size: 13px; }
+    figure.clinical-img {
+        top: 48px;
+        max-height: 50vh;
+    }
+    figure.clinical-img img { max-height: calc(50vh - 120px); }
+    figure.clinical-img figcaption { font-size: 13px; max-height: 90px; }
 }
-html, body { overflow-x: hidden; max-width: 100%; }
-body { word-wrap: break-word; overflow-wrap: break-word; }
 </style>
 </head>
 <body>
