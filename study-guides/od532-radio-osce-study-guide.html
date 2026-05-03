@@ -302,21 +302,21 @@ figure.clinical-img figcaption strong { color: var(--primary-dark); }
 .tag.t-error { background: var(--accent-light); color: var(--accent-dark); border: 1px solid var(--accent); }
 
 /* STICKY IMAGE — pin figure below the sticky nav while answer text scrolls.
-   The next figure scrolls into view and naturally covers the previous one.
-   Disabled on narrow screens and in print so the image always sits inline.
-   top: 64px clears the .nav-sticky bar (nav-link padding 12px + line-height ~16px + border). */
-@media (min-width: 901px) {
+   Includes -webkit-sticky for iOS Safari/Brave. Active from iPad portrait up.
+   top offset clears the .nav-sticky bar at the top of the page. */
+@media (min-width: 700px) {
     figure.clinical-img {
+        position: -webkit-sticky;
         position: sticky;
-        top: 64px;
+        top: 56px;
         z-index: 5;
-        max-height: calc(100vh - 80px);
+        max-height: calc(100vh - 72px);
         display: flex;
         flex-direction: column;
         background: #0e0e10;
     }
     figure.clinical-img img {
-        max-height: calc(100vh - 240px);
+        max-height: calc(100vh - 220px);
         min-height: 0;
         object-fit: contain;
         flex: 1 1 auto;
