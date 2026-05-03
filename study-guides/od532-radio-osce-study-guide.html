@@ -39,7 +39,8 @@
     --radius-lg: 12px;
 }
 * { margin: 0; padding: 0; box-sizing: border-box; }
-html { scroll-behavior: smooth; scroll-padding-top: 80px; }
+html { scroll-behavior: smooth; scroll-padding-top: 100px; }
+table { display: block; max-width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; }
 body {
     font-family: 'Karla', sans-serif;
     background: var(--bg);
@@ -101,14 +102,18 @@ body {
     border-bottom: 1px solid var(--border);
     padding: 0 24px;
 }
-.nav-inner { max-width: 900px; margin: 0 auto; display: flex; gap: 4px; overflow-x: auto; scrollbar-width: none; }
+.nav-inner { max-width: 1100px; margin: 0 auto; display: flex; flex-wrap: wrap; gap: 2px; overflow-x: auto; scrollbar-width: none; }
 .nav-inner::-webkit-scrollbar { display: none; }
 .nav-link {
-    display: block; padding: 12px 14px; font-size: 13px; font-weight: 600;
+    display: block; padding: 10px 10px; font-size: 12px; font-weight: 600;
     color: var(--text-muted); text-decoration: none; white-space: nowrap;
     border-bottom: 2px solid transparent; transition: all 0.2s;
 }
 .nav-link:hover { color: var(--primary); border-bottom-color: var(--primary); }
+@media (max-width: 700px) {
+    .nav-inner { flex-wrap: nowrap; padding-right: 8px; }
+    .nav-link { padding: 10px 8px; font-size: 11px; }
+}
 
 /* CONTAINER */
 .container { max-width: 900px; margin: 0 auto; padding: 32px 24px 80px; }
@@ -340,10 +345,14 @@ figure.clinical-img figcaption strong { color: var(--primary-dark); }
 /* MOBILE */
 @media (max-width: 700px) {
     .hero { padding: 40px 20px 32px; }
+    .hero h1 { font-size: 28px; line-height: 1.2; word-wrap: break-word; }
+    .hero-sub, .hero-meta { font-size: 14px; }
     .container { padding: 24px 16px 60px; }
     .card { padding: 20px; }
     figure.clinical-img figcaption { font-size: 13px; }
 }
+html, body { overflow-x: hidden; max-width: 100%; }
+body { word-wrap: break-word; overflow-wrap: break-word; }
 </style>
 </head>
 <body>
@@ -392,7 +401,7 @@ figure.clinical-img figcaption strong { color: var(--primary-dark); }
     <div class="card-content">
 
       <figure class="clinical-img" data-slide="01-04">
-        <img src="images/radio-osce/01-section-title-and-anatomy-q.png?v=20260503"
+        <img src="images/radio-osce/01-section-title-and-anatomy-q.png?v=20260503b"
              alt="Title slide for Intraoral Anatomy Review for Radiology Rotation plus three opening question slides asking 'What are these radiolucencies?', 'What is this radiolucency?', and 'What is this radiopaque line?'"
              loading="lazy">
         <figcaption><span class="slide-tag">Slides 1&ndash;4</span>Section opener (top-left) plus three opening anatomy questions. The exam will reuse these exact image-types in random order &mdash; recognizing the <em>kind</em> of structure (lucent vs opaque, anterior vs posterior, max vs mand) is half the battle.</figcaption>
@@ -427,7 +436,7 @@ figure.clinical-img figcaption strong { color: var(--primary-dark); }
     <div class="card-content">
 
       <figure class="clinical-img" data-slide="05-08">
-        <img src="images/radio-osce/02-max-anterior-name-structures-1.png?v=20260503"
+        <img src="images/radio-osce/02-max-anterior-name-structures-1.png?v=20260503b"
              alt="Four quad slides labeled 'Name the structures' showing maxillary anterior periapicals with arrows to radiolucent and radiopaque midline structures including median palatine suture, nasal fossa, nasal septum, and anterior nasal spine."
              loading="lazy">
         <figcaption><span class="slide-tag">Slides 5&ndash;8</span>Four quad-slides surveying the maxillary anterior region. Every midline structure between the centrals through the apices has its own classic appearance &mdash; learn the radiolucent column (nasal fossa), the radiopaque column (nasal septum), and the thin radiolucent line splitting them (median palatine suture).</figcaption>
@@ -508,12 +517,12 @@ figure.clinical-img figcaption strong { color: var(--primary-dark); }
   <div class="card" id="anat-incisive-fossa">
     <div class="card-header">
       <h3>1.3 &middot; Incisive Foramen, Lateral Fossa, Inverted Y of Ennis</h3>
-      <span class="card-subtitle">Slides 9&ndash;12 &middot; Anterior-to-posterior transition: midline foramen, canine fossa, sinus/nasal junction</span>
+      <span class="card-subtitle">Slides 9&ndash;12 &middot; Anterior-to-posterior transition: midline foramen, lateral fossa, sinus/nasal junction</span>
     </div>
     <div class="card-content">
 
       <figure class="clinical-img" data-slide="09-12">
-        <img src="images/radio-osce/03-max-anterior-name-structures-2.png?v=20260503"
+        <img src="images/radio-osce/03-max-anterior-name-structures-2.png?v=20260503b"
              alt="Four quad slides labeled 'Name the structures' covering the maxillary anterior-posterior transition: incisive foramen on occlusal and PA views, lateral fossa, inverted Y of Ennis, and the maxillary sinus floor."
              loading="lazy">
         <figcaption><span class="slide-tag">Slides 9&ndash;12</span>Four quad-slides covering the anterior-to-posterior transition. Two structures dominate: the <strong>incisive foramen</strong> (midline radiolucent oval between centrals) and the <strong>inverted Y of Ennis</strong> (the X-ray crossing of the nasal floor and maxillary sinus floor over the canine).</figcaption>
@@ -534,12 +543,12 @@ figure.clinical-img figcaption strong { color: var(--primary-dark); }
       <h4>Top-Right Quad &mdash; Two more PAs</h4>
       <div class="panel-grid">
         <div class="panel-row"><span class="panel-label">PA #1</span><strong>Two white arrows flanking a radiolucent oval between/above the central root apices</strong> &rarr; <strong>incisive foramen</strong>.</div>
-        <div class="panel-row"><span class="panel-label">PA #2</span><strong>Single black arrow at the top + two white arrows below outlining a U-shaped radiolucent depression lateral to the canine</strong> &rarr; <strong>lateral fossa (canine fossa)</strong>. This is a depression in the maxilla between the canine and lateral incisor &mdash; thinner bone projects as a localized radiolucency that mimics a periapical lesion on the lateral.</div>
+        <div class="panel-row"><span class="panel-label">PA #2</span><strong>Single black arrow at the top + two white arrows below outlining a U-shaped radiolucent depression lateral to the lateral incisor</strong> &rarr; <strong>lateral fossa</strong> (a.k.a. <em>incisive fossa</em> &mdash; the depression between the lateral incisor and canine). Thinner bone projects as a localized radiolucency that mimics a periapical lesion on the lateral. Note: this is <em>not</em> the canine fossa, which is a separate depression located above the canine apex.</div>
       </div>
       <div class="answer-key">
         <ol>
           <li>Incisive foramen <span class="tag t-rl">RL</span></li>
-          <li>Lateral fossa (canine fossa) <span class="tag t-rl">RL</span></li>
+          <li>Lateral fossa (incisive fossa) <span class="tag t-rl">RL</span></li>
         </ol>
       </div>
 
@@ -582,7 +591,7 @@ figure.clinical-img figcaption strong { color: var(--primary-dark); }
     <div class="card-content">
 
       <figure class="clinical-img" data-slide="13-16">
-        <img src="images/radio-osce/04-max-posterior-sinus-anatomy.png?v=20260503"
+        <img src="images/radio-osce/04-max-posterior-sinus-anatomy.png?v=20260503b"
              alt="Four quad slides labeled 'Name the structures' on the maxillary posterior region showing zygomatic process, maxillary sinus floor, sinus septa, lateral sinus wall, and posterior superior alveolar nutrient canals."
              loading="lazy">
         <figcaption><span class="slide-tag">Slides 13&ndash;16</span>Maxillary posterior anatomy. Dominant landmarks: <strong>zygomatic process of the maxilla</strong> (J-shape over molar roots), <strong>maxillary sinus floor</strong> (thin radiopaque cortex), <strong>sinus septa</strong> (linear opacities crossing the antrum), and <strong>nutrient canals</strong> in alveolar bone.</figcaption>
@@ -659,7 +668,7 @@ figure.clinical-img figcaption strong { color: var(--primary-dark); }
     <div class="card-content">
 
       <figure class="clinical-img" data-slide="17-20">
-        <img src="images/radio-osce/05-mandible-anatomy-1.png?v=20260503"
+        <img src="images/radio-osce/05-mandible-anatomy-1.png?v=20260503b"
              alt="Four quad slides labeled 'Name the structures' covering mandibular anterior and bicuspid anatomy: mental ridge, lingual foramen with genial tubercles, mental foramen, mandibular occlusal lingual foramen view."
              loading="lazy">
         <figcaption><span class="slide-tag">Slides 17&ndash;20</span>Mandibular anterior region. Master the midline triad: <strong>genial tubercles</strong> (radiopaque ring), <strong>lingual foramen</strong> (radiolucent dot in the center of the ring), and <strong>mental ridge</strong> (radiopaque V-shape running across the symphysis). Then move laterally for the <strong>mental foramen</strong> at the bicuspid apex.</figcaption>
@@ -730,7 +739,7 @@ figure.clinical-img figcaption strong { color: var(--primary-dark); }
     <div class="card-content">
 
       <figure class="clinical-img" data-slide="21-23">
-        <img src="images/radio-osce/06-mandible-anatomy-2-and-amalgam.png?v=20260503"
+        <img src="images/radio-osce/06-mandible-anatomy-2-and-amalgam.png?v=20260503b"
              alt="Three mandibular posterior quad slides labeled 'Name the structures' showing mylohyoid ridge, external oblique ridge, submandibular fossa, inferior border of mandible, and a fourth quad of restorative material identification (amalgam)."
              loading="lazy">
         <figcaption><span class="slide-tag">Slides 21&ndash;23 + Restorative</span>Mandibular posterior anatomy plus the first restorative-material slide. Two oblique ridges run on opposite cortices: the <strong>external oblique ridge</strong> (buccal, continuation of anterior ramus border) and the <strong>mylohyoid (internal oblique) ridge</strong> (lingual, attaches mylohyoid muscle). Both project as radiopaque diagonal lines on PAs, but their position differs.</figcaption>
@@ -801,7 +810,7 @@ figure.clinical-img figcaption strong { color: var(--primary-dark); }
       <h3>2.1 The Restorative Materials Quad &mdash; Final Answers</h3>
 
       <figure class="clinical-img" data-slide="07">
-        <img src="images/radio-osce/07-restorative-materials-gp-composite.png?v=20260503" alt="Quad of restorative-material periapicals: gutta percha, composite, gold/PFM crown, orthodontic brackets" loading="lazy">
+        <img src="images/radio-osce/07-restorative-materials-gp-composite.png?v=20260503b" alt="Quad of restorative-material periapicals: gutta percha, composite, gold/PFM crown, orthodontic brackets" loading="lazy">
         <figcaption><span class="slide-tag">Slide 07</span> &mdash; Four PAs showing different restorative and endodontic materials. Identify each material by density, contour, and location.</figcaption>
       </figure>
 
@@ -859,7 +868,7 @@ figure.clinical-img figcaption strong { color: var(--primary-dark); }
       </div>
 
       <div class="pearl">
-        <strong>Density ladder (memorize this for the OSCE):</strong> Air &lt; soft tissue &lt; cartilage &lt; enamel &lt; dentin &lt; cementum &lt; cortical bone &lt; composite &lt; gutta percha &lt; ceramic crown &lt; gold/amalgam/stainless steel. The brighter the structure, the higher the atomic number of the material.</p>
+        <strong>Density ladder (memorize this for the OSCE):</strong> Air &lt; soft tissue &lt; cartilage &lt; dentin &asymp; cementum &lt; enamel &asymp; cortical bone &lt; gutta percha &lt; modern (barium-filled) composite &lt; ceramic crown &lt; gold/amalgam/stainless steel. The brighter the structure, the higher the atomic number of the material. (Note: enamel is the densest natural tooth tissue; modern composites are typically slightly more radiopaque than gutta percha because of barium/zirconium fillers.)</p>
       </div>
 
       <div class="pitfall">
@@ -885,7 +894,7 @@ figure.clinical-img figcaption strong { color: var(--primary-dark); }
       <h3>3.1 Cone Cuts &mdash; Lines, Notches, and Crescents</h3>
 
       <figure class="clinical-img" data-slide="08">
-        <img src="images/radio-osce/08-shinas-intro-cone-cuts-clinical.png?v=20260503" alt="Clinical setup and cone-cut examples on PA radiographs" loading="lazy">
+        <img src="images/radio-osce/08-shinas-intro-cone-cuts-clinical.png?v=20260503b" alt="Clinical setup and cone-cut examples on PA radiographs" loading="lazy">
         <figcaption><span class="slide-tag">Slide 08</span> &mdash; Clinical positioning of the rectangular collimator (top images) and the resulting cone-cut artifacts on PAs (bottom images).</figcaption>
       </figure>
 
@@ -929,7 +938,7 @@ figure.clinical-img figcaption strong { color: var(--primary-dark); }
       <h3>3.2 Foreshortening &mdash; Steep Vertical Angle</h3>
 
       <figure class="clinical-img" data-slide="09">
-        <img src="images/radio-osce/09-cone-cuts-fmx-foreshortening-clinical.png?v=20260503" alt="Foreshortened maxillary anterior PA with stubby roots and clinical demonstration" loading="lazy">
+        <img src="images/radio-osce/09-cone-cuts-fmx-foreshortening-clinical.png?v=20260503b" alt="Foreshortened maxillary anterior PA with stubby roots and clinical demonstration" loading="lazy">
         <figcaption><span class="slide-tag">Slide 09</span> &mdash; Cone-cut review (top) and foreshortening clinical setup &amp; image (bottom). The arrow on the bottom-right PA points to <strong>stubby, abnormally short roots</strong> on the maxillary anteriors.</figcaption>
       </figure>
 
@@ -966,7 +975,7 @@ figure.clinical-img figcaption strong { color: var(--primary-dark); }
       <h3>3.3 Bite-block Positioning &mdash; Correct vs Incorrect Placement</h3>
 
       <figure class="clinical-img" data-slide="10">
-        <img src="images/radio-osce/10-foreshortening-fmx-bite-block.png?v=20260503" alt="Foreshortening review and bite-block positioning examples" loading="lazy">
+        <img src="images/radio-osce/10-foreshortening-fmx-bite-block.png?v=20260503b" alt="Foreshortening review and bite-block positioning examples" loading="lazy">
         <figcaption><span class="slide-tag">Slide 10</span> &mdash; Top: foreshortening recap with correct vs incorrect PID alignment. Bottom: PA images showing bite-block positioning errors.</figcaption>
       </figure>
 
@@ -999,7 +1008,7 @@ figure.clinical-img figcaption strong { color: var(--primary-dark); }
       <h3>3.4 Midline of the Bite-block &amp; Open Bite on Bitewings</h3>
 
       <figure class="clinical-img" data-slide="11">
-        <img src="images/radio-osce/11-bite-block-midline-open-bite.png?v=20260503" alt="Midline of bite-block on PAs and open bite on bitewing radiographs" loading="lazy">
+        <img src="images/radio-osce/11-bite-block-midline-open-bite.png?v=20260503b" alt="Midline of bite-block on PAs and open bite on bitewing radiographs" loading="lazy">
         <figcaption><span class="slide-tag">Slide 11</span> &mdash; Top row: midline of the bite-block visible on PAs as a horizontal radiopaque line. Bottom row: bitewings showing the patient was not biting fully closed (open bite) &mdash; the occlusal plane sits in the middle of the image instead of at the central horizontal line.</figcaption>
       </figure>
 
@@ -1038,7 +1047,7 @@ figure.clinical-img figcaption strong { color: var(--primary-dark); }
       <h3>3.5 Elongation &mdash; Insufficient Vertical Angle</h3>
 
       <figure class="clinical-img" data-slide="12">
-        <img src="images/radio-osce/12-elongation-fmx.png?v=20260503" alt="Elongated PA radiograph showing stretched, abnormally long teeth" loading="lazy">
+        <img src="images/radio-osce/12-elongation-fmx.png?v=20260503b" alt="Elongated PA radiograph showing stretched, abnormally long teeth" loading="lazy">
         <figcaption><span class="slide-tag">Slide 12</span> &mdash; PA showing <strong>elongated</strong> teeth: roots and crowns appear stretched longer than their actual anatomy. Arrow points to the abnormally long roots.</figcaption>
       </figure>
 
@@ -1087,16 +1096,16 @@ figure.clinical-img figcaption strong { color: var(--primary-dark); }
     </div>
     <div class="card-body">
       <figure class="clinical-img" data-slide="13a">
-        <img src="images/radio-osce/13-pano-positioning-quad-sensor-chinup-chindown.png?v=20260503" alt="Sensor sliding setup, panoramic radiograph header, Chin Up positioning + result, Chin Down positioning + result" loading="lazy">
+        <img src="images/radio-osce/13-pano-positioning-quad-sensor-chinup-chindown.png?v=20260503b" alt="Sensor sliding setup, panoramic radiograph header, Chin Up positioning + result, Chin Down positioning + result" loading="lazy">
         <figcaption><span class="slide-tag">Slides 13&ndash;14</span>Quad opener for the panoramic technique block. Top-left shows the cassette/sensor being slid into the rotating arm. Top-right is the section header. The bottom rows show <strong>Chin Up</strong> and <strong>Chin Down</strong> errors paired with the patient's actual head positioning relative to the vertical midline beam (red line through the midsagittal plane).</figcaption>
       </figure>
       <div class="panel-grid">
         <div class="panel-row"><span class="panel-label">Top-Left</span><strong>Yellow cassette being slid into the receptor track of the pan machine</strong> &mdash; this is just the sensor-loading setup before exposure. No diagnostic content; setup orientation only.</div>
         <div class="panel-row"><span class="panel-label">Top-Right</span><strong>&ldquo;Panoramic Radiograph&rdquo; section title.</strong></div>
         <div class="panel-row"><span class="panel-label">Middle-Right Photo</span><strong>Patient with chin tilted UP</strong> &mdash; red vertical reference line shows the Frankfort plane angled upward. The bite block is being approached from below the occlusal plane.</div>
-        <div class="panel-row"><span class="panel-label">Middle-Left Pano</span><strong>Result of Chin Up</strong> &mdash; flat / reverse-smile occlusal plane, anterior teeth elongated and superimposed on hard palate, hard palate appears as a thick radiopaque band crossing the maxillary roots, condyles pushed off the top of the film.</div>
+        <div class="panel-row"><span class="panel-label">Middle-Left Pano</span><strong>Result of Chin Up</strong> &mdash; flat / reverse-smile (frown) occlusal plane, anterior teeth elongated and superimposed on hard palate, hard palate appears as a thick radiopaque band crossing the maxillary roots, <strong>condyles pushed laterally toward or off the SIDES of the film</strong> (Frankfort plane tipped upward projects the mandible inferiorly-laterally).</div>
         <div class="panel-row"><span class="panel-label">Bottom-Right Photo</span><strong>Patient with chin tilted DOWN</strong> &mdash; red reference line angles downward; the bite block is being approached from above. This is the classic &ldquo;tucked chin&rdquo; error.</div>
-        <div class="panel-row"><span class="panel-label">Bottom-Left Pano</span><strong>Result of Chin Down</strong> &mdash; <strong>exaggerated upward smile</strong> (deep V) of the occlusal plane, anterior teeth crowded and overlapping, mandibular incisors pushed labially, condyles ride high near the lateral edges of the film.</div>
+        <div class="panel-row"><span class="panel-label">Bottom-Left Pano</span><strong>Result of Chin Down</strong> &mdash; <strong>exaggerated upward smile</strong> (deep V) of the occlusal plane, anterior teeth crowded and overlapping, mandibular incisors pushed labially, <strong>condyles cut off at the TOP of the film</strong> (chin-tuck rotates the mandible superiorly so the condyles ride above the image margin).</div>
       </div>
       <div class="answer-key">
         <p><strong>Final answers (these two slides together):</strong></p>
@@ -1119,7 +1128,7 @@ figure.clinical-img figcaption strong { color: var(--primary-dark); }
     </div>
     <div class="card-body">
       <figure class="clinical-img" data-slide="14b">
-        <img src="images/radio-osce/14-pano-positioning-quad-slumping-tilt-rotation.png?v=20260503" alt="Slumping of spine pano + photo, Tilt pano + photo, Rotation pano + photo" loading="lazy">
+        <img src="images/radio-osce/14-pano-positioning-quad-slumping-tilt-rotation.png?v=20260503b" alt="Slumping of spine pano + photo, Tilt pano + photo, Rotation pano + photo" loading="lazy">
         <figcaption><span class="slide-tag">Slide 14</span>Three more positioning errors stacked: slumping of the spine (top), head tilt (middle), and head rotation (bottom). Each row pairs the resulting pan with the patient&rsquo;s body/head posture. Red lines mark the patient&rsquo;s midsagittal plane.</figcaption>
       </figure>
       <div class="panel-grid">
@@ -1164,7 +1173,7 @@ figure.clinical-img figcaption strong { color: var(--primary-dark); }
     </div>
     <div class="card-body">
       <figure class="clinical-img" data-slide="15">
-        <img src="images/radio-osce/15-interpretation-title-odontograms-fmx.png?v=20260503" alt="Interpretation section header, two BW images of large amalgams, odontogram chart, and miniature FMX strip" loading="lazy">
+        <img src="images/radio-osce/15-interpretation-title-odontograms-fmx.png?v=20260503b" alt="Interpretation section header, two BW images of large amalgams, odontogram chart, and miniature FMX strip" loading="lazy">
         <figcaption><span class="slide-tag">Slide 15</span>Quad opener for the interpretation section. Top-right pair: two bitewings showing very large radiopaque restorations with subjacent radiolucent zones. Middle-left pair: same/similar bitewings repeated under the &ldquo;Odontograms&rdquo; header. Middle-right: hand-drawn FDI odontogram chart with red caries marks and a typed answer key. Bottom strip: full mounted FMX preview.</figcaption>
       </figure>
       <div class="panel-grid">
@@ -1196,7 +1205,7 @@ figure.clinical-img figcaption strong { color: var(--primary-dark); }
     </div>
     <div class="card-body">
       <figure class="clinical-img" data-slide="16">
-        <img src="images/radio-osce/16-fmx-charting-and-pano-trio.png?v=20260503" alt="Mounted FMX with one PA highlighted in red, plus three baseline panoramic radiographs of the same patient" loading="lazy">
+        <img src="images/radio-osce/16-fmx-charting-and-pano-trio.png?v=20260503b" alt="Mounted FMX with one PA highlighted in red, plus three baseline panoramic radiographs of the same patient" loading="lazy">
         <figcaption><span class="slide-tag">Slide 16</span>Top-left: mounted FMX strip with a single PA outlined in red &mdash; this is the &ldquo;point to the source film&rdquo; drill (radiograph &rarr; tooth on chart). The remaining three frames are full-arch panoramic radiographs of an adult patient: one fully labeled, one without labels, and one with R/L orientation marks. These are the baseline panos used for every anatomy slide that follows.</figcaption>
       </figure>
       <div class="panel-grid">
@@ -1233,7 +1242,7 @@ figure.clinical-img figcaption strong { color: var(--primary-dark); }
     </div>
     <div class="card-body">
       <figure class="clinical-img" data-slide="17">
-        <img src="images/radio-osce/17-bony-structures-cranial-bones.png?v=20260503" alt="Bony Structures section title with lateral skull diagram colored by bone region" loading="lazy">
+        <img src="images/radio-osce/17-bony-structures-cranial-bones.png?v=20260503b" alt="Bony Structures section title with lateral skull diagram colored by bone region" loading="lazy">
         <figcaption><span class="slide-tag">Slide 17</span>Section opener &mdash; lateral skull diagram with each cranial bone color-coded. Orientation: face on the left, occiput on the right.</figcaption>
       </figure>
       <div class="answer-key">
@@ -1246,11 +1255,11 @@ figure.clinical-img figcaption strong { color: var(--primary-dark); }
           <li><strong>Temporal (2)</strong> &mdash; orange, houses ear and forms part of the TMJ (glenoid fossa).</li>
           <li><strong>Occipital (1)</strong> &mdash; green, posterior cranium with foramen magnum.</li>
         </ul>
-        <p style="margin-top:8px;"><strong>Memory:</strong> &ldquo;PEST OF 6&rdquo; &rarr; <em>P</em>arietal, <em>E</em>thmoid, <em>S</em>phenoid, <em>T</em>emporal, <em>O</em>ccipital, <em>F</em>rontal.</p>
+        <p style="margin-top:8px;"><strong>Memory:</strong> &ldquo;PEST OF&rdquo; (6 names, 8 bones &mdash; parietal &amp; temporal are paired) &rarr; <em>P</em>arietal, <em>E</em>thmoid, <em>S</em>phenoid, <em>T</em>emporal, <em>O</em>ccipital, <em>F</em>rontal.</p>
       </div>
 
       <figure class="clinical-img" data-slide="18">
-        <img src="images/radio-osce/18-facial-bones-skull-anterior.png?v=20260503" alt="Anterior view of skull with facial bones labeled and color-coded" loading="lazy">
+        <img src="images/radio-osce/18-facial-bones-skull-anterior.png?v=20260503b" alt="Anterior view of skull with facial bones labeled and color-coded" loading="lazy">
         <figcaption><span class="slide-tag">Slide 18</span>Anterior skull diagram with the 14 facial bones color-coded and labeled with their counts.</figcaption>
       </figure>
       <div class="answer-key">
@@ -1280,7 +1289,7 @@ figure.clinical-img figcaption strong { color: var(--primary-dark); }
     </div>
     <div class="card-body">
       <figure class="clinical-img" data-slide="19">
-        <img src="images/radio-osce/19-pano-fdi-numbering.png?v=20260503" alt="Adult mixed-dentition pano with full FDI numbering 11-48 and red arrows curving around the articular eminence in both upper corners" loading="lazy">
+        <img src="images/radio-osce/19-pano-fdi-numbering.png?v=20260503b" alt="Adult mixed-dentition pano with full FDI numbering 11-48 and red arrows curving around the articular eminence in both upper corners" loading="lazy">
         <figcaption><span class="slide-tag">Slide 19</span>Mixed-dentition pano with every tooth labeled in the FDI two-digit system (quadrants 1&ndash;4, then position 1&ndash;8). <strong>Red curves with arrows in both upper corners</strong> hook around a rounded radiopaque eminence anterior to each glenoid fossa &mdash; the articular eminence.</figcaption>
       </figure>
       <div class="answer-key">
@@ -1305,16 +1314,12 @@ figure.clinical-img figcaption strong { color: var(--primary-dark); }
     </div>
     <div class="card-body">
       <figure class="clinical-img" data-slide="20">
-        <img src="images/radio-osce/20-pano-baseline-A.png?v=20260503" alt="Baseline panoramic radiograph A with no labels" loading="lazy">
+        <img src="images/radio-osce/20-pano-baseline-A.png?v=20260503b" alt="Baseline panoramic radiograph A with no labels" loading="lazy">
         <figcaption><span class="slide-tag">Slide 20</span>First baseline pano (labeled &ldquo;A&rdquo;) &mdash; the unlabeled canvas for the anatomy questions that follow.</figcaption>
       </figure>
       <figure class="clinical-img" data-slide="21">
-        <img src="images/radio-osce/21-pano-baseline-B.png?v=20260503" alt="Baseline panoramic radiograph B" loading="lazy">
+        <img src="images/radio-osce/21-pano-baseline-B.png?v=20260503b" alt="Baseline panoramic radiograph B" loading="lazy">
         <figcaption><span class="slide-tag">Slide 21</span>Second baseline pano (labeled &ldquo;B&rdquo;) &mdash; same patient, used for additional landmark drills.</figcaption>
-      </figure>
-      <figure class="clinical-img" data-slide="22">
-        <img src="images/radio-osce/22-pano-orthodontics-brackets.png?v=20260503" alt="Pano of patient in full orthodontic brackets with retained roots and missing teeth" loading="lazy">
-        <figcaption><span class="slide-tag">Slide 22</span>Pano of an orthodontic patient in full upper and lower fixed appliances. Brackets appear as evenly spaced rectangular radiopacities along the labial surfaces. Use as an example of how restorations and appliances can obscure anatomy.</figcaption>
       </figure>
       <div class="high-yield">
         <p><strong>Baseline anatomy mental checklist (memorize these landmarks on a clean pano before any arrows are added):</strong> condyles &rarr; coronoid &rarr; sigmoid notch &rarr; ramus &rarr; angle &rarr; mental foramen &rarr; mandibular canal &rarr; mental ridge / lingual foramen &rarr; hard palate &rarr; nasal septum &rarr; ANS &rarr; maxillary sinuses &rarr; zygomatic arch &rarr; pterygoid plates &rarr; styloid process &rarr; mastoid &rarr; articular eminence/glenoid fossa.</p>
@@ -1329,43 +1334,43 @@ figure.clinical-img figcaption strong { color: var(--primary-dark); }
     </div>
     <div class="card-body">
       <figure class="clinical-img" data-slide="23">
-        <img src="images/radio-osce/23-pano-articular-eminence-curve.png?v=20260503" alt="Pano with red curving brackets at upper lateral corners marking articular eminence" loading="lazy">
+        <img src="images/radio-osce/23-pano-articular-eminence-curve.png?v=20260503b" alt="Pano with red curving brackets at upper lateral corners marking articular eminence" loading="lazy">
         <figcaption><span class="slide-tag">Slide 23</span><strong>Red curving brackets in both upper lateral corners</strong>, hooking around a rounded radiopaque convexity anterior to the glenoid fossa.</figcaption>
       </figure>
       <div class="answer-key"><p><strong>Answer:</strong> <strong>Articular eminence</strong> (of the temporal bone). Convex bony prominence anterior to glenoid fossa &mdash; condyle slides forward and downward over it during translation.</p></div>
 
       <figure class="clinical-img" data-slide="24">
-        <img src="images/radio-osce/24-pano-glenoid-fossa-articular-eminence.png?v=20260503" alt="Pano with red filled circle highlighting glenoid fossa and articular eminence area on right TMJ" loading="lazy">
+        <img src="images/radio-osce/24-pano-glenoid-fossa-articular-eminence.png?v=20260503b" alt="Pano with red filled circle highlighting glenoid fossa and articular eminence area on right TMJ" loading="lazy">
         <figcaption><span class="slide-tag">Slide 24</span><strong>Red filled circle in the upper-right (patient's left) corner</strong> with two arrows converging on the rounded depression-and-eminence complex of the TMJ.</figcaption>
       </figure>
       <div class="answer-key"><p><strong>Answer:</strong> <strong>Glenoid fossa + articular eminence complex</strong> &mdash; the concave depression (fossa) of the temporal bone that houses the condyle, with the convex eminence immediately anterior. Together they form the bony socket of the TMJ.</p></div>
 
       <figure class="clinical-img" data-slide="32">
-        <img src="images/radio-osce/32-pano-condyle.png?v=20260503" alt="Pano with red arrows on bilateral mandibular condyles" loading="lazy">
+        <img src="images/radio-osce/32-pano-condyle.png?v=20260503b" alt="Pano with red arrows on bilateral mandibular condyles" loading="lazy">
         <figcaption><span class="slide-tag">Slide 32</span><strong>Red arrows pointing diagonally upward into the rounded radiopaque heads at the top of each ramus</strong>, sitting within the glenoid fossa.</figcaption>
       </figure>
       <div class="answer-key"><p><strong>Answer:</strong> <strong>Mandibular condyle</strong> &mdash; superior articular surface of the mandible, articulates with the glenoid fossa to form the TMJ. Has a head, neck, and is anterior to the ear canal.</p></div>
 
       <figure class="clinical-img" data-slide="33">
-        <img src="images/radio-osce/33-pano-glenoid-fossa.png?v=20260503" alt="Pano with red curve and arrow specifically marking the depression of the glenoid fossa" loading="lazy">
+        <img src="images/radio-osce/33-pano-glenoid-fossa.png?v=20260503b" alt="Pano with red curve and arrow specifically marking the depression of the glenoid fossa" loading="lazy">
         <figcaption><span class="slide-tag">Slide 33</span><strong>Red curves in both upper-lateral regions outlining the concave depression posterior to the articular eminence and superior to the condyle.</strong></figcaption>
       </figure>
       <div class="answer-key"><p><strong>Answer:</strong> <strong>Glenoid fossa (mandibular fossa) of the temporal bone</strong> &mdash; the concave socket that houses the condyle. Forms the &ldquo;upper&rdquo; half of the TMJ.</p></div>
 
       <figure class="clinical-img" data-slide="31">
-        <img src="images/radio-osce/31-pano-coronoid-process.png?v=20260503" alt="Pano with red filled lobed shapes over the coronoid processes plus arrows" loading="lazy">
+        <img src="images/radio-osce/31-pano-coronoid-process.png?v=20260503b" alt="Pano with red filled lobed shapes over the coronoid processes plus arrows" loading="lazy">
         <figcaption><span class="slide-tag">Slide 31</span><strong>Red filled lobed shapes superimposed in the upper-left zone (over the maxillary tuberosity area)</strong> &mdash; pointed bony projections rising up between the maxillary teeth and the ramus. Plus an arrow on the contralateral condyle for comparison.</figcaption>
       </figure>
       <div class="answer-key"><p><strong>Answer:</strong> <strong>Coronoid process</strong> of the mandible &mdash; the anterior, sharp, beak-like projection of the ramus. Site of attachment for the temporalis muscle. On a pan it often projects upward into the maxillary sinus / tuberosity area as a triangular radiopacity with a sharp tip.</p></div>
 
       <figure class="clinical-img" data-slide="29">
-        <img src="images/radio-osce/29-pano-mastoid-process.png?v=20260503" alt="Pano with red arrows pointing diagonally up to the far upper lateral corners" loading="lazy">
+        <img src="images/radio-osce/29-pano-mastoid-process.png?v=20260503b" alt="Pano with red arrows pointing diagonally up to the far upper lateral corners" loading="lazy">
         <figcaption><span class="slide-tag">Slide 29</span><strong>Red arrows pointing diagonally up-and-out to the far upper lateral corners of the pano</strong>, into the dense bone behind/below the ear.</figcaption>
       </figure>
       <div class="answer-key"><p><strong>Answer:</strong> <strong>Mastoid process</strong> of the temporal bone &mdash; bony prominence behind the ear, attachment for sternocleidomastoid. Appears as dense radiopaque bone in the far lateral upper corners of the pano.</p></div>
 
       <figure class="clinical-img" data-slide="30">
-        <img src="images/radio-osce/30-pano-styloid-process.png?v=20260503" alt="Pano with red brackets around vertical sliver-like radiopacity descending from skull base behind ramus" loading="lazy">
+        <img src="images/radio-osce/30-pano-styloid-process.png?v=20260503b" alt="Pano with red brackets around vertical sliver-like radiopacity descending from skull base behind ramus" loading="lazy">
         <figcaption><span class="slide-tag">Slide 30</span><strong>Red brackets and arrows on a thin vertical sliver of radiopaque bone descending from the skull base inferomedial to the condyle</strong>, behind the ramus.</figcaption>
       </figure>
       <div class="answer-key"><p><strong>Answer:</strong> <strong>Styloid process</strong> of the temporal bone &mdash; thin, pointed bone projecting inferiorly from the skull base. Attachment for stylohyoid, styloglossus, stylopharyngeus muscles. May appear elongated in <em>Eagle syndrome</em>.</p></div>
@@ -1379,13 +1384,13 @@ figure.clinical-img figcaption strong { color: var(--primary-dark); }
     </div>
     <div class="card-body">
       <figure class="clinical-img" data-slide="25">
-        <img src="images/radio-osce/25-pano-pterygoid-plates-brackets.png?v=20260503" alt="Pano with red horizontal brackets and arrows pointing inward toward midline at upper midface level" loading="lazy">
+        <img src="images/radio-osce/25-pano-pterygoid-plates-brackets.png?v=20260503b" alt="Pano with red horizontal brackets and arrows pointing inward toward midline at upper midface level" loading="lazy">
         <figcaption><span class="slide-tag">Slide 25</span><strong>Red horizontal brackets with arrows pointing medially toward the midline</strong>, located in the upper midface just lateral to the nasal cavity, at the level of the maxillary sinus roof.</figcaption>
       </figure>
       <div class="answer-key"><p><strong>Answer:</strong> <strong>Pterygoid plates</strong> (lateral and medial) of the sphenoid bone &mdash; project inferiorly from the body of the sphenoid behind the maxillary tuberosity. Attachment for the medial and lateral pterygoid muscles. On a pan they appear as faint vertical radiopaque structures behind the maxillary tuberosity.</p></div>
 
       <figure class="clinical-img" data-slide="34">
-        <img src="images/radio-osce/34-pano-pterygomaxillary-fissure.png?v=20260503" alt="Pano with red curve and arrow marking thin radiolucent gap between maxillary tuberosity and pterygoid plates" loading="lazy">
+        <img src="images/radio-osce/34-pano-pterygomaxillary-fissure.png?v=20260503b" alt="Pano with red curve and arrow marking thin radiolucent gap between maxillary tuberosity and pterygoid plates" loading="lazy">
         <figcaption><span class="slide-tag">Slide 34</span><strong>Red curve with arrow pointing to a thin radiolucent inverted-teardrop space between the posterior maxilla and the pterygoid plates of the sphenoid.</strong></figcaption>
       </figure>
       <div class="answer-key"><p><strong>Answer:</strong> <strong>Pterygomaxillary fissure</strong> &mdash; the narrow vertical gap between the posterior wall of the maxilla and the anterior surface of the pterygoid process. Communicates with the pterygopalatine fossa. Classic teardrop-shaped radiolucency on a pan.</p></div>
@@ -1400,25 +1405,25 @@ figure.clinical-img figcaption strong { color: var(--primary-dark); }
     </div>
     <div class="card-body">
       <figure class="clinical-img" data-slide="26">
-        <img src="images/radio-osce/26-pano-zygomatic-arch.png?v=20260503" alt="Pano with red curves and arrows pointing laterally outward at superior midface bilaterally" loading="lazy">
+        <img src="images/radio-osce/26-pano-zygomatic-arch.png?v=20260503b" alt="Pano with red curves and arrows pointing laterally outward at superior midface bilaterally" loading="lazy">
         <figcaption><span class="slide-tag">Slide 26</span><strong>Red curves with arrows pointing laterally (outward, away from midline) on both sides</strong> in the upper third of the pano, tracing a horizontal radiopaque band that arcs from the lateral orbital rim back toward the ear.</figcaption>
       </figure>
       <div class="answer-key"><p><strong>Answer:</strong> <strong>Zygomatic arch</strong> &mdash; horizontal bony bridge formed by the temporal process of the zygoma and the zygomatic process of the temporal bone. Attachment for masseter. On a pan it&rsquo;s a long horizontal radiopaque band crossing the upper third of the image bilaterally.</p></div>
 
       <figure class="clinical-img" data-slide="27">
-        <img src="images/radio-osce/27-pano-zygomaticomaxillary-suture.png?v=20260503" alt="Pano with red curves and arrows pointing upward at the junction of zygomatic arch and maxilla bilaterally" loading="lazy">
+        <img src="images/radio-osce/27-pano-zygomaticomaxillary-suture.png?v=20260503b" alt="Pano with red curves and arrows pointing upward at the junction of zygomatic arch and maxilla bilaterally" loading="lazy">
         <figcaption><span class="slide-tag">Slide 27</span><strong>Red curves with arrows pointing upward at the junction where the zygomatic arch meets the lateral wall of the maxilla bilaterally</strong>, just above the maxillary molars.</figcaption>
       </figure>
-      <div class="answer-key"><p><strong>Answer:</strong> <strong>Zygomaticomaxillary suture (Z-line / J-line)</strong> &mdash; the suture between the zygomatic bone and the maxilla. Forms a J or hook-shaped radiopaque line at the junction of the maxillary tuberosity and zygomatic arch. <strong>One of the most reliable anatomic landmarks on a pan.</strong></p></div>
+      <div class="answer-key"><p><strong>Answer:</strong> <strong>Zygomaticomaxillary suture (Z-line)</strong> &mdash; the suture between the zygomatic bone and the maxilla. Appears as a thin radiopaque line at the junction of the maxillary tuberosity and zygomatic arch. <strong>One of the most reliable anatomic landmarks on a pan.</strong> (Note: the &ldquo;J-line / hook&rdquo; descriptor applies to the <em>zygomatic process of the maxilla</em>, the next card &mdash; do not confuse the two.)</p></div>
 
       <figure class="clinical-img" data-slide="28">
-        <img src="images/radio-osce/28-pano-inferior-orbital-rim.png?v=20260503" alt="Pano with two short red arrows pointing up to the curved radiopaque line forming the inferior orbital rim" loading="lazy">
+        <img src="images/radio-osce/28-pano-inferior-orbital-rim.png?v=20260503b" alt="Pano with two short red arrows pointing up to the curved radiopaque line forming the inferior orbital rim" loading="lazy">
         <figcaption><span class="slide-tag">Slide 28</span><strong>Two short red lines with upward arrows</strong> located between the zygomatic arch and the orbit, pointing to a smoothly curved radiopaque margin.</figcaption>
       </figure>
       <div class="answer-key"><p><strong>Answer:</strong> <strong>Inferior orbital rim / floor of the orbit</strong> &mdash; the U-shaped radiopaque rim at the bottom of each orbit, formed by the maxilla and zygoma. Often visible just superior to the maxillary sinus roof on a pan.</p></div>
 
       <figure class="clinical-img" data-slide="41">
-        <img src="images/radio-osce/41-pano-zygomatic-process-maxilla.png?v=20260503" alt="Pano with red lines and arrows at the J-shaped zygomatic process of the maxilla" loading="lazy">
+        <img src="images/radio-osce/41-pano-zygomatic-process-maxilla.png?v=20260503b" alt="Pano with red lines and arrows at the J-shaped zygomatic process of the maxilla" loading="lazy">
         <figcaption><span class="slide-tag">Slide 41</span><strong>Red curves and arrows tracing the J-shaped radiopaque hook above the maxillary molars bilaterally.</strong></figcaption>
       </figure>
       <div class="answer-key"><p><strong>Answer:</strong> <strong>Zygomatic process of the maxilla</strong> (the &ldquo;maxillary J-line&rdquo; or &ldquo;hook&rdquo;) &mdash; U or J-shaped radiopaque structure superimposed over the maxillary first molar region. Marks where the lateral wall of the maxillary sinus joins the zygoma.</p>
@@ -1433,43 +1438,43 @@ figure.clinical-img figcaption strong { color: var(--primary-dark); }
     </div>
     <div class="card-body">
       <figure class="clinical-img" data-slide="35">
-        <img src="images/radio-osce/35-pano-maxillary-sinus-floor.png?v=20260503" alt="Pano with red horizontal arrows pointing inward at the corticated radiopaque line forming the sinus floor above maxillary roots" loading="lazy">
+        <img src="images/radio-osce/35-pano-maxillary-sinus-floor.png?v=20260503b" alt="Pano with red horizontal arrows pointing inward at the corticated radiopaque line forming the sinus floor above maxillary roots" loading="lazy">
         <figcaption><span class="slide-tag">Slide 35</span><strong>Red horizontal arrows pointing inward (toward midline) on both sides</strong>, marking a thin corticated radiopaque line draping above the maxillary posterior roots.</figcaption>
       </figure>
       <div class="answer-key"><p><strong>Answer:</strong> <strong>Floor of the maxillary sinus</strong> &mdash; the inferior corticated boundary of the antrum, sitting just above (and sometimes draping between) the maxillary posterior root apices. The sinus itself is the large radiolucent area above this line.</p></div>
 
       <figure class="clinical-img" data-slide="42">
-        <img src="images/radio-osce/42-pano-maxillary-tuberosity.png?v=20260503" alt="Pano with red curves and arrows on the rounded posterior maxillary bone behind the third molar bilaterally" loading="lazy">
+        <img src="images/radio-osce/42-pano-maxillary-tuberosity.png?v=20260503b" alt="Pano with red curves and arrows on the rounded posterior maxillary bone behind the third molar bilaterally" loading="lazy">
         <figcaption><span class="slide-tag">Slide 42</span><strong>Red curves with arrows on the rounded radiopaque bony prominence behind the maxillary third molars bilaterally.</strong></figcaption>
       </figure>
       <div class="answer-key"><p><strong>Answer:</strong> <strong>Maxillary tuberosity</strong> &mdash; the rounded posterior projection of the maxilla distal to the upper third molars. Important landmark for posterior superior alveolar nerve block and for upper denture flange extension.</p></div>
 
       <figure class="clinical-img" data-slide="36">
-        <img src="images/radio-osce/36-pano-hard-palate.png?v=20260503" alt="Pano with red horizontal line and arrow marking the dense radiopaque band above the maxillary tooth apices" loading="lazy">
+        <img src="images/radio-osce/36-pano-hard-palate.png?v=20260503b" alt="Pano with red horizontal line and arrow marking the dense radiopaque band above the maxillary tooth apices" loading="lazy">
         <figcaption><span class="slide-tag">Slide 36</span><strong>Red horizontal line with leftward arrow marking a dense radiopaque horizontal band crossing above the maxillary tooth apices.</strong></figcaption>
       </figure>
       <div class="answer-key"><p><strong>Answer:</strong> <strong>Hard palate</strong> (palatal process of the maxilla + horizontal plate of palatine bone) &mdash; appears as a thick horizontal radiopaque band crossing the upper pano just at/above the maxillary tooth apices due to the focal-trough geometry. <strong>If the band is projected too far <em>down</em> over the maxillary apices and obscures them, suspect a Chin Up positioning error</strong> (Frankfort plane angled upward thrusts the palate inferiorly into the apex zone).</p></div>
 
       <figure class="clinical-img" data-slide="37">
-        <img src="images/radio-osce/37-pano-anterior-nasal-spine.png?v=20260503" alt="Pano with red filled circle in midline at the base of nasal cavity" loading="lazy">
+        <img src="images/radio-osce/37-pano-anterior-nasal-spine.png?v=20260503b" alt="Pano with red filled circle in midline at the base of nasal cavity" loading="lazy">
         <figcaption><span class="slide-tag">Slide 37</span><strong>Red filled circle in the exact midline at the base of the nasal cavity</strong>, just above the maxillary central incisors.</figcaption>
       </figure>
       <div class="answer-key"><p><strong>Answer:</strong> <strong>Anterior nasal spine (ANS)</strong> &mdash; small triangular radiopaque projection of the maxilla in the midline at the inferior border of the nasal aperture. Cephalometric landmark.</p></div>
 
       <figure class="clinical-img" data-slide="38">
-        <img src="images/radio-osce/38-pano-nasal-septum.png?v=20260503" alt="Pano with red curves and arrows on the vertical radiopaque structure dividing the nasal cavity in the midline" loading="lazy">
+        <img src="images/radio-osce/38-pano-nasal-septum.png?v=20260503b" alt="Pano with red curves and arrows on the vertical radiopaque structure dividing the nasal cavity in the midline" loading="lazy">
         <figcaption><span class="slide-tag">Slide 38</span><strong>Red curves with arrows pointing inferiorly to a vertical radiopaque structure dividing the nasal cavity in the midline.</strong></figcaption>
       </figure>
       <div class="answer-key"><p><strong>Answer:</strong> <strong>Nasal septum</strong> &mdash; vertical midline radiopaque wall dividing the right and left nasal cavities. Made of the perpendicular plate of the ethmoid (superior) and the vomer (inferior). Often deviated.</p></div>
 
       <figure class="clinical-img" data-slide="39">
-        <img src="images/radio-osce/39-pano-inferior-nasal-concha.png?v=20260503" alt="Pano with red curves and arrows on the radiopaque scroll-like structures lateral to the nasal septum" loading="lazy">
+        <img src="images/radio-osce/39-pano-inferior-nasal-concha.png?v=20260503b" alt="Pano with red curves and arrows on the radiopaque scroll-like structures lateral to the nasal septum" loading="lazy">
         <figcaption><span class="slide-tag">Slide 39</span><strong>Red curves with arrows pointing to scroll-like radiopaque structures projecting laterally into the nasal cavity, on either side of the septum.</strong></figcaption>
       </figure>
       <div class="answer-key"><p><strong>Answer:</strong> <strong>Inferior nasal concha (turbinate)</strong> &mdash; horizontally scrolling bony shelf on the lateral wall of the nasal cavity. Largest of the three turbinates. Pano often shows it as a curved radiopaque shelf inside the nasal aperture lateral to the septum.</p></div>
 
       <figure class="clinical-img" data-slide="40">
-        <img src="images/radio-osce/40-pano-incisive-foramen.png?v=20260503" alt="Pano with red filled circle in midline between roots of central incisors" loading="lazy">
+        <img src="images/radio-osce/40-pano-incisive-foramen.png?v=20260503b" alt="Pano with red filled circle in midline between roots of central incisors" loading="lazy">
         <figcaption><span class="slide-tag">Slide 40</span><strong>Red filled circle in the midline of the maxilla between the apices of the central incisors</strong>, just below the anterior nasal spine.</figcaption>
       </figure>
       <div class="answer-key"><p><strong>Answer:</strong> <strong>Incisive foramen (nasopalatine canal opening)</strong> &mdash; midline radiolucency between or just apical to the maxillary central incisor roots. Transmits the nasopalatine nerve and sphenopalatine artery. Commonly &ldquo;heart-shaped.&rdquo; <strong>Do not mistake for a periapical lesion</strong> &mdash; it&rsquo;s anatomy.</p></div>
@@ -1483,13 +1488,13 @@ figure.clinical-img figcaption strong { color: var(--primary-dark); }
     </div>
     <div class="card-body">
       <figure class="clinical-img" data-slide="43">
-        <img src="images/radio-osce/43-pano-ramus-mandible.png?v=20260503" alt="Pano with red arrows on the broad vertical bone behind the mandibular molars bilaterally" loading="lazy">
+        <img src="images/radio-osce/43-pano-ramus-mandible.png?v=20260503b" alt="Pano with red arrows on the broad vertical bone behind the mandibular molars bilaterally" loading="lazy">
         <figcaption><span class="slide-tag">Slide 43</span><strong>Red arrows pointing diagonally to the broad vertical wall of bone behind the lower third molars on both sides</strong>, extending from the angle up to the condyle and coronoid.</figcaption>
       </figure>
       <div class="answer-key"><p><strong>Answer:</strong> <strong>Ramus of the mandible</strong> &mdash; the vertical posterior portion of the mandible. Includes the angle (gonion) inferiorly, the condyle posterosuperiorly, and the coronoid anterosuperiorly, separated by the sigmoid (mandibular) notch.</p></div>
 
       <figure class="clinical-img" data-slide="44">
-        <img src="images/radio-osce/44-pano-internal-oblique-ridge.png?v=20260503" alt="Pano with red curving lines and arrows tracing thin radiopaque diagonal lines descending from the ramus into the mandibular body bilaterally (inner pair)" loading="lazy">
+        <img src="images/radio-osce/44-pano-internal-oblique-ridge.png?v=20260503b" alt="Pano with red curving lines and arrows tracing thin radiopaque diagonal lines descending from the ramus into the mandibular body bilaterally (inner pair)" loading="lazy">
         <figcaption><span class="slide-tag">Slide 44</span><strong>Red curving lines with arrows tracing the thinner / more medial of two parallel diagonal radiopaque lines descending from the ramus down into the mandibular body bilaterally.</strong></figcaption>
       </figure>
       <div class="answer-key">
@@ -1498,31 +1503,31 @@ figure.clinical-img figcaption strong { color: var(--primary-dark); }
       </div>
 
       <figure class="clinical-img" data-slide="45">
-        <img src="images/radio-osce/45-pano-external-oblique-ridge.png?v=20260503" alt="Pano with red curving lines and arrows tracing the more lateral of the two parallel diagonal lines descending from the ramus" loading="lazy">
+        <img src="images/radio-osce/45-pano-external-oblique-ridge.png?v=20260503b" alt="Pano with red curving lines and arrows tracing the more lateral of the two parallel diagonal lines descending from the ramus" loading="lazy">
         <figcaption><span class="slide-tag">Slide 45</span><strong>Red curving lines with arrows tracing the LATERAL / more superior of two parallel diagonal radiopaque lines descending from the anterior border of the ramus into the mandibular body bilaterally.</strong></figcaption>
       </figure>
       <div class="answer-key"><p><strong>Answer:</strong> <strong>External oblique ridge</strong> &mdash; ridge on the buccal/lateral surface of the mandible, continuous with the anterior border of the ramus. Lateral and superior to the internal oblique ridge on a pan. Important landmark for mandibular block and for distal extension dentures.</p></div>
 
       <figure class="clinical-img" data-slide="46">
-        <img src="images/radio-osce/46-pano-mental-foramen.png?v=20260503" alt="Pano with red ovals and arrows on small radiolucencies between/below the mandibular premolar apices" loading="lazy">
+        <img src="images/radio-osce/46-pano-mental-foramen.png?v=20260503b" alt="Pano with red ovals and arrows on small radiolucencies between/below the mandibular premolar apices" loading="lazy">
         <figcaption><span class="slide-tag">Slide 46</span><strong>Red ovals with arrows pointing up at small radiolucencies in the mandible between/below the premolar apices bilaterally.</strong></figcaption>
       </figure>
       <div class="answer-key"><p><strong>Answer:</strong> <strong>Mental foramen</strong> &mdash; oval radiolucency typically between or apical to the mandibular premolars, where the mental nerve (terminal branch of IAN) exits the mandible. <strong>Common pitfall:</strong> can be mistaken for periapical pathology of #20 / #29 / #44 / #45 &mdash; check that the lamina dura is intact and the radiolucency is <em>distinct</em> from the apex.</p></div>
 
       <figure class="clinical-img" data-slide="47">
-        <img src="images/radio-osce/47-pano-ian-canal.png?v=20260503" alt="Pano with red curving lines marking thin radiolucent corticated tube running through posterior mandible bilaterally" loading="lazy">
+        <img src="images/radio-osce/47-pano-ian-canal.png?v=20260503b" alt="Pano with red curving lines marking thin radiolucent corticated tube running through posterior mandible bilaterally" loading="lazy">
         <figcaption><span class="slide-tag">Slide 47</span><strong>Red curving lines and arrows tracing a horizontal radiolucent tube bordered by two thin radiopaque cortical lines, running through the posterior mandible from the ramus to the mental foramen.</strong></figcaption>
       </figure>
       <div class="answer-key"><p><strong>Answer:</strong> <strong>Inferior alveolar (mandibular) canal / IAN canal</strong> &mdash; corticated tubular radiolucency containing the inferior alveolar nerve, artery, and vein. Travels from the mandibular foramen on the lingual ramus to the mental foramen. <strong>Critical landmark for implant planning and 3rd molar removal &mdash; proximity to root apices = paresthesia risk.</strong></p></div>
 
       <figure class="clinical-img" data-slide="48">
-        <img src="images/radio-osce/48-pano-submandibular-fossa.png?v=20260503" alt="Pano with blue filled regions and arrows on the radiolucent depression below the mylohyoid line in the posterior mandible bilaterally" loading="lazy">
+        <img src="images/radio-osce/48-pano-submandibular-fossa.png?v=20260503b" alt="Pano with blue filled regions and arrows on the radiolucent depression below the mylohyoid line in the posterior mandible bilaterally" loading="lazy">
         <figcaption><span class="slide-tag">Slide 48</span><strong>Blue filled regions with arrows pointing up at a relatively radiolucent zone in the posterior mandible below the mylohyoid line, in the molar region bilaterally.</strong></figcaption>
       </figure>
       <div class="answer-key"><p><strong>Answer:</strong> <strong>Submandibular fossa (gland fossa)</strong> &mdash; concavity on the lingual surface of the mandible below the mylohyoid line that houses the submandibular gland. The thinner bone here appears as a relative radiolucency on a pan. <strong>Implant pitfall:</strong> this lingual concavity is the classic site of inadvertent lingual cortical perforation during posterior mandibular implant placement.</p></div>
 
       <figure class="clinical-img" data-slide="49">
-        <img src="images/radio-osce/49-pano-lingual-foramen.png?v=20260503" alt="Pano with blue oval and arrow at midline below mandibular incisor apices" loading="lazy">
+        <img src="images/radio-osce/49-pano-lingual-foramen.png?v=20260503b" alt="Pano with blue oval and arrow at midline below mandibular incisor apices" loading="lazy">
         <figcaption><span class="slide-tag">Slide 49</span><strong>Blue oval with arrow pointing inferiorly to a small midline radiolucency in the anterior mandible, below the central incisor apices.</strong></figcaption>
       </figure>
       <div class="answer-key"><p><strong>Answer:</strong> <strong>Lingual foramen / genial tubercles</strong> &mdash; the lingual foramen is a small midline radiolucency on the lingual cortex of the anterior mandible, transmitting a small branch of the sublingual artery. It often sits within or just below the radiopaque genial tubercles (attachment for genioglossus and geniohyoid). Both are midline-only.</p></div>
@@ -1538,83 +1543,73 @@ figure.clinical-img figcaption strong { color: var(--primary-dark); }
       <p>The lecture explicitly mandates familiarity with soft-tissue and airway shadows superimposed on a pan (Stuart C. White / Pharoah, p.182 reference). These are <em>real anatomic structures</em> that show up as relative radiolucencies or radiopacities on the pano &mdash; not artifacts. Each one is presented on the same baseline pano below.</p>
 
       <figure class="clinical-img" data-slide="50">
-        <img src="images/radio-osce/50-pano-soft-palate.png?v=20260503" alt="Pano with marker on diagonal soft tissue shadow descending behind the maxillary tuberosity" loading="lazy">
+        <img src="images/radio-osce/50-pano-soft-palate.png?v=20260503b" alt="Pano with marker on diagonal soft tissue shadow descending behind the maxillary tuberosity" loading="lazy">
         <figcaption><span class="slide-tag">Slide 50</span><strong>Marker on the diagonal radiopaque soft-tissue shadow descending obliquely behind the maxillary tuberosity</strong>, ending in a curved tip.</figcaption>
       </figure>
       <div class="answer-key"><p><strong>Answer:</strong> <strong>Soft palate (and uvula tip)</strong> &mdash; appears as a slanted soft-tissue radiopacity superimposed over the ramus/maxillary tuberosity area bilaterally, often with a small tongue-of-tissue uvula tip.</p></div>
 
       <figure class="clinical-img" data-slide="51">
-        <img src="images/radio-osce/51-pano-tongue-shadow.png?v=20260503" alt="Pano with marker on the broad horizontal soft-tissue shadow projected over the mandibular dentition" loading="lazy">
+        <img src="images/radio-osce/51-pano-tongue-shadow.png?v=20260503b" alt="Pano with marker on the broad horizontal soft-tissue shadow projected over the mandibular dentition" loading="lazy">
         <figcaption><span class="slide-tag">Slide 51</span><strong>Marker on the broad gray horizontal band of soft-tissue density layered across the mandibular tooth row.</strong></figcaption>
       </figure>
       <div class="answer-key"><p><strong>Answer:</strong> <strong>Dorsum of the tongue</strong> &mdash; soft-tissue shadow of the tongue. <strong>If the tongue is NOT placed on the palate</strong>, an air space appears between the tongue and palate as a black radiolucent band crossing the maxillary roots (the &ldquo;palatoglossal air space&rdquo; artifact).</p></div>
 
       <figure class="clinical-img" data-slide="52">
-        <img src="images/radio-osce/52-pano-nasal-airway.png?v=20260503" alt="Pano with marker on the broad radiolucent space within the nasal cavity above the hard palate" loading="lazy">
+        <img src="images/radio-osce/52-pano-nasal-airway.png?v=20260503b" alt="Pano with marker on the broad radiolucent space within the nasal cavity above the hard palate" loading="lazy">
         <figcaption><span class="slide-tag">Slide 52</span><strong>Marker on the broad radiolucent space contained within the nasal cavity above the hard palate.</strong></figcaption>
       </figure>
       <div class="answer-key"><p><strong>Answer:</strong> <strong>Nasal airway</strong> (nasal cavity airspace) &mdash; bilateral radiolucent space inside the nasal cavity, divided by the nasal septum and bordered laterally by the inferior nasal conchae.</p></div>
 
       <figure class="clinical-img" data-slide="53">
-        <img src="images/radio-osce/53-pano-nasopharynx.png?v=20260503" alt="Pano with marker on radiolucent airspace posterior and superior to the soft palate" loading="lazy">
+        <img src="images/radio-osce/53-pano-nasopharynx.png?v=20260503b" alt="Pano with marker on radiolucent airspace posterior and superior to the soft palate" loading="lazy">
         <figcaption><span class="slide-tag">Slide 53</span><strong>Marker on the radiolucent airspace posterior and superior to the soft palate</strong>, behind the maxillary tuberosity.</figcaption>
       </figure>
-      <div class="answer-key"><p><strong>Answer:</strong> <strong>Nasopharynx</strong> &mdash; the airspace above the soft palate connecting the nasal cavity to the oropharynx. Visible on a pan as a radiolucent zone behind the maxillary tuberosity, above the soft palate shadow.</p></div>
+      <div class="answer-key"><p><strong>Answer:</strong> <strong>Nasopharynx</strong> &mdash; per the Pharoah caption, the airspace <em>posterior to the turbinates and above the level of the hard palate</em>, connecting the nasal cavity to the oropharynx. Visible on a pan as a radiolucent zone behind the maxillary tuberosity.</p></div>
 
       <figure class="clinical-img" data-slide="54">
-        <img src="images/radio-osce/54-hyoid-bone-anatomy-diagram.png?v=20260503" alt="Anatomic diagram of the hyoid bone with greater horns, lesser horns, and body labeled" loading="lazy">
+        <img src="images/radio-osce/54-hyoid-bone-anatomy-diagram.png?v=20260503b" alt="Anatomic diagram of the hyoid bone with greater horns, lesser horns, and body labeled" loading="lazy">
         <figcaption><span class="slide-tag">Slide 54</span>Diagram of the U-shaped hyoid bone in superior view, with <strong>greater horns (greater cornua)</strong>, <strong>lesser horns (lesser cornua)</strong>, and central <strong>body</strong> labeled. The hyoid is the only bone in the body that does not articulate with another bone.</figcaption>
       </figure>
       <div class="answer-key"><p><strong>Hyoid bone</strong> &mdash; sits at the level of C3, suspended by the stylohyoid ligament from the styloid process. On a pan, the greater horns can ghost into the lower mandible region as faint horizontal lines.</p></div>
 
       <figure class="clinical-img" data-slide="55">
-        <img src="images/radio-osce/55-pano-hyoid-bone-radiograph.png?v=20260503" alt="Pano with corner letter A and L showing patient with the greater horns of hyoid faintly visible in the lower part of the image" loading="lazy">
+        <img src="images/radio-osce/55-pano-hyoid-bone-radiograph.png?v=20260503b" alt="Pano with corner letter A and L showing patient with the greater horns of hyoid faintly visible in the lower part of the image" loading="lazy">
         <figcaption><span class="slide-tag">Slide 55</span>Pano of an adult patient (corner markers &ldquo;A&rdquo; / &ldquo;L&rdquo; visible) showing where the hyoid bone superimposes on the pano image &mdash; faint horizontal radiopacities in the inferior portion of the image, below the mandibular border.</figcaption>
       </figure>
       <div class="answer-key"><p><strong>Hyoid on a pano:</strong> appears as faint horizontal/curved radiopacities below the angle of the mandible bilaterally. <strong>Do not confuse</strong> with calcified stylohyoid ligament (which is a thin radiopaque line connecting styloid to hyoid).</p></div>
 
-      <figure class="clinical-img" data-slide="56">
-        <img src="images/radio-osce/56-pano-orthodontics-brackets-2.png?v=20260503" alt="Pano of orthodontic patient in full upper and lower fixed appliances, second example" loading="lazy">
-        <figcaption><span class="slide-tag">Slide 56</span>Second pano of a patient in full orthodontic brackets &mdash; reference example showing how appliances superimpose on dental anatomy and obscure interproximal areas.</figcaption>
-      </figure>
-
       <figure class="clinical-img" data-slide="57">
-        <img src="images/radio-osce/57-pano-soft-palate-uvula.png?v=20260503" alt="Pano with marker emphasizing the V-shaped soft palate and uvula projecting into the airway space" loading="lazy">
+        <img src="images/radio-osce/57-pano-soft-palate-uvula.png?v=20260503b" alt="Pano with marker emphasizing the V-shaped soft palate and uvula projecting into the airway space" loading="lazy">
         <figcaption><span class="slide-tag">Slide 57</span><strong>Marker emphasizing the V-shape of the soft palate and the small downward-projecting uvula</strong> in the midline of the oropharyngeal airway.</figcaption>
       </figure>
       <div class="answer-key"><p><strong>Answer:</strong> <strong>Soft palate + uvula</strong> &mdash; the soft palate appears as a slanted soft-tissue radiopacity hanging from the posterior hard palate; the uvula is the small midline projection at its inferior tip.</p></div>
 
       <figure class="clinical-img" data-slide="58">
-        <img src="images/radio-osce/58-pano-tongue-on-palate.png?v=20260503" alt="Pano showing tongue properly positioned against palate (no palatoglossal air space)" loading="lazy">
+        <img src="images/radio-osce/58-pano-tongue-on-palate.png?v=20260503b" alt="Pano showing tongue properly positioned against palate (no palatoglossal air space)" loading="lazy">
         <figcaption><span class="slide-tag">Slide 58</span>Pano with the tongue <strong>correctly placed on the palate</strong> &mdash; no dark radiolucent band crossing the maxillary roots. The maxillary anterior apices are clearly visible without a palatoglossal air-space artifact.</figcaption>
       </figure>
       <div class="answer-key"><p><strong>Tongue on palate at exposure:</strong> eliminates the palatoglossal air space. Without this, a black radiolucent stripe is projected over the maxillary anterior root apices and can mimic apical pathology. <strong>Tell every pano patient: &ldquo;swallow, tongue up to the roof of your mouth, hold it there.&rdquo;</strong></p></div>
 
       <figure class="clinical-img" data-slide="59">
-        <img src="images/radio-osce/59-pano-ear-lobe.png?v=20260503" alt="Pano with marker on the soft-tissue density of the ear lobe superimposed over the ramus near the condyle/mastoid region" loading="lazy">
+        <img src="images/radio-osce/59-pano-ear-lobe.png?v=20260503b" alt="Pano with marker on the soft-tissue density of the ear lobe superimposed over the ramus near the condyle/mastoid region" loading="lazy">
         <figcaption><span class="slide-tag">Slide 59</span><strong>Marker on the round soft-tissue density of the ear lobe superimposed over the posterior ramus / mastoid region bilaterally.</strong></figcaption>
       </figure>
       <div class="answer-key"><p><strong>Answer:</strong> <strong>Ear lobe</strong> (lobule of the auricle &mdash; <em>not</em> the entire auricle, which is the whole external ear) &mdash; rounded soft-tissue radiopacity projected over the posterior ramus and mastoid region. Has nothing to do with dental anatomy; just helps confirm head positioning was symmetric.</p></div>
 
-      <figure class="clinical-img" data-slide="60">
-        <img src="images/radio-osce/60-pano-orthodontics-brackets-3.png?v=20260503" alt="Third pano of orthodontic patient with full brackets" loading="lazy">
-        <figcaption><span class="slide-tag">Slide 60</span>Third orthodontic-bracket pano example &mdash; review reference for how appliance shadows interact with adjacent soft-tissue and airway landmarks.</figcaption>
-      </figure>
-
       <figure class="clinical-img" data-slide="61">
-        <img src="images/radio-osce/61-pano-velopharynx.png?v=20260503" alt="Pano with marker on the airspace immediately behind and below the soft palate at the level of the oropharynx entry" loading="lazy">
+        <img src="images/radio-osce/61-pano-velopharynx.png?v=20260503b" alt="Pano with marker on the airspace immediately behind and below the soft palate at the level of the oropharynx entry" loading="lazy">
         <figcaption><span class="slide-tag">Slide 61</span><strong>Marker on the airspace immediately behind and below the soft palate</strong>, at the level where the soft palate meets the posterior pharyngeal wall.</figcaption>
       </figure>
       <div class="answer-key"><p><strong>Answer:</strong> <strong>Velopharynx</strong> &mdash; the air space at the junction of the soft palate (velum) and the pharynx. Closes during swallowing/speech to seal off the nasopharynx. Important in evaluating airway and cleft palate function.</p></div>
 
       <figure class="clinical-img" data-slide="62">
-        <img src="images/radio-osce/62-pano-oropharynx.png?v=20260503" alt="Pano with marker on the central radiolucent airway behind the tongue and below the soft palate" loading="lazy">
+        <img src="images/radio-osce/62-pano-oropharynx.png?v=20260503b" alt="Pano with marker on the central radiolucent airway behind the tongue and below the soft palate" loading="lazy">
         <figcaption><span class="slide-tag">Slide 62</span><strong>Marker on the central radiolucent airway behind the dorsum of the tongue and below the soft palate</strong>, at the level of the mandibular molars.</figcaption>
       </figure>
       <div class="answer-key"><p><strong>Answer:</strong> <strong>Oropharynx</strong> &mdash; the airspace behind the oral cavity, between the soft palate (above) and the epiglottis (below). On a pan it appears as a vertical column of radiolucency in the central image, behind the tongue. <strong>Do not confuse with the &ldquo;oral airway&rdquo;</strong>, which is the oral cavity proper (mouth) on the Pharoah p.182 diagram &mdash; oral airway and oropharynx are adjacent but distinct compartments.</p></div>
 
       <figure class="clinical-img" data-slide="63">
-        <img src="images/radio-osce/63-pano-airway-summary.png?v=20260503" alt="Pano summary view with multiple airway and soft-tissue structures highlighted together" loading="lazy">
+        <img src="images/radio-osce/63-pano-airway-summary.png?v=20260503b" alt="Pano summary view with multiple airway and soft-tissue structures highlighted together" loading="lazy">
         <figcaption><span class="slide-tag">Slide 63</span>Summary pano consolidating the airway and soft-tissue map &mdash; nasal airway (top), nasopharynx (behind soft palate), velopharynx (transition zone), oropharynx (behind tongue), with soft palate, uvula, and tongue dorsum as the soft-tissue shadows that border them.</figcaption>
       </figure>
       <div class="answer-key">
@@ -1641,7 +1636,7 @@ figure.clinical-img figcaption strong { color: var(--primary-dark); }
       <p>This is the OSCE source slide. The lecture explicitly warns: <strong>"You must be able to identify the structures from the slide on a different panoramic image."</strong> Same for the airway slide. Memorize the 30 numbered structures by region, then practice on different pans.</p>
 
       <figure class="clinical-img">
-        <img src="images/radio-osce/65-pharoah-master-reference-quad.png?v=20260503" alt="Pharoah master reference quad with 30 numbered hard tissue structures and airway/soft tissue overlay panels (White & Pharoah, Oral Radiology, p.179 + p.182)">
+        <img src="images/radio-osce/65-pharoah-master-reference-quad.png?v=20260503b" alt="Pharoah master reference quad with 30 numbered hard tissue structures and airway/soft tissue overlay panels (White & Pharoah, Oral Radiology, p.179 + p.182)">
         <figcaption><span class="slide-tag">Master reference</span> Hard tissue legend (top, p.179) + soft tissue / airway overlay (bottom, p.182). All OSCE labels come from this slide.</figcaption>
       </figure>
 
@@ -1770,7 +1765,7 @@ figure.clinical-img figcaption strong { color: var(--primary-dark); }
     <div class="card-header"><span class="card-title">7B. Identify the Errors &mdash; Practice Slide</span></div>
     <div class="card-body">
       <figure class="clinical-img">
-        <img src="images/radio-osce/64-pano-errors-identify-quad.png?v=20260503" alt="Course title slide ('Panoramic Radiography for Radiology Rotation') and 'Identify the errors in the following panos' header above a 2x2 grid of four real-patient panoramic radiographs each demonstrating a distinct technique error.">
+        <img src="images/radio-osce/64-pano-errors-identify-quad.png?v=20260503b" alt="Course title slide ('Panoramic Radiography for Radiology Rotation') and 'Identify the errors in the following panos' header above a 2x2 grid of four real-patient panoramic radiographs each demonstrating a distinct technique error.">
         <figcaption><span class="slide-tag">Section 7 master image</span> Title pane (top-left) + question prompt (top-right) above a 2&times;2 grid of error pans. Each is broken down individually below.</figcaption>
       </figure>
       <div class="pitfall">
@@ -2013,6 +2008,34 @@ figure.clinical-img figcaption strong { color: var(--primary-dark); }
 </section>
 
 </div><!-- /container -->
+
+<script>
+(function () {
+    function scrollToHash(hash) {
+        if (!hash || hash.length < 2) return;
+        var target = document.querySelector(hash);
+        if (!target) return;
+        var pad = 100;
+        var rect = target.getBoundingClientRect();
+        var y = rect.top + window.pageYOffset - pad;
+        window.scrollTo({ top: y, behavior: 'smooth' });
+    }
+    document.addEventListener('click', function (e) {
+        var a = e.target.closest && e.target.closest('a[href^="#"]');
+        if (!a) return;
+        var hash = a.getAttribute('href');
+        if (!hash || hash === '#') return;
+        e.preventDefault();
+        history.replaceState(null, '', hash);
+        scrollToHash(hash);
+        setTimeout(function () { scrollToHash(hash); }, 350);
+        setTimeout(function () { scrollToHash(hash); }, 900);
+    }, true);
+    window.addEventListener('load', function () {
+        if (location.hash) setTimeout(function () { scrollToHash(location.hash); }, 200);
+    });
+})();
+</script>
 
 </body>
 </html>
