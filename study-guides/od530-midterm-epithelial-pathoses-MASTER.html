@@ -1,0 +1,2527 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Epithelial Pathoses &amp; SCC | OD 530 Midterm MASTER</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Crimson+Pro:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&family=Karla:ital,wght@0,400;0,500;0,600;0,700;1,400&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+    --bg: #FAF8F4;
+    --bg-card: #FFFFFF;
+    --bg-sidebar: #1B2838;
+    --text: #1B2838;
+    --text-muted: #5A6B7D;
+    --text-light: #8896A6;
+    --border: #E2DDD5;
+    --border-light: #F0ECE6;
+    --primary: #2B5E8C;
+    --primary-dark: #1E4366;
+    --primary-light: #E8F0F8;
+    --accent: #C8923E;
+    --accent-dark: #A87730;
+    --accent-light: #FEF7EC;
+    --success: #2E7D5B;
+    --success-light: #EBF5F0;
+    --danger: #B5483B;
+    --danger-light: #FDF0EE;
+    --purple: #6B4C9A;
+    --purple-light: #F3EFF8;
+    --teal: #1A8A7D;
+    --teal-light: #E6F6F4;
+    --shadow-sm: 0 1px 3px rgba(27,40,56,0.06);
+    --shadow-md: 0 4px 12px rgba(27,40,56,0.08);
+    --radius: 8px;
+    --radius-lg: 12px;
+    --radius-md: 8px;
+}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+html { scroll-behavior: smooth; scroll-padding-top: 80px; }
+body {
+    font-family: 'Karla', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    font-size: 16px;
+    line-height: 1.72;
+    -webkit-font-smoothing: antialiased;
+}
+::-webkit-scrollbar { width: 7px; }
+::-webkit-scrollbar-track { background: var(--bg); }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+::-webkit-scrollbar-thumb:hover { background: var(--text-muted); }
+::selection { background: rgba(43,94,140,0.2); }
+.hero {
+    background: linear-gradient(135deg, #1B2838 0%, #2B5E8C 50%, #1A8A7D 100%);
+    color: #fff;
+    padding: 56px 40px 48px;
+    position: relative;
+    overflow: hidden;
+}
+.hero::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.03'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+}
+.hero-content { max-width: 900px; margin: 0 auto; position: relative; z-index: 1; }
+.hero-badge {
+    display: inline-block;
+    background: rgba(255,255,255,0.12);
+    border: 1px solid rgba(255,255,255,0.2);
+    border-radius: 20px;
+    padding: 4px 14px;
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    margin-bottom: 16px;
+    backdrop-filter: blur(4px);
+    font-family: 'JetBrains Mono', monospace;
+}
+.hero h1 {
+    font-family: 'Crimson Pro', serif;
+    font-size: clamp(32px, 5vw, 52px);
+    font-weight: 700;
+    line-height: 1.15;
+    margin-bottom: 12px;
+    letter-spacing: -0.5px;
+    color: #fff;
+}
+.hero h1 em { font-style: normal; }
+.hero-sub { font-size: 17px; opacity: 0.85; margin-bottom: 6px; max-width: none; color: #fff; }
+.hero-meta {
+    font-size: 13px; opacity: 0.65; margin-top: 20px; padding-top: 16px;
+    border-top: 1px solid rgba(255,255,255,0.15); color: #fff; letter-spacing: 0;
+    font-family: 'Karla', sans-serif;
+}
+.nav-sticky {
+    position: sticky; top: 0; z-index: 100;
+    background: rgba(250,248,244,0.92);
+    backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--border);
+    padding: 0 24px;
+}
+.nav-inner { max-width: 900px; margin: 0 auto; display: flex; gap: 4px; overflow-x: auto; scrollbar-width: none; }
+.nav-inner::-webkit-scrollbar { display: none; }
+.nav-link {
+    display: block; padding: 12px 14px; font-size: 13px; font-weight: 600;
+    color: var(--text-muted); text-decoration: none; white-space: nowrap;
+    border-bottom: 2px solid transparent; transition: all 0.2s;
+}
+.nav-link:hover { color: var(--primary); border-bottom-color: var(--primary); }
+.container { max-width: 900px; margin: 0 auto; padding: 32px 24px 80px; }
+.section-header {
+    padding: 40px 0 0; text-align: left;
+    margin-bottom: 24px; padding-bottom: 12px;
+    border-bottom: 2px solid var(--border); position: relative;
+}
+.section-number {
+    display: inline-block; background: var(--primary); color: #fff;
+    font-size: 11px; font-weight: 700; letter-spacing: 1.5px;
+    text-transform: uppercase; padding: 4px 12px; border-radius: 4px;
+    margin-bottom: 10px; font-family: 'JetBrains Mono', monospace;
+}
+.section-header h2 {
+    font-family: 'Crimson Pro', serif; font-size: 28px; font-weight: 700;
+    color: var(--text); line-height: 1.2;
+}
+.section-desc { font-size: 15px; color: var(--text-muted); margin-top: 8px; max-width: none; text-align: left; }
+.card {
+    background: var(--bg-card); border: 1px solid var(--border);
+    border-radius: var(--radius-lg); padding: 28px; margin-bottom: 20px;
+    box-shadow: var(--shadow-sm); overflow: visible;
+}
+.card h3 {
+    font-family: 'Crimson Pro', serif; font-size: 22px; font-weight: 600;
+    color: var(--text); margin-bottom: 4px; line-height: 1.3;
+}
+.card .card-subtitle { font-size: 15px; color: var(--text-muted); display: block; margin-bottom: 12px; }
+.card h4 {
+    font-family: 'Karla', sans-serif; font-size: 16px; font-weight: 700;
+    color: var(--primary-dark); margin: 20px 0 10px;
+}
+.card h4:first-child { margin-top: 0; }
+.card h5 {
+    font-family: 'Karla', sans-serif; font-size: 14px; font-weight: 700;
+    color: var(--text); margin: 16px 0 8px;
+}
+.card p { margin-bottom: 12px; color: var(--text); }
+.card ul { margin: 8px 0 12px 20px; list-style: disc; }
+.card li { padding: 0; margin-bottom: 6px; color: var(--text); }
+.card li li { font-size: 15px; color: var(--text-muted); }
+.high-yield {
+    background: var(--success-light); border-left: 4px solid var(--success);
+    border-radius: var(--radius); padding: 18px 20px; margin: 16px 0;
+    font-size: 15px; line-height: 1.65;
+}
+.high-yield::before {
+    content: '\2B50  HIGH YIELD'; display: block;
+    font-size: 13px; font-weight: 700; letter-spacing: 0.8px;
+    color: var(--success); margin-bottom: 6px;
+    font-family: 'JetBrains Mono', monospace;
+}
+.high-yield p, .high-yield li { color: var(--text); }
+.high-yield ul { list-style: disc; margin-left: 20px; }
+.explain {
+    background: var(--accent-light); border-left: 4px solid var(--accent);
+    border-radius: var(--radius); padding: 18px 20px; margin: 16px 0;
+    font-size: 15px; line-height: 1.65;
+}
+.explain::before {
+    content: '\1F4A1  PLAIN ENGLISH'; display: block;
+    font-size: 13px; font-weight: 700; letter-spacing: 0.8px;
+    color: var(--accent-dark); margin-bottom: 6px;
+    font-family: 'JetBrains Mono', monospace;
+}
+.explain p { color: var(--text); }
+.callout-danger {
+    background: var(--primary-light); border-left: 4px solid var(--primary);
+    border-radius: var(--radius); padding: 18px 20px; margin: 16px 0;
+}
+.callout-danger::before {
+    content: '\2695  CLINICAL PEARL'; display: block; font-size: 13px; font-weight: 700;
+    letter-spacing: 0.8px; color: var(--primary); margin-bottom: 6px;
+    font-family: 'JetBrains Mono', monospace;
+}
+.callout-danger p { color: var(--text); }
+.prof-highlight {
+    background: #FFF7D1; border-left: 4px solid #E5B82E;
+    border-radius: var(--radius); padding: 18px 20px; margin: 16px 0;
+    font-size: 15px; line-height: 1.65;
+}
+.prof-highlight::before {
+    content: '\270F\FE0F  HIGHLIGHTED BY PROF'; display: block;
+    font-size: 12px; font-weight: 700; letter-spacing: 1px;
+    color: #8B6914; margin-bottom: 6px;
+    font-family: 'JetBrains Mono', monospace;
+}
+.prof-highlight p, .prof-highlight li { color: var(--text); }
+.prof-highlight ul { list-style: disc; margin-left: 20px; }
+.prof-highlight strong { color: #6B4F0E; }
+.hl { background: #FFE84D; padding: 0 4px; border-radius: 2px; font-weight: 600; }
+.memorize {
+    background: var(--purple-light); border-left: 4px solid var(--purple);
+    border-radius: var(--radius); padding: 18px 20px; margin: 16px 0;
+    font-size: 15px; line-height: 1.65;
+}
+.memorize::before {
+    content: '\1F522  NUMBERS TO MEMORIZE'; display: block;
+    font-size: 12px; font-weight: 700; letter-spacing: 1px;
+    color: var(--purple); margin-bottom: 6px;
+    font-family: 'JetBrains Mono', monospace;
+}
+.memorize p, .memorize li { color: var(--text); font-family: 'JetBrains Mono', monospace; font-size: 14px; }
+.memorize ul { list-style: none; margin-left: 0; }
+.memorize li { margin-bottom: 6px; padding-left: 18px; position: relative; }
+.memorize li::before { content: '\2192'; position: absolute; left: 0; color: var(--purple); font-weight: 700; }
+.exam-trap {
+    background: var(--danger-light); border-left: 4px solid var(--danger);
+    border-radius: var(--radius); padding: 18px 20px; margin: 16px 0;
+    font-size: 15px; line-height: 1.65;
+}
+.exam-trap::before {
+    content: '\26A0\FE0F  EXAM TRAP'; display: block;
+    font-size: 12px; font-weight: 700; letter-spacing: 1px;
+    color: var(--danger); margin-bottom: 6px;
+    font-family: 'JetBrains Mono', monospace;
+}
+.exam-trap p, .exam-trap li { color: var(--text); }
+.exam-trap strong { color: var(--danger); }
+.diff-table {
+    width: 100%; border-collapse: collapse; font-size: 14.5px; line-height: 1.55;
+    margin: 16px 0; border-radius: var(--radius); overflow: hidden; border: 1px solid var(--border);
+}
+.diff-table thead th {
+    background: var(--bg-sidebar); color: #fff; font-weight: 600; text-align: left;
+    padding: 12px 16px; font-size: 13px; letter-spacing: 0.3px;
+}
+.diff-table td {
+    padding: 11px 16px; border-bottom: 1px solid var(--border-light);
+    color: var(--text); vertical-align: top;
+}
+.diff-table tr:last-child td { border-bottom: none; }
+.diff-table tbody tr:nth-child(even) { background: #FAFAF8; }
+.diff-table tbody tr:hover td { background: var(--primary-light); }
+.diff-table .diff-cell { background: #FFF7D1; font-weight: 600; color: #6B4F0E; }
+.diff-table tbody tr:hover .diff-cell { background: #FFE84D; }
+/* data-table (from DONOR) */
+.data-table {
+    width: 100%; border-collapse: collapse; font-size: 14.5px; line-height: 1.55;
+    margin: 16px 0; border-radius: var(--radius); overflow: hidden; border: 1px solid var(--border);
+}
+.data-table thead th {
+    background: var(--bg-sidebar); color: #fff; font-weight: 600; text-align: left;
+    padding: 12px 16px; font-size: 13px; letter-spacing: 0.3px;
+}
+.data-table td {
+    padding: 11px 16px; border-bottom: 1px solid var(--border-light);
+    color: var(--text); vertical-align: top;
+}
+.data-table tr:last-child td { border-bottom: none; }
+.data-table tbody tr:nth-child(even) { background: #FAFAF8; }
+.data-table tbody tr:hover td { background: var(--primary-light); }
+.data-table .val-safe { color: var(--success); font-weight: 600; }
+.data-table .val-warn { color: var(--accent-dark); font-weight: 600; }
+.data-table .val-danger { color: var(--danger); font-weight: 600; }
+/* lab-val inline badge */
+.lab-val {
+    display: inline-block; background: var(--purple-light); color: var(--purple);
+    font-family: 'JetBrains Mono', monospace; font-size: 13px; font-weight: 500;
+    padding: 2px 8px; border-radius: 4px;
+}
+/* triage-grid */
+.triage-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px; margin: 20px 0; }
+.triage-card {
+    background: var(--bg-card); border-radius: var(--radius-lg); padding: 24px;
+    border: 1px solid var(--border); border-top: 3px solid; box-shadow: var(--shadow-sm);
+}
+.triage-card.tier1 { border-top-color: var(--danger); }
+.triage-card.tier2 { border-top-color: var(--accent); }
+.triage-card.tier3 { border-top-color: var(--success); }
+.triage-card h4 {
+    font-weight: 700; font-size: 13px; letter-spacing: 1px; text-transform: uppercase;
+    margin-bottom: 14px; padding-bottom: 10px; border-bottom: 1px solid var(--border-light);
+}
+.triage-card.tier1 h4 { color: var(--danger); }
+.triage-card.tier2 h4 { color: var(--accent-dark); }
+.triage-card.tier3 h4 { color: var(--success); }
+.triage-card h5 { font-size: 14px; font-weight: 700; color: var(--text); margin: 12px 0 6px; }
+.triage-card ul { list-style: disc; margin-left: 16px; }
+.triage-card li { font-size: 14.5px; padding: 2px 0; color: var(--text-muted); }
+/* hemo-compare / hemo-col */
+.hemo-compare { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 20px; }
+.hemo-col {
+    background: var(--bg-card); border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 20px; border-top: 3px solid;
+}
+.hemo-col.primary { border-top-color: var(--accent); }
+.hemo-col.secondary { border-top-color: var(--primary); }
+.hemo-col h4 { font-size: 16px; margin: 0 0 12px; padding-bottom: 8px; border-bottom: 1px solid var(--border-light); }
+.hemo-col.primary h4 { color: var(--accent-dark); }
+.hemo-col.secondary h4 { color: var(--primary); }
+.hemo-col p { font-size: 14.5px; color: var(--text); margin-bottom: 8px; }
+.hemo-col ul { list-style: disc; margin-left: 16px; }
+.hemo-col li { font-size: 14.5px; padding: 2px 0; color: var(--text-muted); }
+/* severity-meter */
+.severity-meter { display: flex; border-radius: var(--radius); overflow: hidden; margin: 16px 0; border: 1px solid var(--border); }
+.severity-meter .seg { flex: 1; padding: 12px 14px; text-align: center; border-right: 1px solid var(--border-light); }
+.severity-meter .seg:last-child { border-right: none; }
+.severity-meter .seg-label { display: block; font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 4px; font-weight: 600; }
+.severity-meter .seg-val { font-size: 14px; font-weight: 600; color: var(--text); }
+.severity-meter .seg.safe { background: var(--success-light); }
+.severity-meter .seg.safe .seg-label { color: var(--success); }
+.severity-meter .seg.warn { background: var(--accent-light); }
+.severity-meter .seg.warn .seg-label { color: var(--accent-dark); }
+.severity-meter .seg.danger { background: var(--danger-light); }
+.severity-meter .seg.danger .seg-label { color: var(--danger); }
+.severity-meter .seg.emergency { background: #f8e0dd; }
+.severity-meter .seg.emergency .seg-label { color: #C0392B; }
+/* clinical-img */
+.clinical-img {
+    background: #FAFAF8; border: 1px solid var(--border); border-radius: var(--radius);
+    padding: 14px 18px; margin: 16px 0; display: flex; gap: 14px; align-items: flex-start;
+}
+.clinical-img .img-icon {
+    width: 32px; height: 32px; border-radius: 6px;
+    background: var(--purple-light); border: 1px solid rgba(107,76,154,0.2);
+    display: flex; align-items: center; justify-content: center; flex-shrink: 0; font-size: 0.85rem;
+}
+.clinical-img .img-text { flex: 1; }
+.clinical-img .img-label {
+    font-weight: 700; font-size: 13px; letter-spacing: 0.3px; text-transform: uppercase;
+    color: var(--purple); margin-bottom: 4px; font-family: 'JetBrains Mono', monospace;
+}
+.clinical-img .img-desc { font-size: 14px; color: var(--text-muted); line-height: 1.55; }
+.case-box {
+    max-width: 900px; margin: 32px auto; padding: 28px 32px;
+    background: var(--accent-light); border: 1px solid var(--accent);
+    border-left: 4px solid var(--accent); border-radius: var(--radius-lg);
+}
+.case-box h3 {
+    font-family: 'Crimson Pro', serif; font-size: 20px;
+    color: var(--accent-dark); margin-bottom: 12px;
+}
+.case-box p { margin-bottom: 10px; }
+.quick-facts { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin: 20px 0; }
+.quick-fact {
+    background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius);
+    padding: 18px 14px; text-align: center; box-shadow: var(--shadow-sm);
+}
+.quick-fact .number {
+    display: block; font-family: 'JetBrains Mono', monospace; font-size: 26px;
+    font-weight: 700; color: var(--primary); margin-bottom: 6px; line-height: 1;
+}
+.quick-fact .label { display: block; font-size: 13px; color: var(--text-muted); line-height: 1.4; }
+.vs-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; margin: 20px 0; }
+.vs-card {
+    background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-lg);
+    padding: 22px; box-shadow: var(--shadow-sm); border-top: 3px solid var(--primary);
+}
+.vs-card h5 {
+    font-size: 15px; font-weight: 700; color: var(--primary-dark);
+    margin: 0 0 10px; padding-bottom: 8px; border-bottom: 2px solid var(--primary-light);
+}
+.vs-card p { font-size: 14.5px; color: var(--text); margin-bottom: 0; }
+.toolkit-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin: 16px 0; }
+.toolkit-item {
+    padding: 14px 16px; background: #FAFAF8; border: 1px solid var(--border);
+    border-radius: var(--radius); font-size: 14.5px; color: var(--text);
+}
+.toolkit-item strong { color: var(--primary-dark); font-weight: 700; }
+.toolkit-item .tk-detail { font-size: 13.5px; color: var(--text-muted); margin-top: 4px; }
+.section-number.s1 { background: var(--primary); }
+.section-number.s2 { background: var(--accent); }
+.section-number.s3 { background: var(--success); }
+.section-number.s4 { background: var(--purple); }
+.section-number.s5 { background: var(--teal); }
+.section-number.s6 { background: var(--danger); }
+.guide-footer {
+    text-align: center; padding: 40px 24px 32px; color: var(--text-light);
+    font-size: 13px; border-top: 1px solid var(--border); margin-top: 40px;
+}
+.back-top {
+    position: fixed; bottom: 28px; right: 28px; width: 44px; height: 44px;
+    border-radius: 50%; background: var(--primary); color: #fff; border: none;
+    font-size: 20px; cursor: pointer; opacity: 0; visibility: hidden;
+    transition: all 0.25s; z-index: 9998; box-shadow: var(--shadow-md);
+    display: flex; align-items: center; justify-content: center;
+}
+.back-top.visible { opacity: 1; visibility: visible; }
+.back-top:hover { background: var(--primary-dark); transform: translateY(-2px); }
+/* notecard styles */
+.nc { max-width: 960px; margin: 0 auto; padding: 24px 16px; }
+.nc .nc-label { color: var(--text-muted); font-size: 11px; letter-spacing: 2.5px; text-transform: uppercase; text-align: center; margin-bottom: 8px; font-weight: 600; }
+.nc .nc-card {
+    background: #fffff8; border: 1px solid var(--border); border-radius: var(--radius-lg);
+    padding: 20px 18px; margin-bottom: 28px; box-shadow: var(--shadow-md);
+}
+.nc .nc-card-title {
+    text-align: center; font-size: 11px; color: var(--text-muted); letter-spacing: 0.8px;
+    text-transform: uppercase; border-bottom: 1px solid var(--border-light);
+    padding-bottom: 10px; margin-bottom: 14px; line-height: 1.5;
+}
+.nc .nc-cols { display: flex; gap: 20px; }
+.nc .nc-col { flex: 1; font-size: 13px; line-height: 1.5; color: #222; }
+.nc .nc-col-left { border-right: 1px solid var(--border-light); padding-right: 18px; }
+.nc .nc-col-right { padding-left: 2px; }
+.nc .r { color: #c00; font-weight: 600; }
+.nc .b { color: #0a58a0; font-weight: 600; }
+.nc .g { color: #1a7a1a; font-weight: 600; }
+.nc .p { color: #7a2d8e; font-weight: 600; }
+.nc .h { font-weight: 700; font-size: 14px; border-bottom: 2px solid currentColor; margin: 12px 0 8px; padding-bottom: 4px; }
+.nc .h:first-child { margin-top: 0; }
+.nc .s { font-weight: 700; font-size: 13px; margin: 8px 0 4px; text-decoration: underline; }
+.nc .hl { background: #ffe84d; padding: 0 3px; border-radius: 2px; }
+/* case timeline */
+.timeline { margin: 16px 0; }
+.timeline-entry {
+    display: flex; gap: 16px; margin-bottom: 12px; padding-bottom: 12px;
+    border-bottom: 1px solid var(--border-light);
+}
+.timeline-entry:last-child { border-bottom: none; margin-bottom: 0; padding-bottom: 0; }
+.timeline-date {
+    font-family: 'JetBrains Mono', monospace; font-size: 12px; font-weight: 700;
+    color: var(--primary); white-space: nowrap; min-width: 100px; padding-top: 2px;
+}
+.timeline-content { flex: 1; font-size: 14.5px; color: var(--text); }
+@media (max-width: 700px) {
+    .hero { padding: 32px 20px; }
+    .hero h1 { font-size: 28px; }
+    .container { padding: 20px 16px 60px; }
+    .card { padding: 20px 16px; }
+    .vs-grid { grid-template-columns: 1fr; }
+    .quick-facts { grid-template-columns: 1fr 1fr; }
+    .toolkit-grid { grid-template-columns: 1fr; }
+    .severity-meter { flex-direction: column; }
+    .triage-grid { grid-template-columns: 1fr; }
+    .hemo-compare { grid-template-columns: 1fr; }
+    .nc .nc-cols { flex-direction: column; gap: 0; }
+    .nc .nc-col-left { border-right: none; border-bottom: 1px solid var(--border-light); padding-right: 0; padding-bottom: 16px; margin-bottom: 16px; }
+    .nc .nc-col-right { padding-left: 0; }
+    .timeline-entry { flex-direction: column; gap: 4px; }
+}
+/* board-pearl callout */
+.board-pearl {
+    background: #EBF5F7; border-left: 4px solid var(--teal);
+    border-radius: var(--radius); padding: 18px 20px; margin: 16px 0;
+    font-size: 15px; line-height: 1.65;
+}
+.board-pearl::before {
+    content: '\1F4CC  BOARD PEARL'; display: block;
+    font-size: 12px; font-weight: 700; letter-spacing: 1px;
+    color: var(--teal); margin-bottom: 6px;
+    font-family: 'JetBrains Mono', monospace;
+}
+.board-pearl p, .board-pearl li { color: var(--text); }
+.board-pearl ul { list-style: disc; margin-left: 20px; }
+/* lecture figure */
+.lecture-figure {
+    margin: 20px 0;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+    background: #000;
+}
+.lecture-figure img {
+    width: 100%;
+    display: block;
+    max-height: 500px;
+    object-fit: contain;
+}
+.lecture-figure figcaption {
+    padding: 10px 16px;
+    font-size: 13px;
+    color: var(--text-muted);
+    background: var(--bg-card);
+    border-top: 1px solid var(--border);
+    font-family: 'JetBrains Mono', monospace;
+}
+/* test-yourself collapsible */
+.test-yourself {
+    border: 1px solid var(--border); border-radius: var(--radius);
+    margin: 12px 0; overflow: hidden;
+}
+.test-yourself summary {
+    padding: 14px 18px; cursor: pointer; font-weight: 600;
+    font-size: 15px; color: var(--primary-dark); list-style: none;
+    background: var(--primary-light); border-bottom: 1px solid var(--border);
+    user-select: none;
+}
+.test-yourself summary::-webkit-details-marker { display: none; }
+.test-yourself summary::before { content: '\25B6  '; font-size: 11px; }
+details[open].test-yourself summary::before { content: '\25BC  '; }
+.test-yourself > :not(summary) { padding: 18px 20px; }
+.test-yourself p { margin-bottom: 10px; color: var(--text); }
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <div class="hero-content">
+    <span class="hero-badge">OD 530 &middot; Oral Medicine &middot; Midterm &middot; MASTER</span>
+    <h1>Epithelial Pathoses <em>&amp;</em> Squamous Cell Carcinoma</h1>
+    <p class="hero-sub">Master study guide &mdash; fully merged from both source files &middot; 69 slides + case studies + chemoprevention data &middot; QA-verified facts</p>
+    <p class="hero-meta">Boston University Goldman School of Dental Medicine &middot; Class of 2027 &middot; All facts traceable to professor&rsquo;s slide deck &middot; Amelanotic melanoma ~15% &middot; Erythroplakia ~50% MT &middot; HPV&minus; OPSCC ~40% OS</p>
+  </div>
+</header>
+
+<nav class="nav-sticky" aria-label="Section navigation">
+  <div class="nav-inner">
+    <a class="nav-link" href="#case">Quiz Case</a>
+    <a class="nav-link" href="#epi">Epi</a>
+    <a class="nav-link" href="#hpv-benign">HPV Benign</a>
+    <a class="nav-link" href="#leukoplakia">Leukoplakia</a>
+    <a class="nav-link" href="#biopsy">Biopsy</a>
+    <a class="nav-link" href="#dysplasia-mgmt">Dysplasia Mgmt</a>
+    <a class="nav-link" href="#cases">Cases</a>
+    <a class="nav-link" href="#chemoprev">Chemoprev</a>
+    <a class="nav-link" href="#opmd">OSF/OLP/OLL</a>
+    <a class="nav-link" href="#scc">SCC</a>
+    <a class="nav-link" href="#ajcc">AJCC TNM</a>
+    <a class="nav-link" href="#hpv-scc">HPV SCC</a>
+    <a class="nav-link" href="#verrucous">Verrucous</a>
+    <a class="nav-link" href="#melanoma">Melanoma</a>
+    <a class="nav-link" href="#recap">Recap</a>
+  </div>
+</nav>
+
+<div class="container">
+
+<!-- ═══════════════ SECTION 01 — OPENING QUIZ CASE ═══════════════ -->
+<section id="case">
+  <div class="section-header">
+    <span class="section-number s1">01</span>
+    <h2>Opening Quiz Case</h2>
+    <p class="section-desc">A 75-year-old male with swollen, bleeding gingiva &mdash; what&rsquo;s the test-Q answer?</p>
+  </div>
+
+  <div class="case-box">
+    <h3>75-year-old male &middot; new patient visit</h3>
+    <p><strong>Chief complaint:</strong> Generalized swollen, painful, bleeding gingiva &times; <strong>6 months</strong>. Difficulty eating. Sores on the inside of mouth and lips that bleed daily.</p>
+    <p><strong>Med Hx:</strong> Prostate adenocarcinoma (brachytherapy 2015), HTN (amlodipine, lisinopril), anemia, inflammatory polyarthritis, GERD, Hepatitis C (treated), bladder calculus, IBS, epilepsy, overactive bladder, depression, PTSD, memory loss.</p>
+    <p><strong>Meds:</strong> Amlodipine, lisinopril, plus multiple others per history above.</p>
+    <p><strong>Exam:</strong> <span class="hl">Generalized erythema and edema of the maxillary and mandibular facial gingiva.</span> Fire engine red gingiva throughout. No Wickham striae. No white reticular pattern. Patient uses Sensodyne toothpaste and consumes cinnamon gum daily.</p>
+  </div>
+
+<figure class="lecture-figure">
+  <img src="images/lecture-3-epithelial-pathoses/L3-S1-quiz-case-presentation-1.png"
+       alt="Slide 1: 75-year-old male quiz case — clinical photo of swollen, bleeding gingiva before differential diagnosis"
+       loading="lazy">
+  <figcaption>Slide 1 — Quiz case: 75-year-old male with 6-month history of swollen, painful, bleeding gingiva. Clinical intraoral photo of the presentation. Before reading the medical history — what questions do you ask? What tests do you order?</figcaption>
+</figure>
+
+  <div class="card">
+    <h3>Test question &mdash; confirmed exam material</h3>
+    <span class="card-subtitle">Which intervention is MOST likely to improve this patient&rsquo;s condition? (Prof said: &ldquo;This is something that could show up on your exam.&rdquo;)</span>
+<figure class="lecture-figure">
+  <img src="images/lecture-3-epithelial-pathoses/L3-S3-quiz-mcq-1.png"
+       alt="Slide 3: MCQ slide for the 75-year-old quiz case — multiple choice question with answer choices A through E"
+       loading="lazy">
+  <figcaption>Slide 3 — MCQ for the 75-year-old male quiz case. Which intervention is MOST likely to improve this patient's condition? Answer: D — avoidance of benzoates and cinnamon-containing products (plasma cell gingivitis / oral lichenoid contact reaction).</figcaption>
+</figure>
+    <ol style="list-style: upper-alpha; margin: 12px 0 12px 28px;">
+      <li>Dexamethasone elixir 0.5 mg/5 mL, swish and spit BID</li>
+      <li>Sensodyne toothpaste &mdash; continue current regimen</li>
+      <li>Scaling and root planing</li>
+      <li><span class="hl">Avoidance of benzoates and cinnamon-containing products</span></li>
+      <li>Magic Mouthwash (lidocaine / diphenhydramine / antacid)</li>
+    </ol>
+    <div class="prof-highlight">
+      <p><strong>Answer: D &mdash; Avoidance of cinnamon and benzoate-containing products.</strong></p>
+      <p>This is <strong>plasma cell gingivitis</strong> &mdash; a contact hypersensitivity reaction to cinnamon/benzoate preservatives. It is NOT an infection (chlorhexidine and magic mouthwash are wrong), NOT OLP (which has bilateral symmetric Wickham striae and would use topical steroids), and NOT periodontal disease (SRP is wrong). Management = trigger identification and avoidance.</p>
+      <p><em>&ldquo;When you see that fire engine red plasma cell gingivitis, that is a reaction to cinnamon products typically.&rdquo;</em></p>
+    </div>
+    <div class="exam-trap">
+      <p><strong>Trap #1:</strong> Dexamethasone is the reflexive answer for gingival inflammation. The key differentiator: <strong>plasma cell gingivitis has fire-engine red, diffuse gingival erythema with NO Wickham striae</strong>. OLP = bilateral symmetric + reticular white pattern. If you see &ldquo;fire engine red&rdquo; + cinnamon exposure, think plasma cell gingivitis first.</p>
+      <p><strong>Trap #2:</strong> Magic Mouthwash treats pain, not the contact mechanism. Do not shotgun empiric therapy &mdash; identify the trigger first.</p>
+      <p><strong>Trap #3 &mdash; IBS &ne; IBD:</strong> IBS (irritable bowel syndrome) = stress-related functional GI disorder = <strong>no oral manifestations</strong>. IBD (Crohn&rsquo;s, ulcerative colitis) = inflammatory = associated with oral facial granulomatosis. The prof said this explicitly: <em>&ldquo;IBS is not IBD.&rdquo;</em> Don&rsquo;t let the patient&rsquo;s IBS history throw you off.</p>
+    </div>
+    <div class="callout-danger">
+      <p><strong>Expected verbatim phrasing on exam:</strong> <em>&ldquo;Generalized erythema and edema of the maxillary and mandibular facial gingiva.&rdquo;</em> The prof stated this phrase is expected on the exam. Say maxilla/mandible, not &ldquo;jaw.&rdquo;</p>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════ SECTION 02 — FOUNDATIONS & EPIDEMIOLOGY ═══════════════ -->
+<section id="epi">
+  <div class="section-header">
+    <span class="section-number s2">02</span>
+    <h2>Foundations &amp; Epidemiology</h2>
+    <p class="section-desc">The numbers prof opened with &mdash; oral cancer in the US in 2024</p>
+  </div>
+  <!-- no image delivered for Section 02 (Foundations & Epidemiology) — statistics/text slides only -->
+
+  <div class="quick-facts">
+    <div class="quick-fact"><span class="number">36,600</span><span class="label">new oral cavity cancers, US 2024</span></div>
+    <div class="quick-fact"><span class="number">12,230</span><span class="label">deaths from oral cavity cancer, US 2024</span></div>
+    <div class="quick-fact"><span class="number">&gt;50%</span><span class="label">present <strong>with mets</strong> at diagnosis</span></div>
+    <div class="quick-fact"><span class="number">41.7%</span><span class="label">of cases &mdash; <strong>oral tongue is #1 site</strong></span></div>
+  </div>
+
+  <div class="prof-highlight">
+    <p><strong>The prof&rsquo;s anchor numbers:</strong> ~<strong>36,600</strong> new oral cavity cancers per year in the US (2024 data). ~<strong>12,230 deaths/yr</strong>. <strong>Over half present with metastatic disease at diagnosis</strong> &mdash; this is the central tragedy of oral cancer epidemiology and the reason early detection drives all of this material. The oral tongue (lateral border) is the single most common site at <strong>41.7%</strong>. Incidence is rising <strong>1.8%/yr</strong> (women 2.3%/yr). Tongue cancers in younger patients are often <strong>not associated with traditional risk factors</strong> (tobacco/alcohol) &mdash; an unexplained epidemiologic shift.</p>
+  </div>
+
+  <h3 style="font-family: 'Crimson Pro', serif; font-size: 22px; margin: 28px 0 8px;">5-Year Overall Survival by Stage</h3>
+  <table class="diff-table">
+    <thead><tr><th>Stage at diagnosis</th><th>5-yr Overall Survival</th><th>Take-home</th></tr></thead>
+    <tbody>
+      <tr><td><strong>Localized</strong> (no nodes)</td><td class="diff-cell">~85%</td><td>Why early detection is everything</td></tr>
+      <tr><td><strong>Regional</strong> (+ nodes)</td><td>~70%</td><td>Drops the moment a single node is positive</td></tr>
+      <tr><td><strong>Distant mets</strong></td><td class="diff-cell">~40%</td><td>Where most patients actually present</td></tr>
+      <tr><td><strong>All stages combined</strong></td><td>~68%</td><td>Pulled down by late-presenters</td></tr>
+    </tbody>
+  </table>
+
+  <div class="memorize">
+    <ul>
+      <li>36,600 new / 12,230 deaths / yr (US 2024)</li>
+      <li>&gt;50% present with mets &rarr; survival cliff</li>
+      <li>Oral tongue 41.7% &mdash; #1 site; rising 1.8%/yr</li>
+      <li>5-yr OS: localized 85% &rarr; regional 70% &rarr; distant 40%</li>
+      <li>Worldwide: 7th most common cancer overall</li>
+    </ul>
+  </div>
+
+  <h3 style="font-family: 'Crimson Pro', serif; font-size: 22px; margin: 28px 0 8px;">Risk-Factor Multipliers (the prof&rsquo;s table)</h3>
+  <table class="diff-table">
+    <thead><tr><th>Risk factor</th><th>Relative risk / OR</th><th>Notes</th></tr></thead>
+    <tbody>
+      <tr><td>Tobacco (smoking, any)</td><td class="diff-cell">5&ndash;9&times;</td><td>Dose-dependent (pack-years)</td></tr>
+      <tr><td>Alcohol (heavy)</td><td>3&ndash;9&times;</td><td>Solvent effect &mdash; lets carcinogens enter mucosa</td></tr>
+      <tr><td><strong>Tobacco + Alcohol together</strong></td><td class="diff-cell">~30&times; (multiplicative, not additive)</td><td><strong>This is the prof&rsquo;s key teaching point</strong></td></tr>
+      <tr><td>Smokeless tobacco / Betel quid</td><td>~5&times; (betel up to 8&times; with tobacco)</td><td>Buccal/labial sulcus where the quid sits</td></tr>
+      <tr><td>HPV-16 (oropharynx)</td><td>~15&times; for OPSCC</td><td>NOT for oral cavity SCC</td></tr>
+      <tr><td><strong>Fanconi anemia</strong></td><td class="diff-cell">OR ~40.6</td><td>Inherited DNA-repair defect &mdash; highest per-patient risk</td></tr>
+      <tr><td>Dyskeratosis congenita</td><td>~1,000&times; baseline</td><td>Telomere maintenance defect</td></tr>
+      <tr><td>UV light</td><td>Lip vermilion only</td><td>Lower lip; NOT intraoral SCC; NOT melanoma</td></tr>
+    </tbody>
+  </table>
+
+
+  <div class="board-pearl">
+    <p><strong>Board Pearl &mdash; Inherited syndromes that love to appear on boards:</strong> Fanconi anemia (OR = 40.6), dyskeratosis congenita, Li-Fraumeni syndrome, Cowden syndrome, xeroderma pigmentosum. Know all 5 names. <em>&ldquo;Inherited syndromes &mdash; they love to ask this on the board.&rdquo;</em></p>
+  </div>
+  <div class="explain">
+    <p><strong>Why tobacco + alcohol is multiplicative, not additive:</strong> alcohol acts as a solvent &mdash; it dehydrates oral mucosa and increases permeability, letting tobacco-derived nitrosamines penetrate deeper. Add the chronic mucosal irritation of acetaldehyde (alcohol&rsquo;s first metabolite, itself a carcinogen) and you get synergy: 5&times; (tobacco) &times; 6&times; (alcohol) ~30&times; combined risk, not 11&times;.</p>
+  </div>
+
+  <div class="explain">
+    <p><strong>Smokeless tobacco &amp; betel quid:</strong> the carcinogen sits against the same patch of mucosa for hours. Risk localizes to wherever the quid is held &mdash; buccal mucosa, labial sulcus, gingiva. Areca nut (the active ingredient in betel) is itself a Group&nbsp;1 carcinogen (IARC) and drives <strong>oral submucous fibrosis</strong> on top of carcinoma risk.</p>
+  </div>
+
+  <div class="explain">
+    <p><strong>Fanconi anemia &amp; inherited syndromes:</strong> Fanconi patients have defective FA/BRCA DNA-crosslink repair, so every smoke or drink does more permanent damage. They develop oral SCC <strong>decades earlier</strong> than the general population (often in their 20&ndash;30s) &mdash; and the prof emphasized this as the highest single per-patient OR (~40.6) on the deck. Dyskeratosis congenita is similar: short telomeres &rarr; rapid stem-cell exhaustion &rarr; SCC at young ages.</p>
+  </div>
+
+  <div class="exam-trap">
+    <p><strong>UV light is NOT a cause of intraoral SCC and NOT a cause of oral mucosal melanoma.</strong> UV drives <em>lip vermilion</em> SCC (basically skin) and <em>cutaneous</em> melanoma. The mucosa is shielded inside the mouth &mdash; the prof returns to this point twice in the deck.</p>
+  </div>
+</section>
+
+<!-- ═══════════════ SECTION 03 — HPV-ASSOCIATED BENIGN LESIONS ═══════════════ -->
+<section id="hpv-benign">
+  <div class="section-header">
+    <span class="section-number s3">03</span>
+    <h2>HPV-Associated Benign Lesions</h2>
+    <p class="section-desc">Four entities the prof side-by-sides: papilloma, condyloma, verruca, Heck</p>
+  </div>
+
+  <div class="prof-highlight">
+    <p>The prof builds a single comparison table across slides 8&ndash;13. The <strong>only</strong> way to keep these straight on a written exam is to memorize <strong>HPV genotype</strong> + <strong>characteristic site</strong> + <strong>whether Gardasil&nbsp;9 covers it</strong>. Heck disease (HPV 13/32) is the trap: it is <strong>NOT</strong> covered by current vaccines.</p>
+  </div>
+
+  <table class="diff-table">
+    <thead><tr><th>Lesion</th><th>HPV type(s)</th><th>Classic site</th><th>Appearance</th><th>Vaccine covered?</th></tr></thead>
+    <tbody>
+      <tr>
+        <td><strong>Squamous papilloma</strong></td>
+        <td class="diff-cell">HPV 6, 11</td>
+        <td>Soft palate, uvula, tongue; solitary 98%</td>
+        <td>Solitary, pedunculated, &ldquo;cauliflower,&rdquo; white-pink; male 1.3:1; mean age ~48; recurrence ~2%</td>
+        <td><strong>Yes</strong> (Gardasil 9: 6/11/16/18/31/33/45/52/58)</td>
+      </tr>
+      <tr>
+        <td><strong>Condyloma acuminatum</strong></td>
+        <td class="diff-cell">HPV 6, 11 (~75%)</td>
+        <td>Labial mucosa, FOM, soft palate (sexually transmitted)</td>
+        <td>Multiple, sessile, broader-based, blunted papillae; <span class="lab-val">75% HPV+</span> &mdash; highest of all oral HPV lesions</td>
+        <td><strong>Yes</strong> (same as papilloma)</td>
+      </tr>
+      <tr>
+        <td><strong>Verruca vulgaris</strong></td>
+        <td class="diff-cell">HPV 2, 4 (cutaneous types)</td>
+        <td>Vermilion, perioral skin (auto-inoculation from fingers); children &gt; adults</td>
+        <td>White, keratinized, pointed papillae &mdash; &ldquo;common wart&rdquo;; may resolve spontaneously</td>
+        <td><strong>No</strong> &mdash; not in Gardasil 9</td>
+      </tr>
+      <tr>
+        <td><strong>Heck disease</strong> (focal epithelial hyperplasia)</td>
+        <td class="diff-cell">HPV 13, 32</td>
+        <td>Labial / buccal / tongue mucosa &mdash; <strong>multifocal</strong>; 67% &le;20 yr</td>
+        <td>Multiple soft, flat-topped, mucosa-colored papules; Native American/Inuit predilection; spontaneous regression; no malignant potential</td>
+        <td><strong>NO &mdash; not covered by Gardasil 9</strong> (exam trap)</td>
+      </tr>
+    </tbody>
+  </table>
+
+<figure class="lecture-figure">
+  <img src="images/lecture-3-epithelial-pathoses/L3-S8-squamous-papilloma-1.png"
+       alt="Slide 8: Squamous papilloma — pedunculated cauliflower-like HPV 6/11 lesion on soft palate, most common HPV oral lesion"
+       loading="lazy">
+  <figcaption>Slide 8 — Squamous papilloma. Most common HPV-associated oral lesion (HPV 6/11). Pedunculated, solitary (98%), cauliflower-like soft exophytic mass. Most common site: soft palate (23%). Male predilection 1.3:1. ~2% recurrence rate. Covered by Gardasil 9.</figcaption>
+</figure>
+
+<figure class="lecture-figure">
+  <img src="images/lecture-3-epithelial-pathoses/L3-S9-condyloma-acuminatum-1.png"
+       alt="Slide 9: Condyloma acuminatum — sessile multiple pink-white nodules, 75% HPV positive, highest rate of all oral HPV lesions"
+       loading="lazy">
+  <figcaption>Slide 9 — Condyloma acuminatum. Sessile, multiple pink/white nodules. 75% HPV-positive — highest HPV-positive rate of all oral HPV lesions. HPV 6/11 in >90%. Sexually transmitted. Raises concern for sexual abuse in children even when non-sexual transmission is possible.</figcaption>
+</figure>
+
+<figure class="lecture-figure">
+  <img src="images/lecture-3-epithelial-pathoses/L3-S10-verruca-vulgaris-1.png"
+       alt="Slide 10: Verruca vulgaris oral common wart — sessile white papule with rough keratotic surface, HPV 2/4 autoinoculation from hand warts"
+       loading="lazy">
+  <figcaption>Slide 10 — Verruca vulgaris (oral common wart). Sessile white papule with rough, keratotic surface. HPV 2/4 (cutaneous strains) via autoinoculation from hand warts. Always ask about finger/hand warts. NOT covered by Gardasil 9. Excisional biopsy for treatment; may resolve spontaneously in children.</figcaption>
+</figure>
+
+  <div class="exam-trap">
+    <p><strong>HECK DISEASE IS NOT COVERED BY GARDASIL 9.</strong> HPV 13 and 32 are not in the 9-valent vaccine. If the prof asks &ldquo;which of these benign HPV lesions cannot be prevented by current vaccination?&rdquo; &mdash; the answer is <strong>focal epithelial hyperplasia (Heck disease)</strong>. Verruca vulgaris (HPV 2/4) is also not covered, but Heck is the one the prof highlighted explicitly.</p>
+  </div>
+
+  <div class="explain">
+    <p><strong>Papilloma vs condyloma &mdash; how to actually tell them apart:</strong> same HPV types (6/11), but papilloma is <em>solitary, pedunculated, finger-like (cauliflower)</em> and condyloma is <em>multiple, sessile, broader, with blunted papillae</em>. Condyloma is sexually transmitted; papilloma can arise from any prior HPV contact. Both are excised conservatively. In children, condyloma requires always considering sexual abuse in the differential, even though non-sexual transmission is possible.</p>
+  </div>
+
+  <div class="memorize">
+    <ul>
+      <li>Papilloma: HPV 6, 11 &rarr; soft palate, solitary (98%), pedunculated, vaccine-covered</li>
+      <li>Condyloma: HPV 6, 11 (75%) &rarr; STI, multiple, sessile, vaccine-covered</li>
+      <li>Verruca: HPV 2, 4 &rarr; lip/perioral, auto-inoculation, NOT vaccine-covered</li>
+      <li>Heck: HPV 13, 32 &rarr; multifocal, flat, mucosa-colored, NOT vaccine-covered</li>
+    </ul>
+  </div>
+
+<figure class="lecture-figure">
+  <img src="images/lecture-3-epithelial-pathoses/L3-S12-heck-disease-management-board-pearl-1.png" alt="Heck disease management slide with cyan Board Pearl callout — HPV vaccines do not protect against HPV 13/32" loading="lazy">
+  <figcaption>Slide 12 — Heck disease (focal epithelial hyperplasia). HPV 13/32. Board Pearl (cyan on slide): current HPV vaccines do NOT protect against HPV 13/32. Management: imiquimod 5% cream 3×/week × 2–3 months. Benign — zero malignant potential.</figcaption>
+</figure>
+</section>
+
+
+  <div class="board-pearl">
+    <p><strong>Board Pearl &mdash; Heck Disease HPV &ldquo;1332&rdquo;:</strong> Multifocal epithelial hyperplasia = HPV 13 and 32 (mnemonic: &ldquo;1332&rdquo; &mdash; thirteen, thirty-two). <strong>NOT covered by Gardasil 9</strong> (covers types 6, 11, 16, 18, 31, 33, 45, 52, 58). You can still get Heck disease even if fully vaccinated. The boards love this.</p>
+    <p><em>&ldquo;They love asking this on the boards. So you have to know this 1, 1332. They love that the vaccines, the current vaccines do not protect against 13 and 32.&rdquo;</em></p>
+  </div>
+
+<!-- ═══════════════ SECTION 04 — LEUKOPLAKIA / ERYTHROPLAKIA / PVL ═══════════════ -->
+<section id="leukoplakia">
+  <div class="section-header">
+    <span class="section-number s4">04</span>
+    <h2>Leukoplakia, Erythroplakia &amp; PVL</h2>
+    <p class="section-desc">The OPMD trio &mdash; definitions, transformation rates, who transforms when</p>
+  </div>
+
+  <div class="exam-trap">
+    <p><strong>EXAM TRAP &mdash; Carcinoma in Situ is NOT a Pre-cancer. It IS cancer.</strong></p>
+    <p><em>&ldquo;Some people think that carcinoma in situ is a pre-cancer. It&rsquo;s not, it&rsquo;s cancer. It&rsquo;s just the second before it invades, OK? It is cancer. It&rsquo;s not a pre-cancer.&rdquo;</em></p>
+    <ul>
+      <li><strong>CIS</strong> = full-thickness epithelial atypia; basement membrane still intact; cytologically already carcinoma</li>
+      <li><strong>Pre-cancer</strong> = mild / moderate / severe dysplasia (partial-thickness epithelial involvement)</li>
+      <li>The exam will list CIS as a pre-malignant option &mdash; <strong>it is not</strong>. Next step after CIS = invasion = invasive SCC.</li>
+    </ul>
+  </div>
+
+  <!-- LEUKOPLAKIA DEFINITION -->
+  <div class="card">
+    <h3>Leukoplakia &mdash; the definition you&rsquo;ll be tested on</h3>
+    <span class="card-subtitle">A clinical term, not a histologic diagnosis &mdash; diagnosis of exclusion</span>
+    <div class="prof-highlight">
+      <p><strong>WHO definition:</strong> <em>&ldquo;A predominantly white plaque of questionable risk having excluded (other) known diseases or disorders that carry no increased risk for cancer.&rdquo;</em></p>
+      <p>Translation: &ldquo;white patch I can&rsquo;t wipe off, can&rsquo;t blame on anything else.&rdquo; It is a <strong>diagnosis of exclusion</strong>.</p>
+    </div>
+    <h4>Must Rule Out First (diagnosis of exclusion):</h4>
+    <ul>
+      <li>Frictional keratosis</li>
+      <li>Candidiasis (can be scraped off)</li>
+      <li>Lichen planus</li>
+      <li>White sponge nevus</li>
+      <li>Other identifiable white lesions (leukoedema, hairy leukoplakia, etc.)</li>
+    </ul>
+    <div class="high-yield">
+      <p><strong>Requires biopsy for definitive diagnosis.</strong> Clinical judgment alone has low sensitivity (<strong>60%</strong>) and specificity (<strong>62%</strong>) for detecting cancer &mdash; you cannot reliably tell malignant from benign by eye alone.</p>
+    </div>
+    <div class="explain">
+      <p><strong>&ldquo;Leukoplakia is a clinical term, not a histologic diagnosis.&rdquo;</strong> When you biopsy it, the path report comes back as <em>hyperkeratosis</em>, <em>mild/moderate/severe dysplasia</em>, <em>carcinoma in situ</em>, or <em>invasive SCC</em>. The clinical diagnosis &ldquo;leukoplakia&rdquo; tells you nothing about the tissue underneath until you cut it.</p>
+    </div>
+  </div>
+
+  <!-- LEUKOPLAKIA NATURAL HISTORY -->
+
+<figure class="lecture-figure">
+  <img src="images/lecture-3-epithelial-pathoses/L3-S15-leukoplakia-fom-buccal-1.png" alt="Non-homogeneous leukoplakia with mixed red-white appearance on floor of mouth and buccal mucosa, knife-edge margins" loading="lazy">
+  <figcaption>Slide 15 — Non-homogeneous leukoplakia on floor of mouth / mandibular vestibule. Note the mixed white plaque with crisp knife-edge margins requiring biopsy. Compare: the irregular border is NOT traumatic keratosis — traumatic lesions lack the fissuring and crisp demarcation.</figcaption>
+</figure>
+
+  <div class="card">
+    <h3>Leukoplakia &mdash; Natural History &amp; 5-Year MT Rates by Grade</h3>
+    <span class="card-subtitle">Both resolution and progression data &mdash; important exam numbers</span>
+    <div class="hemo-compare">
+      <div class="hemo-col primary">
+        <h4>Resolution (good news)</h4>
+        <ul>
+          <li>Mild dysplasia: <strong>18&ndash;39%</strong> had spontaneous resolution</li>
+          <li>All dysplasias: <strong>32.5%</strong> had reduction in size or resolution over 10-year follow-up</li>
+          <li>18.6% completely disappeared</li>
+          <li>12.7% reduced in size or clinical severity</li>
+        </ul>
+      </div>
+      <div class="hemo-col secondary">
+        <h4>Progression (the danger)</h4>
+        <ul>
+          <li>Overall transformation rate: <span class="lab-val">6.6&ndash;8.4%</span></li>
+          <li>Annual rate: ~<strong>2% per year</strong></li>
+          <li><strong>39.6% of cancers arose from leukoplakias WITHOUT dysplasia</strong></li>
+        </ul>
+      </div>
+    </div>
+    <h4>5-Year Malignant Transformation Rate by Dysplasia Grade</h4>
+    <table class="data-table">
+      <thead>
+        <tr><th>Dysplasia Grade</th><th>5-Year MT Rate</th><th>Key Data</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>No dysplasia</strong></td>
+          <td class="val-safe">2.2%</td>
+          <td>Yet 39.6% of oral cancers arose from non-dysplastic leukoplakias &mdash; never dismiss</td>
+        </tr>
+        <tr>
+          <td><strong>Mild dysplasia</strong></td>
+          <td class="val-warn">2.6&ndash;11.9%</td>
+          <td>38% progressed to malignancy in some series; 5-yr risk up to 11.9%</td>
+        </tr>
+        <tr>
+          <td><strong>Moderate dysplasia</strong></td>
+          <td class="val-warn">4.1&ndash;8.7%</td>
+          <td>5-yr risk 8.7% (UK cohort 4.1%)</td>
+        </tr>
+        <tr>
+          <td><strong>Severe dysplasia</strong></td>
+          <td class="val-danger">29.2&ndash;32.2%</td>
+          <td>5-yr risk 32.2% (UK cohort 29.2%) &mdash; excise urgently</td>
+        </tr>
+      </tbody>
+    </table>
+    <div class="prof-highlight">
+      <p><strong>The 39.6% paradox:</strong> in one widely cited series, <strong>39.6% of leukoplakias that progressed to SCC had only &ldquo;hyperkeratosis without dysplasia&rdquo; on the original biopsy.</strong> Read that twice. <em>You cannot rule out malignant potential with a single benign-looking biopsy.</em> &rarr; This is why prof emphasizes <strong>photo-documentation + re-biopsy if any clinical change</strong> &mdash; never &ldquo;I biopsied it once, it was benign, we&rsquo;re done.&rdquo;</p>
+    </div>
+  </div>
+
+<figure class="lecture-figure">
+  <img src="images/lecture-3-epithelial-pathoses/L3-S17-leukoplakia-tongue-bilateral-1.png" alt="Bilateral tongue leukoplakia showing homogeneous vs non-homogeneous spectrum with fissures and knife-edge margins" loading="lazy">
+  <figcaption>Slide 17 — Bilateral tongue leukoplakia. Prof returned to these images repeatedly to train lesion recognition. Note the fissures, folds, and crisp knife-edge margins — these reflect P53 mutation signals. Used for biopsy decision-making training.</figcaption>
+</figure>
+
+  <!-- ERYTHROPLAKIA -->
+  <div class="card">
+    <h3>Erythroplakia &mdash; the dangerous one</h3>
+    <span class="card-subtitle">Less common than leukoplakia, but vastly more sinister &mdash; median time to cancer 3.7 months</span>
+    <div class="prof-highlight">
+      <p><strong>WHO definition:</strong> <em>&ldquo;A bright red velvety plaque that cannot be characterized clinically or pathologically as any other recognizable condition.&rdquo;</em></p>
+      <p>Erythroplakia is <strong>much rarer</strong> than leukoplakia (~10&times; less common) but carries a <strong>~50% malignant transformation rate</strong>, and <strong>~75&ndash;90% already show severe dysplasia, CIS, or invasive SCC at the very first biopsy</strong>. These are two separate statistics: the 50% is the eventual MT rate; the 75&ndash;90% is how bad the histology is at presentation. Any persistent red patch &gt; 2 weeks needs biopsy &mdash; do not wait.</p>
+    </div>
+    <h4>Also a Diagnosis of Exclusion &mdash; Must Rule Out:</h4>
+    <ul>
+      <li>Atrophic glossitis</li>
+      <li>Median rhomboid glossitis</li>
+      <li>Plasma cell gingivitis</li>
+      <li>Erosive lichen planus</li>
+    </ul>
+    <div class="high-yield">
+      <ul>
+        <li>Malignant transformation rate: <strong>~50% MT</strong></li>
+        <li><span class="lab-val">~75&ndash;90%</span> are <strong>already</strong> severe dysplasia, CIS, or invasive SCC at the first biopsy</li>
+        <li><strong>Median time to cancer: 3.7 months</strong> &rarr; URGENT referral; do not watch and wait</li>
+        <li>Compare leukoplakia median time to cancer: <strong>25 months</strong></li>
+      </ul>
+    </div>
+    <div class="explain">
+      <p><strong>Why red &gt; white as a danger sign:</strong> the red color comes from <em>thinning of the epithelium</em> (so capillaries show through) plus <em>increased vascularity</em> driving the proliferating dysplasia. Less keratin on top + more blood underneath = the visual signature of advanced cellular disorder. White plaques are usually thicker keratin layers &mdash; can be benign reactive keratosis. Red plaques almost never are.</p>
+    </div>
+    <div class="exam-trap">
+      <p><strong>Speckled / non-homogeneous leukoplakia (mixed red &amp; white) carries the same risk as erythroplakia.</strong> If a leukoplakia has any red component, biopsy the <strong>red</strong> part &mdash; that&rsquo;s where the dysplasia/SCC is most likely to be sampled.</p>
+    </div>
+  </div>
+
+<figure class="lecture-figure">
+  <img src="images/lecture-3-epithelial-pathoses/L3-S19-erythroplakia-lateral-tongue-1.png" alt="Erythroplakia on lateral tongue — soft velvety bright red well-demarcated lesion requiring immediate biopsy" loading="lazy">
+  <figcaption>Slide 19 — Erythroplakia on lateral tongue. Soft, velvety, well-demarcated red lesion. ~75–90% are already severe dysplasia, CIS, or invasive SCC at the very first biopsy. Median time to cancer: 3.7 months. Biopsy immediately — do not watch and wait.</figcaption>
+</figure>
+
+  <div class="board-pearl">
+    <p><strong>Board Pearl &mdash; Erythroplakia = the worst bad boy:</strong> <em>&ldquo;Biopsy, biopsy, biopsy.&rdquo;</em> ~90% are already severe dysplasia, CIS, or invasive SCC at the first biopsy. Median time from erythroplakia &rarr; cancer = <strong>3.7 months</strong> (vs. leukoplakia = 25 months). This is an urgent referral &mdash; not watch and wait.</p>
+  </div>
+
+  <!-- MT RATES TABLE -->
+  <h3 style="font-family: 'Crimson Pro', serif; font-size: 22px; margin: 28px 0 8px;">Malignant transformation rates by OPMD &mdash; Severity Spectrum</h3>
+  <div class="severity-meter">
+    <div class="seg safe">
+      <span class="seg-label">OLP</span>
+      <span class="seg-val">0.2&ndash;1.4%</span>
+    </div>
+    <div class="seg safe">
+      <span class="seg-label">OSF</span>
+      <span class="seg-val">5.1%</span>
+    </div>
+    <div class="seg warn">
+      <span class="seg-label">Leukoplakia</span>
+      <span class="seg-val">6.6&ndash;8.4%</span>
+    </div>
+    <div class="seg danger">
+      <span class="seg-label">PL / PVL</span>
+      <span class="seg-val">48&ndash;50%</span>
+    </div>
+    <div class="seg emergency">
+      <span class="seg-label">Erythroplakia</span>
+      <span class="seg-val">~50% MT</span>
+    </div>
+  </div>
+
+  <table class="diff-table">
+    <thead><tr><th>OPMD</th><th>MT rate</th><th>Notable</th></tr></thead>
+    <tbody>
+      <tr><td>Homogeneous leukoplakia</td><td>~3%</td><td>Smooth, uniform white</td></tr>
+      <tr><td>Non-homogeneous (speckled) leukoplakia</td><td class="diff-cell">~15&ndash;25%</td><td>Mixed red/white &mdash; biopsy the red; 4.2&ndash;6.5&times; higher risk than homogeneous</td></tr>
+      <tr><td><strong>Erythroplakia</strong></td><td class="diff-cell"><strong>~50% MT</strong></td><td><strong>~75&ndash;90% already severe dysplasia/CIS/SCC at first biopsy</strong>; median time to cancer 3.7 mo</td></tr>
+      <tr><td><strong>Proliferative (Verrucous) Leukoplakia &mdash; PVL/PL</strong></td><td class="diff-cell">48&ndash;50% (some up to 100% over time)</td><td><strong>Highest MT rate; 8&times; higher than conventional leukoplakia</strong></td></tr>
+      <tr><td>Oral submucous fibrosis (OSF)</td><td>~5.1%</td><td>Median 36 mo to cancer</td></tr>
+      <tr><td>Oral lichen planus (OLP)</td><td>~1.4%</td><td>Controversial; risk highest in atrophic/erosive forms</td></tr>
+      <tr><td>Oral lichenoid lesion (OLL)</td><td>~1.4% (same as OLP)</td><td>Per the prof&rsquo;s slide</td></tr>
+    </tbody>
+  </table>
+
+  <!-- RISK FACTORS FOR TRANSFORMATION TRIAGE GRID -->
+  <div class="card">
+    <h3>Risk Factors for Malignant Transformation &mdash; Triage Grid</h3>
+    <span class="card-subtitle">Clinical and pathologic features that predict progression from OPMD to OSCC</span>
+    <div class="triage-grid">
+      <div class="triage-card tier1">
+        <h4>Non-Homogeneous Appearance</h4>
+        <ul>
+          <li>Mixed red/white lesions: <strong>4.2&ndash;6.5&times; higher risk</strong> than homogeneous white</li>
+          <li>In mixed lesions: <strong>always biopsy the RED component</strong> &mdash; that&rsquo;s where dysplasia lives</li>
+        </ul>
+      </div>
+      <div class="triage-card tier1">
+        <h4>Dysplasia on Biopsy</h4>
+        <ul>
+          <li>Any dysplasia: 2.75&times; higher risk overall</li>
+          <li>No dysplasia: 2.2% (but 39.6% of cancers arise here)</li>
+          <li>Mild: 2.6&ndash;11.9%</li>
+          <li>Moderate: 4.1&ndash;8.7%</li>
+          <li>Severe: <strong>29.2&ndash;32.2%</strong></li>
+        </ul>
+      </div>
+      <div class="triage-card tier2">
+        <h4>High-Risk Anatomic Sites</h4>
+        <ul>
+          <li><strong>Lateral/ventral tongue and floor of mouth</strong></li>
+          <li>Tongue leukoplakia: <strong>12.7% transformation</strong> vs 6.6% overall</li>
+          <li>Floor of mouth: <strong>2.1&times; higher risk</strong></li>
+        </ul>
+      </div>
+      <div class="triage-card tier2">
+        <h4>Size &amp; Sex</h4>
+        <ul>
+          <li><strong>Size &gt;200 mm&sup2; (&gt;2 cm): 2&ndash;4&times; higher risk</strong></li>
+          <li><strong>Female sex paradox:</strong> higher MT rate despite lower incidence</li>
+          <li>Non-smoking females with leukoplakia = particularly high risk</li>
+          <li>Combination of these factors is additive</li>
+        </ul>
+      </div>
+    </div>
+    <div class="explain">
+      <p>The combination of risk factors is additive. A non-homogeneous (mixed red/white) leukoplakia on the lateral tongue in a non-smoking female with moderate dysplasia on biopsy represents an extremely high-risk lesion requiring aggressive management and close follow-up.</p>
+    </div>
+  </div>
+
+  <!-- PVL CARD WITH DETAILED CRITERIA -->
+  <div class="card">
+    <h3>Proliferative Verrucous Leukoplakia (PVL) / Proliferative Leukoplakia (PL)</h3>
+    <span class="card-subtitle">The OPMD with the worst prognosis &mdash; 8&times; higher MT than conventional leukoplakia</span>
+    <div class="prof-highlight">
+      <p><strong>PVL has the highest malignant transformation rate of any OPMD: 48&ndash;50%, approaching 100% over time.</strong> Female &gt; male (F:M = 2:1), often non-smokers (which is unusual for an OPMD). Multifocal, slowly spreading, white verrucous (warty) plaques that recur after every excision. <strong>Gingiva is the most common site</strong>; &ldquo;ring around the collar&rdquo; circumferential marginal gingival involvement is an ominous pattern.</p>
+    </div>
+
+    <h4>Proposed Diagnostic Criteria</h4>
+    <h5>Major Criteria (must meet 1+):</h5>
+    <ul>
+      <li>Leukoplakia at &ge;2 oral sites</li>
+      <li>Lesion enlargement or new lesions during follow-up</li>
+      <li>Recurrence after treatment</li>
+    </ul>
+    <h5>Minor Criteria:</h5>
+    <ul>
+      <li>Total size &ge;3 cm (sum of all sites)</li>
+      <li>Female sex</li>
+      <li>Non-smoker</li>
+      <li>Disease course &gt;5 years</li>
+    </ul>
+    <h5>Alternative Definition:</h5>
+    <ul>
+      <li>Multiple non-contiguous lesions <strong>OR</strong> single lesion &gt;4 cm with documented progression</li>
+    </ul>
+
+    <div class="high-yield">
+      <ul>
+        <li>Malignant transformation: <strong>48&ndash;50%</strong> (some series report 70&ndash;100% over lifetime)</li>
+        <li>Annual transformation rate: <strong>~9.3%/yr</strong> (vs ~2%/yr for conventional leukoplakia)</li>
+        <li><strong>8&times; higher transformation risk</strong> than conventional leukoplakia</li>
+        <li>F:M = 2:1; gingiva most common; &ldquo;ring around the collar&rdquo;</li>
+      </ul>
+    </div>
+
+    <div class="explain">
+      <p><strong>What &ldquo;proliferative verrucous&rdquo; actually means clinically:</strong> instead of a single discrete patch you can excise once and be done, PVL behaves like a <em>field disease</em> &mdash; lesions pop up next door, then across the arch, then on a new mucosal site, over years. Each new lesion can independently progress to verrucous carcinoma or conventional SCC. There is no curative treatment &mdash; only serial excision + lifelong surveillance. Etiology is unknown; HPV has been implicated in some series but is not the established cause.</p>
+    </div>
+  </div>
+
+<figure class="lecture-figure">
+  <img src="images/lecture-3-epithelial-pathoses/L3-S24-pvl-fom-1.png" alt="Proliferative leukoplakia on floor of mouth showing extensive multifocal white plaque — the maxi leukoplakia appearance" loading="lazy">
+  <figcaption>Slide 24 — Proliferative leukoplakia, floor of mouth / mandibular vestibule. Extensive multifocal white plaque — the 'maxi leukoplakia' the prof described. 48–50% malignant transformation rate. Female, non-smoker profile is classic.</figcaption>
+</figure>
+
+<figure class="lecture-figure">
+  <img src="images/lecture-3-epithelial-pathoses/L3-S25-leukoplakia-spectrum-4panel-1.png" alt="Four-panel clinical photo grid showing leukoplakia and erythroleukoplakia spectrum across multiple oral sites" loading="lazy">
+  <figcaption>Slide 25 — Leukoplakia spectrum: homogeneous white → mixed erythroleukoplakia → exophytic presentations across multiple sites. The red component is always the biopsy target — 'biopsy the red over the white.'</figcaption>
+</figure>
+
+<figure class="lecture-figure">
+  <img src="images/lecture-3-epithelial-pathoses/L3-S26-pvl-spectrum-5panel-1.png" alt="Five-panel clinical photos showing proliferative leukoplakia variants including ring around the collar circumferential gingival involvement" loading="lazy">
+  <figcaption>Slide 26 — PVL spectrum including circumferential marginal gingival involvement ('ring around the collar'). Female, non-smoker, gingiva = classic PVL profile. Each panel shows a different presentation of the same underlying field disease.</figcaption>
+</figure>
+
+  <div class="memorize">
+    <ul>
+      <li>Hyperkeratosis only: ~3% MT; severe dysplasia: &gt;40% MT</li>
+      <li>5-yr MT by grade: no dysplasia 2.2% &rarr; mild 2.6&ndash;11.9% &rarr; mod 4.1&ndash;8.7% &rarr; severe 29.2&ndash;32.2%</li>
+      <li>39.6% of progressors had NO dysplasia on first biopsy</li>
+      <li>Erythroplakia: TWO stats &rarr; ~50% MT rate; ~75&ndash;90% already severe dysplasia/CIS/SCC at biopsy</li>
+      <li>Erythroplakia median time to cancer: 3.7 months; leukoplakia: 25 months</li>
+      <li>PVL: 48&ndash;50% MT, up to 100%; annual rate 9.3%; 8&times; higher than conventional</li>
+      <li>OSF: 5.1% MT, ~36 mo median to cancer</li>
+      <li>OLP / OLL: ~1.4% MT each</li>
+      <li>Clinical sensitivity 60%, specificity 62% for detecting cancer &rarr; always biopsy</li>
+    </ul>
+  </div>
+</section>
+
+<!-- ═══════════════ SECTION 05 — BIOPSY TECHNIQUE & SITE SELECTION ═══════════════ -->
+<section id="biopsy">
+  <!-- no image delivered for Section 05 (Biopsy Technique & Site Selection) — no clinical photos on these slides -->
+  <div class="section-header">
+    <span class="section-number s5">05</span>
+    <h2>Biopsy Technique &amp; Site Selection</h2>
+    <p class="section-desc">Where to biopsy, when to excise, the seeding myth &mdash; with quantitative evidence</p>
+  </div>
+
+  <div class="card">
+    <h3>When to Biopsy</h3>
+    <ul>
+      <li><strong>All leukoplakias should be biopsied</strong> &mdash; clinical judgment alone has sensitivity 60%, specificity 62% for detecting cancer</li>
+      <li><strong>Erythroplakia</strong> &mdash; biopsy or excise immediately; 75&ndash;90% are carcinoma, CIS, or severe dysplasia</li>
+      <li><strong>Persistent lesions (&gt;2&ndash;3 weeks)</strong> that don&rsquo;t resolve after removing irritants</li>
+      <li>Any lesion with <strong>clinical change</strong> (color, texture, size, symptoms)</li>
+    </ul>
+  </div>
+
+  <div class="card">
+    <h3>Site selection rules</h3>
+    <span class="card-subtitle">From the prof&rsquo;s biopsy slides</span>
+    <ul>
+      <li><strong>If there is a red component: biopsy the red.</strong> Mixed red/white lesions &mdash; the dysplasia/SCC is in the red.</li>
+      <li><strong>Sample the thickest, most indurated, or most ulcerated zone</strong> if the lesion is non-homogeneous.</li>
+      <li><strong>Avoid the necrotic center</strong> of an ulcer &mdash; you&rsquo;ll get acellular slough. Sample the <strong>edge of the ulcer where viable epithelium meets ulcerated tissue</strong>.</li>
+      <li><strong>Use multiple incisional biopsies</strong> if the lesion is large or non-homogeneous &mdash; one site may miss the worst dysplasia.</li>
+      <li><strong>Mark orientation</strong> for the pathologist (suture tag or ink) when margin assessment matters.</li>
+    </ul>
+    <div class="explain">
+      <p><strong>Why &ldquo;biopsy the red component&rdquo;:</strong> the red zone is where epithelium has thinned (capillaries show through), keratin protection has dropped, and the dysplastic cells are proliferating fastest. White zones may be reactive keratosis sitting <em>over</em> normal epithelium &mdash; a misleading &ldquo;benign&rdquo; sample. The red is where the disease lives.</p>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3>Tumor Seeding &mdash; the myth, and the numbers</h3>
+    <div class="exam-trap">
+      <p><strong>Tumor seeding from biopsy is a myth.</strong> Older teaching held that incisional biopsy &ldquo;seeded&rdquo; SCC into deeper tissue and worsened prognosis. <strong>This is not supported by current evidence.</strong></p>
+    </div>
+    <div class="callout-danger">
+      <p><strong>Quantitative seeding data:</strong> incidence of tumor seeding is approximately <strong>~0.00012%</strong> for FNA biopsy and <strong>~0.0011%</strong> for core biopsy. A population-based registry study showed <strong>no association between incisional biopsy and 5-year survival or recurrence</strong> in Stage I/II OSCC. Outcomes are equivalent whether the cancer is incisionally biopsied first or excised primarily. <strong>Do not withhold biopsy out of fear of seeding.</strong></p>
+    </div>
+    <div class="explain">
+      <p><strong>Special case &mdash; verrucous lesions:</strong> verrucous carcinoma&rsquo;s diagnosis depends on seeing the deep <em>pushing border</em> (not infiltrative). A superficial biopsy that captures only the warty surface architecture will look like benign hyperkeratosis or &ldquo;verrucous hyperplasia.&rdquo; <strong>Biopsy must extend to the deep submucosa</strong> to see the broad pushing front.</p>
+    </div>
+    <div class="prof-highlight">
+      <p>Mnemonic for biopsy site selection: <strong>&ldquo;Red over white, edge over center, deep for verrucous, multiple for big.&rdquo;</strong></p>
+    </div>
+  </div>
+</section>
+
+
+  <div class="prof-highlight">
+    <p><strong>Why biopsy depth matters for staging &mdash; the direct link:</strong></p>
+    <ul>
+      <li>Depth of invasion (DOI) <strong>&ge;5 mm = already T2 staging</strong></li>
+      <li>Your biopsy must reach <strong>4&ndash;6 mm deep</strong> to capture this information</li>
+      <li>A superficial punch that only goes 2 mm will miss the invasive front and give the pathologist an artificially low DOI reading</li>
+      <li><em>&ldquo;If you have a depth of invasion that&rsquo;s 5 millimeters, then you&rsquo;re already in T2. So what does that tell you about your biopsies? You better be at around 4 or 5 millimeters.&rdquo;</em></li>
+    </ul>
+  </div>
+
+  <div class="exam-trap">
+    <p><strong>EXAM TRAP &mdash; DOI &gt;4 mm = automatic neck dissection.</strong></p>
+    <p><em>&ldquo;If it&rsquo;s more than 4 millimeters, the patient automatically gets a neck dissection. So you need to go deep.&rdquo;</em></p>
+    <ul>
+      <li>DOI &gt;4 mm &rarr; elective neck dissection (cervical lymph node dissection)</li>
+      <li>DOI &ge;5 mm &rarr; T2 staging</li>
+      <li>Biopsy technique therefore has direct surgical staging consequences &mdash; punch to 4&ndash;6 mm depth</li>
+    </ul>
+  </div>
+
+  <div class="exam-trap">
+    <p><strong>EXAM TRAP &mdash; Brush biopsy is NOT appropriate for leukoplakia or dysplasia evaluation.</strong></p>
+    <p><em>&ldquo;This is why brush biopsies don&rsquo;t work. This is why you cannot use brush biopsies because it&rsquo;s not going to get the organization or the architecture. It will only get the cytology&hellip; So I do not recommend that for anyone. No brush biopsies.&rdquo;</em></p>
+    <ul>
+      <li>Brush biopsy (OralCDx) = cytology only (individual cell morphology)</li>
+      <li>Cannot assess <strong>architectural and organizational changes</strong> that define dysplasia</li>
+      <li>A negative brush biopsy does NOT rule out dysplasia</li>
+      <li>Preferred: punch biopsy 4&ndash;6 mm or scalpel incisional biopsy (full thickness including submucosa)</li>
+    </ul>
+  </div>
+
+  <div class="callout-danger">
+    <p><strong>Procedural rule &mdash; scalpel first, laser second:</strong> <em>&ldquo;Cut first with your scalpel, use the laser secondary for your bleeders. Give me a clean margin that doesn&rsquo;t have fried tissue on the ends because I can&rsquo;t tell you if it&rsquo;s cancer or not.&rdquo;</em></p>
+    <p>Never use the laser or cautery as the primary cutting instrument for a diagnostic biopsy &mdash; it destroys the tissue architecture at the margin.</p>
+  </div>
+
+<!-- ═══════════════ SECTION 06 — MANAGEMENT OF DYSPLASIAS ═══════════════ -->
+<section id="dysplasia-mgmt">
+  <div class="section-header">
+    <span class="section-number s6">06</span>
+    <h2>Management of Dysplasias</h2>
+    <p class="section-desc">Scalpel vs CO2 vs diode vs cryo vs ALA-PDT &mdash; with quantitative evidence data</p>
+  </div>
+
+  <div class="card">
+    <h3>Surgical / Ablative Approaches &mdash; Evidence Table</h3>
+    <table class="data-table">
+      <thead>
+        <tr><th>Method</th><th>Key Evidence</th><th>Notes</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>Scalpel Excision</strong></td>
+          <td>Gold standard; allows margin assessment</td>
+          <td>Positive margins &uarr; recurrence (OR <strong>3.6</strong>); aim 5 mm peripheral, &ge;2 mm deep</td>
+        </tr>
+        <tr>
+          <td><strong>CO<sub>2</sub> Laser Ablation</strong></td>
+          <td>HR <strong>0.14</strong> for MT vs. observation; <strong>52.6%</strong> recurrence rate reported</td>
+          <td>&ge;3 mm margins reduces recurrence; thermal artifact can limit pathology read</td>
+        </tr>
+        <tr>
+          <td><strong>Diode Laser</strong></td>
+          <td><strong>93.5%</strong> complete response; <strong>6.5%</strong> recurrence at 39 months</td>
+          <td>Combination excision + vaporization = lowest recurrence; more thermal artifact than CO<sub>2</sub></td>
+        </tr>
+        <tr>
+          <td><strong>Cryotherapy</strong></td>
+          <td><strong>100%</strong> complete regression; mean <strong>3.1 treatments</strong></td>
+          <td>Best for lesions &lt;2 cm&sup2;; no specimen for histology; limited RCT data</td>
+        </tr>
+        <tr>
+          <td><strong>Photodynamic Therapy (ALA-PDT)</strong></td>
+          <td><strong>66&ndash;100%</strong> complete response; <strong>8.3%</strong> MT at 3 years</td>
+          <td>ALA-PDT effective for mild-moderate dysplasia; less effective for severe; tissue-preserving; good for multifocal/large field</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+<figure class="lecture-figure">
+  <img src="images/lecture-3-epithelial-pathoses/L3-S29-dysplasia-management-laser-figure-1.png" alt="Dysplasia management multi-modality laser figure showing diode and CO2 laser outcomes data" loading="lazy">
+  <figcaption>Slide 29 — Dysplasia management modalities. Diode laser: 93.5% complete response, 6.5% recurrence at 39 months. CO₂ laser: 52.6% recurrence (use ≥3 mm margins to reduce). Combination excision + vaporization = lowest recurrence rate.</figcaption>
+</figure>
+
+<figure class="lecture-figure">
+  <img src="images/lecture-3-epithelial-pathoses/L3-S30-ala-pdt-sequence-1.png" alt="ALA-PDT procedure sequence: pre-treatment lesion, aminolevulinic acid gel application, laser illumination, post-treatment response" loading="lazy">
+  <figcaption>Slide 30 — ALA-PDT procedure sequence. 20% aminolevulinic acid gel applied 2 hours before laser illumination. ALA → protoporphyrin IX (selective uptake by dysplastic cells) → light activation → reactive oxygen species → ablation. 66–100% complete response rate. 8.3% MT at 3 years.</figcaption>
+</figure>
+
+  <div class="toolkit-grid">
+    <div class="toolkit-item">
+      <strong>Scalpel excision</strong>
+      <div class="tk-detail">Gold standard. Preserves margins for histology. Best for severe dysplasia / CIS / suspected SCC. OR 3.6 for recurrence if positive margins.</div>
+    </div>
+    <div class="toolkit-item">
+      <strong>CO<sub>2</sub> laser</strong>
+      <div class="tk-detail">Excellent hemostasis, good for vascular sites (FOM, tongue). HR 0.14 for MT vs observation. 52.6% recurrence. Use &ge;3 mm margins. Thermal artifact at margins can compromise pathology.</div>
+    </div>
+    <div class="toolkit-item">
+      <strong>Diode laser</strong>
+      <div class="tk-detail">93.5% complete response, 6.5% recurrence at 39 mo. Combo excision + vaporization = lowest recurrence. More thermal artifact than CO<sub>2</sub> &mdash; not recommended when histology critical.</div>
+    </div>
+    <div class="toolkit-item">
+      <strong>Cryotherapy</strong>
+      <div class="tk-detail">100% complete regression; mean 3.1 treatments; lesions &lt;2 cm&sup2;. No specimen for histology. Reserved for select small benign-appearing lesions.</div>
+    </div>
+    <div class="toolkit-item">
+      <strong>ALA-PDT</strong>
+      <div class="tk-detail">66&ndash;100% CR; 8.3% MT at 3 yr. Topical 5-aminolevulinic acid + visible light. Selectively destroys dysplastic cells. Tissue-preserving &mdash; ideal for multifocal/large field. Good for mild-moderate; less effective for severe.</div>
+    </div>
+    <div class="toolkit-item">
+      <strong>Topical chemoprevention</strong>
+      <div class="tk-detail">Imiquimod 5% (TLR-7 agonist), retinoids, others &mdash; see chemoprevention section. Adjunctive, not curative for established dysplasia.</div>
+    </div>
+  </div>
+
+  <h3 style="font-family: 'Crimson Pro', serif; font-size: 22px; margin: 28px 0 8px;">Treatment by dysplasia grade</h3>
+  <table class="diff-table">
+    <thead><tr><th>Histology</th><th>First-line treatment</th><th>Follow-up</th></tr></thead>
+    <tbody>
+      <tr><td>Hyperkeratosis (no dysplasia)</td><td>Photo-document, eliminate irritants, watch</td><td>Re-evaluate 3&ndash;6 mo; re-biopsy if change</td></tr>
+      <tr><td>Mild dysplasia</td><td>Excise OR close watch (3 mo)</td><td>Strict surveillance even if excised</td></tr>
+      <tr><td>Moderate dysplasia</td><td class="diff-cell">Excise (scalpel preferred)</td><td>Q3-mo for 1 yr, then Q6-mo</td></tr>
+      <tr><td><strong>Severe dysplasia / CIS</strong></td><td class="diff-cell"><strong>Excise with clear margins</strong></td><td><strong>Q3-mo lifelong</strong> &mdash; field cancerization risk</td></tr>
+      <tr><td>Multifocal / PVL / large field</td><td>Serial excisions &plusmn; ALA-PDT &plusmn; imiquimod</td><td>Lifelong surveillance, photo-document each visit</td></tr>
+    </tbody>
+  </table>
+
+  <div class="explain">
+    <p><strong>Dysplasia grading in plain English:</strong></p>
+    <ul style="list-style: disc; margin-left: 20px;">
+      <li><strong>Mild:</strong> abnormal cells in the <em>basal third</em> of the epithelium only. Architecture mostly preserved.</li>
+      <li><strong>Moderate:</strong> abnormal cells extending into the <em>middle third</em>. More mitoses, nuclear pleomorphism.</li>
+      <li><strong>Severe:</strong> abnormal cells throughout the <em>upper third</em> as well. Loss of polarity, atypical mitoses, marked pleomorphism.</li>
+      <li><strong>Carcinoma in situ (CIS):</strong> full-thickness atypia <em>but the basement membrane is intact</em> &mdash; no invasion yet.</li>
+      <li><strong>Invasive SCC:</strong> tumor cells have broken through the basement membrane into lamina propria/submucosa.</li>
+    </ul>
+    <p>The 2017 WHO update collapsed the 3-tier system into a 2-tier <strong>low-grade</strong> vs <strong>high-grade</strong> system in many institutions because reproducibility between mild and moderate is poor. Treat moderate the same as low end of high-grade.</p>
+  </div>
+
+  <div class="callout-danger">
+    <p><strong>Margins matter.</strong> When you excise dysplasia, aim for <strong>5&nbsp;mm</strong> peripheral and at least 2&nbsp;mm deep clinical margin. A &ldquo;positive&rdquo; margin on path = re-excision or close surveillance (OR 3.6 for recurrence). Field cancerization means the entire exposed mucosa is at risk &mdash; clear margins on one lesion don&rsquo;t protect the next centimeter over.</p>
+  </div>
+</section>
+
+<!-- ═══════════════ SECTION 07 — TWO REAL PATIENT CASES ═══════════════ -->
+<section id="cases">
+  <div class="section-header">
+    <span class="section-number s1">07</span>
+    <h2>Two Real Patient Cases</h2>
+    <p class="section-desc">The 56-year-old female and the 73-year-old male the prof showed &mdash; with full dated timelines</p>
+  </div>
+
+  <div class="card">
+    <h3>Case 1 &middot; 56-year-old female &middot; Recurrent Leukoplakia, R Floor of Mouth</h3>
+    <span class="card-subtitle">2+ year follow-up &mdash; demonstrates escalating dysplasia and field cancerization</span>
+
+<figure class="lecture-figure">
+  <img src="images/lecture-3-epithelial-pathoses/L3-S31-case1-56yo-female-progression-1.png" alt="Case 1: 56-year-old female FOM verrucous leukoplakia progression composite from May 2021 through April 2023" loading="lazy">
+  <figcaption>Slide 31 — Case 1 (56-year-old female): rough white floor-of-mouth plaque since May 2021. Biopsy showed moderate dysplasia → wide local excision → recurrence at superior margin → re-excision. Illustrates field cancerization and grade escalation on incisional biopsy.</figcaption>
+</figure>
+
+    <h4>Patient Background</h4>
+    <ul>
+      <li><strong>Age/Sex:</strong> 56-year-old female</li>
+      <li><strong>Medical history:</strong> Thyroid disease (levothyroxine)</li>
+      <li><strong>Chief complaint:</strong> Rough white plaque on right floor of mouth, May 2021</li>
+    </ul>
+
+    <div class="timeline">
+      <div class="timeline-entry">
+        <div class="timeline-date">May 2021</div>
+        <div class="timeline-content">Initial presentation: plaque on R FOM noted; painless, found on routine exam. Referred to ORL for management.</div>
+      </div>
+      <div class="timeline-entry">
+        <div class="timeline-date">06/07/2021</div>
+        <div class="timeline-content"><strong>Incisional biopsy:</strong> Right posterior floor of mouth &mdash; <strong>moderate epithelial dysplasia extending to tissue edges</strong>. A/P: verrucous leukoplakia; referred to ORL for surgical management.</div>
+      </div>
+      <div class="timeline-entry">
+        <div class="timeline-date">09/21/2021</div>
+        <div class="timeline-content"><strong>Wide local excision with Integra graft reconstruction.</strong> Final histopathology: keratosis with focal <strong>SEVERE DYSPLASIA</strong>; background of predominantly mild to moderate dysplasia. Evaluation of margins limited by cautery artifact; no definite high-grade dysplasia at margin. Mild dysplasia extends to anterior and right lateral margins.</div>
+      </div>
+      <div class="timeline-entry">
+        <div class="timeline-date">03/06/2023</div>
+        <div class="timeline-content"><strong>Recurrence:</strong> Jan 2023 noted white scaly area on gingiva between two posterior teeth, not painful. Returned to ORL; Rx nystatin and Magic Mouthwash &times; 3 weeks &mdash; lesion did not regress. A/P: leukoplakia at superior margin of prior excision, likely <strong>recurrence of prior severe dysplasia</strong>. Re-excision performed.</div>
+      </div>
+      <div class="timeline-entry">
+        <div class="timeline-date">04/06/2023</div>
+        <div class="timeline-content"><strong>Re-excision histopathology (tooth #30 area):</strong> hyperkeratosis, papillomatosis, and <strong>mild epithelial dysplasia, ETE</strong>. A/P: excised leukoplakia. Follow with general dentist, RTC PRN.</div>
+      </div>
+    </div>
+
+    <div class="high-yield">
+      <p><strong>Key teaching points:</strong> (1) Incisional biopsy showed moderate dysplasia, but excision revealed focal <strong>severe dysplasia</strong> &mdash; incisional biopsies can underestimate the true grade. (2) Recurrence at the margin of the prior excision site is consistent with <strong>field cancerization</strong>. (3) Each recurrence needs fresh biopsy because grade can change. (4) Re-excision showed downgrade to mild dysplasia &mdash; sustained monitoring essential.</p>
+    </div>
+    <div class="explain">
+      <p><strong>Why &ldquo;deeper biopsy&rdquo; was the path&rsquo;s request:</strong> verrucous architecture (broad rete pegs pushing down) on a superficial sample alone is non-specific &mdash; can be benign hyperplasia, dysplasia, or verrucous carcinoma. The diagnosis depends on seeing whether the rete pegs <em>push</em> or <em>infiltrate</em> at the deep margin. Surface bite = no answer. <strong>Deep bite = diagnosis.</strong></p>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3>Case 2 &middot; 73-year-old male &middot; Gingival Leukoplakia treated with Aldara (Imiquimod 5%)</h3>
+    <span class="card-subtitle">Proliferative leukoplakia on upper gingiva &mdash; non-surgical field management</span>
+
+<figure class="lecture-figure">
+  <img src="images/lecture-3-epithelial-pathoses/L3-S37-case2-73yo-male-presentation-1.png" alt="Case 2: 73-year-old male initial presentation with upper gingival leukoplakia and verrucous hyperplasia, biopsy May 2019" loading="lazy">
+  <figcaption>Slide 37 — Case 2 (73-year-old male): cutaneous melanoma history + psoriasis (risankizumab) + 13 pack-year former smoker. Upper-left gingival hyperkeratosis and verrucous hyperplasia (05/2019 biopsy). Field too extensive for surgery — led to imiquimod treatment decision.</figcaption>
+</figure>
+
+    <h4>Patient Background</h4>
+    <ul>
+      <li><strong>Age/Sex:</strong> 73-year-old male</li>
+      <li><strong>Medical history:</strong> Cutaneous melanoma (s/p surgical removal), hypertension, psoriasis (on <strong>risankizumab</strong> q12 wks)</li>
+      <li><strong>Social history:</strong> Former smoker (<strong>13 pack-years, quit 1984</strong>)</li>
+      <li><strong>Chief complaint:</strong> Multifocal white plaques on maxillary gingiva, referred for evaluation of leukoplakia, 2019</li>
+    </ul>
+
+    <div class="timeline">
+      <div class="timeline-entry">
+        <div class="timeline-date">05/09/2019</div>
+        <div class="timeline-content"><strong>Initial biopsy:</strong> Upper left gingiva associated with teeth #13 and #14 &mdash; <strong>hyperkeratosis and verrucous hyperplasia, extending to tissue edges</strong>.</div>
+      </div>
+      <div class="timeline-entry">
+        <div class="timeline-date">06/18&ndash;08/15/2021</div>
+        <div class="timeline-content"><strong>Aldara (imiquimod 5% cream) course</strong> applied to affected maxillary gingiva. Field too large for surgical excision without major morbidity (full-thickness graft, periodontal compromise).</div>
+      </div>
+      <div class="timeline-entry">
+        <div class="timeline-date">07/12/2021</div>
+        <div class="timeline-content"><strong>During Aldara treatment:</strong> significant inflammatory response with erythema and white plaque on maxillary gingiva bilaterally &mdash; expected (TLR7/8 agonist activation). Tapered to 2&times;/week.</div>
+      </div>
+      <div class="timeline-entry">
+        <div class="timeline-date">09/20/2021</div>
+        <div class="timeline-content"><strong>Post-Aldara (1 month):</strong> reduced leukoplakia, residual erythema, improvement in gingival appearance.</div>
+      </div>
+      <div class="timeline-entry">
+        <div class="timeline-date">11/18/2024</div>
+        <div class="timeline-content"><strong>Long-term follow-up (3+ years):</strong> gingiva appears relatively <strong>normal with minimal residual changes</strong>. Sustained clinical improvement documented.</div>
+      </div>
+    </div>
+
+    <div class="prof-highlight">
+      <p>This is the prof&rsquo;s poster case for <strong>field-disease management when surgery isn&rsquo;t feasible</strong>. Multifocal attached gingiva, multifocal palate &mdash; you can&rsquo;t excise it all without disfiguring the patient. Topical chemoprevention (imiquimod) is the workaround. Long-term (3+ yr) follow-up shows sustained response, though continued monitoring is essential given PL&rsquo;s high recurrence rate.</p>
+    </div>
+<figure class="lecture-figure">
+  <img src="images/lecture-3-epithelial-pathoses/L3-S38-case2-july2021-1.png" alt="Case 2: 73-year-old male upper gingival leukoplakia July 2021 before imiquimod treatment course" loading="lazy">
+  <figcaption>Slide 38 — Case 2, 07/12/2021. Upper-left gingival leukoplakia BEFORE imiquimod treatment. White plaque with leukoplakia extending over multiple gingival sites. Field too large for surgery without major morbidity — topical chemoprevention chosen.</figcaption>
+</figure>
+
+<figure class="lecture-figure">
+  <img src="images/lecture-3-epithelial-pathoses/L3-S39-case2-sept2021-1.png" alt="Case 2: 73-year-old male during Aldara imiquimod treatment September 2021 showing expected inflammatory response" loading="lazy">
+  <figcaption>Slide 39 — Case 2, 09/20/2021. DURING imiquimod (Aldara) course. Local inflammatory response with erythema and erosion — this is EXPECTED and indicates the drug is working. TLR-7 activation drives innate immune clearance of dysplastic keratinocytes.</figcaption>
+</figure>
+
+<figure class="lecture-figure">
+  <img src="images/lecture-3-epithelial-pathoses/L3-S40-case2-nov2024-1.png" alt="Case 2: 73-year-old male long-term follow-up November 2024 showing durable response 3+ years after imiquimod treatment" loading="lazy">
+  <figcaption>Slide 40 — Case 2, 11/18/2024. Three-plus years after imiquimod. Durable response — gingiva appears relatively normal with minimal residual changes. 'You don't have to get rid of the leukoplakia to have a win.' Treatment goal = cancer prevention, not plaque elimination.</figcaption>
+</figure>
+
+    <div class="callout-danger">
+      <p><strong>Key concept from Case 2:</strong> <em>&ldquo;You don&rsquo;t have to get rid of the leukoplakia to have a win.&rdquo;</em> Treatment goal = cancer prevention, not plaque elimination. If the lesion remains stable and cancer-free after 3 years, that is a successful outcome.</p>
+    </div>
+    <div class="explain">
+      <p><strong>Why imiquimod for gingival leukoplakia:</strong> imiquimod is a <strong>TLR-7 agonist</strong> &mdash; it kicks the local innate immune system into high gear (interferons, NK cells, T-cell recruitment) at the application site. Dysplastic keratinocytes that look &ldquo;abnormal-self&rdquo; get cleared by the activated immune response. It&rsquo;s borrowed from cutaneous use (genital warts, actinic keratosis, superficial BCC) and is off-label for oral mucosa. Causes a brisk local inflammation &mdash; warn patients that inflammation during weeks 2&ndash;4 is the drug working, not a sign to stop.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════ SECTION 08 — CHEMOPREVENTION ═══════════════ -->
+<section id="chemoprev">
+  <!-- no image delivered for Section 08 (Chemoprevention) — no clinical photos on these slides -->
+  <div class="section-header">
+    <span class="section-number s2">08</span>
+    <h2>Chemoprevention</h2>
+    <p class="section-desc">The agents under investigation &mdash; retinoids, natural compounds, emerging therapies with clinical trial data</p>
+  </div>
+
+  <div class="exam-trap">
+    <p><strong>PROF SAID: &ldquo;You don&rsquo;t have to know anything from these tables.&rdquo;</strong></p>
+    <p>The detailed chemoprevention tables (retinoid response rates, green tea, turmeric, ONYX-015, rAd-p53, vidutolimod data) are NOT exam-tested. The prof explicitly dismissed this entire section for memorization purposes.</p>
+    <p><strong>What IS testable from this section:</strong></p>
+    <ul>
+      <li>Imiquimod (Aldara) = TLR-7 agonist; revs up innate immune system; used for Heck disease (3&times;/week) and gingival leukoplakia; local inflammation response = expected and indicates it&rsquo;s working</li>
+      <li>ALA-PDT = aminolevulinic acid applied &rarr; protoporphyrin IX accumulates &rarr; laser illumination &rarr; reactive oxygen species &rarr; lesion ablation; 66&ndash;100% complete response</li>
+      <li>Treatment goal for leukoplakia: <em>&ldquo;You don&rsquo;t have to get rid of the leukoplakia to have a win.&rdquo;</em> Goal = cancer prevention, not elimination of the plaque.</li>
+    </ul>
+  </div>
+
+  <div class="prof-highlight">
+    <p>Chemoprevention is the use of agents to <strong>halt or reverse</strong> the molecular progression from normal mucosa &rarr; OPMD &rarr; SCC. The prof&rsquo;s slides cover ~23 agents grouped into <strong>retinoids/carotenoids/synthetics</strong> (Part 1) and <strong>natural compounds + the BWH/DFCI RP-2 program</strong> (Part 2). Most are still investigational; <strong>imiquimod and ALA-PDT</strong> have the most clinical traction in oral medicine right now.</p>
+  </div>
+
+  <div class="card">
+    <h3>Part 1 &mdash; Retinoids, Carotenoids &amp; Topical Cytolytics</h3>
+    <table class="data-table">
+      <thead>
+        <tr><th>Category</th><th>Agent</th><th>Mechanism</th><th>Evidence</th><th>Limitations</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td rowspan="3"><strong>Retinoids</strong></td>
+          <td>13-cis-retinoic acid (isotretinoin)</td>
+          <td rowspan="2">RAR/RXR activation &rarr; differentiation, anti-proliferation</td>
+          <td><strong>67% clinical response</strong></td>
+          <td>High toxicity; relapse after stopping</td>
+        </tr>
+        <tr>
+          <td>Vitamin A (300,000 IU/wk)</td>
+          <td><strong>52% CR vs. 10% placebo</strong></td>
+          <td>2/3 relapse after stopping</td>
+        </tr>
+        <tr>
+          <td>Fenretinide (4-HPR)</td>
+          <td>Apoptosis induction via ROS</td>
+          <td><strong>87% CR (topical + systemic)</strong></td>
+          <td>Relapse common</td>
+        </tr>
+        <tr>
+          <td rowspan="2"><strong>Carotenoids</strong></td>
+          <td>Beta-carotene</td>
+          <td rowspan="2">Antioxidant (provitamin A)</td>
+          <td>RR 0.71 (not statistically significant)</td>
+          <td><strong>May increase risk in smokers (CARET trial)</strong></td>
+        </tr>
+        <tr>
+          <td>Lycopene</td>
+          <td>Modest effect in OSF/leukoplakia</td>
+          <td>Limited data</td>
+        </tr>
+        <tr>
+          <td rowspan="2"><strong>Topical Cytolytics</strong></td>
+          <td>Bleomycin (0.5&ndash;1%)</td>
+          <td>DNA strand breaks</td>
+          <td><strong>25&ndash;40% CR</strong></td>
+          <td>No cancer prevention proven</td>
+        </tr>
+        <tr>
+          <td>5-Fluorouracil (topical)</td>
+          <td>Thymidylate synthase inhibition</td>
+          <td>Used for actinic cheilitis</td>
+          <td>Limited oral cavity data</td>
+        </tr>
+        <tr>
+          <td><strong>Vitamin D Analogues</strong></td>
+          <td>Calcipotriene (&plusmn; 5-FU)</td>
+          <td>VDR activation; immune modulation</td>
+          <td><strong>NCCN preferred for cutaneous field cancerization</strong></td>
+          <td>No oral RCTs</td>
+        </tr>
+        <tr>
+          <td><strong>EGFR Inhibitor</strong></td>
+          <td>Erlotinib</td>
+          <td>EGFR TKI</td>
+          <td>EPOC trial &mdash; minimal benefit in unselected leukoplakia</td>
+          <td>Not recommended routinely</td>
+        </tr>
+        <tr>
+          <td><strong>mTOR / AMPK</strong></td>
+          <td>Metformin</td>
+          <td>AMPK activator / mTOR inhibition</td>
+          <td>Active trials; off-target anti-cancer effects</td>
+          <td>Investigational</td>
+        </tr>
+        <tr>
+          <td><strong>COX-2 Inhibitors</strong></td>
+          <td>Celecoxib / Ketorolac topical</td>
+          <td>COX-2 inhibition &mdash; anti-inflammatory</td>
+          <td>Mixed results</td>
+          <td>CV risk limits long-term celecoxib</td>
+        </tr>
+        <tr>
+          <td><strong>Immunomodulators</strong></td>
+          <td>Imiquimod (5%)</td>
+          <td>TLR7/8 agonist &rarr; innate immunity, cytokine induction</td>
+          <td><strong>Phase I/II Clinical Trial at USC; prof&rsquo;s Case 2 agent</strong></td>
+          <td>May cause lichenoid reactions; off-label oral use</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="card">
+    <h3>Part 2 &mdash; Natural Compounds &amp; ALA-PDT</h3>
+    <table class="diff-table">
+      <thead><tr><th>Agent</th><th>Mechanism</th><th>Notes</th></tr></thead>
+      <tbody>
+        <tr><td>Curcumin (3.6 g/day)</td><td>NF-&kappa;B inhibition, anti-inflammatory</td><td>Poor oral bioavailability; topical formulations tested</td></tr>
+        <tr><td>EGCG (green tea polyphenol)</td><td>Anti-angiogenic, pro-apoptotic</td><td>Some efficacy in leukoplakia trials</td></tr>
+        <tr><td>Black raspberry extract (BRB)</td><td>Anthocyanin-rich, antioxidant</td><td>Topical gel, OSU-led trials</td></tr>
+        <tr><td>Resveratrol</td><td>SIRT1 activator, anti-inflammatory</td><td>Investigational</td></tr>
+        <tr><td>Bowman-Birk inhibitor (BBI)</td><td>Soybean-derived protease inhibitor</td><td>Trialed for leukoplakia &mdash; some response</td></tr>
+        <tr><td><strong>Imiquimod 5% (Aldara)</strong></td><td><strong>TLR-7 agonist</strong> &mdash; activates innate immunity</td><td><strong>Off-label oral use; Phase I/II at USC; the prof&rsquo;s Case 2 agent</strong></td></tr>
+        <tr><td><strong>5-ALA Photodynamic Therapy</strong></td><td>Photosensitizer + visible light &rarr; ROS-mediated cell death</td><td>Selectively kills dysplastic cells; tissue-preserving; 66&ndash;100% CR; 8.3% MT at 3 yr</td></tr>
+        <tr><td>Diclofenac topical</td><td>NSAID &mdash; COX inhibition</td><td>Used in actinic cheilitis</td></tr>
+        <tr><td>Vitamin D3</td><td>Differentiation, immune modulation</td><td>Adjunctive; deficiency widely associated with cancer</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="card">
+    <h3>Part 3 &mdash; Emerging Therapies &amp; Clinical Trials</h3>
+    <span class="card-subtitle">The cutting edge of non-surgical dysplasia management &mdash; BWH/DFCI pipeline</span>
+    <table class="data-table">
+      <thead>
+        <tr><th>Category</th><th>Agent</th><th>Mechanism</th><th>Evidence</th><th>Status</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>Natural Compounds</strong></td>
+          <td>Curcumin 3.6 g/day</td>
+          <td>NF-&kappa;B inhibition; antioxidant</td>
+          <td><strong>RCT: 67.5% response vs. 55.3% placebo (p=0.03)</strong></td>
+          <td>No histologic difference; oral bioavailability poor</td>
+        </tr>
+        <tr>
+          <td rowspan="3"><strong>Oncolytic Viruses</strong></td>
+          <td>ONYX-015 (mouthwash)</td>
+          <td>p53-selective adenovirus</td>
+          <td><strong>37% histologic resolution</strong>; mostly transient</td>
+          <td>Investigational</td>
+        </tr>
+        <tr>
+          <td>rAd-p53 / Gendicine (injection)</td>
+          <td>p53 gene transfer</td>
+          <td><strong>Phase I: 72% clinical response</strong>; safe and feasible</td>
+          <td>China only; investigational</td>
+        </tr>
+        <tr>
+          <td><strong>RP2 (intralesional injection)</strong></td>
+          <td><strong>Modified HSV-1 oncolytic virus</strong></td>
+          <td><strong>Phase II Clinical Trial at BWH/DFCI</strong></td>
+          <td><strong>Active ongoing trial</strong></td>
+        </tr>
+        <tr>
+          <td><strong>TLR9 Agonists</strong></td>
+          <td>Vidutolimod (&plusmn; ICB)</td>
+          <td>VLP activates pDCs via TLR9</td>
+          <td>&uarr; IFN-&gamma;, IL-12, TNF-&alpha;; &darr; Ki-67 in lesions</td>
+          <td>Investigational</td>
+        </tr>
+        <tr>
+          <td rowspan="2"><strong>Emerging</strong></td>
+          <td>APG-157 (zinflavonoid mixture)</td>
+          <td>Flavonoid multi-target</td>
+          <td><strong>Phase IIa: some severe dysplasia &rarr; no dysplasia</strong></td>
+          <td>Ongoing</td>
+        </tr>
+        <tr>
+          <td>Immune checkpoint inhibitors (PD-1/PD-L1)</td>
+          <td>PD-1/PD-L1 blockade</td>
+          <td>Being evaluated for dysplasia prevention</td>
+          <td>Investigational</td>
+        </tr>
+      </tbody>
+    </table>
+    <div class="callout-danger">
+      <p><strong>Active Clinical Trials to Know:</strong> (1) <strong>RP2</strong> (oncolytic modified HSV-1) at BWH/DFCI &mdash; Phase II, intralesional injection. (2) <strong>Imiquimod 5%</strong> at USC &mdash; Phase I/II. These represent the cutting edge of non-surgical dysplasia management and were specifically flagged by the prof.</p>
+    </div>
+  </div>
+
+  <div class="explain">
+    <p><strong>Imiquimod mechanism in plain English:</strong> imiquimod binds toll-like receptor 7 (TLR-7) on local dendritic cells and macrophages. TLR-7 normally senses single-stranded viral RNA &mdash; binding it triggers a strong type-I interferon response (IFN-&alpha;/&beta;), recruits CD8+ T cells, activates NK cells. Dysplastic keratinocytes that escape immune surveillance get re-recognized and destroyed. Side effect: aggressive local inflammation (redness, soreness, ulceration) for the first 2&ndash;4 weeks &mdash; that <em>is</em> the drug working.</p>
+  </div>
+
+  <div class="explain">
+    <p><strong>ALA-PDT mechanism in plain English:</strong> 5-aminolevulinic acid is a precursor in the heme synthesis pathway. Apply it topically and dysplastic cells preferentially absorb &amp; convert it into <strong>protoporphyrin IX</strong> (because their metabolism is dysregulated). Then shine red/blue visible light: protoporphyrin IX absorbs the photon, transfers energy to molecular oxygen, generates <strong>reactive oxygen species (singlet oxygen)</strong> that destroy the dysplastic cell from inside. Selectivity comes from differential ALA uptake/conversion.</p>
+  </div>
+
+  <div class="memorize">
+    <ul>
+      <li>Imiquimod = TLR-7 agonist &rarr; innate immune activation; Phase I/II at USC</li>
+      <li>ALA-PDT = ALA &rarr; protoporphyrin IX &rarr; light &rarr; ROS &rarr; cell death; 66&ndash;100% CR</li>
+      <li>Beta-carotene may INCREASE risk in smokers (CARET trial); RR 0.71 NS</li>
+      <li>13-cis-RA: 67% CR; Vitamin A 300k IU: 52% CR; Fenretinide: 87% CR</li>
+      <li>Bleomycin 0.5&ndash;1%: 25&ndash;40% CR</li>
+      <li>Curcumin 3.6 g/d: RCT 67.5% vs 55.3% placebo (p=0.03); no histo difference</li>
+      <li>RP2 (modified HSV-1): Phase II at BWH/DFCI (intralesional)</li>
+      <li>ONYX-015 mouthwash: 37% histologic resolution; rAd-p53: 72% clinical response (China)</li>
+      <li>Vidutolimod (TLR9 VLP): &uarr;IFN-&gamma;, IL-12, TNF-&alpha;; &darr;Ki-67</li>
+      <li>APG-157: Phase IIa, some severe &rarr; no dysplasia</li>
+      <li>Calcipotriene &plusmn; 5-FU = NCCN preferred for cutaneous field cancerization</li>
+    </ul>
+  </div>
+</section>
+
+<!-- ═══════════════ SECTION 09 — OTHER OPMDs: OSF, OLP, OLL ═══════════════ -->
+<section id="opmd">
+  <div class="section-header">
+    <span class="section-number s3">09</span>
+    <h2>Other OPMDs: OSF, OLP, OLL</h2>
+    <p class="section-desc">Submucous fibrosis, lichen planus, lichenoid lesions &mdash; and how to tell them apart</p>
+  </div>
+
+  <div class="card">
+    <h3>Oral Submucous Fibrosis (OSF)</h3>
+    <span class="card-subtitle">The areca-nut / betel-quid disease &mdash; 5.1% MT, 36 mo to cancer</span>
+    <div class="prof-highlight">
+      <p><strong>OSF malignant transformation rate: ~5.1%. Median time from OSF onset to oral cancer: ~36 months.</strong> Cause is <strong>areca nut</strong> (the active ingredient in betel quid) &mdash; a Group&nbsp;1 IARC carcinogen. Prevalent in South &amp; Southeast Asian populations.</p>
+    </div>
+    <h4>Clinical features</h4>
+    <ul>
+      <li><strong>Burning sensation</strong> with spicy foods (early symptom)</li>
+      <li>Progressive <strong>blanching of mucosa</strong> &rarr; marble-like whitening</li>
+      <li><strong>Palpable fibrous bands</strong> on buccal mucosa, soft palate, lips</li>
+      <li>Late: <strong>trismus</strong> (limited mouth opening) &mdash; from submucosal fibrosis around muscles of mastication</li>
+      <li>Tongue depapillation, atrophic mucosa</li>
+      <li>Condition is considered <strong>irreversible</strong> once established</li>
+    </ul>
+    <div class="explain">
+      <p><strong>OSF mechanism &mdash; how a chewed nut causes fibrosis &amp; cancer:</strong> areca nut releases <strong>arecoline</strong> and copper-rich extracts that drive submucosal fibroblasts into a profibrotic phenotype. Fibroblasts upregulate collagen type I/III and TGF-&beta;, depositing dense fibrous bands that stiffen the mucosa (hence trismus). Simultaneously, chronic injury induces <strong>epithelial-to-mesenchymal transition (EMT)</strong>: surface keratinocytes lose E-cadherin, gain mesenchymal markers, and the field becomes primed for malignant transformation.</p>
+    </div>
+    <div class="explain">
+      <p><strong>HIF / EMT pathway in OSF:</strong> the same dense fibrosis that causes trismus also <em>chokes off oxygen delivery</em> to the overlying epithelium. Hypoxic stress activates <strong>HIF-1&alpha;</strong>, which drives SNAIL/SLUG transcription factors that suppress E-cadherin and trigger EMT. Cells shed their epithelial polarity, become motile, accumulate genetic damage. This is the molecular bridge from OSF to invasive SCC.</p>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3>Oral Lichen Planus (OLP)</h3>
+    <span class="card-subtitle">T-cell&ndash;mediated autoimmune disease, idiopathic &mdash; bilateral, symmetric</span>
+    <div class="prof-highlight">
+      <p><strong>OLP is bilateral, symmetric, idiopathic.</strong> Sites: buccal mucosa &gt; tongue &gt; gingiva. Classic finding: <strong>Wickham striae</strong> &mdash; lacy white reticular network. Six clinical subtypes: <em>reticular, papular, plaque-like, atrophic, erosive, bullous</em>. ~1.4% MT rate (controversial &mdash; risk concentrates in atrophic/erosive forms). <strong>The controversy:</strong> some experts argue that reported &ldquo;OLP transformation&rdquo; cases were actually misdiagnosed <em>oral lichenoid dysplasia</em> from the beginning, not true lichen planus. Regardless, patients with OLP &mdash; especially erosive/atrophic forms &mdash; should be monitored long-term.</p>
+    </div>
+    <h4>Histology (4 classic features)</h4>
+    <ul>
+      <li><strong>Hyperkeratosis</strong> (parakeratosis) of surface</li>
+      <li><strong>Saw-tooth rete ridges</strong></li>
+      <li><strong>Band-like (lichenoid) lymphocytic infiltrate</strong> hugging the basement membrane</li>
+      <li><strong>Liquefactive degeneration of the basal cell layer</strong> with apoptotic keratinocytes (Civatte bodies)</li>
+    </ul>
+    <h4>Treatment</h4>
+    <ul>
+      <li><strong>First-line:</strong> topical corticosteroids (clobetasol gel, dexamethasone elixir swish &amp; spit, fluocinonide ointment)</li>
+      <li>Severe / refractory: topical tacrolimus / pimecrolimus, intralesional steroid, systemic immunomodulators</li>
+      <li>Eliminate amalgam / contact triggers if a lichenoid pattern is suspected</li>
+    </ul>
+  </div>
+
+  <div class="card">
+    <h3>Oral Lichenoid Lesions (OLL)</h3>
+    <span class="card-subtitle">&ldquo;Looks like OLP, but caused by something specific&rdquo; &mdash; three types</span>
+    <div class="prof-highlight">
+      <p><strong>OLL malignant transformation: ~1.4% &mdash; the same as OLP per the prof&rsquo;s slide.</strong> Don&rsquo;t undertreat OLL just because it has an identifiable trigger. The prof&rsquo;s specific instruction: <em>&ldquo;ask the pathologist about architectural dysplasia&rdquo;</em> &mdash; OLL can mask underlying dysplastic change. <strong>Oral lichenoid dysplasia</strong> (one of the three OLL types) has a <strong>higher MT than true OLP</strong> and requires close surveillance.</p>
+    </div>
+    <h4>Three Types of OLL:</h4>
+    <ul>
+      <li><strong>Oral lichenoid drug reactions</strong> &mdash; NSAIDs, ACE inhibitors, beta-blockers, antimalarials, hydroxychloroquine, hepatitis-C antivirals, thiazide diuretics</li>
+      <li><strong>Oral lichenoid contact reactions</strong> &mdash; amalgam, composite, gold, cinnamon, mint flavorings (often unilateral, adjacent to restoration)</li>
+      <li><strong>Oral lichenoid dysplasia</strong> &mdash; dysplastic lesion with lichen planus-like histologic features; <strong>higher MT potential than true OLP</strong>; requires biopsy and close follow-up</li>
+    </ul>
+    <div class="callout-danger">
+      <p><strong>GVHD</strong> (graft-versus-host disease after allogeneic HCT) and <strong>Hepatitis C</strong> association can also produce lichenoid lesions &mdash; ask about HCT and HCV history in patients with atypical OLP presentation.</p>
+    </div>
+  </div>
+
+  <h3 style="font-family: 'Crimson Pro', serif; font-size: 22px; margin: 28px 0 8px;">OLP vs OLL &mdash; how to actually tell them apart</h3>
+  <table class="diff-table">
+    <thead><tr><th>Feature</th><th>OLP</th><th>OLL</th></tr></thead>
+    <tbody>
+      <tr><td>Distribution</td><td class="diff-cell">Bilateral, symmetric</td><td class="diff-cell">Often unilateral, adjacent to a contact trigger or drug-related</td></tr>
+      <tr><td>Etiology</td><td>Idiopathic (autoimmune T-cell mediated)</td><td>Identifiable (drug, contact, GVHD, HCV)</td></tr>
+      <tr><td>Histology</td><td>Classic band-like lymphocytic infiltrate at basement membrane; saw-tooth rete; Civatte bodies</td><td>Similar but often deeper, more diffuse infiltrate; eosinophils may be present</td></tr>
+      <tr><td>Reaction to triggers</td><td>None &mdash; no identifiable agent; resolves only with immunosuppression</td><td>Resolves or improves when trigger removed</td></tr>
+      <tr><td>MT rate</td><td>~1.4%</td><td>~1.4% (per prof&rsquo;s slide); but oral lichenoid dysplasia subtype is higher</td></tr>
+      <tr><td>Treatment</td><td>Topical steroids, tacrolimus</td><td>Remove trigger first; then topical steroids if persists</td></tr>
+    </tbody>
+  </table>
+
+  <div class="explain">
+    <p><strong>&ldquo;Lichenoid contact reaction&rdquo; vs OLP:</strong> if you see a white striated patch on the buccal mucosa that <em>only</em> contacts a specific amalgam or crown, and the contralateral side is normal, that&rsquo;s a contact lichenoid &mdash; remove the restoration and it resolves. True OLP is bilateral and doesn&rsquo;t care what restorations are present. The give-away is <strong>asymmetry</strong>.</p>
+  </div>
+
+  <div class="exam-trap">
+    <p><strong>Erythroplakia ~90% already dysplasia/CIS/SCC at biopsy &mdash; do not &ldquo;watch and wait.&rdquo;</strong> Even a small red patch &gt; 2 weeks needs immediate biopsy. Test-question framing: &ldquo;which OPMD has the highest rate of severe histology at first biopsy?&rdquo; Answer: erythroplakia. Median time to cancer = 3.7 months.</p>
+  </div>
+
+  <div class="memorize">
+    <ul>
+      <li>OSF: 5.1% MT, 36 mo to cancer, areca nut, irreversible</li>
+      <li>OSF mechanism: arecoline &rarr; fibroblast EMT &rarr; HIF-1&alpha; &rarr; SNAIL/SLUG &rarr; carcinoma</li>
+      <li>OLP: bilateral, ~1.4% MT, Wickham striae; saw-tooth rete + band lymph infiltrate + Civatte bodies</li>
+      <li>OLL 3 types: drug reactions (NSAIDs/ACE-I/BB/antimalarials) + contact reactions (amalgam/cinnamon/mint) + oral lichenoid dysplasia (higher MT)</li>
+      <li>OLP controversy: &ldquo;transformation&rdquo; cases may have been misdiagnosed oral lichenoid dysplasia all along</li>
+    </ul>
+  </div>
+</section>
+
+
+  <div class="exam-trap">
+    <p><strong>DISTRACTOR TRAP &mdash; OLP as OPMD (know both positions):</strong></p>
+    <ul>
+      <li><strong>WHO classification:</strong> OLP IS an OPMD with ~1.4% MT rate (exam MCQs from boards use this)</li>
+      <li><strong>Prof&rsquo;s stated position:</strong> <em>&ldquo;I will stand toe to toe with people about this. I don&rsquo;t think it&rsquo;s a potentially malignant condition.&rdquo;</em> She believes the 1.4% transformation cases were misdiagnosed oral lichenoid dysplasia from the start</li>
+      <li><strong>Safe strategy:</strong> OLP IS on OPMD lists; rank it at the BOTTOM (0.2&ndash;1.4%) &mdash; lower than OSF (5.1%), leukoplakia (6.6%), PVL (48&ndash;50%), erythroplakia (~50%)</li>
+    </ul>
+    <p>The WHO classifies OLP as a potentially malignant disorder (0.2&ndash;1.4% MT rate). OLP WITH architectural dysplasia on biopsy = 5.1% MT rate (p=0.001) &mdash; that subset must be watched. The testable takeaway: know both the number AND that this is contested.</p>
+  </div>
+
+  <div class="explain">
+    <p><strong>OSF molecular cascade &mdash; exam-scope note:</strong> The HIF-1&alpha;/SNAIL/SLUG/EMT detail is beyond exam scope. The only testable concept: <em>&ldquo;fibroblasts create a toxic microenvironment that transforms the epithelial cells.&rdquo;</em> The molecular names are reference material, not cram targets.</p>
+  </div>
+
+  <!-- no image delivered for Section 09 (OSF/OLP/OLL) -->
+
+<!-- ═══════════════ SECTION 10 — SQUAMOUS CELL CARCINOMA ═══════════════ -->
+<section id="scc">
+  <div class="section-header">
+    <span class="section-number s4">10</span>
+    <h2>Squamous Cell Carcinoma</h2>
+    <p class="section-desc">The main act &mdash; epidemiology, risk factors, clinical presentation, warning signs, referral workup</p>
+  </div>
+
+  <div class="prof-highlight">
+    <p><strong>SCC is &gt;90% of all oral malignancies.</strong> 7th most common cancer worldwide. Median age at diagnosis ~66. <strong>M:F ratio 2&ndash;4:1</strong> (male predominance shrinking as female smoking + HPV exposure rise). Rising incidence especially in younger patients without traditional risk factors.</p>
+  </div>
+
+<figure class="lecture-figure">
+  <img src="images/lecture-3-epithelial-pathoses/L3-S46-aerodigestive-anatomy-1.png" alt="Upper aerodigestive tract anatomy with cancer site labels showing oral cavity oropharynx hypopharynx and larynx" loading="lazy">
+  <figcaption>Slide 46 — Upper aerodigestive anatomy: oral cavity, oropharynx (HPV+ tonsils/base of tongue), hypopharynx, larynx. Critical for understanding why HPV-positive prognosis benefit is OROPHARYNX-specific — anatomically distinct from the oral cavity.</figcaption>
+</figure>
+
+  <div class="quick-facts">
+    <div class="quick-fact"><span class="number">&gt;90%</span><span class="label">of all oral malignancies</span></div>
+    <div class="quick-fact"><span class="number">7th</span><span class="label">most common cancer worldwide</span></div>
+    <div class="quick-fact"><span class="number">~66</span><span class="label">median age at diagnosis</span></div>
+    <div class="quick-fact"><span class="number">2&ndash;4 : 1</span><span class="label">M : F ratio (narrowing)</span></div>
+  </div>
+
+  <div class="prof-highlight">
+    <p><strong>&ldquo;Horseshoe of Death&rdquo; &mdash; the OSCC anatomic distribution you must examine at every visit:</strong></p>
+    <ul>
+      <li><strong>Lateral and ventral tongue</strong> (~42% of cases) &mdash; #1 site; &ldquo;the tongue is the most important site&rdquo;</li>
+      <li><strong>Floor of mouth</strong> (~16% of cases)</li>
+      <li><strong>Soft palate / tonsillar area</strong></li>
+    </ul>
+    <p><em>&ldquo;That horseshoe of death, the lateral tongue, the floor of mouth, the soft palate, all of those are great areas.&rdquo;</em></p>
+    <p><em>&ldquo;The tongue is the most important site that you have to look at&rdquo;</em> &mdash; said 3&times; during lecture.</p>
+    <p><em>&ldquo;If you&rsquo;re not flipping that tongue around and looking at the back of the throat, looking underneath the tongue at the floor of the mouth at every single visit, you are not practicing standard of care.&rdquo;</em></p>
+    <p><strong>Why these sites:</strong> carcinogens (tobacco smoke, alcohol) pool in saliva that collects in the floor of mouth &mdash; the horseshoe anatomically follows where saliva pools.</p>
+  </div>
+
+  <h3 style="font-family: 'Crimson Pro', serif; font-size: 22px; margin: 28px 0 8px;">Risk factors &mdash; the prof&rsquo;s full list</h3>
+  <table class="diff-table">
+    <thead><tr><th>Category</th><th>Specific factor</th><th>Notes</th></tr></thead>
+    <tbody>
+      <tr><td rowspan="3">Tobacco</td><td>Cigarettes / cigars / pipes</td><td>Dose-dependent; pack-years</td></tr>
+      <tr><td>Smokeless (chewing, dip, snuff)</td><td>Risk localizes to where the quid sits</td></tr>
+      <tr><td>Betel quid / areca nut</td><td>Group 1 carcinogen; OSF + SCC; 600M+ users worldwide</td></tr>
+      <tr><td>Alcohol</td><td>Heavy chronic use</td><td>Solvent + acetaldehyde mutagen</td></tr>
+      <tr><td>Combo</td><td><strong>Tobacco + alcohol</strong></td><td class="diff-cell"><strong>~30&times; multiplicative</strong></td></tr>
+      <tr><td rowspan="2">Genetic</td><td><strong>Fanconi anemia</strong></td><td class="diff-cell"><strong>OR ~40.6</strong> &mdash; highest single OR</td></tr>
+      <tr><td>Dyskeratosis congenita</td><td>Telomere maintenance defect; ~1,000&times; baseline</td></tr>
+      <tr><td>Viral</td><td>HPV-16 (oropharynx only, NOT oral cavity)</td><td>See section 12</td></tr>
+      <tr><td>Light</td><td>UV (lip vermilion only)</td><td><strong>NOT intraoral SCC</strong></td></tr>
+      <tr><td>Iatrogenic</td><td>Chronic immunosuppression (transplant, HIV)</td><td>Higher SCC incidence</td></tr>
+      <tr><td>Oral hygiene</td><td>Poor OH, chronic mucosal trauma</td><td>Co-factor, not independent driver</td></tr>
+      <tr><td>Diet</td><td>Low fruit/vegetable intake; iron deficiency (Plummer-Vinson)</td><td>Modest contribution</td></tr>
+    </tbody>
+  </table>
+
+  <div class="explain">
+    <p><strong>Field cancerization &mdash; why SCC patients keep getting new SCCs:</strong> the entire upper aerodigestive epithelium has been bathed in the same carcinogens (smoke + ethanol). By the time one tumor is clinically visible, <em>thousands of other dispersed clones</em> across the mucosa have already accumulated TP53 / NOTCH1 / FAT1 / CDKN2A mutations. Slaughter coined &ldquo;field cancerization&rdquo; in 1953. Clinically: lifetime risk of a second primary SCC is ~3&ndash;5% per year &mdash; which is why post-treatment patients need lifelong oral exam screening.</p>
+  </div>
+
+<figure class="lecture-figure">
+  <img src="images/lecture-3-epithelial-pathoses/L3-S50-lip-scc-clinical-1.png" alt="Actinic cheilitis progressing to lower lip squamous cell carcinoma — three clinical panels showing spectrum from AC to SCC" loading="lazy">
+  <figcaption>Slide 50 — Actinic cheilitis → lower-lip SCC spectrum. Diffuse lower lip white stippling with loss of mucocutaneous junction = actinic cheilitis. Indurated/ulcerated component = SCC. Malignant transformation rate: 10–30%. Lower lip receives 3× more UV than upper lip.</figcaption>
+</figure>
+
+  <h3 style="font-family: 'Crimson Pro', serif; font-size: 22px; margin: 28px 0 8px;">Sites &amp; presentation</h3>
+  <div class="severity-meter">
+    <div class="seg safe">
+      <div class="seg-label">Lateral / ventral tongue</div>
+      <div class="seg-val">42% &mdash; #1 site</div>
+    </div>
+    <div class="seg warn">
+      <div class="seg-label">Floor of mouth</div>
+      <div class="seg-val">16%</div>
+    </div>
+    <div class="seg danger">
+      <div class="seg-label">Other intraoral</div>
+      <div class="seg-val">42%</div>
+    </div>
+  </div>
+
+  <div class="prof-highlight">
+    <p><strong>Where intraoral SCC actually shows up:</strong> <strong>lateral &amp; ventral tongue (42%)</strong> &gt; floor of mouth (16%) &gt; everything else (gingiva, buccal, palate, retromolar trigone). The lateral tongue is the #1 site overall at 41.7% of all oral cavity cancers. Rising incidence in younger patients often without traditional risk factors.</p>
+  </div>
+
+  <!-- CLINICAL PRESENTATION WARNING SIGNS -->
+  <div class="card">
+    <h3>Clinical Presentation &mdash; Warning Signs</h3>
+    <span class="card-subtitle">Any of these should prompt biopsy or urgent referral</span>
+    <ul>
+      <li><strong>Non-healing ulcer persisting &gt;2&ndash;3 weeks</strong> after removing obvious irritants (sharp tooth, denture flange)</li>
+      <li><strong>Exophytic mass or indurated area</strong> &mdash; induration on palpation is the most reliable physical finding</li>
+      <li><strong>Persistent red or white patch</strong> that doesn&rsquo;t resolve</li>
+      <li><strong>Unexplained bleeding, numbness, or pain</strong></li>
+      <li><strong>Fixation to underlying structures</strong></li>
+      <li><strong>Firm, fixed, non-tender cervical lymphadenopathy</strong></li>
+      <li><strong>Rolled or raised borders</strong></li>
+      <li><strong>Nonhealing socket</strong> after extraction (occult tumor in the bone)</li>
+      <li><strong>Loose teeth</strong> in non-perio patient (bony invasion)</li>
+      <li><strong>Numbness</strong> of lip / tongue / cheek (perineural invasion)</li>
+    </ul>
+    <div class="exam-trap">
+      <p><strong>~50% of oral SCCs at diagnosis are NON-ulcerated.</strong> Don&rsquo;t anchor on &ldquo;oral cancer = ulcer.&rdquo; A persistent, indurated, asymmetric red or red/white plaque can be SCC without any ulceration. <strong>Induration on palpation is the most reliable physical finding.</strong></p>
+    </div>
+  </div>
+
+<figure class="lecture-figure">
+  <img src="images/lecture-3-epithelial-pathoses/L3-S53-scc-carcinogenesis-cascade-1.png" alt="SCC carcinogenesis cascade showing histology progression from hyperplasia through dysplasia CIS to invasion with molecular drivers" loading="lazy">
+  <figcaption>Slide 53 — SCC pathogenesis cascade: hyperplasia → dysplasia → CIS → invasion. Molecular drivers at each step: 9p21/13q21 LOH, p16 inactivation, p53 mutation, Cyclin D1 amplification. The 'horseshoe of death' anatomy follows where carcinogen-laden saliva pools.</figcaption>
+</figure>
+
+<figure class="lecture-figure">
+  <img src="images/lecture-3-epithelial-pathoses/L3-S57-scc-lip-case-1.png" alt="Lip SCC case photos showing multi-panel disease progression with raised rolled borders of ulcerated SCC mass" loading="lazy">
+  <figcaption>Slide 57 — Lip SCC progression. Characteristic raised rolled borders of an ulcerated SCC mass. Any indurated ulcerated lesion > 2–3 weeks = biopsy. Do not delay for 'watch and wait' when borders are raised/rolled and lesion is indurated.</figcaption>
+</figure>
+
+  <!-- REFERRAL & WORKUP -->
+  <div class="card">
+    <h3>Referral &amp; Workup</h3>
+    <span class="card-subtitle">Your role as a dentist: early detection and prompt referral</span>
+    <ul>
+      <li><strong>Urgent referral</strong> to oral and maxillofacial surgery or head &amp; neck oncology</li>
+      <li><strong>Incisional biopsy</strong> for histopathologic confirmation (do not delay out of seeding fear)</li>
+      <li><strong>CT with contrast and/or MRI</strong> for locoregional staging</li>
+      <li><strong>PET-CT</strong> for distant metastasis evaluation</li>
+      <li><strong>Multidisciplinary tumor board</strong> (surgery, radiation oncology, medical oncology)</li>
+    </ul>
+    <div class="callout-danger">
+      <p>Perform systematic oral cancer screening at every visit. Any suspicious lesion persisting &gt;2&ndash;3 weeks after removal of irritants warrants biopsy or referral. <strong>Do not adopt a &ldquo;watch and wait&rdquo; approach</strong> for clinically suspicious lesions. With erythroplakia, median time to cancer is only 3.7 months. <strong>&ldquo;You save lives with early detection.&rdquo;</strong></p>
+      <p><strong>Screening question for every patient:</strong> <em>&ldquo;Any difficulty swallowing? Any lump in your throat?&rdquo;</em> &mdash; recommended at every appointment for HPV-OPSCC screening. (See also Section 12 for HPV-OPSCC detail.)</p>
+    </div>
+  </div>
+
+<figure class="lecture-figure">
+  <img src="images/lecture-3-epithelial-pathoses/L3-S58-tongue-scc-progression-1.png" alt="Lateral tongue SCC natural history from early leukoplakic appearance 2023 to exophytic fungating mass 2024 — untreated OSCC" loading="lazy">
+  <figcaption>Slide 58 — Lateral tongue SCC natural history. Early leukoplakia-type lesion (Dr. Allen Ho, 2023) → exophytic fungating mass (11/25/2024). Untreated OSCC progression in real time. If this lesion had been caught at the 2023 stage, outcome would have been dramatically different.</figcaption>
+</figure>
+
+  <div class="prof-highlight">
+    <p><strong>Lower lip UV exposure:</strong> The lower lip receives <strong>3&times; more UV radiation</strong> than the upper lip. This is why lower lip SCC (actinic-mediated) is 25&ndash;30% of all oral cancers. The &ldquo;lipstick hypothesis&rdquo; explains female protection &mdash; pigmented products block UV at the lower lip vermilion. Prevention: SPF 30+ lip balm, reapplied every 2 hours. Malignant transformation of actinic cheilitis: <strong>10&ndash;30%</strong>.</p>
+  </div>
+
+  <div class="explain">
+    <p><strong>Clinical anecdote (from lecture):</strong> A 17-year-old male with tongue pain attributed to tongue-biting was found on examination to have a massive SCC. <em>&ldquo;Early detection saves lives, right?&rdquo;</em> Any indurated ulcerated tongue mass requires urgent biopsy regardless of age or absence of traditional risk factors. Rising incidence of oral tongue SCC in patients under 40 without tobacco/alcohol exposure is an unexplained epidemiologic shift.</p>
+  </div>
+
+  <div class="callout-danger">
+    <p><strong>Lip vermilion SCC is different.</strong> Lower-lip SCC behaves like cutaneous SCC: UV-driven, much better prognosis (5-yr survival &gt;90%), low metastatic potential. Don&rsquo;t conflate it with intraoral SCC even though both are &ldquo;oral.&rdquo;</p>
+  </div>
+</section>
+
+<!-- ═══════════════ SECTION 11 — AJCC 8th EDITION TNM ═══════════════ -->
+<section id="ajcc">
+  <div class="section-header">
+    <span class="section-number s5">11</span>
+    <h2>AJCC 8th Edition TNM</h2>
+    <p class="section-desc">The staging table &mdash; what changed in the 8th edition and why</p>
+  </div>
+
+  <div class="prof-highlight">
+    <p><strong>AJCC 8th edition (2018) made two big changes for oral cavity SCC:</strong></p>
+    <ol style="list-style: decimal; margin: 8px 0 0 24px;">
+      <li><strong>Depth of invasion (DOI)</strong> was added to T-staging because tumor depth predicts mortality independently of surface size.</li>
+      <li><strong>Extranodal extension (ENE)</strong> was incorporated into N-staging because ENE+ disease has dramatically worse outcomes.</li>
+    </ol>
+  </div>
+
+  <h3 style="font-family: 'Crimson Pro', serif; font-size: 22px; margin: 28px 0 8px;">T &mdash; Primary tumor (8th ed)</h3>
+  <table class="diff-table">
+    <thead><tr><th>T stage</th><th>Greatest dimension</th><th>Depth of invasion (DOI)</th></tr></thead>
+    <tbody>
+      <tr><td><strong>T1</strong></td><td>&le; 2 cm</td><td class="diff-cell">DOI &le; 5 mm</td></tr>
+      <tr><td><strong>T2</strong></td><td>&le; 2 cm with DOI &gt; 5&ndash;10 mm <em>OR</em> &gt; 2&ndash;4 cm with DOI &le; 10 mm</td><td class="diff-cell">DOI &le; 10 mm</td></tr>
+      <tr><td><strong>T3</strong></td><td>&gt; 4 cm <em>OR</em> any size with DOI &gt; 10 mm</td><td class="diff-cell">DOI &gt; 10 mm</td></tr>
+      <tr><td><strong>T4a</strong></td><td>Moderately advanced &mdash; invades cortical bone of mandible/maxilla, inferior alveolar nerve, FOM, skin of face</td><td>&mdash;</td></tr>
+      <tr><td><strong>T4b</strong></td><td>Very advanced &mdash; invades masticator space, pterygoid plates, skull base, encases internal carotid artery</td><td>&mdash;</td></tr>
+    </tbody>
+  </table>
+
+  <div class="explain">
+    <p><strong>What &ldquo;depth of invasion&rdquo; actually measures:</strong> DOI is measured by the pathologist <em>from the level of the adjacent normal mucosal basement membrane</em> down to the deepest point of tumor invasion &mdash; <em>not</em> from the ulcerated surface. Two tumors of the same surface diameter can have wildly different DOI: a flat ulcerated lesion that has burrowed 8 mm vs an exophytic 2-cm mass with only 3-mm DOI &mdash; the first is more dangerous because depth predicts nodal mets and vascular invasion better than surface size.</p>
+  </div>
+
+  <h3 style="font-family: 'Crimson Pro', serif; font-size: 22px; margin: 28px 0 8px;">N &mdash; Regional nodes (8th ed) with ENE</h3>
+  <table class="diff-table">
+    <thead><tr><th>N stage</th><th>Definition</th></tr></thead>
+    <tbody>
+      <tr><td><strong>N0</strong></td><td>No regional lymph node metastasis</td></tr>
+      <tr><td><strong>N1</strong></td><td>Single ipsilateral node, &le; 3 cm, <strong>ENE&minus;</strong></td></tr>
+      <tr><td><strong>N2a</strong></td><td>Single ipsilateral &gt; 3&ndash;6 cm, ENE&minus; <em>OR</em> single ipsilateral &le; 3 cm with <strong>ENE+</strong></td></tr>
+      <tr><td><strong>N2b</strong></td><td>Multiple ipsilateral nodes, all &le; 6 cm, ENE&minus;</td></tr>
+      <tr><td><strong>N2c</strong></td><td>Bilateral or contralateral nodes, &le; 6 cm, ENE&minus;</td></tr>
+      <tr><td><strong>N3a</strong></td><td>Any node &gt; 6 cm, ENE&minus;</td></tr>
+      <tr><td class="diff-cell"><strong>N3b</strong></td><td class="diff-cell"><strong>Any clinically/pathologically ENE+ disease that doesn&rsquo;t fit N2a</strong> &mdash; the worst nodal category</td></tr>
+    </tbody>
+  </table>
+
+  <div class="explain">
+    <p><strong>What &ldquo;extranodal extension (ENE)&rdquo; means:</strong> a metastatic tumor cell deposit inside a lymph node has eaten through the node&rsquo;s fibrous capsule and is now growing in the surrounding fat or soft tissue. ENE+ disease has <strong>~2&times; the recurrence rate</strong> and substantially worse survival than ENE&minus; disease at the same nodal size. ENE+ patients get adjuvant chemoradiation rather than radiation alone.</p>
+  </div>
+
+  <h3 style="font-family: 'Crimson Pro', serif; font-size: 22px; margin: 28px 0 8px;">Stage groupings &amp; survival</h3>
+  <table class="diff-table">
+    <thead><tr><th>Stage</th><th>TNM</th><th>5-yr OS</th></tr></thead>
+    <tbody>
+      <tr><td><strong>I</strong></td><td>T1 N0 M0</td><td class="diff-cell">~85%</td></tr>
+      <tr><td><strong>II</strong></td><td>T2 N0 M0</td><td>~70%</td></tr>
+      <tr><td><strong>III</strong></td><td>T3 N0 or T1&ndash;3 N1</td><td>~55%</td></tr>
+      <tr><td><strong>IVA</strong></td><td>T4a N0&ndash;1 or T1&ndash;4a N2</td><td>~35%</td></tr>
+      <tr><td><strong>IVB</strong></td><td>Any T4b or any N3</td><td>~20%</td></tr>
+      <tr><td><strong>IVC</strong></td><td>Any M1 (distant mets)</td><td class="diff-cell">&lt;20%</td></tr>
+    </tbody>
+  </table>
+
+  <div class="prof-highlight">
+    <p><strong>&ldquo;A one-way ticket to Stage 4C&rdquo; &mdash; must know:</strong></p>
+    <ul>
+      <li><strong>Stage I = 80&ndash;90% 5-year OS</strong></li>
+      <li><strong>Stage IVC (any M1 = distant metastasis) = &lt;20% 5-year OS</strong></li>
+      <li><em>&ldquo;You need to know the fact that stage one has an excellent 5-year survival rate, 80 to 90%, but as soon as anything metastasizes out, that&rsquo;s stage 4C, the worst you can have, less than 20% survival as soon as it&rsquo;s outside.&rdquo;</em></li>
+    </ul>
+  </div>
+
+  <div class="memorize">
+    <ul>
+      <li>T1 = &le;2 cm AND DOI &le;5 mm</li>
+      <li>T2 = up to 4 cm AND DOI &le;10 mm</li>
+      <li>T3 = &gt;4 cm OR DOI &gt;10 mm</li>
+      <li>T4a = mod-advanced (cortical bone, IAN, FOM, skin of face)</li>
+      <li>T4b = very advanced (skull base, ICA encasement, pterygoid plates, masticator space)</li>
+      <li>N3b = ENE+ &mdash; worst nodal stage; gets adjuvant CRT</li>
+      <li>Stage I 85% &rarr; IVC ~10&ndash;15% 5-yr OS</li>
+      <li>ENE+ &rarr; ~2&times; recurrence rate</li>
+    </ul>
+  </div>
+
+  <!-- no image delivered for Section 11 (AJCC TNM) — no clinical images on these slides -->
+
+  <div class="exam-trap">
+    <p><strong>DISTRACTOR TRAP &mdash; Tumor Thickness &ne; Depth of Invasion for T-staging:</strong></p>
+    <ul>
+      <li><strong>Tumor thickness</strong> = total lesion height including exophytic component above the mucosal surface</li>
+      <li><strong>Depth of invasion (DOI)</strong> = invasive component measured FROM adjacent normal mucosal baseline DOWNWARD to deepest invasive point</li>
+      <li>A 10 mm exophytic mass with only 3 mm below the mucosal baseline = <strong>DOI 3 mm = T1</strong> (not T2)</li>
+      <li>The exophytic &ldquo;warty stuff on top&rdquo; does NOT count toward DOI</li>
+    </ul>
+    <p><em>&ldquo;Tumor thickness is everything, even the big warty stuff on top. Depth of invasion is a little bit different.&rdquo;</em></p>
+    <p><strong>Exam note:</strong> For precise N sub-classifications (N2a, N2b, N2c): &ldquo;You don&rsquo;t have to memorize these.&rdquo; Know: N0 = no nodes; N1 = single ipsilateral &le;3cm ENE&minus;; N3b = ENE+ = worst prognosis.</p>
+  </div>
+
+</section>
+
+<!-- ═══════════════ SECTION 12 — HPV-MEDIATED SCC ═══════════════ -->
+<section id="hpv-scc">
+  <div class="section-header">
+    <span class="section-number s6">12</span>
+    <h2>HPV-Mediated SCC</h2>
+    <p class="section-desc">Why oropharynx &ne; oral cavity, and why Gardasil 9 matters</p>
+  </div>
+
+  <div class="prof-highlight">
+    <p><strong>The single most important distinction in this section:</strong> HPV-positive SCC of the <strong>oropharynx</strong> (tonsils, base of tongue, soft palate, posterior pharyngeal wall) is a <em>different disease</em> from HPV-positive SCC of the <strong>oral cavity</strong> (anterior 2/3 of tongue, FOM, buccal, gingiva, hard palate). Oropharyngeal HPV+ has <strong>better prognosis</strong>; oral cavity HPV+ does <strong>NOT</strong>.</p>
+  </div>
+
+  <h3 style="font-family: 'Crimson Pro', serif; font-size: 22px; margin: 28px 0 8px;">HPV+ OPSCC vs HPV&minus; OPSCC vs HPV+ OCSCC</h3>
+  <table class="diff-table">
+    <thead><tr><th>Feature</th><th>HPV+ OPSCC</th><th>HPV&minus; OPSCC</th><th>HPV+ OCSCC (oral cavity)</th></tr></thead>
+    <tbody>
+      <tr><td>Typical patient</td><td class="diff-cell">Younger (50s), white male, non- or light smoker, multiple oral-sex partners</td><td>Older (60s+), heavy smoker/drinker</td><td>Same demographic as HPV&minus; OCSCC</td></tr>
+      <tr><td>Site</td><td>Tonsil, base of tongue (lymphoid-rich crypts)</td><td>Tonsil, BOT, soft palate</td><td>Anterior 2/3 tongue, FOM, etc.</td></tr>
+      <tr><td>HPV type</td><td class="diff-cell">HPV-16 (~90%)</td><td>HPV negative</td><td>HPV-16 if any (uncommon)</td></tr>
+      <tr><td>p16 IHC</td><td class="diff-cell">Strongly + (surrogate)</td><td>Negative</td><td>May be + or &minus;; <strong>not a reliable surrogate in oral cavity</strong></td></tr>
+      <tr><td>5-yr OS</td><td class="diff-cell"><strong>~80&ndash;85%</strong></td><td class="diff-cell"><strong>~40%</strong></td><td>Same as HPV&minus; OCSCC (no benefit)</td></tr>
+      <tr><td>Stage at diagnosis</td><td>Often N+ early but small T</td><td>Often advanced T</td><td>Stage-dependent</td></tr>
+      <tr><td>Treatment response</td><td>Excellent &mdash; de-escalation trials ongoing</td><td>Standard CRT</td><td>Standard surgery &plusmn; CRT</td></tr>
+    </tbody>
+  </table>
+
+  <div class="explain">
+    <p><strong>HPV E6/E7 oncoproteins &mdash; the molecular punch:</strong> high-risk HPV types (16, 18, 31, 33, 45, 52, 58) integrate into the host genome and the early genes <strong>E6</strong> and <strong>E7</strong> are persistently expressed. <strong>E6 binds and degrades p53</strong> (the genome guardian), and <strong>E7 binds and inactivates Rb</strong> (the cell-cycle brake). Loss of p53 &rarr; no apoptosis after DNA damage. Loss of Rb &rarr; constitutive S-phase entry. Result: a cell that divides relentlessly and tolerates mutations.</p>
+  </div>
+
+  <div class="explain">
+    <p><strong>p16 IHC as an HPV surrogate:</strong> when E7 inactivates Rb, the cell loses negative feedback on the CDKN2A locus and <strong>p16 protein piles up</strong> in the nucleus &amp; cytoplasm. Strong, diffuse p16 positivity (&ge; 70% nuclear+cytoplasmic staining) in an OPSCC is the standard surrogate for HPV-driven disease &mdash; concordance with HPV PCR &gt; 95%. <strong>In oral cavity SCC, p16 is NOT a reliable surrogate</strong> &mdash; you can be p16+ without HPV driving the tumor.</p>
+  </div>
+
+  <div class="exam-trap">
+    <p><strong>HPV positivity does NOT confer survival benefit in oral cavity SCC.</strong> The good-prognosis HPV+ story is <strong>oropharynx-specific</strong>. Oral cavity HPV+ tumors do not behave the same way and should not be de-escalated. <strong>HPV&minus; OPSCC 5-yr OS is ~40% &mdash; not 50&ndash;55%.</strong></p>
+  </div>
+
+  <div class="prof-highlight">
+    <p><strong>Gardasil 9 covers HPV types 6, 11, 16, 18, 31, 33, 45, 52, 58.</strong> ACIP recommends routine vaccination for all children at age 11&ndash;12 (can start at 9), catch-up through age 26, and shared decision-making to age 45. <strong>Best efficacy when given before sexual debut.</strong> Vaccination is the single most powerful preventive intervention against HPV-driven OPSCC.</p>
+  </div>
+
+  <div class="memorize">
+    <ul>
+      <li>Gardasil 9 covers: 6, 11, 16, 18, 31, 33, 45, 52, 58</li>
+      <li>HPV-16 drives ~90% of HPV+ OPSCC</li>
+      <li>p16 IHC = HPV surrogate in OROPHARYNX only</li>
+      <li>HPV+ OPSCC 5-yr OS ~80&ndash;85% vs HPV&minus; OPSCC ~40%</li>
+      <li>HPV+ OCSCC: NO survival benefit</li>
+      <li>E6 &rarr; degrades p53; E7 &rarr; inactivates Rb; p16 piles up (Rb released)</li>
+    </ul>
+  </div>
+
+  <div class="exam-trap">
+    <p><strong>DISTRACTOR TRAP &mdash; HPV benefit is OROPHARYNX-specific, NOT oral cavity:</strong></p>
+    <ul>
+      <li><strong>HPV+ oral cavity SCC</strong> = NO improved prognosis; p16 IHC also not a reliable surrogate in oral cavity</li>
+      <li><strong>HPV+ oropharyngeal SCC</strong> = BETTER prognosis (~81% vs ~57% 3-yr OS); younger, non-smokers, tonsil/base of tongue</li>
+    </ul>
+    <p><em>&ldquo;Unfortunately in the oral cavity having HPV doesn&rsquo;t give you a better prognosis.&rdquo;</em></p>
+  </div>
+
+  <div class="callout-danger">
+    <p><strong>Screening pearl &mdash; ask every patient:</strong> <em>&ldquo;Any difficulty swallowing? Any lump in your throat?&rdquo;</em> These are the two screening questions for HPV-OPSCC. Base of tongue and tonsil SCCs are often N+ before the primary tumor is palpable.</p>
+  </div>
+
+  <!-- no image delivered for Section 12 (HPV-mediated SCC) — no clinical photos on these slides -->
+
+</section>
+
+
+  <div class="board-pearl">
+    <p><strong>Board Pearl &mdash; Gardasil 9: CONFIRMED quiz question on these 9 types:</strong></p>
+    <p style="font-family: 'JetBrains Mono', monospace; font-size: 15px; font-weight: 700; letter-spacing: 1px;">6 &bull; 11 &bull; 16 &bull; 18 &bull; 31 &bull; 33 &bull; 45 &bull; 52 &bull; 58</p>
+    <p><em>&ldquo;Get them tattooed on your butt. You gotta know these 9.&rdquo;</em></p>
+    <p>NOT covered: HPV 13/32 (Heck disease), HPV 2/4 (verruca vulgaris).</p>
+  </div>
+
+<!-- ═══════════════ SECTION 13 — VERRUCOUS CARCINOMA ═══════════════ -->
+<section id="verrucous">
+  <div class="section-header">
+    <span class="section-number s1">13</span>
+    <h2>Verrucous Carcinoma</h2>
+    <p class="section-desc">The &ldquo;low-grade SCC&rdquo; that virtually never metastasizes</p>
+  </div>
+
+  <div class="prof-highlight">
+    <p><strong>Verrucous carcinoma is a low-grade variant of SCC.</strong> Slow-growing, exophytic, warty/cauliflower-like, locally destructive but <strong>virtually NEVER metastasizes</strong> (when pure verrucous &mdash; mixed verrucous-conventional SCC can). Classic association: <strong>chronic smokeless tobacco use</strong> at the site where the quid sits.</p>
+  </div>
+
+  <figure class="lecture-figure">
+    <img src="images/lecture-3-epithelial-pathoses/L3-S65-verrucous-carcinoma-definition-1.png"
+         alt="Slide 65: Verrucous carcinoma definition — exophytic warty white-pink mass with wide pushing border and bland cytology; classic smokeless tobacco association"
+         loading="lazy">
+    <figcaption>Slide 65 &mdash; Verrucous carcinoma definition: exophytic, warty (cauliflower-like), white-pink mass; wide <em>pushing</em> border histologically (not infiltrative); minimal cytologic atypia; smokeless tobacco is the classic risk factor. Diagnosis requires a deep biopsy to the submucosa.</figcaption>
+  </figure>
+
+  <h4 style="font-family: 'Karla', sans-serif; font-size: 16px; font-weight: 700; color: var(--primary-dark); margin: 20px 0 10px;">Clinical features</h4>
+  <ul style="margin: 8px 0 12px 20px; list-style: disc;">
+    <li>Slow-growing, exophytic, warty (verrucous), white-pink mass</li>
+    <li>Common sites: <strong>buccal mucosa, mandibular alveolar ridge, tongue, FOM</strong> &mdash; especially under chewing-tobacco placement</li>
+    <li>Wide pushing border on histology &mdash; not infiltrative</li>
+    <li>Bland cytology &mdash; minimal atypia in cells, easy to miss on superficial biopsy</li>
+    <li>Cervical lymphadenopathy is rare and usually reactive (not malignant)</li>
+  </ul>
+
+  <div class="explain">
+    <p><strong>Verrucous carcinoma biology in plain English:</strong> verrucous carcinoma cells are well-differentiated keratinocytes &mdash; they look almost normal under the microscope, with minimal nuclear atypia. What makes them malignant is <strong>architectural</strong>, not <strong>cytologic</strong>: they form thick keratinized rete pegs that <em>push</em> down into the lamina propria as a broad, blunt front, instead of <em>infiltrating</em> as small invasive nests. They lack the molecular machinery for distant metastasis (low MMP expression, intact E-cadherin, low EMT) so they spread by local extension only. They can still destroy bone and soft tissue locally if untreated.</p>
+  </div>
+
+  <div class="exam-trap">
+    <p><strong>Superficial biopsy &rarr; you cannot diagnose verrucous carcinoma.</strong> A surface bite captures only the warty top architecture, which looks like benign hyperkeratosis or &ldquo;verrucous hyperplasia.&rdquo; The <strong>diagnosis depends on seeing the deep pushing border</strong>. The biopsy must include the deep submucosa &mdash; either an excisional biopsy or a deep incisional bite that goes through the lesion to underlying connective tissue.</p>
+  </div>
+
+  <h4 style="font-family: 'Karla', sans-serif; font-size: 16px; font-weight: 700; color: var(--primary-dark); margin: 20px 0 10px;">Treatment</h4>
+  <ul style="margin: 8px 0 12px 20px; list-style: disc;">
+    <li><strong>Wide local surgical excision</strong> with clear margins &mdash; treatment of choice</li>
+    <li>Radiation therapy historically discouraged because of (mostly disproven) reports of <em>anaplastic transformation</em> after RT &mdash; modern data suggests RT is acceptable when surgery is not feasible</li>
+    <li>Cervical lymph node dissection is generally <strong>NOT</strong> indicated in pure verrucous carcinoma (no nodal mets) &mdash; reserved for cases with proven mixed conventional SCC component</li>
+    <li>Excellent prognosis: 5-yr OS &gt; 85% with adequate excision; recurrence rate ~10% if margins clear</li>
+  </ul>
+
+  <div class="callout-danger">
+    <p><strong>&ldquo;Mixed&rdquo; verrucous + conventional SCC is more dangerous than either pure form.</strong> When a pathologist reports a tumor with verrucous architecture but also has foci of conventional SCC, treat it as conventional SCC &mdash; node dissection considered, RT may be added. Pure verrucous behavior only applies when <em>all</em> the tumor is verrucous.</p>
+  </div>
+
+  <div class="memorize">
+    <ul>
+      <li>Verrucous CA: low-grade SCC variant, NO mets in pure form</li>
+      <li>Cause: chronic smokeless tobacco (where quid sits)</li>
+      <li>Diagnosis requires DEEP biopsy (deep pushing border; surface bite = no diagnosis)</li>
+      <li>Treatment: wide local excision; node dissection NOT routine in pure form</li>
+      <li>5-yr OS &gt; 85%</li>
+      <li>Mixed verrucous + conventional &rarr; treat as conventional SCC</li>
+    </ul>
+  </div>
+
+  <figure class="lecture-figure">
+    <img src="images/lecture-3-epithelial-pathoses/L3-S66-verrucous-carcinoma-alveolar-1.png"
+         alt="Slide 66: Verrucous carcinoma on mandibular alveolar ridge — broad exophytic white warty mass occupying the edentulous ridge; characteristic of smokeless tobacco users"
+         loading="lazy">
+    <figcaption>Slide 66 &mdash; Verrucous carcinoma, mandibular alveolar ridge: broad, exophytic white warty mass in an edentulous area. Classic smokeless tobacco (quid) placement site. Wide local excision required; node dissection not indicated for pure form.</figcaption>
+  </figure>
+
+  <figure class="lecture-figure">
+    <img src="images/lecture-3-epithelial-pathoses/L3-S66-verrucous-carcinoma-vestibule-2.png"
+         alt="Slide 66: Verrucous carcinoma in labial vestibule — second case showing exophytic white lesion in lower labial vestibule from chronic lower-lip tobacco pouch habit"
+         loading="lazy">
+    <figcaption>Slide 66 (second case) &mdash; Verrucous carcinoma, labial vestibule: exophytic white mass at lower labial sulcus from chronic tobacco pouch placement. Demonstrates the &ldquo;where the quid sits&rdquo; principle. Locally destructive but does not metastasize (pure form).</figcaption>
+  </figure>
+  <div class="prof-highlight">
+    <p><strong>Verrucous carcinoma frequency:</strong> ~2&ndash;3% of all oral carcinomas. Relatively rare but important because it is clinically recognizable and curable.</p>
+    <p><strong>&ldquo;0% cervical lymph node metastasis, 0% distant metastasis&rdquo;</strong> &mdash; this verbatim phrase is testable. Pure verrucous carcinoma does not metastasize. If any metastasis is found, there is a conventional SCC component somewhere in the tumor.</p>
+    <p><strong>Prof said:</strong> &ldquo;That&rsquo;s what Doctor Wu&rsquo;s article talked about and you need to know this&rdquo; (re: the deep biopsy requirement to see the pushing border).</p>
+  </div>
+
+  <div class="board-pearl">
+    <p><strong>Board Pearl &mdash; Superficial biopsy MISSES verrucous carcinoma:</strong> The diagnosis of verrucous carcinoma depends on seeing the deep <em>pushing border</em> (not infiltrative invasion). A superficial biopsy sees only the warty surface = reads as &ldquo;benign verrucous hyperplasia.&rdquo; <em>&ldquo;You need to get deep in there. That&rsquo;s what Doctor Wu&rsquo;s article talked about and you need to know this.&rdquo;</em></p>
+  </div>
+
+<!-- ═══════════════ SECTION 14 — ORAL MELANOMA ═══════════════ -->
+<section id="melanoma">
+  <div class="section-header">
+    <span class="section-number s2">14</span>
+    <h2>Oral Melanoma</h2>
+    <p class="section-desc">Rare, deadly, on the palate &mdash; and UV is NOT the cause</p>
+  </div>
+
+
+  <div class="callout-danger">
+    <p><strong>ABCD of Oral Melanoma &mdash; when to biopsy a pigmented lesion:</strong></p>
+    <ul>
+      <li><strong>A</strong> &mdash; Asymmetric</li>
+      <li><strong>C</strong> &mdash; Color variation (multiple shades of brown, black, red, gray)</li>
+      <li><strong>G</strong> &mdash; Growing in size</li>
+      <li><strong>U</strong> &mdash; Ulcerated</li>
+      <li><strong>D</strong> &mdash; Diameter &gt;1 cm</li>
+    </ul>
+    <p><em>&ldquo;Same you think about the ABCDs of moles on your skin. Same thing in the mouth, right? If it&rsquo;s asymmetric, has color variation, growing, ulcerated, larger than 1 centimeter, biopsy it.&rdquo;</em></p>
+    <p><strong>Urgency:</strong> Any new or changing pigmented lesion on the palate or gingiva in an older adult &mdash; <strong>biopsy same day.</strong> <em>&ldquo;Just cover your butts, cover your butts, OK?&rdquo;</em></p>
+  </div>
+
+  <figure class="lecture-figure">
+    <img src="images/lecture-3-epithelial-pathoses/L3-S67-oral-melanoma-features-1.png"
+         alt="Slide 67: Oral melanoma features — irregular brown-black pigmented mass on hard palate; asymmetric borders, color variation (brown, black, red), ulceration present"
+         loading="lazy">
+    <figcaption>Slide 67 &mdash; Oral melanoma, hard palate: irregular asymmetric pigmented mass with color variation (brown, black, red) and focal ulceration. ~50% of oral melanomas occur on the hard palate. UV is NOT the cause &mdash; this is a mucosal melanoma driven by c-KIT/NRAS mutations (not BRAF). 5-yr OS ~20&ndash;34% (vs. ~90% cutaneous melanoma).</figcaption>
+  </figure>
+
+  <div class="prof-highlight">
+    <p><strong>Oral melanoma is rare (~0.5% of all melanomas, &lt; 1% of oral malignancies) but devastating.</strong> ~50% present on the <strong>hard palate</strong>, with maxillary gingiva second. <strong>UV light is NOT the etiology &mdash; it cannot reach intraoral mucosa.</strong> Cause is unknown for most cases.</p>
+  </div>
+
+  <h4 style="font-family: 'Karla', sans-serif; font-size: 16px; font-weight: 700; color: var(--primary-dark); margin: 20px 0 10px;">Clinical features</h4>
+  <ul style="margin: 8px 0 12px 20px; list-style: disc;">
+    <li>Asymmetric, irregular pigmented (brown, blue, black) macule or nodule</li>
+    <li><strong>~15% are amelanotic</strong> (pink/red without pigment, worse prognosis) &mdash; easy to miss</li>
+    <li>Hard palate &gt; maxillary gingiva &gt; mandibular gingiva &gt; tongue &gt; buccal</li>
+    <li>Most asymptomatic at presentation; ulceration / bleeding is late</li>
+    <li>Often diagnosed at advanced stage &mdash; high mortality</li>
+  </ul>
+
+  <h3 style="font-family: 'Crimson Pro', serif; font-size: 22px; margin: 28px 0 8px;">Oral mucosal vs cutaneous melanoma</h3>
+  <table class="diff-table">
+    <thead><tr><th>Feature</th><th>Oral mucosal melanoma</th><th>Cutaneous melanoma</th></tr></thead>
+    <tbody>
+      <tr><td>Etiology</td><td class="diff-cell"><strong>Unknown &mdash; UV NOT involved</strong></td><td>UV exposure</td></tr>
+      <tr><td>Site</td><td class="diff-cell">Hard palate (~50%), max gingiva</td><td>Sun-exposed skin</td></tr>
+      <tr><td>Driver mutations</td><td class="diff-cell"><strong>c-KIT</strong> (~20&ndash;30%), NRAS; <em>BRAF rare</em></td><td><strong>BRAF V600E</strong> (~50%), NRAS</td></tr>
+      <tr><td>Mutation burden</td><td>Low</td><td>High (UV signature)</td></tr>
+      <tr><td>Amelanotic rate</td><td class="diff-cell"><strong>~15%</strong> (pink/red; worse prognosis)</td><td>Rare; ~2&ndash;8%</td></tr>
+      <tr><td>5-yr OS</td><td class="diff-cell"><strong>~15&ndash;25%</strong> &mdash; among the worst of any oral malignancy</td><td>~92% (all stages combined)</td></tr>
+      <tr><td>Stage at dx</td><td>Often advanced</td><td>Usually localized (visible on skin)</td></tr>
+      <tr><td>Treatment</td><td>Wide excision &plusmn; neck dissection; immuno (PD-1) for advanced; <em>BRAF inhibitors generally not effective</em></td><td>Excision + sentinel node; BRAF/MEK inhibitors if BRAF+; PD-1 inhibitors</td></tr>
+    </tbody>
+  </table>
+
+  <div class="explain">
+    <p><strong>c-KIT vs BRAF &mdash; why the same drug doesn&rsquo;t work in both:</strong> cutaneous melanoma&rsquo;s UV-driven mutations preferentially hit BRAF (V600E), making it responsive to BRAF inhibitors (vemurafenib, dabrafenib) &plusmn; MEK inhibitors. Oral mucosal melanoma rarely has BRAF mutations &mdash; instead a meaningful fraction (20&ndash;30%) carries activating mutations in <strong>c-KIT</strong>. c-KIT-mutant oral melanomas may respond to <strong>imatinib</strong> (the same drug used for GIST and CML) in select cases, but most oral melanomas don&rsquo;t have a targetable driver, and outcomes lag far behind cutaneous melanoma.</p>
+  </div>
+
+  <div class="explain">
+    <p><strong>Why oral melanoma prognosis is so bad:</strong> three reasons stack up. (1) <strong>Late detection</strong> &mdash; intraoral pigmented lesions are often only noticed at routine dental exam; patients never see them. (2) <strong>Vascular-rich submucosa</strong> &mdash; the palate and gingiva have abundant blood and lymphatic supply, so melanoma cells reach the bloodstream early. (3) <strong>Few targetable drivers</strong> &mdash; without BRAF mutations, the modern targeted-therapy revolution has largely bypassed oral melanoma.</p>
+  </div>
+
+  <div class="exam-trap">
+    <p><strong>DISTRACTOR TRAP &mdash; Oral melanoma is NOT caused by UV (unlike cutaneous):</strong></p>
+    <ul>
+      <li><strong>Cutaneous melanoma:</strong> UV-driven (C&rarr;T transitions), BRAF-mutant, responsive to BRAF inhibitors and immunotherapy</li>
+      <li><strong>Oral mucosal melanoma:</strong> genetic translocations (c-KIT, NRAS), NOT UV, BRAF rare, fewer treatment targets, poorer prognosis</li>
+      <li>Do NOT attribute UV exposure as the risk factor for a hard palate pigmented lesion</li>
+    </ul>
+    <p><em>&ldquo;It&rsquo;s different than cutaneous melanoma. It&rsquo;s not related to UV. It&rsquo;s related to genetic translocations.&rdquo;</em></p>
+    <p>UV is NOT the cause of oral mucosal melanoma. Mucosal melanoma is a biologically distinct disease. Also: <strong>amelanotic oral melanoma is ~15% of cases</strong> (NOT 25%) &mdash; the pink/red lesions that are easy to miss.</p>
+  </div>
+
+  <div class="callout-danger">
+    <p><strong>Pigmented lesions on the hard palate need biopsy.</strong> The differential includes amalgam tattoo (most common), racial pigmentation (bilateral, symmetric, usually gingival), oral melanotic macule (small, &lt; 5 mm, well-defined), Peutz-Jeghers, Addison&rsquo;s, smoker&rsquo;s melanosis, and oral melanoma. Asymmetric, irregular, &gt; 5 mm, growing, or located on hard palate / maxillary gingiva &mdash; biopsy.</p>
+  </div>
+
+  <div class="memorize">
+    <ul>
+      <li>Oral melanoma: ~50% hard palate &mdash; #1 site</li>
+      <li>UV is NOT the cause</li>
+      <li>c-KIT mutations 20&ndash;30%; BRAF rare (opposite of cutaneous)</li>
+      <li>5-yr OS ~15&ndash;25% &mdash; worst of any oral malignancy</li>
+      <li>~15% are amelanotic (pink/red, no pigment) &mdash; worse prognosis</li>
+      <li>c-KIT+ &rarr; imatinib; PD-1 inhibitors for advanced disease</li>
+    </ul>
+  </div>
+</section>
+
+<!-- ═══════════════ SECTION 15 — CRAMMABLE RECAP ═══════════════ -->
+<section id="recap">
+  <div class="section-header">
+    <span class="section-number s3">15</span>
+    <h2>Crammable Recap</h2>
+    <p class="section-desc">Every prof-highlighted item + notecard candidates &mdash; QA-verified facts</p>
+  </div>
+
+  <div class="prof-highlight">
+    <p>This is the notecard. Color legend: <span class="r">RED = rules / red flags</span> &middot; <span class="b">BLUE = diseases / entities</span> &middot; <span class="g">GREEN = treatments / drugs</span> &middot; <span class="p">PURPLE = numbers / stats</span>. Use this to write your double-sided 5&Prime;&times;8&Prime; handwritten card.</p>
+  </div>
+
+  <div class="nc">
+    <div class="nc-label">SIDE A &middot; OPMDs &amp; benign HPV lesions</div>
+    <div class="nc-card">
+      <div class="nc-card-title">OD 530 &middot; Epithelial Pathoses &amp; SCC &middot; Side A</div>
+      <div class="nc-cols">
+        <div class="nc-col nc-col-left">
+          <div class="h b">HPV BENIGN</div>
+          <div class="t">
+            <span class="b">Papilloma</span>: HPV <span class="hl">6/11</span>, soft palate, solitary (98%), pedunculated, vaccine-covered<br>
+            <span class="b">Condyloma</span>: HPV <span class="hl">6/11</span> ~75%, multiple, sessile, STI, vaccine-covered<br>
+            <span class="b">Verruca vulgaris</span>: HPV <span class="hl">2/4</span>, lip/perioral, auto-inoculation, NOT vaccine-covered<br>
+            <span class="b">Heck disease</span>: HPV <span class="hl">13/32</span>, multifocal, flat, <span class="r">NOT vaccine-covered</span>
+          </div>
+          <div class="h r">RULES (red flags)</div>
+          <div class="t">
+            <span class="r">39.6%</span> of progressors had NO dysplasia on first biopsy<br>
+            <span class="r">Erythroplakia ~90%</span> already severe dysplasia/CIS/SCC at biopsy<br>
+            Erythroplakia median time to cancer = <span class="r">3.7 mo</span> (leukoplakia = 25 mo)<br>
+            <span class="r">PVL/PL 48&ndash;50% MT</span> (annual rate ~9.3%, 8&times; conventional)<br>
+            <span class="r">Tobacco + alcohol = ~30&times;</span> multiplicative<br>
+            <span class="r">UV NOT cause</span> of intraoral SCC or oral melanoma<br>
+            Biopsy <span class="r">RED</span> over white &middot; deep for verrucous<br>
+            <span class="r">Tumor seeding from biopsy = MYTH</span> (~0.00012% FNA)<br>
+            HPV+ benefit = oropharynx ONLY, <span class="r">NOT oral cavity</span>
+          </div>
+          <div class="h p">NUMBERS</div>
+          <div class="t">
+            US 2024: <span class="p">36,600 new</span> / <span class="p">12,230 deaths</span><br>
+            <span class="p">&gt;50%</span> present with mets; rising <span class="p">1.8%/yr</span><br>
+            Oral tongue <span class="p">41.7%</span> #1 site<br>
+            Stage 5-yr OS: localized 85% &rarr; reg 70% &rarr; dist 40%<br>
+            Fanconi <span class="p">OR ~40.6</span><br>
+            Clinical sensitivity <span class="p">60%</span>, specificity <span class="p">62%</span> for cancer<br>
+            OSF MT <span class="p">5.1%</span>, ~36 mo to cancer<br>
+            OLP / OLL ~<span class="p">1.4%</span> MT each<br>
+            SCC: <span class="p">&gt;90%</span> oral malignancy, 7th worldwide, age ~66, M:F 2&ndash;4:1
+          </div>
+        </div>
+        <div class="nc-col nc-col-right">
+          <div class="h b">OPMDs</div>
+          <div class="t">
+            <span class="b">Leukoplakia</span> = white plaque, dx of <span class="r">EXCLUSION</span> (rule out: frictional keratosis, candida, lichen planus, WSN)<br>
+            5-yr MT by grade: No dysp <span class="p">2.2%</span> &rarr; mild <span class="p">2.6&ndash;11.9%</span> &rarr; mod <span class="p">4.1&ndash;8.7%</span> &rarr; severe <span class="p">29.2&ndash;32.2%</span><br>
+            Mild dysp: <span class="p">18&ndash;39%</span> spontaneous resolution; annual MT ~2%/yr<br>
+            <span class="b">Erythroplakia</span> = red velvety; dx of EXCLUSION (rule out: atrophic glossitis, MRG, plasma cell gingivitis, erosive OLP)<br>
+            <span class="r">TWO STATS</span>: ~50% MT rate; ~75&ndash;90% already severe dysp/CIS/SCC at 1st biopsy<br>
+            <span class="b">PVL</span>: F:M 2:1, gingiva, &ldquo;ring around collar&rdquo;, non-smoker, <span class="r">48&ndash;50% MT</span><br>
+            PVL major criteria: &ge;2 sites, enlargement, recurrence after tx<br>
+            <span class="b">OSF</span>: areca nut &rarr; arecoline &rarr; fibroblast EMT &rarr; HIF-1&alpha; &rarr; SNAIL &rarr; cancer; trismus, <span class="p">5.1% MT, 36 mo</span><br>
+            <span class="b">OLP</span>: bilateral, Wickham striae, sawtooth rete + band lymph + Civatte bodies<br>
+            <span class="b">OLL</span> 3 types: drug reactions + contact reactions + oral lichenoid dysplasia (higher MT)
+          </div>
+          <div class="h g">CHEMOPREVENTION</div>
+          <div class="t">
+            <span class="g">Imiquimod 5%</span> = TLR-7 agonist &rarr; innate immunity; Phase I/II USC<br>
+            <span class="g">ALA-PDT</span> = ALA &rarr; protoporphyrin IX &rarr; light &rarr; ROS; 66&ndash;100% CR<br>
+            13-cis-RA <span class="p">67%</span> CR &middot; Vit A 300k IU <span class="p">52%</span> CR &middot; Fenretinide <span class="p">87%</span> CR<br>
+            Bleomycin 0.5&ndash;1%: <span class="p">25&ndash;40%</span> CR<br>
+            Curcumin 3.6g/d: <span class="p">67.5% vs 55.3%</span> placebo RCT (p=0.03)<br>
+            <span class="r">Beta-carotene MAY INCREASE risk in smokers</span> (CARET)<br>
+            <span class="g">RP2</span> (modified HSV-1): Phase II BWH/DFCI (intralesional)<br>
+            ONYX-015: <span class="p">37%</span> histologic resolution &middot; rAd-p53: <span class="p">72%</span> clinical response<br>
+            Calcipotriene &plusmn; 5-FU: NCCN preferred cutaneous field
+          </div>
+          <div class="h g">DYSPLASIA TX</div>
+          <div class="t">
+            <span class="g">Scalpel</span> = gold standard (margins; OR 3.6 if positive)<br>
+            <span class="g">CO2 laser</span>: HR 0.14 MT; 52.6% recurrence; &ge;3mm margins<br>
+            <span class="g">Diode laser</span>: 93.5% CR; 6.5% recurrence at 39 mo<br>
+            <span class="g">Cryo</span>: 100% regression; mean 3.1 tx; &lt;2cm&sup2;<br>
+            <span class="g">ALA-PDT</span> for multifocal/large field; 8.3% MT at 3yr<br>
+            Margins: <span class="p">5 mm</span> peripheral, &ge;2 mm deep<br>
+            Severe dysplasia/CIS &rarr; excise + Q3-mo lifelong<br>
+            <span class="r">CIS = CANCER (not pre-cancer)</span>; basement membrane intact but cytologically cancer already
+          </div>
+          <div class="h r">QUIZ CASE &amp; KEY PHRASES</div>
+          <div class="t">
+            <span class="r">Plasma cell gingivitis</span> = fire engine red gingiva + cinnamon/benzoate trigger<br>
+            Answer = <span class="g">avoidance</span>, NOT dexamethasone; NOT magic mouthwash<br>
+            &ldquo;Magic mouthwash is BS&rdquo; for contact hypersensitivity<br>
+            &ldquo;rip roaring red gingiva&rdquo; = plasma cell gingivitis visual<br>
+            <span class="r">IBS &ne; IBD</span>: IBS = functional, NO oral mfx; IBD = Crohn&rsquo;s/UC = oral facial granulomatosis<br>
+            <span class="r">Heck &ldquo;1332&rdquo;</span>: HPV 13/32, NOT in Gardasil 9<br>
+            <span class="r">Brush biopsy = NOT recommended</span> (cytology only; misses architecture)<br>
+            <span class="r">DOI &gt;4 mm = automatic neck dissection</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="nc-label">SIDE B &middot; SCC, AJCC, HPV-SCC, verrucous, melanoma</div>
+    <div class="nc-card">
+      <div class="nc-card-title">OD 530 &middot; Epithelial Pathoses &amp; SCC &middot; Side B</div>
+      <div class="nc-cols">
+        <div class="nc-col nc-col-left">
+          <div class="h b">SCC OVERVIEW</div>
+          <div class="t">
+            &gt;90% oral malig, 7th worldwide, age ~66, M:F 2&ndash;4:1<br>
+            Sites: lateral/ventral tongue <span class="p">42%</span> &gt; FOM 16%<br>
+            Rising 1.8%/yr; younger pts often no trad risk factors<br>
+            ~50% non-ulcerated &mdash; <span class="r">induration is the key sign</span><br>
+            Field cancerization: ~3&ndash;5%/yr 2nd primary risk
+          </div>
+          <div class="h r">WARNING SIGNS</div>
+          <div class="t">
+            Non-healing ulcer &gt;2&ndash;3 wk<br>
+            Exophytic mass or indurated area<br>
+            Red/white patch that persists<br>
+            Bleeding / numbness / pain<br>
+            Fixation to structures<br>
+            Firm fixed non-tender cervical LAD
+          </div>
+          <div class="h g">REFERRAL WORKUP</div>
+          <div class="t">
+            Urgent referral &rarr; OMFS / H&amp;N onc<br>
+            Incisional biopsy (histo confirmation)<br>
+            CT contrast and/or MRI (staging)<br>
+            PET-CT (distant mets)<br>
+            Multidisciplinary tumor board
+          </div>
+          <div class="h b">AJCC 8 T-stage</div>
+          <div class="t">
+            <span class="b">T1</span>: &le;2 cm AND DOI &le;5 mm<br>
+            <span class="b">T2</span>: up to 4 cm AND DOI &le;10 mm<br>
+            <span class="b">T3</span>: &gt;4 cm OR DOI &gt;10 mm<br>
+            <span class="b">T4a</span>: cortical bone, IAN, FOM, skin<br>
+            <span class="b">T4b</span>: skull base, ICA encasement, pterygoid plates
+          </div>
+          <div class="h b">AJCC 8 N-stage</div>
+          <div class="t">
+            <span class="b">N1</span>: 1 ipsi &le;3 cm, ENE&minus;<br>
+            <span class="b">N2a</span>: 1 ipsi &gt;3&ndash;6 cm OR <span class="r">any ENE+ &le;3 cm</span><br>
+            <span class="b">N2b</span>: multi ipsi &le;6 cm<br>
+            <span class="b">N2c</span>: bilat/contralat &le;6 cm<br>
+            <span class="b">N3a</span>: any &gt;6 cm<br>
+            <span class="r">N3b</span>: any other ENE+ &mdash; worst<br>
+            <em>ENE+ &rarr; ~2&times; recurrence; gets adjuvant CRT</em>
+          </div>
+          <div class="h b">HPV+ OPSCC vs HPV&minus; vs OCSCC</div>
+          <div class="t">
+            <span class="b">HPV+ OPSCC</span>: tonsil/BOT, p16+, <span class="p">5-yr ~80&ndash;85%</span>, younger<br>
+            <span class="b">HPV&minus; OPSCC</span>: smoker, <span class="p">~40% OS</span> (NOT 50&ndash;55%)<br>
+            <span class="r">HPV+ OCSCC: NO survival benefit</span><br>
+            E6 &rarr; degrades p53; E7 &rarr; inactivates Rb; p16 piles up<br>
+            <span class="g">Gardasil 9</span>: <span class="hl">6, 11, 16, 18, 31, 33, 45, 52, 58</span>
+          </div>
+        </div>
+        <div class="nc-col nc-col-right">
+          <div class="h b">VERRUCOUS CA</div>
+          <div class="t">
+            Low-grade SCC, slow, exophytic warty<br>
+            <span class="r">Virtually NEVER metastasizes</span> (pure form)<br>
+            Cause: chronic <span class="r">smokeless tobacco</span><br>
+            Dx: <span class="r">DEEP biopsy</span> &mdash; need to see pushing border<br>
+            Tx: wide excision; <span class="r">no node dissection</span> in pure form<br>
+            Mixed verrucous + conventional &rarr; treat as conventional
+          </div>
+          <div class="h b">ORAL MELANOMA</div>
+          <div class="t">
+            ~<span class="p">50% hard palate</span> &mdash; #1 site<br>
+            <span class="r">UV is NOT the cause</span> (skin = UV; mucosa = unknown)<br>
+            <span class="r">c-KIT</span> 20&ndash;30%, NRAS; <em>BRAF rare</em><br>
+            5-yr OS <span class="p">15&ndash;25%</span> &mdash; worst oral malig<br>
+            ~<span class="p">15%</span> amelanotic (pink/red, no pigment) <span class="r">worse prognosis</span><br>
+            c-KIT+ &rarr; imatinib; PD-1 inhibitors for advanced
+          </div>
+          <div class="h b">RISK MULTIPLIERS</div>
+          <div class="t">
+            Tobacco: 5&ndash;9&times; &middot; Alcohol: 3&ndash;9&times;<br>
+            <span class="r">Tobacco + Alcohol: ~30&times;</span> (multiplicative)<br>
+            Smokeless / betel: ~5&ndash;8&times;<br>
+            Fanconi: <span class="r">OR ~40.6</span><br>
+            Dyskeratosis cong: ~1000&times; baseline<br>
+            HPV-16: ~15&times; for OPSCC (NOT oral cavity)
+          </div>
+          <div class="h r">EXAM TRAPS</div>
+          <div class="t">
+            <span class="r">Heck NOT in Gardasil 9</span> (HPV 13/32)<br>
+            <span class="r">UV NOT cause</span> of intraoral SCC or oral melanoma<br>
+            <span class="r">Erythroplakia &gt; leukoplakia</span> &mdash; biopsy red part<br>
+            Tumor seeding myth &mdash; biopsy first (~0.00012% FNA)<br>
+            ~50% SCC <span class="r">non-ulcerated</span><br>
+            p16 IHC ONLY reliable in oropharynx<br>
+            Verrucous needs DEEP biopsy<br>
+            Bilateral symmetric Wickham &rarr; <span class="g">topical steroid</span> first<br>
+            <span class="r">Amelanotic melanoma ~15%</span> (NOT 25%)<br>
+            <span class="r">HPV&minus; OPSCC OS ~40%</span> (NOT 50&ndash;55%)<br>
+            <span class="r">Stage IVC &lt;20%</span> 5-yr OS &mdash; &ldquo;one-way ticket to Stage 4C&rdquo;<br>
+            <span class="r">Biopsy same day</span> for new palate/gingiva pigmented lesion<br>
+            ABCD melanoma: Asymmetric, Color variation, Growing, Ulcerated, Diameter &gt;1cm<br>
+            <span class="r">Horseshoe of death</span>: lateral tongue + FOM + soft palate<br>
+            &ldquo;You save lives with early detection&rdquo;
+          </div>
+          <div class="h p">TRANSFORMATION TRIAGE</div>
+          <div class="t">
+            Non-homogeneous: <span class="p">4.2&ndash;6.5&times;</span> higher risk<br>
+            Lateral tongue: <span class="p">12.7%</span> vs 6.6% overall<br>
+            FOM: <span class="p">2.1&times;</span> higher<br>
+            Size &gt;200mm&sup2;: <span class="p">2&ndash;4&times;</span> higher<br>
+            Female sex paradox: higher MT despite lower incidence
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="prof-highlight">
+    <p><strong>Last-pass cram trio:</strong> (1) every &ldquo;white patch + red component&rdquo; &rarr; biopsy the red. (2) Tobacco + alcohol is multiplicative ~30&times;. (3) HPV+ OPSCC is a different disease from HPV+ OCSCC &mdash; survival benefit is oropharynx-only.</p>
+  </div>
+  <div class="prof-highlight">
+    <p><strong>QA-verified critical facts &mdash; verify in master:</strong> Amelanotic melanoma rate = <strong>~15%</strong> (not 25%). Erythroplakia has <strong>TWO metrics</strong>: ~50% MT rate AND ~75&ndash;90% already severe dysplasia/CIS/SCC at first biopsy. HPV&minus; OPSCC 5-yr OS = <strong>~40%</strong> (not 50&ndash;55%).</p>
+  </div>
+
+  <h3 style="font-family: 'Crimson Pro', serif; font-size: 22px; margin: 28px 0 8px;">Test-Yourself Vignettes</h3>
+  <p style="color: var(--text-muted); font-size: 15px; margin-bottom: 16px;">Read the stem, select your answer, then click to reveal the explanation. These are based directly on confirmed exam-style stems from the professor&rsquo;s lecture.</p>
+
+  <details class="test-yourself">
+    <summary>Vignette 1: 75-year-old male, fire engine red gingiva</summary>
+    <p><strong>Stem:</strong> A 75-year-old male presents with a 6-month history of swollen, painful, generalized bleeding gingiva and difficulty eating. Medical history includes prostate adenocarcinoma, HTN (lisinopril, amlodipine), anemia, inflammatory polyarthritis, GERD, Hep C, IBS, epilepsy, depression, and PTSD. On exam: <strong>generalized erythema and edema of the maxillary and mandibular facial gingiva.</strong> No Wickham striae. Uses Sensodyne toothpaste and cinnamon gum daily. Which intervention is MOST likely to improve this patient&rsquo;s condition? A) Dexamethasone elixir B) Chlorhexidine rinse C) Elimination of cinnamon and benzoate-containing products D) Scaling and root planing E) Magic Mouthwash</p>
+    <p><strong>Best answer: C &mdash; Elimination of cinnamon and benzoate-containing products.</strong></p>
+    <p><strong>Why:</strong> Plasma cell gingivitis = contact hypersensitivity to cinnamon/benzoates. NOT an infection (no chlorhexidine). NOT OLP (no Wickham striae &mdash; that would be topical steroids). NOT periodontal disease. Dexamethasone is the distractor the prof built the quiz case around. <em>Slide 3 / Audio: &ldquo;This is something that could show up on your exam.&rdquo;</em></p>
+  </details>
+
+  <details class="test-yourself">
+    <summary>Vignette 2: Female with tongue pain dismissed as geographic tongue</summary>
+    <p><strong>Stem:</strong> A 43-year-old female presents with tongue pain present for 3 months. Previous dentist diagnosed geographic tongue. On exam: healing geographic tongue on one side; ambiguous white lesion on symptomatic left lateral side adjacent to a sharp cusp; pain radiates from left tonsil bilaterally. Most appropriate next step: A) Reassure/follow up 6 months B) Antifungal therapy and re-evaluate in 2 weeks C) Incisional biopsy before initiating any treatment D) Refer for glossopharyngeal nerve evaluation only E) Topical steroid gel 2 weeks and reassess</p>
+    <p><strong>Best answer: C &mdash; Incisional biopsy before initiating treatment.</strong></p>
+    <p><strong>Why:</strong> Any white lesion persisting &gt;2&ndash;3 weeks after removing irritants requires biopsy. Pain with a white lesion elevates concern &mdash; pre-cancers are NOT painful in most cases, so pain = higher worry for malignancy. Prescribing medications without tissue diagnosis destroys architectural information the pathologist needs. <em>Audio: &ldquo;pre-cancers are not painful.&rdquo;</em></p>
+  </details>
+
+  <details class="test-yourself">
+    <summary>Vignette 3: Non-smoking female with recurrent gingival lesions after two surgeries</summary>
+    <p><strong>Stem:</strong> A 61-year-old non-smoking female has undergone two prior surgical excisions and CO&#8322; laser ablation of gingival lesions, all with recurrence. Exam: corrugated, fissured white plaque on maxillary and mandibular facial gingiva with scalloped margins and crisp knife edges, spanning multiple non-contiguous sites, present &gt;6 years. Most likely diagnosis: A) Frictional keratosis B) Oral lichen planus C) Proliferative leukoplakia D) Candida-associated leukoplakia E) White sponge nevus</p>
+    <p><strong>Best answer: C &mdash; Proliferative leukoplakia.</strong></p>
+    <p><strong>Why:</strong> All major criteria met: &ge;2 sites, new lesions during follow-up, recurrence after treatment. Minor criteria: female, non-smoker, &gt;5-year course. &ldquo;Crisp knife edges,&rdquo; &ldquo;corrugated fissuring,&rdquo; &ldquo;scalloping on gingiva&rdquo; = the visual signature. Malignant transformation: 48&ndash;50%, annual rate ~9.3%. Management: lifelong surveillance + medical management (imiquimod).</p>
+  </details>
+
+  <details class="test-yourself">
+    <summary>Vignette 4: HPV 13/32 positive multifocal oral nodules</summary>
+    <p><strong>Stem:</strong> A 62-year-old white male has a 4-year history of multiple soft nodules on his buccal mucosa, labial mucosa, and tongue commissures. Serial excisions all recurred. History of incarceration. HIV negative. Biopsy: acanthosis with koilocytosis. HPV DNA positive for HPV 13 and 32. Which statement is CORRECT: A) Gardasil 9 would have prevented this B) This condition has real malignant transformation potential C) Existing HPV vaccines do NOT protect against these subtypes D) Most commonly in older immunocompetent adults E) Exclusively Native American/Inuit populations</p>
+    <p><strong>Best answer: C &mdash; Existing vaccines do NOT protect against HPV 13/32.</strong></p>
+    <p><strong>Why:</strong> Gardasil 9 covers HPV 6, 11, 16, 18, 31, 33, 45, 52, 58 &mdash; NOT 13 or 32. Heck disease is benign &mdash; NO malignant potential (B is wrong). Can occur in immunocompromised adults of any background. <em>Slide 12 / Audio: &ldquo;They love asking this on the boards.&rdquo;</em></p>
+  </details>
+
+  <details class="test-yourself">
+    <summary>Vignette 5: 73-year-old male on imiquimod reports redness/soreness</summary>
+    <p><strong>Stem:</strong> A 73-year-old male with extensive maxillary gingival leukoplakia (biopsy: verrucous hyperplasia) is started on imiquimod 5% cream. After 3 months he calls reporting increased redness, soreness, and erosion at application sites. Most appropriate response: A) Discontinue immediately &mdash; lichenoid drug reaction B) Urgent oncology referral &mdash; malignant transformation C) Reassure &mdash; local inflammation indicates the medication is working D) Switch to topical steroid to suppress inflammation E) Decrease to once weekly</p>
+    <p><strong>Best answer: C &mdash; Reassure &mdash; local inflammatory response indicates the medication is working.</strong></p>
+    <p><strong>Why:</strong> Imiquimod = TLR-7 agonist. Expected mechanism = brisk innate immune activation at application site (weeks 2&ndash;4 = redness, soreness, potential ulceration). This IS the drug working. Stopping or suppressing the inflammation defeats the purpose. &ldquo;Stunning improvement&rdquo; seen at 3-year follow-up in the prof&rsquo;s case. <em>Slides 37&ndash;40 / Audio Case.</em></p>
+  </details>
+
+  <details class="test-yourself">
+    <summary>Vignette 6: New dark pigmented lesion palate in 65-year-old</summary>
+    <p><strong>Stem:</strong> A 65-year-old male presents with a new 1.2 cm dark brown-black macular lesion on the hard palate with areas of red and gray discoloration, irregular borders. Patient noticed it 4 months ago. It was not present at last recall 2 years ago. Most appropriate action: A) Photograph and re-evaluate at 3-month recall B) Refer to dermatology for melanoma mapping C) Biopsy today D) Prescribe antifungal empirically and re-evaluate in 2 weeks E) Excise completely in office today</p>
+    <p><strong>Best answer: C &mdash; Biopsy today.</strong></p>
+    <p><strong>Why:</strong> Any new or changing pigmented lesion on the palate or gingiva in an older adult &mdash; biopsy same day. ABCD criteria: Asymmetric, Color variation, Growing (new in 2 years), Diameter &gt;1 cm. Oral melanoma = ~20&ndash;34% 5-year survival. Early detection is the only lever. <em>Audio: &ldquo;biopsy same day,&rdquo; &ldquo;cover your butts.&rdquo;</em></p>
+  </details>
+
+  <details class="test-yourself">
+    <summary>Vignette 7: 17-year-old male with tongue pain thought to be tongue-biting</summary>
+    <p><strong>Stem:</strong> A 17-year-old male presents with tongue pain attributed by parents to habitual tongue-biting. On examination with adequate retraction and lighting: large, indurated, ulcerated mass on the lateral tongue with raised rolled borders. Does not blanch. No tobacco/alcohol use. Bilateral cervical lymphadenopathy. Most important immediate action: A) Advise to stop tongue-biting, follow up 3 months B) Refer immediately for incisional biopsy and oncologic evaluation C) Antifungal therapy, reassess 4 weeks D) Orthopantomogram and reassess E) Reassure &mdash; oral cancer in teenagers is not clinically significant</p>
+    <p><strong>Best answer: B &mdash; Refer immediately for incisional biopsy and oncologic evaluation.</strong></p>
+    <p><strong>Why:</strong> OSCC can occur in young patients without traditional risk factors. An indurated, ulcerated lateral tongue mass + cervical lymphadenopathy in ANY patient requires urgent biopsy. Age does not exclude malignancy. &ldquo;Watch and wait&rdquo; or &ldquo;reassure&rdquo; are categorically wrong. <em>Audio: &ldquo;This is a 17-year-old with a massive squamous cell carcinoma. Thank God we saw him when we did because early detection saves lives.&rdquo;</em></p>
+  </details>
+
+  <details class="test-yourself">
+    <summary>Vignette 8: 64-year-old female with lower lip nodule &mdash; biopsy site selection</summary>
+    <p><strong>Stem:</strong> A 64-year-old female presents with a 14-month lower lip white keratotic non-healing lesion with a 6 mm indurated nodular component. You perform a punch biopsy directed into the center of the most indurated, raised area. Most appropriate rationale for this site selection: A) Center of ulcerated lesions provides most cellular sample B) Peripheral uninvolved tissue minimizes patient discomfort C) Most indurated/raised area = &ldquo;heart of darkness&rdquo; &mdash; deepest and most diagnostically informative D) White periphery captures earliest dysplastic change E) Site selection is arbitrary when lesion is excisable</p>
+    <p><strong>Best answer: C &mdash; The most indurated/raised/nodular area = &ldquo;heart of darkness.&rdquo;</strong></p>
+    <p><strong>Why:</strong> Go to the deepest, worst-looking area, not the surface necrosis of an ulcer center or the white periphery (which may be reactive keratosis). &ldquo;Heart of darkness&rdquo; = biopsy site selection rule. Red &gt; white, nodular/indurated &gt; flat, ulcerated margin &gt; ulcer center. <em>Audio: &ldquo;Punch biopsy right in the middle of it. Was it perfect? No. Was it a biopsy? Yes. Was it cancer? Yes.&rdquo;</em></p>
+  </details>
+
+  <!-- no image delivered for Section 15 (crammable recap) — no clinical images for this section -->
+
+</section>
+
+</div><!-- /container -->
+
+<footer class="guide-footer">
+  MASTER STUDY GUIDE &mdash; Fully merged from two source files &middot; Built for D3 OD 530 Midterm cram &middot; Sources: 69-slide professor deck + supplementary evidence &middot; Highlighted material flagged &middot; QA-verified: amelanotic melanoma ~15%, erythroplakia ~50% MT (split from 75&ndash;90%), HPV&minus; OPSCC ~40% OS
+</footer>
+
+<button class="back-top" id="backTop" aria-label="Back to top">&#8593;</button>
+
+<script>
+  const btn = document.getElementById('backTop');
+  window.addEventListener('scroll', () => {
+    btn.classList.toggle('visible', window.scrollY > 400);
+  });
+  btn.addEventListener('click', () => window.scrollTo({top: 0, behavior: 'smooth'}));
+</script>
+
+</body>
+</html>

@@ -1,0 +1,1271 @@
+<!-- ===================================================================
+  FRAGMENT: Allergies & Immunologic Diseases (Lecture 2 — Roehm)
+  CSS-TO-ADD (for orchestrator to move into merged shell <style> block):
+
+  #sec-allergies details.flashcard { background:#F4F1EA; border:1px solid #C8923E; border-radius:8px; padding:10px 14px; margin:8px 0; }
+  #sec-allergies details.flashcard summary.flashcard-q { cursor:pointer; font-weight:600; color:#2C2920; list-style:none; }
+  #sec-allergies details.flashcard summary.flashcard-q::marker { display:none; }
+  #sec-allergies details.flashcard summary.flashcard-q::before { content:"▶ Q: "; color:#C8923E; }
+  #sec-allergies details.flashcard[open] summary.flashcard-q::before { content:"▼ Q: "; }
+  #sec-allergies details.flashcard[open] .flashcard-a { margin-top:8px; padding-top:8px; border-top:1px solid #E5E1D8; color:#4A4030; }
+  .slide-ref { display:inline-block; background:#E5E1D8; color:#5C5448; padding:2px 6px; border-radius:4px; font-size:11px; font-weight:600; font-family:'JetBrains Mono',monospace; margin-left:4px; }
+  .alg-catG { background:#FFF3E0; border-left:4px solid #E65100; padding:10px 14px; border-radius:0 8px 8px 0; margin:12px 0; }
+  .alg-catG::before { content:"⚡ PROF POSITION (Category G — EXAM TARGET)"; display:block; font-weight:700; color:#E65100; font-size:12px; margin-bottom:6px; }
+  .alg-tier-header { display:inline-block; padding:3px 10px; border-radius:12px; font-size:11px; font-weight:700; letter-spacing:0.5px; margin-bottom:8px; }
+  .alg-t1 { background:#FFEAEA; color:#C0392B; }
+  .alg-t2 { background:#FFF3CD; color:#8D6708; }
+  .alg-t3 { background:#EDE7F6; color:#4527A0; }
+  .alg-tx { background:#F0F0F0; color:#777; }
+  .alg-drug-hero { background:#FFF8E1; border:2px solid #F9A825; border-radius:10px; padding:14px 18px; margin:14px 0; text-align:center; }
+  .alg-drug-hero .drug-name { font-size:1.3em; font-weight:800; color:#5D4037; font-family:'JetBrains Mono',monospace; }
+  .alg-biopsy-trap { background:#FFEBEE; border:2px dashed #E53935; border-radius:8px; padding:12px; margin:10px 0; }
+  .alg-sep-entities { background:#E8F5E9; border:2px solid #2E7D32; border-radius:8px; padding:12px; margin:10px 0; }
+  .alg-sep-entities::before { content:"✅ CURRENT CLASSIFICATION (updated from spectrum teaching)"; display:block; font-weight:700; color:#1B5E20; font-size:11px; margin-bottom:6px; }
+  details.tier-3-collapse > summary { cursor:pointer; font-size:0.88em; color:#7E6EBB; font-weight:600; padding:4px 0; }
+=================================================================== -->
+
+<div class="guide-section" id="sec-allergies" data-tab="allergies">
+  <div class="guide-section-divider">
+    <div class="divider-inner">
+      <span class="section-number">PART 2 OF 5</span>
+      <h2>Allergies &amp; Immunologic Diseases</h2>
+      <p class="section-tagline">Roehm — 57 slides | 8-agent compiled</p>
+    </div>
+  </div>
+  <div class="guide-section-content">
+
+<!-- ========================================================
+  SECTION 1: TIER FRAMEWORK + QUICK NAVIGATION
+======================================================== -->
+<div class="foundations-box" id="alg-tier-framework" style="margin-bottom:24px;">
+  <h3 style="margin-top:0;">How Prof Roehm Triaged These Diseases for the Exam</h3>
+  <div class="prof-emphasis">🎙️ Prof opened the lecture by explicitly telling students she had ranked the diseases by exam priority — Tier 1 conditions would be covered first and most deeply, Tier 2 required recognition and referral understanding, and Tier 3 was awareness-level only.</div>
+  <div style="display:flex;gap:16px;flex-wrap:wrap;margin-top:14px;">
+    <div style="flex:1 1 200px;background:#FFEAEA;border-radius:8px;padding:12px;">
+      <span class="alg-tier-header alg-t1">TIER 1 — MEMORIZE</span>
+      <ul style="margin:6px 0 0;padding-left:18px;font-size:0.92em;">
+        <li><strong>RAS</strong> (Recurrent Aphthous Stomatitis)</li>
+        <li><strong>OLP</strong> (Oral Lichen Planus)</li>
+        <li><strong>Erythema Migrans</strong> (Geographic Tongue)</li>
+        <li><strong>DRGH</strong> (Drug-Related Gingival Hyperplasia)</li>
+        <li><strong>Allergic Contact Stomatitis</strong></li>
+        <li><strong>TLP</strong> (Transient Lingual Papillitis)</li>
+      </ul>
+    </div>
+    <div style="flex:1 1 200px;background:#FFF3CD;border-radius:8px;padding:12px;">
+      <span class="alg-tier-header alg-t2">TIER 2 — RECOGNITION + REFERRAL</span>
+      <ul style="margin:6px 0 0;padding-left:18px;font-size:0.92em;">
+        <li>Pemphigus Vulgaris (PV)</li>
+        <li>Mucous Membrane Pemphigoid (MMP)</li>
+        <li>Erythema Multiforme / SJS</li>
+        <li>Lichenoid Contact Reaction</li>
+      </ul>
+    </div>
+    <div style="flex:1 1 180px;background:#EDE7F6;border-radius:8px;padding:12px;">
+      <span class="alg-tier-header alg-t3">TIER 3 — AWARENESS ONLY</span>
+      <ul style="margin:6px 0 0;padding-left:18px;font-size:0.92em;">
+        <li>Plasma Cell Gingivitis</li>
+        <li>OFG</li>
+        <li>PNP/PAMS</li>
+        <li>Bullous Pemphigoid</li>
+        <li>Others</li>
+      </ul>
+    </div>
+  </div>
+  <div class="prof-flag-tier-1" style="margin-top:14px;">⚠️ EXAM FORMAT GUARANTEED: Prof stated she will include a typed clinical question — photo + describe lesion + DDx + workup + treatment plan. Practice this framework for every disease below.</div>
+  <div style="margin-top:10px;padding:8px 12px;background:#F0F4F8;border-radius:6px;font-size:0.85em;">
+    <strong>Lesion Description Framework:</strong> Location → Size/Shape/Color/Border → Differential Diagnoses → Diagnostic Workup → Treatment Plan
+  </div>
+</div>
+
+<!-- Quick Navigation -->
+<div class="quick-facts" id="alg-quicknav" style="margin-bottom:24px;">
+  <h4 style="margin-top:0;">Quick Navigation</h4>
+  <div style="display:flex;flex-wrap:wrap;gap:8px;font-size:0.88em;">
+    <div style="flex:0 0 auto;"><strong>Part 1 — Reactive/Inflammatory:</strong></div>
+    <a href="#alg-ras" style="color:#C0392B;font-weight:600;">RAS (T1)</a> ·
+    <a href="#alg-gt" style="color:#C0392B;font-weight:600;">Geographic Tongue (T1)</a> ·
+    <a href="#alg-drgh" style="color:#C0392B;font-weight:600;">DRGH (T1)</a> ·
+    <a href="#alg-allergic" style="color:#8D6708;font-weight:600;">Allergic Reactions (T2/T3)</a> ·
+    <a href="#alg-tlp" style="color:#C0392B;font-weight:600;">TLP (T1)</a>
+    <div style="flex:1 1 100%;"></div>
+    <div style="flex:0 0 auto;"><strong>Part 2 — Immunologic/Vesiculobullous:</strong></div>
+    <a href="#alg-olp" style="color:#C0392B;font-weight:600;">OLP (T1)</a> ·
+    <a href="#alg-mmp" style="color:#C0392B;font-weight:600;">MMP (T1)</a> ·
+    <a href="#alg-pv" style="color:#C0392B;font-weight:600;">PV (T1)</a> ·
+    <a href="#alg-em-rime" style="color:#C0392B;font-weight:600;">EM/RIME (T1)</a> ·
+    <a href="#alg-sjs-ten" style="color:#C0392B;font-weight:600;">SJS/TEN (T1)</a> ·
+    <a href="#alg-pnp" style="color:#8D6708;font-weight:600;">PNP/PAMS (T2/T3)</a>
+    <div style="flex:1 1 100%;"></div>
+    <a href="#alg-cross-tables" style="color:#4527A0;font-weight:600;">Cross-Cutting Tables (Nikolsky · DIF · BSA · Histology)</a> ·
+    <a href="#alg-flashcards" style="color:#2E7D32;font-weight:600;">Flashcard Deck (15 Q&amp;A)</a> ·
+    <a href="#alg-drug-quickref" style="color:#1565C0;font-weight:600;">Drug Allergy Quick-Ref</a>
+  </div>
+</div>
+
+<!-- ========================================================
+  PART 1 — REACTIVE / INFLAMMATORY
+======================================================== -->
+<h3 style="margin-top:28px;border-bottom:3px solid #C0392B;padding-bottom:6px;color:#C0392B;">PART 1 — Reactive &amp; Inflammatory Diseases</h3>
+
+<!-- ===================== RAS ===================== -->
+<div class="high-yield" id="alg-ras" style="margin-bottom:28px;">
+  <span class="alg-tier-header alg-t1">TIER 1</span>
+  <h3 style="margin-top:4px;">Recurrent Aphthous Stomatitis (RAS)</h3>
+
+  <!-- When RAS isn't RAS callout -->
+  <div class="callout" style="background:#FFF3E0;border-left:4px solid #E65100;margin-bottom:14px;">
+    <strong>⚠️ When RAS isn't RAS:</strong> Oral ulcers + fever + fatigue + weight loss + not responding to acyclovir → markedly reduced CD4 T-lymphocyte count = top differential is HIV/AIDS. <span class="slide-ref">[Slide 2]</span>
+  </div>
+
+  <!-- T1: Location badge -->
+  <div style="display:inline-block;background:#C0392B;color:#fff;font-weight:800;font-size:1.1em;padding:8px 18px;border-radius:8px;letter-spacing:1px;margin-bottom:12px;">
+    🎯 NONKERATINIZED MUCOSA ONLY <span style="font-size:0.75em;font-weight:500;">(labial/buccal mucosa · ventral tongue · soft palate)</span>
+  </div>
+  <span class="slide-ref">[Slide 4]</span>
+
+  <div class="callout-danger" style="margin:10px 0;">
+    🔑 <strong>Erythematous halo = RAS on your differential — "EASY POINTS"</strong><br>
+    Yellow-white fibrinopurulent membrane surrounded by a red halo. If you see it, put RAS on your list. <span class="slide-ref">[Slide 4]</span>
+  </div>
+  <div class="prof-emphasis">🎙️ Prof flagged the erythematous halo as an easy exam point — students who recognize it in a photo get immediate credit.</div>
+
+  <!-- DDx: RAS vs HSV -->
+  <div class="ddx-table" style="margin:14px 0;" id="alg-ras-ddx">
+    <h4 style="margin-top:0;">RAS vs HSV — The Critical DDx <span class="slide-ref">[Slide 6]</span></h4>
+    <table class="data-table" style="width:100%;">
+      <thead><tr><th>Feature</th><th style="color:#C0392B;">RAS</th><th style="color:#2980B9;">HSV</th></tr></thead>
+      <tbody>
+        <tr><td><strong>Mucosa type</strong></td><td style="color:#C0392B;font-weight:700;">NONKERATINIZED (labial, buccal, ventral tongue)</td><td style="color:#2980B9;font-weight:700;">KERATINIZED (gingiva, hard palate, dorsal tongue)</td></tr>
+        <tr><td>Fever</td><td>No</td><td>Yes</td></tr>
+        <tr><td>Vesicles/Blisters</td><td>No — ulcer only</td><td>Yes — vesicles rupture → ulcers</td></tr>
+        <tr><td>Lymphadenopathy</td><td>No</td><td>Yes</td></tr>
+        <tr><td>Prodrome</td><td>No</td><td>Tingling/burning</td></tr>
+      </tbody>
+    </table>
+    <div class="prof-emphasis">🎙️ Prof emphasized that location is the most critical differentiator — keratinized mucosa involvement points toward HSV, not RAS.</div>
+  </div>
+
+  <!-- Age >40 callout -->
+  <div class="callout-danger" id="alg-ras-age40" style="margin:12px 0;">
+    🚨 <strong>AGE &gt;40 + NEW-ONSET RAS → MANDATORY SYSTEMIC WORKUP</strong><br>
+    Always ask: "Did you have these ulcers as a child?" If no prior history + age &gt;40 = workup for HIV, celiac disease, IBD, hematologic malignancy. <span class="slide-ref">[Slide 4]</span>
+  </div>
+  <div class="prof-emphasis">🎙️ Prof stressed that new-onset ulcers after age 40 in a patient with no childhood history is not normal — a workup is required.</div>
+
+  <!-- RAS Variants table -->
+  <h4>RAS Variants <span class="slide-ref">[Slide 4]</span></h4>
+  <table class="data-table" style="width:100%;">
+    <thead><tr><th>Type</th><th>Size</th><th>Healing Time</th><th>Scarring</th><th>% of RAS</th><th>Notes</th></tr></thead>
+    <tbody>
+      <tr><td>Minor</td><td>3–10 mm</td><td>7–14 days</td><td>No</td><td>80%</td><td>Most common</td></tr>
+      <tr><td>Major</td><td>1–3 cm</td><td>2–6 weeks</td><td>May scar</td><td>10–15%</td><td>Labial/soft palate/tonsillar fauces</td></tr>
+      <tr style="background:#FFEBEE;"><td><strong>Herpetiform</strong></td><td>1–3 mm</td><td>Variable</td><td>No</td><td>5–10%</td><td><span style="color:#C0392B;font-weight:700;">⚠️ NOT CAUSED BY HSV — shape only!</span> Up to 100 ulcers, may coalesce, female predominance</td></tr>
+    </tbody>
+  </table>
+  <div class="prof-flag-tier-1">⚠️ TRAP: "Herpetiform" = morphologic term only (shaped like herpes clusters). These are NOT caused by Herpes Simplex Virus. The name is a red herring on exams.</div>
+  <div class="prof-emphasis">🎙️ Prof compared herpetiform aphthae to acne — immune-mediated, not viral. She told students not to let the name fool them.</div>
+
+  <!-- Complex aphthosis -->
+  <div class="pearl-callout" style="margin:12px 0;">
+    <strong>Complex Aphthosis:</strong> ≥3 concurrent ulcers, almost constant, severe pain → 60% have an underlying trigger → full lab workup: CBC, iron, B12, folate, Vit D, celiac screening. <span class="slide-ref">[Slide 5]</span>
+  </div>
+
+  <!-- RAS Treatment section -->
+  <h4 id="alg-ras-treatment">Treatment / Pharmacotherapy <span class="slide-ref">[Slides 6–7]</span></h4>
+
+  <!-- HERO IMAGE: slide 7 corticosteroid potency table -->
+  <figure class="clinical-img hero-img-full" data-slide="7" id="alg-ras-hero">
+    <img src="images/oral-med-midterm/lecture-2/slide-007-corticosteroid-potency-table.png"
+         alt="Topical corticosteroid potency table grouped by potency class — Group 1 super-high to Not Classified — with dexamethasone elixir 0.5 mg/5 mL highlighted as the only oral rinse formulation."
+         loading="lazy">
+    <figcaption>Topical corticosteroid potency by class. Cyan-highlighted picks (commit to memory): Clobetasol propionate 0.05% (Group 1 — super-high potency), Fluocinonide 0.05% (Group 2 — high potency), and Dexamethasone elixir 0.5 mg/5 mL (Not classified — the only oral-rinse formulation suitable for diffuse oral lesions). Source: Sidbury R, et al. (2009) JAAD.</figcaption>
+  </figure>
+
+  <!-- DRUG HERO: dexamethasone memorize box -->
+  <div class="alg-drug-hero" id="alg-dex-memorize">
+    <div class="drug-name">💊 DEXAMETHASONE ELIXIR 0.5 mg/5 mL</div>
+    <div style="margin-top:8px;font-size:1em;color:#5D4037;">Soak <strong>5 minutes</strong> (minimum 2 min), up to QID. Soak &amp; expectorate (or swallow per Rx).</div>
+    <div style="margin-top:6px;font-size:0.9em;color:#795548;">The universal first-line oral medicine rinse — referenced for <em>every disease</em> in this lecture.</div>
+    <div style="margin-top:6px;font-size:0.85em;color:#BF360C;font-weight:700;">⚠️ If candidiasis risk: combine with nystatin solution in equal parts.</div>
+    <div style="margin-top:6px;font-size:0.82em;color:#777;">🎬 Prof's mnemonic: "My Windex" — like the father in My Big Fat Greek Wedding, she puts it on everything.</div>
+  </div>
+  <div class="prof-emphasis">🎙️ Prof stated she would "torture" students about dexamethasone solution — she considers it the single most important prescription for every dentist to know and be comfortable writing.</div>
+
+  <!-- Potency hierarchy table -->
+  <h4>Topical Corticosteroid Hierarchy <span class="slide-ref">[Slide 7]</span></h4>
+  <table class="data-table" style="width:100%;">
+    <thead><tr><th>#</th><th>Drug</th><th>Potency Group</th><th>Potency Level</th><th>Notes</th></tr></thead>
+    <tbody>
+      <tr style="background:#FFF9C4;"><td>1</td><td><strong>Clobetasol propionate 0.05% gel</strong></td><td>Group 1</td><td style="color:#C0392B;font-weight:700;">Super-High</td><td>First-line for moderate-severe. Off-label intraorally.</td></tr>
+      <tr style="background:#FFF9C4;"><td>2</td><td><strong>Fluocinonide 0.05% gel</strong></td><td>Group 2</td><td style="color:#E67E22;font-weight:700;">High</td><td>Gel = alcohol base = burns. Pre-numb with benzocaine first. Off-label intraorally.</td></tr>
+      <tr><td>3</td><td><strong>Dexamethasone elixir 0.5 mg/5 mL</strong></td><td>Not classified</td><td style="color:#8E44AD;font-weight:700;">Oral rinse</td><td>ONLY rinse formulation. 5-min soak up to QID. THE one to memorize.</td></tr>
+      <tr style="background:#FFEBEE;"><td>4</td><td>Triamcinolone acetonide 0.1% paste</td><td>Group 4</td><td style="color:#777;">Medium (WEAKEST)</td><td>⚠️ TRAP: Has "dental" in name → students think it's best → it's NOT. Weakest of the three.</td></tr>
+    </tbody>
+  </table>
+  <div class="prof-flag-tier-1">⚠️ TRAP: Triamcinolone acetonide dental paste has "dental" in its name but is the WEAKEST of the three common oral medicine corticosteroids. Do not default to it.</div>
+  <div class="prof-emphasis">🎙️ Prof called out students who reflexively reach for triamcinolone because of the word "dental" in the name, describing it as a common mistake.</div>
+  <div class="prof-mnemonic">🧠 Gel = alcohol base = BURNS. Pre-numb patient with lidocaine or benzocaine BEFORE applying gel corticosteroid to improve adherence. Also: apply gel under gauze for 20 minutes for maximum penetration. <span class="slide-ref">[Slide 6]</span></div>
+
+  <!-- Off-label note -->
+  <div class="de-emphasized" style="font-size:0.85em;margin:8px 0;">
+    <em>Note (G5):</em> Fluocinonide and clobetasol drug inserts say "do not use intraorally" — these are used off-label. Warn patients in advance; pharmacist may flag the prescription. <span class="slide-ref">[Slide 6]</span>
+  </div>
+
+  <!-- SLS-free toothpaste -->
+  <div class="callout-danger" style="margin:14px 0;" id="alg-sensodyne-trap">
+    🚫 <strong>DO NOT RECOMMEND SENSODYNE FOR SOFT TISSUE DISEASE</strong><br>
+    Sensodyne is one of the <em>most irritating</em> toothpastes for mucosal tissues. Sensodyne = good for dentin hypersensitivity, NOT soft tissue sensitivity. <span class="slide-ref">[Slide 8]</span>
+  </div>
+  <div class="alg-catG">Recommend SLS-free toothpastes instead: Cleure, Boka, CloSYS, Tom's (original), Verve, or <strong>Doctor Bob</strong> (the single one to remember — unflavored, SLS-free, dye-free, gluten-free). <span class="slide-ref">[Slide 8]</span></div>
+  <div class="prof-emphasis">🎙️ Prof had students note that many assume Sensodyne is SLS-free — it is not, and she directly warned against recommending it for mucosal conditions. She named Doctor Bob as her single top recommendation.</div>
+
+  <!-- Biopsy indications -->
+  <div class="pearl-callout" style="margin:12px 0;">
+    <strong>Biopsy Indications for RAS:</strong> (1) Single ulcer present &gt;4 weeks, (2) Atypical presentation, (3) New onset after age 40. Liberal biopsying policy — early detection catches cancer. <span class="slide-ref">[Slide 6]</span>
+  </div>
+
+  <!-- T3 background -->
+  <details class="tier-3-collapse">
+    <summary>Tier 3 Background — RAS Epidemiology &amp; Pathophysiology</summary>
+    <ul style="font-size:0.85em;margin-top:8px;">
+      <li>Most common oral ulcerative condition (~20% of population; range 5–66%). <span class="slide-ref">[Slide 4]</span></li>
+      <li>80% experience first ulcer before age 30; 40% positive family history.</li>
+      <li>Mechanism: CD8+ T cells target nonkeratinized mucosa. <span class="slide-ref">[Slide 5]</span></li>
+      <li>Nutritional screen (order only when clinically suspected): B12, folic acid, iron/ferritin, Vit D, Zinc. Supplement <strong>ONLY AS NEEDED</strong>. <span class="slide-ref">[Slide 5]</span></li>
+      <li>Medication-induced RAS: NSAIDs, beta-blockers, bisphosphonates, nicorandil.</li>
+      <li>Systemic associations (Celiac, IBD, Behcet, cyclic neutropenia, PFAPA, HIV) — covered in separate systemic unit.</li>
+      <li>Silver nitrate cautery — <strong>AVOID</strong> (risk of massive necrosis and argyria).</li>
+      <li>Refractory cases: refer to oral medicine (thalidomide, colchicine, dapsone, apremilast — for specialist use).</li>
+    </ul>
+  </details>
+</div>
+
+<!-- ===================== GEOGRAPHIC TONGUE ===================== -->
+<div class="high-yield" id="alg-gt" style="margin-bottom:28px;">
+  <span class="alg-tier-header alg-t1">TIER 1</span>
+  <h3 style="margin-top:4px;">Geographic Tongue (Erythema Migrans / Benign Migratory Glossitis)</h3>
+
+  <!-- 3 D's mnemonic -->
+  <div class="prof-mnemonic" id="alg-gt-3ds" style="margin-bottom:14px;">
+    🧠 <strong>The 3 D's of Geographic Tongue</strong> <span class="slide-ref">[Slide 11]</span>
+    <div style="display:flex;gap:12px;margin-top:10px;flex-wrap:wrap;">
+      <div style="flex:1 1 120px;background:#C0392B;color:#fff;border-radius:8px;padding:10px;text-align:center;">
+        <div style="font-size:2em;font-weight:900;text-decoration:underline;">D</div>
+        <div style="font-weight:700;">EPAPILLATED</div>
+        <div style="font-size:0.85em;margin-top:4px;">Loss of filiform papillae → red smooth atrophic patches</div>
+      </div>
+      <div style="flex:1 1 120px;background:#C0392B;color:#fff;border-radius:8px;padding:10px;text-align:center;">
+        <div style="font-size:2em;font-weight:900;text-decoration:underline;">D</div>
+        <div style="font-weight:700;">EMARCATED</div>
+        <div style="font-size:0.85em;margin-top:4px;">Clear circumferential border — <strong>serpiginous</strong> white line</div>
+      </div>
+      <div style="flex:1 1 120px;background:#C0392B;color:#fff;border-radius:8px;padding:10px;text-align:center;">
+        <div style="font-size:2em;font-weight:900;text-decoration:underline;">D</div>
+        <div style="font-weight:700;">YNAMIC</div>
+        <div style="font-size:0.85em;margin-top:4px;">Migrates location over days–weeks</div>
+      </div>
+    </div>
+  </div>
+  <div class="prof-emphasis">🎙️ Prof had the entire class verbally repeat each of the three D's — she said this mnemonic is the key structure for remembering geographic tongue's features.</div>
+
+  <!-- HERO IMAGE: slide 13 -->
+  <figure class="clinical-img" data-slide="13" id="alg-gt-hero">
+    <img src="images/oral-med-midterm/lecture-2/slide-013-geographic-tongue-clinical-photos.png"
+         alt="Five clinical photographs of geographic tongue showing characteristic well-demarcated red atrophic patches with serpiginous white borders on the dorsal and lateral tongue surfaces."
+         loading="lazy">
+    <figcaption>Geographic tongue: well-defined erythematous patches surrounded by a raised, white serpiginous border. The map-like pattern shifts location over days to weeks (migratory) — pathognomonic when observed.</figcaption>
+  </figure>
+
+  <!-- Serpiginous vocab callout -->
+  <div class="callout" id="alg-serpiginous" style="background:#E8F5E9;border-left:4px solid #2E7D32;margin:12px 0;">
+    📖 <strong>VOCABULARY WORD:</strong> <span style="font-size:1.2em;font-weight:800;color:#1B5E20;">SERPIGINOUS</span> — the term for the winding, snake-like white border of geographic tongue. From "serpent." <span class="slide-ref">[Slides 11–12]</span>
+    <div style="margin-top:4px;font-size:0.88em;color:#2E7D32;">(mnemonic: serpiginous = serpent = snake-shaped winding border)</div>
+  </div>
+  <div class="prof-emphasis">🎙️ Prof had the entire class say "serpiginous" out loud in lecture, calling it a key vocabulary word for the exam.</div>
+
+  <!-- Migratory = pathognomonic -->
+  <div class="callout-danger" style="margin:12px 0;" id="alg-gt-migratory">
+    🔑 <strong>MIGRATORY = PATHOGNOMONIC — RULES OUT MALIGNANCY</strong><br>
+    If the lesion moves location over days, it cannot be cancer. This is the most clinically reassuring feature of geographic tongue. <span class="slide-ref">[Slide 12]</span>
+  </div>
+
+  <!-- Traps -->
+  <div class="prof-flag-tier-1">⚠️ TRAP 1 — White serpiginous border ≠ candidiasis. Candida scrapes off with gauze. Geographic tongue border does NOT scrape off and does NOT respond to antifungals. <span class="slide-ref">[Slide 12]</span></div>
+  <div class="prof-flag-tier-1" style="margin-top:8px;">⚠️ TRAP 2 — Ectopic geographic tongue: GT can appear on buccal mucosa, floor of mouth, soft palate. Still called erythema migrans. Not tongue-restricted. <span class="slide-ref">[Slide 12]</span></div>
+
+  <!-- DDx box -->
+  <div class="ddx-table" style="margin:12px 0;">
+    <h4 style="margin-top:0;">DDx for Geographic Tongue <span class="slide-ref">[Slide 12]</span></h4>
+    <table class="data-table" style="width:100%;">
+      <thead><tr><th>Condition</th><th>Key Distinguisher</th><th>Action</th></tr></thead>
+      <tbody>
+        <tr><td>Candidiasis</td><td>Scrapes off with gauze; responds to antifungals</td><td>Trial antifungal</td></tr>
+        <tr><td>OLP</td><td>Wickham striae; bilateral buccal pattern</td><td>Biopsy if atypical</td></tr>
+        <tr style="background:#FFEBEE;"><td><strong>Erythroplakia</strong></td><td><strong>FIXED (does not migrate); high malignant potential</strong></td><td style="color:#C0392B;font-weight:700;">URGENT BIOPSY</td></tr>
+        <tr><td>Leukoplakia</td><td>Fixed white patch; does not shift</td><td>Biopsy if persistent</td></tr>
+      </tbody>
+    </table>
+    <div class="prof-emphasis">🎙️ Prof flagged erythroplakia specifically, stating it has a very high likelihood of malignancy on first diagnosis and must not be missed.</div>
+  </div>
+
+  <!-- Management -->
+  <h4>Management <span class="slide-ref">[Slide 12]</span></h4>
+  <table class="data-table" style="width:100%;">
+    <thead><tr><th>Status</th><th>Treatment</th></tr></thead>
+    <tbody>
+      <tr><td>Asymptomatic</td><td>Reassurance only — no treatment needed. Benign condition.</td></tr>
+      <tr><td>Symptomatic</td><td>Children's toothpaste (unflavored); avoid mint/spicy/acidic foods; <strong>diphenhydramine 12.5 mg/5 mL (children's Benadryl)</strong> soak TID-QID; fluocinonide/clobetasol gel; tacrolimus 0.1%</td></tr>
+    </tbody>
+  </table>
+  <div class="pearl-callout">
+    <strong>Diphenhydramine Dual Role:</strong> Children's Benadryl (12.5 mg/5 mL) acts as both anti-inflammatory AND topical anesthetic on mucosal surfaces. Soak TID-QID for symptomatic GT. <span class="slide-ref">[Slide 12]</span>
+  </div>
+
+  <details class="tier-3-collapse">
+    <summary>Tier 3 Background — GT Epidemiology &amp; Associations</summary>
+    <ul style="font-size:0.85em;margin-top:8px;">
+      <li>Affects ~3% of population; familial predisposition present. <span class="slide-ref">[Slide 11]</span></li>
+      <li>Associated with: fissured tongue (strong association), psoriasis (documented), atopy (elevated IgE ≥200 U/mL).</li>
+    </ul>
+  </details>
+</div>
+
+<!-- ===================== DRGH ===================== -->
+<div class="high-yield" id="alg-drgh" style="margin-bottom:28px;">
+  <span class="alg-tier-header alg-t1">TIER 1 — BOARDS FAVORITE</span>
+  <h3 style="margin-top:4px;">Drug-Related Gingival Hyperplasia (DRGH / DIGH)</h3>
+
+  <div class="callout-danger" style="margin-bottom:10px;">
+    💊 <strong>BOARDS LOVE THIS SECTION — KNOW THESE DRUGS</strong> <span class="slide-ref">[Slide 14]</span>
+  </div>
+  <div class="prof-emphasis">🎙️ Prof explicitly told students that boards love asking about drug-induced gingival hyperplasia and the specific drugs responsible — she recommended memorizing them completely.</div>
+
+  <!-- HERO IMAGE: slide 16 -->
+  <figure class="clinical-img hero-img-full" data-slide="16" id="alg-drgh-hero">
+    <img src="images/oral-med-midterm/lecture-2/slide-016-drug-induced-gingival-hyperplasia-photos.png"
+         alt="Four clinical photographs of severe drug-induced gingival hyperplasia showing fibrotic overgrowth covering crowns of teeth, predominantly anterior maxillary and mandibular gingiva."
+         loading="lazy">
+    <figcaption>Drug-induced gingival hyperplasia: fibrotic overgrowth most pronounced on labial anterior gingiva. Three drug classes: anticonvulsants (Phenytoin — #1), immunosuppressants (Cyclosporine), calcium channel blockers (Nifedipine, Amlodipine). Source: Bajkovec et al. (2021) World J Cardiol.</figcaption>
+  </figure>
+
+  <!-- Drug table -->
+  <h4>Three Drug Classes <span class="slide-ref">[Slide 14]</span></h4>
+  <table class="data-table" style="width:100%;">
+    <thead><tr><th>Class</th><th>Key Drug(s)</th><th>Incidence</th><th>Notes</th></tr></thead>
+    <tbody>
+      <tr style="background:#FFEBEE;"><td><strong>Anticonvulsants</strong></td><td><strong style="color:#C0392B;">PHENYTOIN (#1 MOST IMPORTANT)</strong></td><td>~50% of users</td><td>Most common overall; boards #1</td></tr>
+      <tr style="background:#FFEBEE;"><td><strong>Immunosuppressants</strong></td><td><strong style="color:#C0392B;">CYCLOSPORINE (#1)</strong></td><td>25–70% of users</td><td>Transplant patients; worst when combined with nifedipine</td></tr>
+      <tr style="background:#FFEBEE;"><td><strong>Calcium Channel Blockers</strong></td><td><strong style="color:#C0392B;">NIFEDIPINE, AMLODIPINE</strong></td><td>6–25% of users</td><td>Verapamil = lower risk; nifedipine/amlodipine highest risk</td></tr>
+    </tbody>
+  </table>
+  <div class="prof-emphasis">🎙️ Prof described these three drug classes as ones to commit to memory completely — calling phenytoin out as the single most important drug in the list.</div>
+
+  <!-- Timeline & distribution -->
+  <div class="callout-danger" style="margin:12px 0;" id="alg-drgh-onset">
+    ⏱️ <strong>ONSET: 1–3 months after starting the medication</strong> — classic exam timeline.<br>
+    Distribution: begins at <strong>interdental papillae</strong> → spreads anteriorly and facially. Edentulous areas spared. <span class="slide-ref">[Slide 14]</span>
+  </div>
+  <div class="prof-emphasis">🎙️ Prof gave this onset timeline as a direct exam target — 1-3 months and starting at the interdental papillae are the details she expects students to know.</div>
+
+  <!-- Management ladder -->
+  <h4>Management Ladder <span class="slide-ref">[Slide 15]</span></h4>
+  <div class="callout-danger" style="margin-bottom:8px;">
+    <strong>STEP 1: METICULOUS PLAQUE CONTROL = #1 INTERVENTION</strong><br>
+    Must optimize oral hygiene BEFORE any other step. Surgery without prior hygiene = ~35% recurrence within 18 months.
+  </div>
+  <div class="prof-flag-tier-1">⚠️ TRAP (F11): Do NOT go straight to gingivectomy. Surgery without correcting the causative drug and optimizing hygiene = the tissue grows right back.</div>
+  <ol style="margin:8px 0;padding-left:24px;">
+    <li><strong>Plaque control</strong> (meticulous, daily)</li>
+    <li>Antimicrobial rinse: chlorhexidine 0.12% (if CHX allergy → povidone-iodine/Betadine; shellfish allergy = iodine contraindicated)</li>
+    <li><strong>Coordinate with prescribing physician</strong> — suggest drug substitution (e.g., nifedipine → felodipine; CCB → ACE inhibitor/ARB). Never change unilaterally. Regression takes 6 months–1 year.</li>
+    <li>Gingivectomy — <strong>LAST RESORT</strong> only after hygiene optimized + drug addressed</li>
+  </ol>
+
+  <details class="tier-3-collapse">
+    <summary>Tier 3 — DRGH Risk Factors &amp; Drug Interactions</summary>
+    <ul style="font-size:0.85em;margin-top:8px;">
+      <li>Risk factors: poor plaque control, male sex (3×), young age, higher drug dose, smoking. <span class="slide-ref">[Slide 14]</span></li>
+      <li>Cyclosporine + nifedipine = synergistic effect (transplant patients at highest risk for severe overgrowth).</li>
+    </ul>
+  </details>
+</div>
+
+<!-- ===================== ALLERGIC REACTIONS ===================== -->
+<div id="alg-allergic" style="margin-bottom:28px;">
+  <span class="alg-tier-header alg-t2">TIER 2 / T3</span>
+  <h3 style="margin-top:4px;">Allergic Reactions in Dental Practice</h3>
+
+  <!-- Type I/IV/Pseudo table -->
+  <h4>Hypersensitivity Reaction Types <span class="slide-ref">[Slide 17]</span></h4>
+  <table class="data-table" style="width:100%;">
+    <thead><tr><th>Type</th><th>Mechanism</th><th>Timing</th><th>Dental Triggers</th></tr></thead>
+    <tbody>
+      <tr style="background:#FFF9C4;"><td><strong>Type I</strong></td><td><strong>IgE-mediated</strong> <em>(memory: Type 1 ends in E → IgE)</em></td><td>Minutes–hours</td><td>Latex, antibiotics, chlorhexidine</td></tr>
+      <tr><td>Type IV</td><td>T-cell mediated (delayed)</td><td>24–72 hours</td><td>Metals (nickel, chromium, cobalt), acrylates, amalgam, flavorings</td></tr>
+      <tr><td>Pseudoallergic</td><td>Non-immune mast cell activation</td><td>Variable</td><td>Bisulfites (LA preservatives); most "LA allergies" are pseudoallergic</td></tr>
+    </tbody>
+  </table>
+  <div class="prof-mnemonic">🧠 Type I memory hook: "Type 1 — the number 1 has an E at the end → IgE." Prof repeated this three times in lecture. <span class="slide-ref">[Slide 17]</span></div>
+
+  <!-- Type IV section with image -->
+  <h4>Type IV — Dental Practice Presentations <span class="slide-ref">[Slide 17]</span></h4>
+  <figure class="clinical-img" data-slide="18">
+    <img src="images/oral-med-midterm/lecture-2/slide-018-allergic-contact-reactions-tongue-arm.png"
+         alt="Two-row clinical panel: top row shows lateral tongue erythematous mucosa lesions adjacent to amalgam restoration; bottom row shows palatal erythema, forearm contact dermatitis, and arch contact stomatitis from acrylic."
+         loading="lazy">
+    <figcaption>Allergic contact reactions in the oral cavity. Lichenoid lesions adjacent to amalgam restorations — characteristic anatomic relationship to triggering material. Skin patch test reactions confirm the suspected contact allergen. <span class="slide-ref">[Slide 18]</span></figcaption>
+  </figure>
+
+  <div class="pearl-callout" style="margin:10px 0;">
+    <strong>Patch Test — Gold Standard for Type IV, BUT:</strong> A positive patch test alone does NOT confirm causation. Must have temporal correlation between exposure and symptom onset. <span class="slide-ref">[Slide 23]</span>
+  </div>
+  <div class="prof-flag-tier-1">⚠️ TRAP (F12): Positive patch test = sensitization history, not necessarily the current active trigger. Requires temporal correlation.</div>
+
+  <!-- PCG section with images -->
+  <h4>Plasma Cell Gingivitis (PCG) / Contact Stomatitis</h4>
+  <details class="tier-3-collapse">
+    <summary>Tier 3 — PCG / Contact Stomatitis Clinical Images &amp; Management</summary>
+    <div style="margin-top:8px;">
+      <figure class="clinical-img" data-slide="19">
+        <img src="images/oral-med-midterm/lecture-2/slide-019-plasma-cell-gingivitis-allergic-stomatitis.png"
+             alt="Three clinical photos labeled a, b, c showing allergic contact stomatitis: palatal erythema, lower labial gingival erythema, and lateral tongue erythematous mucosa lesions."
+             loading="lazy">
+        <figcaption>Allergic contact stomatitis presenting with diffuse erythema of attached gingiva and adjacent mucosa. Source: Zhou Y, Jin X, Chen Q (2018) Case based oral mucosal diseases. <span class="slide-ref">[Slide 19]</span></figcaption>
+      </figure>
+      <figure class="clinical-img" data-slide="22">
+        <img src="images/oral-med-midterm/lecture-2/slide-022-plasma-cell-gingivitis-severe.png"
+             alt="Four clinical photographs (A, B) of severe plasma cell gingivitis showing diffuse, fiery red erythema of the entire attached gingiva on maxillary and mandibular arches."
+             loading="lazy">
+        <figcaption>Plasma cell gingivitis (severe): fiery erythema of attached gingiva, often triggered by cinnamon, benzoates, or other flavorings. Resolves with allergen avoidance. Source: Fitzpatrick SG, et al. (2024) OOOO. <span class="slide-ref">[Slide 22]</span></figcaption>
+      </figure>
+      <div class="prof-mnemonic">🧠 Cinnamon → Plasma Cell Gingivitis: Ask patients about ALL cinnamon-containing products (toothpaste, mouthwash, gum, candy, foods). Cinnamaldehyde = the specific flavoring compound. Eliminate → expect improvement. Cork University cinnamon/benzoate-free diet handout: 70% of OFG patients improve in 12 weeks. <span class="slide-ref">[Slides 23–25]</span></div>
+    </div>
+  </details>
+
+  <!-- Contact cheilitis -->
+  <details class="tier-3-collapse">
+    <summary>Tier 3 — Allergic Contact Cheilitis</summary>
+    <figure class="clinical-img" data-slide="20" style="margin-top:8px;">
+      <img src="images/oral-med-midterm/lecture-2/slide-020-allergic-contact-cheilitis.png"
+           alt="Four clinical photographs of allergic contact cheilitis showing scaling, erythema, fissuring, and yellow crusting of the vermilion border in different patients."
+           loading="lazy">
+      <figcaption>Allergic contact cheilitis: scaling and crusting of the vermilion border, often from cosmetic, dental, or food-derived allergens. Source: Jeong JY (2024) Contact cheilitis. In: Dermatology diaries. <span class="slide-ref">[Slide 20]</span></figcaption>
+    </figure>
+  </details>
+</div>
+
+<!-- ===================== TLP ===================== -->
+<div id="alg-tlp" style="margin-bottom:28px;">
+  <span class="alg-tier-header alg-t1">TIER 1</span>
+  <h3 style="margin-top:4px;">Transient Lingual Papillitis (TLP — "Lie Bumps")</h3>
+
+  <div class="callout" style="background:#E8F5E9;border-left:4px solid #2E7D32;margin-bottom:12px;">
+    ✅ <strong>BENIGN + SELF-LIMITED</strong> — painful erythematous/whitish papules on fungiform papillae of tip/dorsolateral tongue. Resolves spontaneously in 2–15 days (mean ~7 days).
+  </div>
+  <div class="alg-catG">First-line management = REASSURANCE. Patients are not dying, it is not cancer. Symptomatic relief is secondary. <span class="slide-ref">[Slide 26]</span></div>
+  <div class="prof-emphasis">🎙️ Prof emphasized that reassurance is the primary management approach for TLP — students should know that telling the patient it will resolve is the first-line answer.</div>
+
+  <details class="tier-3-collapse">
+    <summary>Tier 3 — TLP Clinical Images, Variants &amp; Management Details</summary>
+    <div style="margin-top:8px;">
+      <figure class="clinical-img" data-slide="26">
+        <img src="images/oral-med-midterm/lecture-2/slide-026-tlp-intro-tongue-instrument.png"
+             alt="Single intraoral photo of a tongue with whitish/erythematous papules at the tip, held with a dental instrument."
+             loading="lazy">
+        <figcaption>Transient lingual papillitis ("lie bumps"): painful erythematous or whitish papules on the fungiform papillae of the tip and dorsolateral tongue. Self-limited in 2–15 days. <span class="slide-ref">[Slide 26]</span></figcaption>
+      </figure>
+      <figure class="clinical-img" data-slide="27">
+        <img src="images/oral-med-midterm/lecture-2/slide-027-tlp-management-tongue-photo.png"
+             alt="Single intraoral photograph showing dorsal tongue with multiple small papules in a generalized eruptive pattern."
+             loading="lazy">
+        <figcaption>Generalized/eruptive variant of TLP — multiple sensitive erythematous papillae. Symptomatic relief: cold foods/ice chips, topical anesthetics (benzocaine), topical corticosteroids. <span class="slide-ref">[Slide 27]</span></figcaption>
+      </figure>
+      <figure class="clinical-img" data-slide="28">
+        <img src="images/oral-med-midterm/lecture-2/slide-028-tlp-clinical-three-panel.png"
+             alt="Three intraoral photographs of transient lingual papillitis: pediatric dorsal tongue with multiple whitish papules at tip; adult lateral tongue red papule clusters; adult dorsal tongue with diffuse generalized papulosis."
+             loading="lazy">
+        <figcaption>TLP across ages: localized pediatric (left), focal lateral adult (center), and diffuse eruptive (right). Discrete (&lt;3 mm) papules confined to fungiform papillae regions. Source: Kalogirou EM, et al. (2017) J Clin Exp Dent. <span class="slide-ref">[Slide 28]</span></figcaption>
+      </figure>
+      <h4>TLP Variants</h4>
+      <table class="data-table" style="width:100%;">
+        <thead><tr><th>Variant</th><th>Features</th></tr></thead>
+        <tbody>
+          <tr><td>Localized</td><td>Single papule; tip/dorsal; most common in adults</td></tr>
+          <tr><td>Generalized/Eruptive</td><td>Multiple papules; may have fever, lymphadenopathy, hypersalivation; ~7 days</td></tr>
+          <tr><td>Papulokeratotic</td><td>Hyperkeratotic variant; less common</td></tr>
+        </tbody>
+      </table>
+      <div style="font-size:0.85em;margin-top:8px;">Proposed triggers: trauma, stress, food allergies, possible viral URI, GI, hormonal.</div>
+    </div>
+  </details>
+</div>
+
+<!-- ========================================================
+  PART 2 — IMMUNOLOGIC / VESICULOBULLOUS DISEASES
+======================================================== -->
+<h3 style="margin-top:28px;border-bottom:3px solid #1565C0;padding-bottom:6px;color:#1565C0;">PART 2 — Immunologic &amp; Vesiculobullous Diseases</h3>
+
+<!-- BMZ Framework Hero -->
+<div id="alg-bmz-overview" style="margin-bottom:24px;">
+  <div class="foundations-box">
+    <h4 style="margin-top:0;">Epithelial Attachment Apparatus — Structural Anchor for ALL Part-2 Diseases</h4>
+    <p style="font-size:0.92em;color:#4A4030;">The anatomic <em>level</em> of cleavage determines the disease identity. Reference this diagram for every condition below.</p>
+    <figure class="clinical-img hero-img-full" data-slide="30" id="alg-bmz-hero">
+      <img src="images/oral-med-midterm/lecture-2/slide-030-bmz-yancey-diagram-part2-overview.png"
+           alt="Schematic ultrastructural diagram of epidermal basement membrane zone (Yancey 2005) showing basal keratinocytes, hemidesmosomes, lamina lucida, lamina densa, and anchoring fibrils, with autoantigens mapped to immunobullous diseases."
+           loading="lazy">
+      <figcaption>Epithelial attachment apparatus — the structural anchor for understanding all immunobullous diseases. Pemphigus targets desmosomes (intra-epithelial blister), pemphigoid targets the BMZ/hemidesmosome (sub-epithelial blister), EBA targets type VII collagen anchoring fibrils. Source: Yancey KB (2005).</figcaption>
+    </figure>
+    <table class="data-table" style="width:100%;margin-top:10px;">
+      <thead><tr><th>Disease</th><th>Target</th><th>Level</th><th>Blister Type</th></tr></thead>
+      <tbody>
+        <tr><td><strong>Pemphigus Vulgaris</strong></td><td>Desmoglein (desmosome)</td><td style="color:#E67E22;font-weight:700;">INTRAEPITHELIAL (above BMZ)</td><td>Flaccid, ruptures immediately</td></tr>
+        <tr><td><strong>MMP / Pemphigoid</strong></td><td>BMZ proteins (BP180, BP230, laminin 332)</td><td style="color:#1565C0;font-weight:700;">SUBEPITHELIAL (at BMZ)</td><td>Tense, intact bullae</td></tr>
+        <tr><td><strong>EBA</strong></td><td>Type VII collagen (anchoring fibrils)</td><td style="color:#4527A0;">BELOW BMZ</td><td>Deep sub-lamina densa</td></tr>
+        <tr><td><strong>OLP</strong></td><td>T-cell auto-inflammatory</td><td>BMZ basal layer</td><td>No true blistering; erosions</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- ===================== OLP ===================== -->
+<div class="high-yield" id="alg-olp" style="margin-bottom:28px;">
+  <span class="alg-tier-header alg-t1">TIER 1</span>
+  <h3 style="margin-top:4px;">Oral Lichen Planus (OLP)</h3>
+
+  <!-- Auto-inflammatory NOT autoimmune -->
+  <div class="alg-catG" id="alg-olp-autoinflam">
+    OLP is a chronic T-cell mediated <strong>AUTO-INFLAMMATORY</strong> disorder — NOT autoimmune. This distinction matters for patient counseling: patients with "autoimmune" diagnoses often become alarmed about life-altering systemic implications that do not apply here. <span class="slide-ref">[Slide 31]</span>
+  </div>
+  <div class="prof-emphasis">🎙️ Prof stated this distinction beyond the slide content — "autoimmune" is the wrong classification; "auto-inflammatory" is correct on her exam.</div>
+
+  <!-- OPMD controversy -->
+  <div class="alg-catG" id="alg-olp-opmd">
+    <strong>Prof's Position on Malignant Potential (Category G — likely exam target):</strong> Standard teaching (Neville) classifies OLP as an oral potentially malignant disorder (OPMD). Prof's updated position: OLP may NOT be a true OPMD. Cancers attributed to OLP transformation were likely dysplasia that was misdiagnosed as OLP from the start. Reference: Wu (2019), Head and Neck Pathology (Harvard). <span class="slide-ref">[Slides 31–32]</span>
+    <div style="margin-top:6px;color:#BF360C;font-weight:700;">On this professor's exam: "OLP is OPMD" = nuanced/controversial answer, not a clear yes.</div>
+  </div>
+
+  <!-- OLP Images -->
+  <figure class="clinical-img" data-slide="34" id="alg-olp-hero">
+    <img src="images/oral-med-midterm/lecture-2/slide-034-olp-erosive-reticular-panels.png"
+         alt="Four-panel clinical photograph of oral lichen planus: panels a and b show erosive OLP with red atrophic mucosa and surrounding white striae on buccal mucosa; panels c and d show reticular OLP with bilateral lacy white Wickham striae on lateral tongue."
+         loading="lazy">
+    <figcaption>Oral lichen planus: erosive form (a, b) with painful atrophic red areas; reticular form (c, d) with characteristic bilateral lacy Wickham striae — most common pattern. Bilaterality is a key diagnostic clue. Source: Wu T, Bai Y, Jing Y, Chen F (2024) Front Cell Infect Microbiol.</figcaption>
+  </figure>
+
+  <!-- Pathognomonic location -->
+  <div class="callout-danger" id="alg-olp-location" style="margin:12px 0;">
+    📍 <strong>PATHOGNOMONIC LOCATION: Bilateral posterior buccal mucosa + ventral tongue with Wickham striae</strong><br>
+    Bilateral = reassuring for OLP. Unilateral or atypical site = <strong>BIOPSY NOW</strong>. <span class="slide-ref">[Slide 31]</span>
+  </div>
+  <div class="prof-emphasis">🎙️ Prof noted that the pathognomonic bilateral location is a key exam feature — she expects students to use bilaterality as a reassuring sign and flag unilateral presentations for biopsy.</div>
+
+  <!-- Wickham striae -->
+  <div class="callout" style="background:#EDE7F6;border-left:4px solid #7B1FA2;margin:10px 0;">
+    📖 <strong>Wickham Striae</strong> = the lacy white reticulations of OLP. These white lacy lines define the reticular form and are the clinical/histopathologic signature finding of OLP. <span class="slide-ref">[Slide 31]</span>
+  </div>
+
+  <!-- 4 P's of cutaneous LP -->
+  <div class="prof-mnemonic" id="alg-olp-4ps" style="margin:12px 0;">
+    🧠 <strong>4 P's of Cutaneous Lichen Planus</strong> <span class="slide-ref">[Slide 31]</span>
+    <div style="display:flex;gap:10px;margin-top:8px;flex-wrap:wrap;">
+      <div style="flex:1 1 80px;background:#7B1FA2;color:#fff;border-radius:6px;padding:8px;text-align:center;font-weight:700;">Purple</div>
+      <div style="flex:1 1 80px;background:#7B1FA2;color:#fff;border-radius:6px;padding:8px;text-align:center;font-weight:700;">Polygonal</div>
+      <div style="flex:1 1 80px;background:#7B1FA2;color:#fff;border-radius:6px;padding:8px;text-align:center;font-weight:700;">Pruritic</div>
+      <div style="flex:1 1 80px;background:#7B1FA2;color:#fff;border-radius:6px;padding:8px;text-align:center;font-weight:700;">Papules</div>
+    </div>
+    <div style="margin-top:8px;font-size:0.9em;">Location: flexor surfaces — wrists and ankles. 50% of cutaneous LP patients have oral lesions. Examine wrists and ankles in the dental chair to confirm OLP diagnosis.</div>
+  </div>
+  <div class="prof-emphasis">🎙️ Prof described the 4 P's as a memory tool and said she asks students to lift sleeves and check wrists/ankles in her own practice — confirming cutaneous LP supports the OLP diagnosis.</div>
+
+  <!-- Cutaneous image -->
+  <figure class="clinical-img" data-slide="35">
+    <img src="images/oral-med-midterm/lecture-2/slide-035-olp-cutaneous-histopathology.png"
+         alt="Composite image: cutaneous lichen planus polygonal violaceous papules on flexor forearm; oral lichen planus reticular pattern on tongue; cutaneous LP papules; histopathology of LP with band-like lymphocytic infiltrate at the dermal-epidermal junction."
+         loading="lazy">
+    <figcaption>Cutaneous lichen planus (4 P's: Pruritic, Polygonal, Planar, Purple, Papules on flexor surfaces). Histology (bottom right): band-like ("lichenoid") lymphocytic infiltrate at the basement membrane with basal cell vacuolization and saw-tooth rete ridges. <span class="slide-ref">[Slide 35]</span></figcaption>
+  </figure>
+
+  <!-- OLP form comparison -->
+  <h4>Reticular vs Erosive OLP <span class="slide-ref">[Slide 31]</span></h4>
+  <table class="data-table" style="width:100%;">
+    <thead><tr><th>Feature</th><th>Reticular (most common)</th><th>Erosive</th></tr></thead>
+    <tbody>
+      <tr><td>Appearance</td><td>Bilateral symmetric lacy white lines (Wickham striae)</td><td>Atrophic areas ± ulceration; may present as desquamative gingivitis</td></tr>
+      <tr><td>Symptoms</td><td>Asymptomatic, waxes and wanes</td><td>Painful</td></tr>
+      <tr><td>Treatment</td><td>No treatment needed — annual monitoring</td><td>Clobetasol 0.05% BID-TID + dexamethasone soak QID</td></tr>
+      <tr><td>Follow-up</td><td>Annual</td><td>Every 3–6 months</td></tr>
+    </tbody>
+  </table>
+
+  <!-- Diagnostic pitfall -->
+  <div class="callout-danger" id="alg-olp-pitfall" style="margin:12px 0;">
+    ⚠️ <strong>DIAGNOSTIC PITFALL: Dysplasia Can Mimic OLP</strong> <span class="slide-ref">[Slide 32]</span>
+    <table class="data-table" style="width:100%;margin-top:8px;">
+      <thead><tr><th>Favors TRUE OLP</th><th>Favors DYSPLASIA</th></tr></thead>
+      <tbody>
+        <tr><td>Bilateral/symmetric</td><td>Unilateral or asymmetric</td></tr>
+        <tr><td>Posterior buccal/ventral tongue</td><td>High-risk sites (tongue, FOM, soft palate)</td></tr>
+        <tr><td>Waxes and wanes</td><td>Progressive, non-resolving</td></tr>
+        <tr><td>No atypia on biopsy</td><td>Dysplastic features on biopsy</td></tr>
+      </tbody>
+    </table>
+    <div style="margin-top:6px;color:#C0392B;font-weight:700;">Rule: Unilateral + high-risk site + progressive = BIOPSY NOW.</div>
+  </div>
+  <div class="prof-emphasis">🎙️ Prof said that unilateral presentation in an atypical location is when she gets concerned and reaches for the biopsy punch.</div>
+
+  <!-- OLP Management -->
+  <h4>Management <span class="slide-ref">[Slide 33]</span></h4>
+  <div class="callout-danger" style="margin-bottom:8px;">
+    🚫 <strong>NEVER apply topical corticosteroids to the vermilion lip — irreversible fat pad atrophy (dimpling).</strong><br>
+    Use <strong>tacrolimus 0.1% ointment</strong> on the vermilion instead. Oral mucosa = OK for topical steroids.
+  </div>
+  <div class="prof-emphasis">🎙️ Prof gave this as a hard clinical rule — applying steroids to the vermilion lip causes permanent cosmetic deformity (fat pad loss). Tacrolimus is the safe substitute for lip involvement.</div>
+  <div class="prof-emphasis" style="margin-top:8px;">🎙️ Prof also told students to commit clobetasol and dexamethasone to memory for erosive OLP management — she called it an easy guaranteed exam question.</div>
+  <table class="data-table" style="width:100%;margin-top:10px;">
+    <thead><tr><th>Drug</th><th>Dose/Route</th><th>Notes</th></tr></thead>
+    <tbody>
+      <tr style="background:#FFF9C4;"><td><strong>Clobetasol 0.05% gel</strong></td><td>BID-TID</td><td>⭐ MEMORIZE</td></tr>
+      <tr style="background:#FFF9C4;"><td><strong>Dexamethasone 0.5 mg/5 mL soak</strong></td><td>5 min, up to QID</td><td>⭐ MEMORIZE — universal oral medicine Rx</td></tr>
+      <tr><td>Fluocinonide 0.05% gel</td><td>BID-TID</td><td>Pre-numb first; off-label</td></tr>
+      <tr><td>Tacrolimus 0.1% ointment</td><td>BID on vermilion</td><td>Vermilion ONLY — not for intraoral mucosa</td></tr>
+    </tbody>
+  </table>
+  <div class="callout" style="background:#FFF3E0;border-left:4px solid #E65100;margin-top:8px;">
+    ⚠️ <strong>Monitor for iatrogenic candidiasis</strong> with prolonged steroid use. If candidiasis risk: combine dexamethasone solution with nystatin solution in equal parts. <span class="slide-ref">[Slide 32]</span>
+  </div>
+
+  <details class="tier-3-collapse">
+    <summary>Tier 3 — OLP Epidemiology, Histopathology Note</summary>
+    <ul style="font-size:0.85em;margin-top:8px;">
+      <li>Prevalence 0.1–2.2%; F:M = 3:2; middle-aged adults. Thyroid disease association. <span class="slide-ref">[Slide 31]</span></li>
+      <li>Classic histopathology: interface mucositis + band-like lymphocytic infiltrate at BMZ + saw-tooth rete ridges + Civatte bodies (not deeply tested per prof).</li>
+    </ul>
+  </details>
+</div>
+
+<!-- ===================== MMP ===================== -->
+<div class="high-yield" id="alg-mmp" style="margin-bottom:28px;">
+  <span class="alg-tier-header alg-t1">TIER 1</span>
+  <h3 style="margin-top:4px;">Mucous Membrane Pemphigoid (MMP)</h3>
+
+  <!-- HERO IMAGE: slide 36 -->
+  <figure class="clinical-img hero-img-full" data-slide="36" id="alg-mmp-hero">
+    <img src="images/oral-med-midterm/lecture-2/slide-036-mmp-bmz-diagram-ocular-eye.png"
+         alt="Composite image: top schematic shows normal epithelial structures labeled with which immune-mediated disease targets each layer — Pemphigoid (BMZ/hemidesmosome — highlighted with cyan box) at center. Below: clinical photograph of severely inflamed conjunctiva with symblepharon (ocular MMP)."
+         loading="lazy">
+    <figcaption>MMP attacks BMZ proteins (BP180, BP230, type VII collagen, laminin 332) producing sub-epithelial blisters. Ocular involvement in 61–70% of patients — early conjunctival scarring is irreversible and can cause blindness. Refer ALL MMP patients to ophthalmology, even asymptomatic. <span class="slide-ref">[Slide 36]</span></figcaption>
+  </figure>
+
+  <!-- Hades mnemonic -->
+  <div class="prof-mnemonic" id="alg-mmp-hades">
+    🧠 <strong>Hades Mnemonic — pemphigoiD lives DEEP</strong><br>
+    "Hades lives deep in the underworld. PemphigoiD has a D — think DEEP. The cleavage is at the basement membrane zone, down below the epithelium." <span class="slide-ref">[Slide 37]</span>
+    <div style="margin-top:8px;display:flex;gap:12px;flex-wrap:wrap;">
+      <div style="flex:1 1 160px;background:#1565C0;color:#fff;border-radius:8px;padding:10px;text-align:center;">
+        <div style="font-size:1.5em;font-weight:800;">PemphigoiD</div>
+        <div style="font-size:1.1em;font-weight:700;margin-top:4px;">= DEEP (BMZ)</div>
+        <div style="font-size:0.85em;margin-top:4px;">Like Hades — deep underground</div>
+      </div>
+      <div style="flex:1 1 160px;background:#E67E22;color:#fff;border-radius:8px;padding:10px;text-align:center;">
+        <div style="font-size:1.5em;font-weight:800;">PemphiGus</div>
+        <div style="font-size:1.1em;font-weight:700;margin-top:4px;">= HIGH UP (intraepithelial)</div>
+        <div style="font-size:0.85em;margin-top:4px;">Like Pegasus — soaring above</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Subepithelial facts -->
+  <div style="margin:12px 0;padding:12px;background:#E3F2FD;border-radius:8px;">
+    <strong>MMP = Autoimmune SUBEPITHELIAL Blistering Disease</strong> <span class="slide-ref">[Slide 36]</span><br>
+    Autoantibodies target BMZ proteins: <span class="lab-val">BP180</span> · <span class="lab-val">BP230</span> · <span class="lab-val">type VII collagen</span> · <span class="lab-val">laminin 332</span>
+  </div>
+
+  <!-- Desquamative gingivitis -->
+  <div class="callout-danger" style="margin:10px 0;" id="alg-mmp-desq">
+    🦷 <strong>Most Common Oral Presentation = DESQUAMATIVE GINGIVITIS</strong><br>
+    Oral cavity involved in ~85% of MMP. Erythematous, eroded, peeling gingiva. <span class="slide-ref">[Slide 36]</span>
+  </div>
+
+  <!-- Clinical images -->
+  <figure class="clinical-img" data-slide="40" id="alg-mmp-clinical">
+    <img src="images/oral-med-midterm/lecture-2/slide-040-mmp-clinical-images-six-panel.png"
+         alt="Six-panel clinical photograph of mucous membrane pemphigoid: top row shows desquamative gingivitis on mandibular gingiva, diffuse maxillary gingival erythema, and intact bulla on palate; bottom row shows alveolar ridge erosions, buccal mucosa erosions, and severe oropharyngeal erosive lesions."
+         loading="lazy">
+    <figcaption>MMP oral presentations: desquamative gingivitis (most common), tense bullae (rare but specific), diffuse erosions. Sub-epithelial separation produces tense (not flaccid) blisters that resist Nikolsky. <span class="slide-ref">[Slide 40]</span></figcaption>
+  </figure>
+
+  <!-- Ocular referral — MANDATORY -->
+  <div class="callout-danger" id="alg-mmp-ophtho" style="margin:14px 0;border:3px solid #C0392B;">
+    👁️ <strong>REFER ALL MMP → OPHTHALMOLOGY — EVEN IF ASYMPTOMATIC</strong><br>
+    Ocular involvement: 61–70% of patients. Early symptoms: burning · dryness · foreign body sensation.<br>
+    Conjunctival scarring (symblepharon) = <strong>IRREVERSIBLE → BLINDNESS</strong> if missed. <span class="slide-ref">[Slide 39]</span>
+  </div>
+  <div class="prof-mnemonic">🧠 Pemphigoid has two i's in the word → "two eyes." This disease involves the eyes. <span class="slide-ref">[Slide 37]</span></div>
+  <div class="prof-emphasis">🎙️ Prof described the ophthalmology referral rule as a "do not miss" — 60–70% of patients have ocular involvement and the scarring is irreversible. She expects students to remember ALL patients, even asymptomatic ones.</div>
+
+  <!-- Anti-laminin 332 -->
+  <div class="alg-catG" id="alg-mmp-laminin">
+    <strong>Anti-Laminin 332 (+) → ORDER CANCER SCREEN IMMEDIATELY</strong> <span class="slide-ref">[Slide 38]</span><br>
+    If DIF is positive, send serology for anti-laminin 332. <strong>25% of anti-laminin 332-positive patients ALREADY have an occult adenocarcinoma.</strong> This is a life-saving diagnostic step.
+  </div>
+  <div class="prof-emphasis">🎙️ Prof said "already have it" twice for emphasis — anti-laminin 332 should immediately trigger a malignancy workup.</div>
+
+  <!-- Nikolsky -->
+  <div class="callout" style="background:#E8F5E9;border-left:4px solid #2E7D32;margin:10px 0;">
+    <strong>Nikolsky Sign = NEGATIVE in MMP</strong> — subepithelial blister is tense; harder to elicit. Contrast with PV (positive). <span class="slide-ref">[Slide 37]</span>
+  </div>
+
+  <!-- Biopsy protocol -->
+  <div class="alg-biopsy-trap" id="alg-mmp-biopsy">
+    <strong>🔬 BIOPSY PROTOCOL — 2 SPECIMENS REQUIRED</strong> <span class="slide-ref">[Slide 38]</span><br>
+    Biopsy perilesional tissue (normal-appearing tissue adjacent to blister).<br>
+    <ol style="margin:6px 0;padding-left:20px;">
+      <li>H&amp;E histology → <strong>10% formalin</strong></li>
+      <li>DIF immunofluorescence → <strong>Michel's solution</strong> (formalin DESTROYS immunoglobulins needed for DIF)</li>
+    </ol>
+    ⚠️ TRAP (F15): Putting all tissue in formalin = destroys DIF = cannot diagnose. Two vials required.
+  </div>
+
+  <!-- DIF result -->
+  <div class="callout" style="background:#E3F2FD;border-left:4px solid #1565C0;margin:10px 0;">
+    <strong>MMP DIF Pattern:</strong> Linear IgG, IgA, and/or C3 at basement membrane zone. <span class="slide-ref">[Slide 38]</span><br>
+    Contrast: PV = "chicken wire" intercellular pattern. Same antibodies — different LOCATION.
+  </div>
+  <div class="prof-emphasis">🎙️ Prof said boards love to ask about IgA, IgG, and C3 in the context of immunobullous diseases — the key is that the location differs: linear at BMZ = MMP, intercellular = PV.</div>
+
+  <!-- MMP biopsy pearl -->
+  <div class="pearl-callout">
+    🍣 <strong>"Don't Lose Your Sushi"</strong> — MMP epithelium is extremely fragile and detaches easily. Warn assistant: NO close suctioning near biopsy site. Epithelium will flap off into the suction. <span class="slide-ref">[Slide 38]</span>
+  </div>
+
+  <!-- MMP Management -->
+  <h4>Management <span class="slide-ref">[Slide 39]</span></h4>
+  <table class="data-table" style="width:100%;">
+    <thead><tr><th>Risk</th><th>Sites</th><th>Treatment</th></tr></thead>
+    <tbody>
+      <tr style="background:#FFF9C4;"><td><strong>Low risk</strong></td><td>Oral ± skin</td><td><strong>Clobetasol 0.05% gel BID-TID + Dexamethasone 0.5 mg/5 mL soak QID</strong> ⭐ MEMORIZE THESE</td></tr>
+      <tr><td>High risk</td><td>Any other mucosal site (ocular, nasal, laryngeal, esophageal, genital)</td><td>Systemic therapy — refer to oral medicine/derm/ophthalmology team</td></tr>
+    </tbody>
+  </table>
+
+  <details class="tier-3-collapse">
+    <summary>Tier 3 — MMP Epidemiology &amp; Site Distribution</summary>
+    <ul style="font-size:0.85em;margin-top:8px;">
+      <li>Incidence ~2/million/year; mean age 60–65; slight female predominance. <span class="slide-ref">[Slide 36]</span></li>
+      <li>Nasal involvement: 20–40%. Laryngeal: 5–10%.</li>
+      <li>IIF (indirect immunofluorescence on blood) available but less accurate than DIF — skip; DIF is primary.</li>
+    </ul>
+  </details>
+</div>
+
+<!-- ===================== PV ===================== -->
+<div class="high-yield" id="alg-pv" style="margin-bottom:28px;">
+  <span class="alg-tier-header alg-t1">TIER 1</span>
+  <h3 style="margin-top:4px;">Pemphigus Vulgaris (PV)</h3>
+
+  <div class="callout-danger" style="margin-bottom:12px;" id="alg-pv-oral-first">
+    🦷 <strong>&gt;50% PRESENT WITH ORAL LESIONS FIRST</strong> — oral lesions precede skin involvement by months to over a year. You may be the FIRST clinician to see this potentially fatal disease. Early diagnosis = lives saved. <span class="slide-ref">[Slide 41]</span>
+  </div>
+  <div class="prof-emphasis">🎙️ Prof said "oral lesions are first to show, last to go" — the dentist's position to catch this disease early is a point of professional pride and clinical responsibility she emphasized strongly.</div>
+
+  <!-- Nikolsky POSITIVE -->
+  <div class="callout-danger" style="margin:10px 0;">
+    <strong>Nikolsky Sign = POSITIVE in PV</strong> — intraepithelial cleavage; lateral pressure on normal mucosa creates blister easily. <span class="slide-ref">[Slide 41]</span>
+  </div>
+
+  <!-- Pegasus mnemonic hero -->
+  <figure class="clinical-img hero-img-full" data-slide="43" id="alg-pv-pegasus">
+    <img src="images/oral-med-midterm/lecture-2/slide-043-pemphigus-pegasus-mnemonic-dif.png"
+         alt="Composite mnemonic image: cartoon Pegasus flying through clouds; main image of white winged Pegasus mid-flight; below is direct immunofluorescence photomicrograph showing intercellular green fluorescence in a fishnet/chicken-wire pattern within the epithelium."
+         loading="lazy">
+    <figcaption>Mnemonic: "Pegasus (sounds like Pemphigus) flies between the clouds" — DIF shows intercellular IgG/C3 deposition in a netting/fishnet pattern between keratinocytes (the "clouds" of cytoplasm). Pemphigus is intra-epithelial; pemphigoid is sub-epithelial ("PemphigOID lives DEEP like Hades"). <span class="slide-ref">[Slide 43]</span></figcaption>
+  </figure>
+
+  <div class="prof-mnemonic" id="alg-pv-pegasus-mnemonic" style="margin:12px 0;">
+    🧠 <strong>Pegasus Mnemonic:</strong><br>
+    "PemPHIGus sounds like Pegasus. Pegasus FLIES BETWEEN THE CLOUDS. The cells are the clouds. Acantholysis = cells falling apart = space between clouds. Cleavage is INTRAEPITHELIAL (suprabasal) — UP HIGH like Pegasus." <span class="slide-ref">[Slides 42–43]</span>
+  </div>
+
+  <!-- Pathomechanism -->
+  <div style="margin:12px 0;padding:12px;background:#FFF3E0;border-radius:8px;">
+    <strong>PV Pathomechanism:</strong> Autoantibodies attack desmoglein proteins (Dsg3, Dsg1) → epithelial cells lose cohesion = <strong>ACANTHOLYSIS</strong> (cells fall apart). Intraepithelial/suprabasal cleavage — above the basement membrane. <span class="slide-ref">[Slide 41]</span>
+  </div>
+
+  <!-- DSG compensation hero image + table -->
+  <figure class="clinical-img hero-img-full" data-slide="44" id="alg-dsg-comp">
+    <img src="images/oral-med-midterm/lecture-2/slide-044-dsg-compensation-diagram.png"
+         alt="Schematic diagram showing the desmoglein compensation hypothesis: Pemphigus foliaceus (DSG3 compensates in mucosa, DSG1 attacked → skin only); Pemphigus vulgaris mucosal-dominant type (DSG3 attacked, DSG1 compensates in skin → mucosa only)."
+         loading="lazy">
+    <figcaption>DSG compensation explains why PV often presents with ORAL lesions FIRST: mucosa expresses mostly DSG3, so anti-DSG3 antibodies hit mucosa unopposed. Skin expresses both DSG1 + DSG3, so DSG1 compensates and delays skin involvement. Source: Stanley JR, Amagai M (2006) NEJM 355:1800–1810.</figcaption>
+  </figure>
+
+  <h4>DSG Antibody–Phenotype Table <span class="slide-ref">[Slides 43–44]</span></h4>
+  <table class="data-table" style="width:100%;">
+    <thead><tr><th>Antibodies Present</th><th>Phenotype</th><th>Why</th></tr></thead>
+    <tbody>
+      <tr style="background:#FFF9C4;"><td><strong>Anti-DSG3 only</strong></td><td>Mucosal-dominant PV — <strong>oral only</strong></td><td>DSG1 compensates in skin; DSG3 present in oral mucosa → hits mucosa unopposed</td></tr>
+      <tr style="background:#FFEBEE;"><td><strong>Anti-DSG3 + Anti-DSG1</strong></td><td>Mucocutaneous PV — <strong>oral + skin</strong></td><td>Both targets attacked</td></tr>
+      <tr><td>Anti-DSG1 only</td><td>Pemphigus foliaceus — <strong>skin only, NO oral</strong></td><td>DSG3 compensates in mucosa; skin lacks this compensation</td></tr>
+    </tbody>
+  </table>
+  <div class="prof-flag-tier-1">⚠️ TRAP (F13): DSG3 = oral; DSG1 = skin; both = oral + skin. Don't blur these. <span class="slide-ref">[Slide 43]</span></div>
+
+  <!-- Clinical images -->
+  <figure class="clinical-img" data-slide="46">
+    <img src="images/oral-med-midterm/lecture-2/slide-046-pemphigus-vulgaris-clinical-images.png"
+         alt="Multi-panel clinical photograph of pemphigus vulgaris showing palatal erosions with serpiginous outlines, maxillary gingival erosions, lateral tongue erosive lesion, bullae on lip and floor of mouth, palatal erosive lesions, and posterior erosive bleeding lesions."
+         loading="lazy">
+    <figcaption>Pemphigus vulgaris oral lesions: shallow ragged erosions following ruptured flaccid bullae. Nikolsky-positive. Serpiginous map-like outlines are characteristic. Source: Gilligan G, et al. (2025) J Oral Diagn. <span class="slide-ref">[Slide 46]</span></figcaption>
+  </figure>
+
+  <!-- Biopsy BEFORE treatment -->
+  <div class="alg-biopsy-trap" id="alg-pv-biopsy">
+    <strong>🔬 BIOPSY BEFORE ANY TREATMENT — CRITICAL RULE</strong> <span class="slide-ref">[Slide 43]</span><br>
+    Topical steroids suppress the autoantibodies needed for DIF diagnosis. Starting treatment first will obscure results.<br>
+    <ol style="margin:6px 0;padding-left:20px;">
+      <li>Take PERILESIONAL biopsy (2 specimens: formalin H&amp;E + Michel's DIF)</li>
+      <li>Begin topical steroids on non-biopsy areas <em>immediately</em></li>
+      <li>Wait <strong>5–7 days</strong> before applying steroids to the biopsy site (delayed healing)</li>
+    </ol>
+  </div>
+  <div class="prof-emphasis">🎙️ Prof stated that biopsying early and before treatment is how lives get saved — the faster the diagnosis, the easier treatment is.</div>
+
+  <!-- DIF: chicken wire -->
+  <div class="callout" style="background:#FFF3E0;border-left:4px solid #E65100;margin:10px 0;">
+    <strong>PV DIF Pattern:</strong> "Chicken wire" intercellular IgG/C3 deposition between keratinocytes throughout the spinous layer — pathognomonic for PV. <span class="slide-ref">[Slide 43]</span>
+  </div>
+
+  <!-- Severity / Emergency -->
+  <h4>Severity Classification <span class="slide-ref">[Slide 45]</span></h4>
+  <table class="data-table" style="width:100%;">
+    <thead><tr><th>PDAI Score</th><th>Severity</th><th>Management</th></tr></thead>
+    <tbody>
+      <tr><td>&lt;15</td><td>Mild</td><td>Topical corticosteroids only (clobetasol + dexamethasone)</td></tr>
+      <tr><td>15–45</td><td>Moderate</td><td>Dermatology consult STAT; rituximab + prednisone 0.5 mg/kg</td></tr>
+      <tr style="background:#FFEBEE;"><td style="color:#C0392B;font-weight:700;">&gt;45</td><td style="color:#C0392B;font-weight:700;">SEVERE — MEDICAL EMERGENCY</td><td style="color:#C0392B;font-weight:700;">→ Emergency Department (ED) immediately</td></tr>
+    </tbody>
+  </table>
+  <div class="prof-emphasis">🎙️ Prof noted that while PV is rare, people die from it — she wants students to know about it because of its severity.</div>
+</div>
+
+<!-- ===================== EM/RIME ===================== -->
+<div class="high-yield" id="alg-em-rime" style="margin-bottom:28px;">
+  <span class="alg-tier-header alg-t1">TIER 1</span>
+  <h3 style="margin-top:4px;">Erythema Multiforme (EM) / RIME</h3>
+
+  <!-- Separate entities callout -->
+  <div class="alg-sep-entities" id="alg-em-separate">
+    <strong>EM/RIME and SJS/TEN are SEPARATE DISEASES — NOT a spectrum.</strong> <span class="slide-ref">[Slides 47, 50]</span><br>
+    Old teaching (EM → SJS → TEN = severity continuum) = <strong>WRONG per this professor.</strong><br>
+    Different causes → different prognoses → different management. RIME is the preferred modern term.
+  </div>
+  <div class="prof-emphasis">🎙️ Prof called the "spectrum" concept "old, old thought process" and explicitly told students to abandon it — on her exam, these are separate entities with different etiologies.</div>
+
+  <!-- EM vs RIME HERO: slide 48 -->
+  <figure class="clinical-img hero-img-full" data-slide="48" id="alg-em-rime-hero">
+    <img src="images/oral-med-midterm/lecture-2/slide-048-em-vs-rime-comparison-table.png"
+         alt="Two-column comparison table contrasting EM and RIME on five rows: Defining feature, Skin, Mucosa, Common triggers, Typical patient."
+         loading="lazy">
+    <figcaption>EM vs RIME (modern classification). EM = skin-dominant, target lesions, HSV-driven, young adults. RIME = mucosa-dominant (oral + ocular ± genital), Mycoplasma-driven, kids/adolescents. Both 90% infection-triggered — distinct from drug-triggered SJS/TEN (potentially fatal). <span class="slide-ref">[Slide 48]</span></figcaption>
+  </figure>
+
+  <!-- Core frame callout -->
+  <div class="callout-danger" style="margin:12px 0;" id="alg-em-90rule">
+    <strong>THE 90% RULE — Core Distinguisher</strong> <span class="slide-ref">[Slides 47, 50]</span><br>
+    ✅ <strong>INFECTION (90%)</strong> → EM/RIME → good prognosis, self-limiting<br>
+    🚨 <strong>DRUG (90%)</strong> → SJS/TEN → potentially FATAL
+  </div>
+  <div class="prof-emphasis">🎙️ Prof called this the central clinical logic of the entire EM/SJS section — knowing whether it's infection or drug triggered determines everything about prognosis and urgency.</div>
+
+  <!-- Comparison table -->
+  <h4>EM vs RIME: 5-Row Comparison <span class="slide-ref">[Slide 47]</span></h4>
+  <table class="data-table" style="width:100%;">
+    <thead><tr><th>Feature</th><th>EM</th><th>RIME</th></tr></thead>
+    <tbody>
+      <tr><td>Defining feature</td><td>Raised 3-ring "iris" target lesions</td><td>Prominent mucositis (oral dominant)</td></tr>
+      <tr><td>Skin</td><td>Prominent, acral distribution</td><td>Minimal or absent</td></tr>
+      <tr><td>Mucosa</td><td>Variable (minor=none/1 site; major=≥2 sites)</td><td>Always prominent — oral + ocular + genital</td></tr>
+      <tr><td>Trigger</td><td>HSV ~70%</td><td>Mycoplasma + other respiratory pathogens</td></tr>
+      <tr><td>Typical patient</td><td>Young adults</td><td>Children/adolescents</td></tr>
+    </tbody>
+  </table>
+
+  <!-- Clinical images -->
+  <figure class="clinical-img" data-slide="49">
+    <img src="images/oral-med-midterm/lecture-2/slide-049-em-rime-clinical-images.png"
+         alt="Five-panel clinical photograph: large left panel shows arm with multiple classic raised target lesions with central dark zone, pale middle ring, erythematous outer ring; top center shows oral mucosa with severe hemorrhagic lip crusting and labial erosions; top right shows oral cavity with extensive labial and buccal erosions; bottom large center shows both eyes with severe conjunctivitis and periorbital erythema."
+         loading="lazy">
+    <figcaption>EM/RIME clinical recognition. Target lesions on hands/feet + hemorrhagic lip crusting (EM) vs. severe oral erosions + conjunctivitis ± genital ulcers with minimal skin (RIME). Source: Trayes KP, Love G, Studdiford JS (2019) Am Fam Physician 100(2):82–88. <span class="slide-ref">[Slide 49]</span></figcaption>
+  </figure>
+
+  <!-- EM Management -->
+  <h4>Management &amp; Supportive Care <span class="slide-ref">[Slide 48]</span></h4>
+  <ul style="margin:8px 0;padding-left:24px;">
+    <li>Lidocaine 2% gel before meals for oral pain</li>
+    <li>Magic mouthwash q4h</li>
+    <li>Dexamethasone 0.5 mg/5 mL soak</li>
+    <li>Sucralfate suspension</li>
+    <li>⚠️ <strong>CHILDREN: topical lidocaine → seizures.</strong> Use benzocaine or diphenhydramine instead. <span class="slide-ref">[Slide 48]</span></li>
+  </ul>
+  <div class="prof-emphasis">🎙️ Prof flagged topical lidocaine in children as a specific trap — absorbed through inflamed mucosa → toxic serum levels → seizures. Use benzocaine for pediatric patients.</div>
+
+  <div class="pearl-callout" style="margin:10px 0;">
+    <strong>Recurrent EM Prophylaxis (HSV-triggered):</strong> Valacyclovir 500 mg BID for ≥6 months, then taper. Most effective prevention for recurrent episodes. <span class="slide-ref">[Slide 48]</span>
+  </div>
+</div>
+
+<!-- ===================== SJS/TEN ===================== -->
+<div class="high-yield" id="alg-sjs-ten" style="margin-bottom:28px;">
+  <span class="alg-tier-header alg-t1">TIER 1 — EMERGENCY</span>
+  <h3 style="margin-top:4px;">Stevens-Johnson Syndrome (SJS) / Toxic Epidermal Necrolysis (TEN)</h3>
+
+  <div class="callout-danger" style="margin-bottom:12px;border:3px solid #C0392B;">
+    🚨 <strong>EMERGENCY — POTENTIALLY FATAL. Drug-triggered in ~85–90% of cases.</strong>
+  </div>
+
+  <!-- BSA HERO: slide 50 -->
+  <figure class="clinical-img hero-img-full" data-slide="50" id="alg-sjs-bsa-hero">
+    <img src="images/oral-med-midterm/lecture-2/slide-050-sjs-ten-comparison-table.png"
+         alt="Comparison table contrasting EM/RIME with SJS/TEN across four rows: Primary trigger, Skin lesions, Mucosal involvement, Prognosis. Right column shows BSA detachment definitions and high-risk drugs."
+         loading="lazy">
+    <figcaption>SJS/TEN is drug-triggered in ~85% (vs. EM/RIME infection-triggered in ~90%). BSA cutoffs: SJS &lt;10%, overlap 10–30%, TEN &gt;30%. High-risk drugs to memorize for boards: sulfonamides, anticonvulsants (carbamazepine, phenytoin, lamotrigine), allopurinol, COX-2 NSAIDs. Onset 1–3 weeks after starting a new med. <span class="slide-ref">[Slide 50]</span></figcaption>
+  </figure>
+
+  <!-- BSA cutoffs -->
+  <h4 id="alg-sjs-bsa">BSA Classification <span class="slide-ref">[Slide 50]</span></h4>
+  <table class="data-table" style="width:100%;">
+    <thead><tr><th>Condition</th><th>BSA Skin Detachment</th><th>Mortality</th></tr></thead>
+    <tbody>
+      <tr><td><strong>SJS</strong></td><td>&lt;10% BSA</td><td>1–5%</td></tr>
+      <tr><td><strong>SJS/TEN Overlap</strong></td><td>10–30% BSA</td><td>—</td></tr>
+      <tr style="background:#FFEBEE;"><td><strong>TEN</strong></td><td><strong>&gt;30% BSA</strong></td><td style="color:#C0392B;font-weight:700;">25–50%</td></tr>
+    </tbody>
+  </table>
+
+  <!-- Drug list — allopurinol #1 -->
+  <h4>High-Risk Drugs — BOARDS FAVORITE <span class="slide-ref">[Slide 50]</span></h4>
+  <div class="callout-danger" style="margin-bottom:8px;">
+    💊 <strong>#1 DRUG TO MEMORIZE: ALLOPURINOL</strong> — highest absolute risk per new user of ANY drug for SJS/TEN.
+  </div>
+  <div class="prof-emphasis">🎙️ Prof said if students remember only one drug, it should be allopurinol — she acknowledged she doesn't fully understand why it has the highest absolute risk, but the data is clear.</div>
+  <ul style="margin:8px 0;padding-left:24px;">
+    <li><strong>Allopurinol</strong> — #1 (HIGHEST ABSOLUTE RISK PER NEW USER)</li>
+    <li>Sulfonamides / TMP-SMX</li>
+    <li>Beta-lactams, fluoroquinolones</li>
+    <li>Anticonvulsants: carbamazepine, phenytoin, lamotrigine, phenobarbital</li>
+    <li>COX-2 NSAIDs (especially etoricoxib)</li>
+  </ul>
+
+  <!-- HLA-B*1502 carbamazepine -->
+  <div class="alg-catG" id="alg-sjs-hla">
+    <strong>Carbamazepine + Han Chinese Patients = HLA-B*1502 Screening Required</strong> <span class="slide-ref">[Slide 50]</span><br>
+    Dentists prescribe carbamazepine for trigeminal neuralgia. Han Chinese patients carry HLA-B*1502 allele at dramatically elevated rates → greatly increased SJS risk from carbamazepine. MUST screen before prescribing.
+  </div>
+  <div class="prof-emphasis">🎙️ Prof highlighted carbamazepine specifically because dentists use it for trigeminal neuralgia — she expects students to know the HLA screening requirement for Han Chinese patients.</div>
+
+  <!-- SCORTEN -->
+  <h4>SCORTEN Mortality Score <span class="slide-ref">[Slide 51]</span></h4>
+  <div class="prof-emphasis">🎙️ Prof said SCORTEN predicts whether a patient will likely survive — 5+ points = likely death, 1–3 = likely survival.</div>
+  <table class="data-table" style="width:100%;">
+    <thead>
+      <tr><th colspan="2">SCORTEN Factors (1 point each)</th><th>Score</th><th>Mortality</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Age ≥40</td><td>HR &gt;120 bpm</td><td rowspan="4" style="vertical-align:middle;text-align:center;">
+        0–1<br>2<br>3<br>4<br><strong style="color:#C0392B;">≥5</strong>
+      </td><td rowspan="4" style="vertical-align:middle;text-align:center;">
+        3%<br>12%<br>35%<br>58%<br><strong style="color:#C0392B;">90%</strong>
+      </td></tr>
+      <tr><td>Malignancy present</td><td>BSA detachment &gt;10%</td></tr>
+      <tr><td>BUN &gt;28 mg/dL</td><td>Glucose &gt;252 mg/dL</td></tr>
+      <tr><td>Bicarbonate &lt;20 mEq/L</td><td></td></tr>
+    </tbody>
+  </table>
+
+  <!-- Dentist action -->
+  <div class="callout-danger" id="alg-sjs-dentist" style="margin:12px 0;">
+    <strong>DENTIST'S ROLE — 4 STEPS:</strong> <span class="slide-ref">[Slide 51]</span>
+    <ol style="margin:6px 0;padding-left:24px;">
+      <li><strong>RECOGNIZE:</strong> New drug + flu-like prodrome + oral erosions + skin macules → suspect SJS/TEN</li>
+      <li><strong>STOP THE SUSPECTED DRUG IMMEDIATELY</strong></li>
+      <li>Refer to ED / burn unit urgently (Call 911 if severe)</li>
+      <li>Document ALL current medications and start dates</li>
+    </ol>
+  </div>
+  <div class="prof-emphasis">🎙️ Prof described the dentist's role as recognition and stopping the drug — she expects students to know this 4-step approach as their clinical action plan.</div>
+
+  <!-- Clinical photos -->
+  <figure class="clinical-img" data-slide="53" id="alg-sjs-clinical">
+    <img src="images/oral-med-midterm/lecture-2/slide-053-sjs-ten-severity-clinical-photos.png"
+         alt="Multi-panel clinical photograph: arm with multiple raised target lesions; two patients with severe hemorrhagic lip crusting; both eyes with severe purulent conjunctivitis, periorbital erythema, and yellow exudate."
+         loading="lazy">
+    <figcaption>Severe SJS/TEN presentation: target lesions, hemorrhagic lip crusting (similar to EM but more severe), and severe conjunctivitis. 50% of survivors develop permanent ocular scarring. Source: Trayes KP, et al. (2019) Am Fam Physician 100(2):82–88. <span class="slide-ref">[Slide 53]</span></figcaption>
+  </figure>
+
+  <div class="pearl-callout">
+    <strong>SJS/TEN Onset Timeline:</strong> Symptoms typically begin 1–3 weeks after starting a new medication. Always take a medication history. <span class="slide-ref">[Slide 50]</span>
+  </div>
+
+  <details class="tier-3-collapse">
+    <summary>Tier 3 — SJS/TEN Oral Supportive Care &amp; Dentist's Inpatient Role</summary>
+    <ul style="font-size:0.85em;margin-top:8px;">
+      <li>Supportive care: magic mouthwash + lidocaine 2%, chlorhexidine 0.12% rinse, petroleum jelly to lips frequently, gentle saline irrigation, avoid aggressive debridement.</li>
+      <li>These patients are in burn units — dentist's primary role is supportive, not primary management.</li>
+      <li>BSA assessment methods: Wallace Rule of Nines; Palmar Method (patient's palm = 1% TBSA).</li>
+    </ul>
+  </details>
+</div>
+
+<!-- ===================== PNP/PAMS ===================== -->
+<div id="alg-pnp" style="margin-bottom:28px;">
+  <span class="alg-tier-header alg-t2">TIER 2 / T3</span>
+  <h3 style="margin-top:4px;">Paraneoplastic Pemphigus / PAMS (PNP/PAMS)</h3>
+
+  <div class="prof-emphasis">🎙️ Prof said this is a boards-tested topic even though students will rarely see these patients in practice — they just need to know the key facts.</div>
+
+  <div class="callout-danger" style="margin:10px 0;" id="alg-pnp-always">
+    🔴 <strong>ALWAYS ASSOCIATED WITH UNDERLYING NEOPLASM (known or occult)</strong><br>
+    Trigger full cancer workup in any patient with PNP/PAMS pattern. <span class="slide-ref">[Slide 54]</span>
+  </div>
+  <div class="callout-danger" style="margin:10px 0;">
+    🦷 <strong>ORAL LESIONS FIRST in ~45% of patients</strong> — often precedes cancer diagnosis. The dentist may be the first to catch an occult malignancy. <span class="slide-ref">[Slide 54]</span>
+  </div>
+  <div class="callout-danger" style="margin:10px 0;">
+    💀 <strong>MORTALITY 60–90% — most deaths within first year</strong> <span class="slide-ref">[Slide 54]</span>
+  </div>
+
+  <h4>Associated Malignancies — BOARDS FAVORITE <span class="slide-ref">[Slide 54]</span></h4>
+  <table class="data-table" style="width:100%;">
+    <thead><tr><th>Malignancy</th><th>Frequency</th></tr></thead>
+    <tbody>
+      <tr style="background:#FFF9C4;"><td><strong>Non-Hodgkin Lymphoma (NHL)</strong></td><td>~40% (#1)</td></tr>
+      <tr><td>Chronic Lymphocytic Leukemia (CLL)</td><td>~20%</td></tr>
+      <tr><td>Castleman Disease</td><td>~18% (best prognosis — surgically removable)</td></tr>
+    </tbody>
+  </table>
+
+  <div class="callout-danger" style="margin:10px 0;">
+    🫁 <strong>Bronchiolitis Obliterans = Major Cause of Death</strong> — autoantibodies attack respiratory epithelium → progressive, often irreversible airway destruction. <span class="slide-ref">[Slide 55]</span>
+  </div>
+  <div class="callout-danger" style="margin:10px 0;">
+    <strong>Oral Lesions: SEVERE, PAINFUL, INTRACTABLE STOMATITIS</strong> — does not respond to standard therapy. <span class="slide-ref">[Slide 55]</span><br>
+    If stomatitis is treatment-resistant → think PNP/PAMS → cancer workup.
+  </div>
+
+  <details class="tier-3-collapse">
+    <summary>Tier 3 — PNP Phenotypes, Diagnostics &amp; Supportive Care</summary>
+    <ul style="font-size:0.85em;margin-top:8px;">
+      <li>Five mucocutaneous phenotypes: Pemphigus-like, Pemphigoid-like, EM-like, GVHD-like, LP-like. <span class="slide-ref">[Slide 54]</span></li>
+      <li>Ocular: cicatrizing conjunctivitis, symblepharon. Skin: polymorphous (simultaneously mimics multiple diseases).</li>
+      <li>Diagnostic criteria 2021: 3 major criteria.</li>
+      <li>Rituximab less effective for PNP than for regular PV.</li>
+      <li>Better prognosis: Castleman disease (surgically removable), lichenoid pattern, oral-only involvement.</li>
+      <li>Supportive oral care: dexamethasone 0.5 mg/5 mL + clobetasol 0.05% gel + magic mouthwash + lidocaine 2% gel before meals + CHX 0.12% + lanolin/petroleum jelly for hemorrhagic crusting + nutritional evaluation. <span class="slide-ref">[Slide 56]</span></li>
+    </ul>
+  </details>
+</div>
+
+<!-- ========================================================
+  CROSS-CUTTING CONCEPT TABLES
+======================================================== -->
+<h3 style="margin-top:28px;border-bottom:3px solid #4527A0;padding-bottom:6px;color:#4527A0;" id="alg-cross-tables">Cross-Cutting Concept Tables — Exam Favorites</h3>
+
+<!-- TABLE 1: Nikolsky -->
+<div class="data-table" id="alg-nikolsky-table" style="margin-bottom:20px;">
+  <h4 style="margin-top:0;">Nikolsky Sign — PV Positive vs MMP Negative <span class="slide-ref">[Slides 37, 41]</span></h4>
+  <table class="data-table" style="width:100%;">
+    <thead><tr><th>Feature</th><th style="color:#C0392B;">Pemphigus Vulgaris (PV)</th><th style="color:#1565C0;">Mucous Membrane Pemphigoid (MMP)</th></tr></thead>
+    <tbody>
+      <tr><td>Nikolsky Sign</td><td style="color:#C0392B;font-weight:700;">✅ POSITIVE</td><td style="color:#1565C0;font-weight:700;">❌ NEGATIVE</td></tr>
+      <tr><td>Why</td><td>Intraepithelial — cells fall apart easily with lateral pressure</td><td>Subepithelial — tense blister; epithelium covers blister; harder to elicit</td></tr>
+      <tr><td>Blister type</td><td>FLACCID — ruptures immediately on formation</td><td>TENSE — intact, dome-shaped bullae</td></tr>
+      <tr><td>Cleavage level</td><td>INTRAEPITHELIAL (suprabasal, above BMZ)</td><td>SUBEPITHELIAL (at BMZ)</td></tr>
+      <tr><td>Mnemonic</td><td>Pegasus flies HIGH ABOVE (between clouds)</td><td>Hades lives DEEP below (pemphigoiD)</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<!-- TABLE 2: DIF patterns -->
+<div class="data-table" id="alg-dif-table" style="margin-bottom:20px;">
+  <h4 style="margin-top:0;">DIF Pattern Table <span class="slide-ref">[Slides 38, 43]</span></h4>
+  <div class="prof-emphasis">🎙️ Prof said boards love to test IgA, IgG, C3 in immunobullous diseases — same antibodies appear in PV and MMP, but at different locations. That location difference is the testable fact.</div>
+  <table class="data-table" style="width:100%;">
+    <thead><tr><th>Disease</th><th>DIF Pattern</th><th>Location</th><th>Antibodies</th></tr></thead>
+    <tbody>
+      <tr style="background:#FFF9C4;"><td><strong>Pemphigus Vulgaris</strong></td><td><strong>"Chicken wire" / fishnet / intercellular netting</strong></td><td>Between keratinocytes in spinous layer (intraepithelial)</td><td>IgG, C3</td></tr>
+      <tr style="background:#E3F2FD;"><td><strong>MMP</strong></td><td><strong>Linear at basement membrane zone</strong></td><td>Subepithelial (at BMZ)</td><td>IgG, IgA, C3</td></tr>
+      <tr><td>OLP</td><td>Negative / fibrinogen deposits</td><td>BMZ basal zone</td><td>No immunoglobulin deposition</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<!-- TABLE 3: BSA cutoffs -->
+<div class="data-table" id="alg-bsa-table" style="margin-bottom:20px;">
+  <h4 style="margin-top:0;">BSA Cutoffs — EM / SJS / TEN <span class="slide-ref">[Slide 50]</span></h4>
+  <table class="data-table" style="width:100%;">
+    <thead><tr><th>Condition</th><th>BSA Skin Detachment</th><th>Trigger</th><th>Prognosis</th></tr></thead>
+    <tbody>
+      <tr><td>EM / RIME</td><td>N/A (no skin detachment)</td><td>Infection 90%</td><td>Self-limiting, good</td></tr>
+      <tr><td>SJS</td><td>&lt;10%</td><td>Drug 85–90%</td><td>Mortality 1–5%</td></tr>
+      <tr><td>SJS/TEN Overlap</td><td>10–30%</td><td>Drug 85–90%</td><td>—</td></tr>
+      <tr style="background:#FFEBEE;"><td><strong>TEN</strong></td><td><strong>&gt;30%</strong></td><td>Drug 85–90%</td><td style="color:#C0392B;font-weight:700;">Mortality 25–50%</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<!-- TABLE 4: Histologic level -->
+<div class="data-table" id="alg-histo-table" style="margin-bottom:20px;">
+  <h4 style="margin-top:0;">Histologic Level of Separation <span class="slide-ref">[Slides 30, 41, 36, 34]</span></h4>
+  <table class="data-table" style="width:100%;">
+    <thead><tr><th>Disease</th><th>Level</th><th>What Separates</th><th>Blister Roof</th></tr></thead>
+    <tbody>
+      <tr style="background:#FFF3E0;"><td><strong>PV</strong></td><td><strong>INTRAEPITHELIAL (suprabasal)</strong></td><td>Desmoglein/desmosome destruction → acantholysis</td><td>Thin (flaccid)</td></tr>
+      <tr style="background:#E3F2FD;"><td><strong>MMP</strong></td><td><strong>SUBEPITHELIAL (BMZ)</strong></td><td>Autoantibodies → BMZ proteins</td><td>Full epithelium (tense)</td></tr>
+      <tr style="background:#EDE7F6;"><td>EBA</td><td>Sub-lamina densa (below BMZ)</td><td>Anti-type VII collagen</td><td>Full epithelium</td></tr>
+      <tr style="background:#E8F5E9;"><td><strong>OLP</strong></td><td><strong>Band-like lymphocytic infiltrate at BMZ</strong></td><td>T-cell mediated basal cell vacuolization</td><td>No true blister</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<!-- ========================================================
+  FLASHCARD DECK — 15 Q&A pairs
+======================================================== -->
+<h3 style="margin-top:28px;border-bottom:3px solid #2E7D32;padding-bottom:6px;color:#2E7D32;" id="alg-flashcards">Flashcard Deck — 15 Must-Know Q&amp;A Pairs</h3>
+<p style="font-size:0.9em;color:#5C5448;margin-bottom:16px;">Click each card to reveal the answer. All T1 items from the handoff.</p>
+
+<details class="flashcard" id="alg-fc-1">
+  <summary class="flashcard-q">What is the most common oral ulcerative condition?</summary>
+  <div class="flashcard-a">Recurrent aphthous stomatitis (RAS) — affects approximately 20% of the population. <span class="slide-ref">[Slide 4]</span></div>
+</details>
+
+<details class="flashcard" id="alg-fc-2">
+  <summary class="flashcard-q">What clinical feature of RAS earns "easy points" on the exam?</summary>
+  <div class="flashcard-a">The erythematous halo surrounding the yellow-white fibrinopurulent membrane. If you see that red halo in a photo → put RAS on your differential. <span class="slide-ref">[Slide 4]</span></div>
+</details>
+
+<details class="flashcard" id="alg-fc-3">
+  <summary class="flashcard-q">New-onset RAS in a patient over 40 with no childhood ulcer history requires what?</summary>
+  <div class="flashcard-a">Systemic workup — evaluate for HIV, celiac disease, IBD, hematologic malignancy. Always ask: "Did you have these as a child?" No = mandatory workup. <span class="slide-ref">[Slide 4]</span></div>
+</details>
+
+<details class="flashcard" id="alg-fc-4">
+  <summary class="flashcard-q">Which topical corticosteroid does the professor say "commit to memory" and "will torture you about"?</summary>
+  <div class="flashcard-a">Dexamethasone elixir 0.5 mg/5 mL — soak 5 minutes (minimum 2 min), up to QID. The universal first-line oral medicine rinse. Every dentist can and should write this prescription. <span class="slide-ref">[Slides 6–7]</span></div>
+</details>
+
+<details class="flashcard" id="alg-fc-5">
+  <summary class="flashcard-q">Rank these three corticosteroids from most to least potent: triamcinolone paste, clobetasol, fluocinonide.</summary>
+  <div class="flashcard-a">Clobetasol propionate 0.05% (Group 1 — super-high) &gt; Fluocinonide 0.05% (Group 2 — high) &gt; Triamcinolone acetonide 0.1% paste (Group 4 — medium/WEAKEST). Trap: "dental" in triamcinolone's name does NOT make it the best choice. <span class="slide-ref">[Slide 7]</span></div>
+</details>
+
+<details class="flashcard" id="alg-fc-6">
+  <summary class="flashcard-q">What are the 3 D's of geographic tongue?</summary>
+  <div class="flashcard-a">Depapillation (loss of filiform papillae → smooth red patches) + Demarcated (clear circumferential serpiginous white border) + Dynamic (migrates/changes location over days–weeks). <span class="slide-ref">[Slide 11]</span></div>
+</details>
+
+<details class="flashcard" id="alg-fc-7">
+  <summary class="flashcard-q">What is the specific vocabulary word for geographic tongue's white serpentine border?</summary>
+  <div class="flashcard-a">Serpiginous — from "serpent" (snake-shaped winding border). Prof had the entire class say this word aloud. Key exam vocabulary. <span class="slide-ref">[Slides 11–12]</span></div>
+</details>
+
+<details class="flashcard" id="alg-fc-8">
+  <summary class="flashcard-q">What are the three drug classes that cause gingival hyperplasia, and which drug is the most important?</summary>
+  <div class="flashcard-a">Anticonvulsants (Phenytoin = #1 most important, ~50% of users) + Immunosuppressants (Cyclosporine, 25–70%) + Calcium Channel Blockers (Nifedipine/Amlodipine, 6–25%). Boards love this section. <span class="slide-ref">[Slide 14]</span></div>
+</details>
+
+<details class="flashcard" id="alg-fc-9">
+  <summary class="flashcard-q">What is the FIRST and MOST IMPORTANT intervention for drug-induced gingival hyperplasia?</summary>
+  <div class="flashcard-a">Meticulous plaque control — before ANY pharmacologic or surgical treatment. Surgery without prior hygiene optimization = ~35% recurrence within 18 months. <span class="slide-ref">[Slide 15]</span></div>
+</details>
+
+<details class="flashcard" id="alg-fc-10">
+  <summary class="flashcard-q">What is the pathognomonic location of oral lichen planus?</summary>
+  <div class="flashcard-a">Bilateral posterior buccal mucosa + ventral tongue with Wickham striae (the lacy white reticulations). Bilateral = reassuring for OLP. Unilateral or atypical = BIOPSY. <span class="slide-ref">[Slide 31]</span></div>
+</details>
+
+<details class="flashcard" id="alg-fc-11">
+  <summary class="flashcard-q">Is OLP autoimmune or auto-inflammatory per this professor?</summary>
+  <div class="flashcard-a">AUTO-INFLAMMATORY (NOT autoimmune). Chronic T-cell mediated auto-inflammatory disorder. This distinction is important for patient counseling — autoimmune implies systemic life-altering disease that does not apply here. Prof's updated position. <span class="slide-ref">[Slide 31]</span></div>
+</details>
+
+<details class="flashcard" id="alg-fc-12">
+  <summary class="flashcard-q">Nikolsky sign: positive in which disease, negative in which disease?</summary>
+  <div class="flashcard-a">Positive = Pemphigus Vulgaris (intraepithelial cleavage — cells fall apart easily with lateral pressure). Negative = MMP (subepithelial cleavage — tense blister, harder to elicit). Mnemonic: Pegasus (PV) flies HIGH; Hades (pemphigoiD) lives DEEP. <span class="slide-ref">[Slides 37, 41]</span></div>
+</details>
+
+<details class="flashcard" id="alg-fc-13">
+  <summary class="flashcard-q">MMP: what percentage have ocular involvement, and what is the referral rule?</summary>
+  <div class="flashcard-a">60–70% have ocular involvement. Rule: Refer ALL MMP patients to ophthalmology — EVEN IF ASYMPTOMATIC. Early symptoms: burning, dryness, foreign body sensation. Conjunctival scarring (symblepharon) is irreversible → blindness. <span class="slide-ref">[Slide 39]</span></div>
+</details>
+
+<details class="flashcard" id="alg-fc-14">
+  <summary class="flashcard-q">EM/RIME is triggered by what 90% of the time? SJS/TEN by what 90% of the time?</summary>
+  <div class="flashcard-a">EM/RIME = Infection 90% (HSV ~70% for EM; Mycoplasma for RIME) → good prognosis. SJS/TEN = Drug ~85–90% → potentially fatal. Single most important distinguishing principle of the section. Allopurinol = #1 drug to remember for SJS/TEN. <span class="slide-ref">[Slides 47, 50]</span></div>
+</details>
+
+<details class="flashcard" id="alg-fc-15">
+  <summary class="flashcard-q">PNP/PAMS: what is ALWAYS present, and what are the two hallmark complications?</summary>
+  <div class="flashcard-a">ALWAYS an underlying neoplasm (known or occult) — trigger cancer workup. Hallmarks: (1) Intractable stomatitis — severe oral lesions that do not respond to standard therapy. (2) Bronchiolitis obliterans — autoantibodies attack respiratory epithelium = major cause of death. NHL ~40% is the most common associated malignancy. <span class="slide-ref">[Slides 54–55]</span></div>
+</details>
+
+<!-- ========================================================
+  DRUG ALLERGY QUICK-REFERENCE
+======================================================== -->
+<h3 style="margin-top:28px;border-bottom:3px solid #1565C0;padding-bottom:6px;color:#1565C0;" id="alg-drug-quickref">Drug Allergy Quick-Reference</h3>
+
+<div style="display:flex;gap:16px;flex-wrap:wrap;margin-bottom:20px;">
+  <!-- SJS/TEN drugs -->
+  <div style="flex:1 1 280px;background:#FFEBEE;border:2px solid #C62828;border-radius:10px;padding:14px;">
+    <h4 style="margin-top:0;color:#C62828;">🚨 SJS/TEN High-Risk Drugs <span class="slide-ref">[Slide 50]</span></h4>
+    <table style="width:100%;font-size:0.88em;">
+      <tr style="background:#FFCDD2;"><td><strong>Allopurinol</strong></td><td>⭐ #1 HIGHEST ABSOLUTE RISK per new user</td></tr>
+      <tr><td>Sulfonamides / TMP-SMX</td><td>Classic boards drug</td></tr>
+      <tr><td>Beta-lactams</td><td>—</td></tr>
+      <tr><td>Fluoroquinolones</td><td>—</td></tr>
+      <tr style="background:#FFCDD2;"><td><strong>Carbamazepine</strong></td><td>⚠️ Screen Han Chinese for HLA-B*1502</td></tr>
+      <tr><td>Phenytoin</td><td>Also causes DRGH</td></tr>
+      <tr><td>Lamotrigine</td><td>—</td></tr>
+      <tr><td>Phenobarbital</td><td>—</td></tr>
+      <tr><td>COX-2 NSAIDs (etoricoxib)</td><td>Highest-risk NSAID</td></tr>
+    </table>
+    <div style="margin-top:8px;font-size:0.82em;color:#C62828;">Onset: 1–3 weeks after starting the drug. Stop drug immediately if SJS suspected.</div>
+  </div>
+
+  <!-- DRGH drugs -->
+  <div style="flex:1 1 280px;background:#FFF3E0;border:2px solid #E65100;border-radius:10px;padding:14px;">
+    <h4 style="margin-top:0;color:#E65100;">💊 DRGH-Causing Drugs <span class="slide-ref">[Slide 14]</span></h4>
+    <table style="width:100%;font-size:0.88em;">
+      <tr style="background:#FFE0B2;"><th>Drug</th><th>Class</th><th>Incidence</th></tr>
+      <tr style="background:#FFE0B2;"><td><strong>Phenytoin</strong></td><td>Anticonvulsant</td><td>~50% (#1 MOST IMPORTANT)</td></tr>
+      <tr><td>Carbamazepine</td><td>Anticonvulsant</td><td>Lower risk</td></tr>
+      <tr style="background:#FFE0B2;"><td><strong>Cyclosporine</strong></td><td>Immunosuppressant</td><td>25–70% (#1 immunosupp.)</td></tr>
+      <tr style="background:#FFE0B2;"><td><strong>Nifedipine</strong></td><td>Calcium channel blocker</td><td>6–25% (highest CCB risk)</td></tr>
+      <tr style="background:#FFE0B2;"><td><strong>Amlodipine</strong></td><td>Calcium channel blocker</td><td>6–25%</td></tr>
+      <tr><td>Verapamil</td><td>Calcium channel blocker</td><td>Lower risk than nifedipine</td></tr>
+    </table>
+    <div style="margin-top:8px;font-size:0.82em;color:#E65100;">Onset: 1–3 months after starting. Starts at interdental papillae. Edentulous areas spared.</div>
+  </div>
+</div>
+
+<!-- Drug-disease quick matrix -->
+<h4>Drug–Disease Master Table</h4>
+<table class="data-table" style="width:100%;">
+  <thead><tr><th>Drug / Drug Class</th><th>Associated Oral Complication</th><th>Key Action</th></tr></thead>
+  <tbody>
+    <tr><td><strong>Allopurinol</strong> (gout)</td><td>SJS/TEN (#1 absolute risk)</td><td>Stop drug; emergency referral</td></tr>
+    <tr><td><strong>Sulfonamides / TMP-SMX</strong></td><td>SJS/TEN</td><td>Stop drug; emergency referral</td></tr>
+    <tr><td><strong>Anticonvulsants</strong> (carbamazepine, phenytoin, lamotrigine)</td><td>SJS/TEN; phenytoin also → DRGH</td><td>Screen Han Chinese for HLA-B*1502 (CBZ)</td></tr>
+    <tr><td><strong>COX-2 NSAIDs</strong> (etoricoxib)</td><td>SJS/TEN</td><td>High-risk category</td></tr>
+    <tr><td><strong>Phenytoin</strong> (anticonvulsant)</td><td>DRGH (#1 drug)</td><td>Plaque control; coord. with prescriber</td></tr>
+    <tr><td><strong>Cyclosporine</strong> (immunosuppressant)</td><td>DRGH</td><td>Plaque control; consider substitution</td></tr>
+    <tr><td><strong>Nifedipine / Amlodipine</strong> (CCB)</td><td>DRGH</td><td>Switch to felodipine or ACE-I/ARB (coord. with prescriber)</td></tr>
+    <tr><td><strong>Latex, Antibiotics, CHX</strong></td><td>Type I hypersensitivity (IgE-mediated)</td><td>Latex-free protocol; substitute CHX → Betadine</td></tr>
+    <tr><td><strong>Metals, acrylates, amalgam, flavorings</strong></td><td>Type IV (delayed, 24–72h) → lichenoid, PCG, contact stomatitis/cheilitis</td><td>Remove causative material; patch test</td></tr>
+    <tr><td><strong>Cinnamon / cinnamaldehyde</strong></td><td>Plasma cell gingivitis (PCG)</td><td>Eliminate cinnamon-containing products</td></tr>
+  </tbody>
+</table>
+
+  </div><!-- end .guide-section-content -->
+</div><!-- end #sec-allergies -->
