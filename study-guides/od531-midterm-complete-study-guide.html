@@ -232,9 +232,18 @@ body::before, .blood-cell, .heartbeat-line { display: none !important; }
 .callout-danger p { color: var(--text); }
 
 /* ═══ CLINICAL IMAGE BOXES ═══ */
+/* Default block layout works for <figure class="clinical-img"> with <img>+<figcaption>.
+   Legacy placeholder pattern <div class="clinical-img"> with .img-icon + .img-text
+   uses the .clinical-img--legacy variant below for flex layout.
+   iOS Safari renders flex+<img> as 0×0 if no flex-basis is set, so default to block. */
 .clinical-img {
     background: #FAFAF8; border: 1px solid var(--border); border-radius: var(--radius);
-    padding: 14px 18px; margin: 16px 0; display: flex; gap: 14px; align-items: flex-start;
+    padding: 14px 18px; margin: 16px 0; display: block;
+}
+/* Legacy placeholder pattern (icon + text side-by-side) */
+.clinical-img.has-icon,
+div.clinical-img:has(> .img-icon) {
+    display: flex; gap: 14px; align-items: flex-start;
 }
 .clinical-img .img-icon {
     width: 32px; height: 32px; border-radius: 6px;
@@ -1583,6 +1592,27 @@ td.hl-amber { background: var(--accent-light); }
   padding: 10px 14px; margin: 8px 0;
 }
 #sec-allergies details.tier-3-collapse[open] summary { margin-bottom: 8px; }
+
+/* === L3 EPITHELIAL — figure scoping (fixes iOS Safari 0×0 image bug) === */
+/* Global .clinical-img is display:flex for the placeholder div pattern.
+   L3 figures need display:block like L1/L2/L4 — without this, iOS Safari
+   renders the flex img child at 0×0 even though the file loads. */
+#sec-epithelial figure.clinical-img {
+  background: #FAFAF8; border: 1px solid var(--border, #E5E1D8); border-radius: 12px;
+  padding: 16px; margin: 20px 0; display: block;
+}
+#sec-epithelial figure.clinical-img img {
+  width: 100%; max-width: 720px; height: auto; display: block; margin: 0 auto;
+  border-radius: 8px; border: 1px solid #E5E1D8;
+  -webkit-user-select: none;
+}
+#sec-epithelial figure.clinical-img figcaption {
+  font-size: 14px; color: #5C5448; line-height: 1.6; font-style: italic;
+  margin-top: 12px; padding: 0 4px;
+}
+@media (max-width: 480px) {
+  #sec-epithelial figure.clinical-img img { max-width: 100%; }
+}
 
 </style>
 </head>
