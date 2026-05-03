@@ -1,15 +1,16 @@
 <!--
   FRAGMENT: 06-fragment-notecard-v2
   AUTHOR: @notecard-v2-builder
-  DESCRIPTION: Exam Notecard v2 — 4-lecture OD531/OD530 midterm
+  DESCRIPTION: Exam Notecard v2 — 4-lecture OD531/OD530 midterm — EXPANDED
   LECTURES COVERED:
-    L1 (red)  = OD531 L1 Infectious Diseases
-    L2 (blue) = OD531 L2 Allergies & Immunologic
-    L3 (green)= OD530 L3 Epithelial Pathoses & SCC
-    L4 (purple)= OD531 L4 Salivary Gland Disorders
+    L1 (red)    = OD531 L1 Infectious Diseases  (104 inventory items)
+    L2 (blue)   = OD531 L2 Allergies & Immunologic (125 items)
+    L3 (green)  = OD530 L3 Epithelial Pathoses & SCC (157 items)
+    L4 (purple) = OD531 L4 Salivary Gland Disorders (103 items)
+    Master(gold)= cross-lecture synthesis
   SECTION: Part 5 of 5
-  GENERATED: 2026-05-02
-  DENSITY: ~175 distinct facts, 10 topic blocks per column, 85+ hl spans
+  GENERATED: 2026-05-03 (expansion pass)
+  DENSITY: ~490 inventory items, ≥3× density of v1 fragment, ~300+ hl spans
   NOTE: NO <style>, NO <script>. All IDs prefixed nc-. Shell provides CSS.
 -->
 
@@ -19,18 +20,18 @@
     <div class="divider-inner">
       <div class="section-number">Part 5 of 5</div>
       <h2>Exam Notecard v2 &mdash; 4-Lecture Midterm</h2>
-      <p>Same format as the final-exam notecard. Study the card as one unit — then fold it in your mind by lecture color.</p>
+      <p>Maximum-density 5&times;8 handwritten card. Study the card as one unit — then fold it in your mind by lecture color: <span class="hl">L1 red</span> · <span class="hl">L2 blue</span> · <span class="hl">L3 green</span> · <span class="hl">L4 purple</span> · <span class="hl">Master gold</span>.</p>
     </div>
   </div>
 
   <div class="guide-section-content nc">
 
     <!-- ═══════════ SIDE A LABEL ═══════════ -->
-    <div class="nc-label" id="nc-label-side-a">Side A</div>
+    <div class="nc-label" id="nc-label-side-a">Side A &mdash; L1 Infectious + L2 Allergies/Immunologic</div>
 
     <div class="nc-card" id="nc-card-side-a">
       <div class="nc-card-title" id="nc-title-side-a">
-        SIDE A — L1 INFECTIOUS (red) + L2 ALLERGIES &amp; IMMUNOLOGIC (blue) | clinical anchors
+        SIDE A &mdash; L1 INFECTIOUS (red) + L2 ALLERGIES &amp; IMMUNOLOGIC (blue) | board anchors, dosing, traps
       </div>
 
       <div class="nc-cols" id="nc-cols-side-a">
@@ -40,299 +41,390 @@
              ══════════════════════════════════ -->
         <div class="nc-col nc-col-left r" id="nc-col-l1" style="border-top:4px solid #B5483B">
 
-          <div class="h r" id="nc-h-l1">L1 · INFECTIOUS DISEASES</div>
+          <div class="h r" id="nc-h-l1">L1 &middot; INFECTIOUS DISEASES</div>
 
-          <!-- clinical img placeholder -->
+          <div class="s" id="nc-s-l1-framework">5-Step Framework (apply to every case)</div>
+          <span class="hl">①</span> Identify lesion (vesicle/ulcer/plaque/papule/crust). <span class="hl">②</span> Locate (oral mucosa vs skin vs both). <span class="hl">③</span> Determine acuity &amp; systemic sx (fever, lymphadenopathy, malaise). <span class="hl">④</span> Risk factors (age, sexual hx, immune status, travel, contacts). <span class="hl">⑤</span> Diagnostic test &amp; targeted tx. Cross-cutting: <span class="hl">IgM = current/active</span> · <span class="hl">IgG = past/immune memory</span> · "<span class="hl">if it wipes off → Candida</span>; if it doesn't → leukoplakia/lichenoid".
+
           <div class="clinical-img" data-img-slot="nc-impetigo-pic">Impetigo: honey crusts over lip/perioral skin</div>
 
           <div class="s" id="nc-s-impetigo">Impetigo</div>
-          Most common bacterial skin infxn <span class="hl">2–5 yr olds</span>. Cause: <span class="pg r"><span class="hl">Staph aureus / β-hemolytic strep</span></span>. <span class="hl">Honey-colored crusts</span> ("cornflakes glued on"). Topical: mupirocin 2% TID ×5d. Systemic: <span class="hl">Augmentin — dose by WEIGHT</span> not age (&lt;40 kg = 25 mg/kg/d BID; ≥40 kg = 500 mg).
+          MC bacterial skin infxn, <span class="hl">2–5 yr olds</span>. Cause: <span class="pg r"><span class="hl">Staph aureus + β-hemolytic strep</span></span>. <span class="pg r"><span class="hl">Honey-colored crusts</span></span> ("cornflakes glued on"). Highly contagious (school outbreaks). Topical: <span class="hl">mupirocin 2% TID ×5d</span>. Systemic: <span class="hl">Augmentin dose by WEIGHT not age</span> — &lt;40 kg = 25 mg/kg/d BID; ≥40 kg = 500 mg BID. Trap: don't dose by age in pediatrics.
 
-          <div class="s" id="nc-s-syphilis">Syphilis — 3 Stages</div>
-          Cause: <span class="pg r"><span class="hl">T. pallidum "cursed corkscrews"</span></span>. 1°: chancre 3–90 d; <span class="hl">painless + indurated + clean base + LAD</span>; 85% genital/10% anal/4% oral; <span class="hl">serology NEG first 6 wk</span>; IHC 64–94% vs silver stain 0–41%. Tx: <span class="hl">Benzathine Pen G 2.4 MU IM ×1</span>; DPH reportable. 2°: 4–10 wk later; <span class="hl">split papules + mucous patches + condyloma lata</span>; HIGHLY infectious. 3°: gumma (palate/tongue), interstitial glossitis, tabes dorsalis; 1–30 yr latency; 30% untreated → 3°.
+          <div class="s" id="nc-s-syphilis">Syphilis (3 stages — match stage to lesion)</div>
+          Cause: <span class="pg r"><span class="hl">Treponema pallidum</span></span> — <span class="pg r"><span class="hl">"cursed corkscrews"</span></span> on bx (<span class="hl">IHC preferred 64–94% sens</span>; silver stain old method 0–41%). <span class="hl">REPORTABLE all stages</span>. <span class="hl">"The Great Imitator"</span>. <span class="hl">6-wk serology window</span> — RPR/VDRL may be falsely negative early in 1°.<br>
+          <span class="hl">PRIMARY</span>: <span class="pg r"><span class="hl">painless chancre</span></span> <span class="hl">3–90 d post-exposure</span>, heals 3–6 wk untreated. <span class="hl">SECONDARY</span> (~9 wk): <span class="pg r"><span class="hl">mucous patches</span></span> ("snail-track ulcers"), maculopapular rash <span class="hl">palms+soles</span>, condyloma lata, <span class="hl">moth-eaten alopecia</span>. <span class="hl">TERTIARY</span> (yrs later): <span class="pg r"><span class="hl">gumma</span></span>, <span class="hl">interstitial glossitis</span>, neuro/CV. <span class="hl">CONGENITAL</span>: <span class="hl">Hutchinson triad</span> (Hutchinson incisors, mulberry molars, interstitial keratitis), saddle nose, saber shins. Tx: <span class="hl">Penicillin G IM</span> (single dose primary; 3-dose tertiary). PCN-allergic: doxycycline.
 
           <div class="s" id="nc-s-tb">Tuberculosis (TB)</div>
-          <span class="hl">Tongue = #1 oral site</span>. <span class="pg r"><span class="hl">NEVER biopsy first</span></span> — isolate + NAAT (Xpert MTB/RIF). Tx: PIRE ×8 wk → IR ×16 wk DOT. DPH reportable.
+          Cause: <span class="pg r"><span class="hl">Mycobacterium tuberculosis</span></span> — acid-fast bacillus. <span class="hl">REPORTABLE</span>. Primary lung; <span class="hl">oral lesion = chronic painful tongue ulcer</span> (rare, posterior dorsal). Dx: <span class="hl">PPD ≥10 mm</span> (≥5 mm if HIV/contact), CXR Ghon focus, <span class="hl">IGRA (QuantiFERON)</span> if BCG-vaccinated. Tx: <span class="hl">RIPE × 2 mo → RI × 4 mo</span> (Rifampin · Isoniazid · Pyrazinamide · Ethambutol). Latent TB: 9 mo INH. Dental: <span class="hl">defer elective tx until non-infectious</span> (≥2 wk multidrug + neg sputum).
 
-          <!-- clinical img placeholder -->
-          <div class="clinical-img" data-img-slot="nc-candida-subtypes">Candida 6 subtypes — key clinical images</div>
+          <div class="s" id="nc-s-candida">Candidiasis (6 subtypes)</div>
+          Cause: <span class="pg r"><span class="hl">Candida albicans</span></span>. <span class="pg r"><span class="hl">Wipes off</span></span> = pseudomembranous; doesn't wipe = atrophic/erythematous. <span class="hl">①</span> Pseudomembranous (thrush) — white wipe-off plaques. <span class="hl">②</span> Erythematous/atrophic — red dorsal tongue, post-AB or steroid inhaler. <span class="hl">③</span> Median rhomboid glossitis — central depapillated rhomboid. <span class="hl">④</span> Angular cheilitis — corners of mouth, Candida + Staph. <span class="hl">⑤</span> Chronic hyperplastic — non-wipe-off, can be premalignant. <span class="hl">⑥</span> Mucocutaneous (CMC). <span class="hl">4 mandatory antifungals</span>: <span class="hl">clotrimazole troches</span> (5×/d), <span class="hl">nystatin susp</span> (swish/swallow QID), <span class="hl">miconazole gel/buccal tab</span>, <span class="hl">fluconazole 100–200 mg PO</span> (×7–14d). <span class="pg r"><span class="hl">Clotrimazole troche CI in diabetics</span></span> (sucrose vehicle → caries/glycemic). Steroid-inhaler pts: <span class="hl">rinse + spit after use</span>.
 
-          <div class="s" id="nc-s-candida">Candida — 6 Subtypes</div>
-          <span class="hl">Pseudomembranous</span> (wipes off → white cottage-cheese plaques). <span class="hl">Erythematous</span> (hyposalivation unique cause). <span class="hl">Median rhomboid</span> (kissing lesion on palate). <span class="hl">Angular cheilitis</span> (VD loss unique). <span class="hl">Denture stomatitis</span> (probably NOT true infection). <span class="pg r"><span class="hl">Hyperplastic CANNOT wipe off → biopsy</span></span>.
-          Drugs: clotrimazole 10 mg 5×/d ×10d (<span class="hl">HIGH SUGAR — avoid diabetics</span>, LFTs↑15%); nystatin 5 mL QID; miconazole 2% gel; Mycolog II BID (angular); fluconazole 100–200 mg QD ×7–14d. <span class="hl">All -azoles → check LFTs</span>.
+          <div class="s" id="nc-s-hsv">HSV-1 / HSV-2 + Herpesviruses</div>
+          <span class="hl">8 HHVs</span>: HHV-1 HSV-1 · HHV-2 HSV-2 · HHV-3 VZV · HHV-4 EBV · HHV-5 CMV · HHV-6/7 roseola · HHV-8 Kaposi. <span class="hl">Primary HSV-1</span> = <span class="pg r"><span class="hl">acute herpetic gingivostomatitis</span></span> (ages 6 mo–5 yr): fever, <span class="hl">crops of vesicles → ulcers</span> on KERATINIZED + non-keratinized mucosa, dx clinical/Tzanck/PCR. Tx: supportive ± <span class="hl">acyclovir 15 mg/kg 5×/d ×7d (start ≤5 d from onset)</span>. <span class="hl">AVOID viscous lidocaine in children &lt;3</span> (FDA boxed warning, seizures), <span class="hl">avoid ASA in kids</span> (Reye). <span class="hl">Recurrent HSV-1 (RHL)</span> = labial vermilion vesicles (cold sore) — prodromal tingling 24h, lasts 7–10d, <span class="hl">attached gingiva &amp; hard palate ONLY</span> intraorally (keratinized only, vs aphthous = nonkerat). Tx: <span class="hl">topical penciclovir 1% q2h start at 48-h prodrome</span>; severe systemic → <span class="hl">valacyclovir 1 g BID ×5d</span>. <span class="hl">HSV-2</span> = anogenital but cross-infect possible.
 
-          <div class="s" id="nc-s-hsv">HSV — Primary vs Recurrent</div>
-          <span class="pg r"><span class="hl">PrHGS: 6 mo–5 yr, KERATINIZED tissue</span></span>; vesicles→coalescence→ulcer; 5d–2 wk duration. RHL: <span class="hl">vermillion border</span>; 15–45% US; prodrome 6–24 h; <span class="hl">HIGHLY transmissible at rupture</span>.
-          Drugs: acyclovir 400 mg 5×/d ×5d (start ≤5d); <span class="hl">valacyclovir 1g BID ×5d (HSV) or TID ×7d (HZO)</span>.
-          <span class="hl">AVOID pediatric: topical lidocaine (seizures), topical benzocaine (methemoglobinemia)</span>.
+          <div class="s" id="nc-s-vzv">VZV (HHV-3) — Chickenpox &amp; Shingles</div>
+          Primary = <span class="hl">varicella</span> (chickenpox), recurrent = <span class="pg r"><span class="hl">herpes zoster (shingles) — UNILATERAL, dermatomal, abrupt midline stop</span></span>. Trigeminal V1 = <span class="hl">Hutchinson sign (nose tip vesicle → ophthalmic involvement)</span> — refer ophtho. V2/V3 = oral hemiface. Tx: <span class="hl">valacyclovir 1 g TID ×7d if &lt;72 hr</span>. Postherpetic neuralgia common &gt;60. Vaccine: <span class="hl">Shingrix ≥50 yr</span>.
 
-          <div class="s" id="nc-s-vzv">VZV / Varicella-Zoster</div>
-          HHV mnemonic: <span class="hl">Z=3 strokes (HHV-3=VZV), Barr=4 letters (HHV-4=EBV), Cyto=cinco (HHV-5=CMV)</span>.
-          <span class="pg r"><span class="hl">Hutchinson sign: nasal tip VZV → V1/nasociliary → HZO → corneal ulceration → blindness</span></span>; mandatory ophtho referral.
+          <div class="s" id="nc-s-cmv">CMV (HHV-5)</div>
+          <span class="pg r"><span class="hl">Owl-eye intranuclear inclusions</span></span> on bx. <span class="hl">#1 nonhereditary cause of SNHL in newborns</span>. Oral = chronic deep punched-out ulcer in immunocompromised (HIV, transplant). Tx: <span class="hl">valganciclovir</span>. Pregnancy: TORCH screen.
 
-          <div class="s" id="nc-s-cmv">CMV</div>
-          <span class="pg r"><span class="hl">Owl-eye nucleus pathognomonic</span></span>. <span class="hl">Acyclovir FAILS → valganciclovir 900 mg PO BID</span>. 83% population. <span class="hl">#1 nonhereditary sensorineural hearing loss</span>.
+          <div class="s" id="nc-s-measles">Measles (Rubeola)</div>
+          <span class="hl">REPORTABLE → MA DPH</span>. <span class="pg r"><span class="hl">Koplik spots</span></span> (blue-white grains opp upper molars) <span class="hl">precede skin rash by 1–2 d</span> = pathognomonic. <span class="hl">3 C's</span>: Cough · Coryza · Conjunctivitis. Cephalocaudal rash. <span class="hl">Airborne isolation</span> until 4d after rash. MMR vaccine. Recent US outbreaks → high-yield.
 
-          <!-- clinical img placeholder -->
-          <div class="clinical-img" data-img-slot="nc-measles-koplik">Koplik spots on buccal mucosa</div>
+          <div class="s" id="nc-s-mumps">Mumps</div>
+          Paramyxovirus. <span class="hl">Bilateral parotitis + fever + orchitis</span>. <span class="hl">10–30% have NO parotid swelling</span> (trap — don't rule out). Dx: <span class="hl">RT-PCR buccal swab + IgM</span>. Saliva test &gt; serology in vaccinated. <span class="hl">Reportable</span>. MMR vaccine.
 
-          <div class="s" id="nc-s-measles">Measles / Mumps / EBV-MCU</div>
-          Measles: <span class="pg r"><span class="hl">Koplik spots — 70% of pts, bluish-white buccal, appear 1–2d BEFORE rash</span></span>. 3C's (cough+coryza+conjunctivitis). Contagious 4d before–4d after rash. PEP: <span class="hl">MMR ≤72 h OR Ig ≤6 d</span>. Vit A 200,000 IU ≥12 mo. Encephalitis 1/1,000. N-95 + negative pressure room. DPH reportable.<br>
-          Mumps: <span class="hl">10–30% NO parotid swelling</span>; serious complications WITHOUT parotitis; CNS ~50%; RT-PCR gold std; contagious 1–2d before sx to 14d after; orchitis 3–10%; subfertility 13%; 3rd MMR 61–88% additional protection.<br>
-          EBV-MCU: <span class="hl">EBER ISH required</span>; 45% spontaneous regression; 91% immunosuppressed; MTX/AZA/cyclosporine triggers; distinguish from lymphoma: <span class="hl">normal LDH + IL-2R + EBV DNA &lt;1,000 copies/mL</span>.
+          <div class="s" id="nc-s-ebv">EBV (HHV-4) &amp; EBV-MCU</div>
+          Mono ("kissing dz"): fever + posterior cervical LAD + pharyngitis + splenomegaly. <span class="hl">Avoid amox/ampicillin → maculopapular rash</span>. <span class="pg r"><span class="hl">EBV-MCU (mucocutaneous ulcer)</span></span> = solitary indurated ulcer in <span class="hl">immunosenescent/iatrogenic</span> (elderly, MTX, biologics). DDx vs SCC vs lymphoma. Dx: <span class="hl">EBER ISH</span>. Discriminators (vs lymphoma): <span class="hl">normal LDH · normal IL-2R · EBV DNA &lt;1,000 copies/mL</span>. Often self-resolves with immunosuppressant taper.
 
-          <!-- clinical img placeholder -->
-          <div class="clinical-img" data-img-slot="nc-syphilis-stages">Syphilis chancre vs condyloma lata vs gumma</div>
+          <div class="s" id="nc-s-l1-traps">L1 Cross-cutting Traps</div>
+          <span class="hl">"Wipes off" rule</span> → Candida pseudo (DDx: strep, herpangina); doesn't wipe → hyperplastic Candida (bx) OR leukoplakia/lichenoid. <span class="hl">Keratinized vs non-kerat</span> → recurrent HSV = kerat ONLY (att ging, hard palate); aphthous = non-kerat ONLY. <span class="hl">Reportable</span>: syphilis (all stages), TB, measles, mumps, HIV/AIDS → MA DPH. <span class="hl">Augmentin = weight-based</span>. <span class="hl">Penicillin G = syphilis gold std</span>. Antiviral windows: <span class="hl">PrHGS acyclovir ≤5 d · RHL penciclovir at 48-h prodrome · zoster valacyclovir &lt;72 h</span>. <span class="hl">No ASA &lt;18, no viscous lidocaine &lt;3</span>. <span class="hl">Mumps IgM may be falsely neg in vaccinated</span> — RT-PCR is gold std. <span class="hl">Hutchinson triad</span> = congenital syphilis ≠ <span class="hl">Hutchinson nasal-tip sign</span> = V1 zoster. <span class="hl">TB: never bx first</span> — workup + airborne PPE + ID consult.
 
-        </div><!-- end nc-col-left r -->
+        </div><!-- /nc-col-l1 -->
 
-
-        <!-- ══════════════════════════════════
-             COLUMN RIGHT — L2 ALLERGIES / IMMUNOLOGIC (BLUE)
-             ══════════════════════════════════ -->
+        <!-- ══════════════════════════════════════════
+             COLUMN RIGHT — L2 ALLERGIES/IMMUNO (BLUE)
+             ══════════════════════════════════════════ -->
         <div class="nc-col nc-col-right b" id="nc-col-l2" style="border-top:4px solid #2B5E8C">
 
-          <div class="h b" id="nc-h-l2">L2 · ALLERGIES &amp; IMMUNOLOGIC</div>
+          <div class="h b" id="nc-h-l2">L2 &middot; ALLERGIES &amp; IMMUNOLOGIC</div>
 
-          <div class="s" id="nc-s-hypersensitivity">Hypersensitivity Types</div>
-          I = <span class="hl">IgE / mast cell / minutes–hours</span> (latex, penicillin, chlorhexidine). II = cytotoxic IgG/IgM (<span class="hl">PV-desmoglein, MMP-BMZ</span>). III = immune complex. IV = <span class="hl">T-cell / 24–72 h</span> (metals, acrylates, amalgam, flavorings). Pseudoallergic = bisulfite preservatives / no sensitization. <span class="hl">LA allergy &lt;1% truly allergic</span>; most vasovagal or pseudoallergic (bisulfite).
+          <div class="s" id="nc-s-hypersens">Hypersensitivity (4 types + pseudoallergic)</div>
+          <span class="hl">Type I</span> (immediate, IgE) — anaphylaxis, urticaria, angioedema. Mast cell + histamine. Tx: <span class="hl">epi 0.3 mg IM lat thigh</span>. <span class="hl">Type II</span> (cytotoxic, IgG/IgM vs cell Ag) — pemphigus, MMP, hemolytic anemia. <span class="hl">Type III</span> (immune complex) — SLE, vasculitis, serum sickness. <span class="hl">Type IV</span> (delayed, T-cell, 24–72 h) — contact dermatitis, OLP, drug rxns, TB skin test. <span class="hl">Pseudoallergic</span> (non-IgE) — radiocontrast, NSAIDs, opioids → direct mast cell.
 
-          <div class="s" id="nc-s-ras">Recurrent Aphthous Stomatitis (RAS)</div>
-          3 types: <span class="hl">Minor 80% (3–10 mm, 7–14 d, no scar)</span>; Major 10–15% (1–3 cm, 2–6 wk, may scar); Herpetiform 5–10% (up to 100 ulcers, <span class="hl">NOT HSV</span>). Nonkeratinized mucosa only. New onset &gt;40 = systemic workup. Complex aphthosis ≥3 ulcers = 60% have underlying disease. Ladder: <span class="hl">triamcinolone 0.1% paste QID → fluocinonide 0.05% → clobetasol 0.05%</span>. <span class="pg b"><span class="hl">DO NOT use silver nitrate cautery (necrosis + argyria)</span></span>.
+          <div class="s" id="nc-s-ras">RAS (Recurrent Aphthous Stomatitis)</div>
+          <span class="pg b"><span class="hl">Non-keratinized mucosa ONLY</span></span> (vs RHL keratinized). Yellow-gray pseudomembrane + <span class="hl">erythematous halo</span>. <span class="hl">3 variants</span>: <span class="hl">Minor</span> (&lt;1 cm, 7–10d, no scar, MC 80%) · <span class="hl">Major (Sutton)</span> (&gt;1 cm, weeks-months, scars) · <span class="hl">Herpetiform</span> (50–100 pinpoint, coalesce). <span class="hl">Complex aphthosis</span> = ≥3 simultaneous OR continuous OR genital. <span class="hl">Onset &gt;40 = workup</span> (Behçet, IBD, celiac, HIV, hematinic def — B12/folate/Fe/zinc). Tx ladder: <span class="hl">topical clobetasol 0.05%</span> &gt; <span class="hl">fluocinonide 0.05%</span> &gt; <span class="hl">dex elixir 0.5 mg/5 mL swish/spit BID</span> &gt; triamcinolone in Orabase (trap — least potent). Severe: PO prednisone, colchicine, dapsone, apremilast.
 
-          <div class="s" id="nc-s-olp">OLP / Geographic Tongue / TLP</div>
-          OLP: 0.1–2.2%, F:M 3:2, middle-aged. <span class="hl">Wickham striae bilateral posterior buccal</span>. Purple polygonal pruritic papules on wrists (skin LP). Reticular = asymptomatic; erosive = painful desquamative gingivitis. <span class="hl">Unilateral / high-risk site → biopsy to exclude dysplasia</span>. Monitor for iatrogenic candidiasis with topical steroids.<br>
-          Geographic tongue: <span class="pg b"><span class="hl">3 D's: Depapillated, Demarcated, Dynamic (migratory)</span></span>; up to 3% prevalence; psoriasis/fissured tongue assoc.<br>
-          TLP: fungiform papillae, tongue tip, self-limited 2–15 d; reassurance.
+          <div class="s" id="nc-s-cs-ladder">Corticosteroid Pharmacotherapy (memorize ladder)</div>
+          Ultra-high: <span class="hl">clobetasol 0.05%</span>. High: <span class="hl">fluocinonide 0.05%</span>. <span class="pg b"><span class="hl">Dex elixir 0.5 mg/5 mL — universal first-line swish</span></span>. Low (TRAP): <span class="hl">triamcinolone in Orabase = weakest</span>, do not lead with. Rules: <span class="hl">vermilion border NEVER</span> (atrophy/telangiectasia). <span class="hl">Sensodyne SLS trap</span> — SLS aggravates RAS, recommend <span class="hl">SLS-free toothpastes: Cleure, Dr. Bob, Sensodyne ProNamel SLS-free, Biotene</span>. <span class="hl">Dex elixir Rx</span>: 0.5 mg/5 mL, swish 5 mL ×2 min spit BID-QID ×2 wk.
 
-          <div class="s" id="nc-s-drug-hyperplasia">Drug Gingival Hyperplasia</div>
-          <span class="hl">Phenytoin ~50%, cyclosporine 25–70%, nifedipine/amlodipine 6–25%</span>. Onset 1–3 mo. <span class="pg b"><span class="hl">Meticulous plaque control = MOST important</span></span>. Cyclosporine + nifedipine = synergistic. Surgical recurrence 35% in 18 mo. Males 3× more likely.
+          <div class="s" id="nc-s-geo-tongue">Geographic Tongue (Benign Migratory Glossitis)</div>
+          <span class="hl">3 D's</span>: <span class="hl">Depapillated red patches · Demarcated white serpiginous border · Dynamic (migrates over days — rules out malignancy)</span>. Dorsal/lateral tongue. <span class="hl">Type IV-like</span>. Asymptomatic; some burning to acidic foods. Reassure. Variant: <span class="hl">ectopic geographic stomatitis</span> (extra-tongue). Assoc psoriasis.
 
-          <!-- clinical img placeholder -->
-          <div class="clinical-img" data-img-slot="nc-mmp-pv-dif">MMP linear BMZ vs PV chicken-wire DIF pattern</div>
+          <div class="s" id="nc-s-drgh">Drug-Related Gingival Hyperplasia (DRGH)</div>
+          <span class="hl">3 drug classes</span>: <span class="hl">Phenytoin · Ca-channel blockers (nifedipine, amlodipine) · Cyclosporine</span>. Onset <span class="hl">1–3 mo after start</span>. Anterior labial gingiva first. Tx: <span class="hl">meticulous plaque control</span> ± gingivectomy ± drug switch (consult MD).
 
-          <div class="s" id="nc-s-mmp-pv">MMP vs PV — Head-to-Head</div>
-          <span class="hl">Nikolsky sign: MMP = NEGATIVE (subepithelial, tense), PV = POSITIVE (intraepithelial, flaccid)</span>. Mnemonic: <span class="pg b"><span class="hl">"PemphigoiD lives DEEP" — D = deep = subepithelial = Nikolsky NEG</span></span>.<br>
-          MMP: IgG anti-BMZ (<span class="hl">BP180, BP230, laminin 332, type VII collagen</span>). DIF = <span class="hl">linear IgG/IgA/C3 at BMZ</span>. Hallmark = desquamative gingivitis. Ocular 61–70% → symblepharon → blindness. <span class="pg b"><span class="hl">Refer ALL MMP to ophtho even if asymptomatic</span></span>. Anti-laminin 332 = 25% → adenocarcinoma. Tx: topical steroids + dapsone 50–100 mg/d; ocular = prednisone + mycophenolate.<br>
-          PV: IgG anti-<span class="hl">DSG3 (±DSG1)</span>. DIF = <span class="hl">"chicken-wire" intercellular IgG</span>. Oral first &gt;50%. All oral surfaces. PDAI: &lt;15 = topicals; 15–45 = rituximab + pred 0.5 mg/kg; <span class="pg b"><span class="hl">&gt;45 = MEDICAL EMERGENCY → ED</span></span>. Biopsy = perilesional + Michel solution.
+          <div class="s" id="nc-s-tlp">Transient Lingual Papillitis (TLP) — "lie bumps"</div>
+          <span class="hl">Painful red/white papules on fungiform papillae</span> (tip + dorsolateral tongue). Resolves <span class="hl">2–15 days</span>. Tx: <span class="hl">reassurance first-line</span>; bland diet, topical anesthetic if severe.
 
-          <div class="s" id="nc-s-pams">PAMS — Board Favorite</div>
-          <span class="pg b"><span class="hl">Always malignancy: NHL ~40%, CLL ~20%, Castleman ~18%</span></span>. Oral first in ~45%. Mortality 60–90%. <span class="hl">Bronchiolitis obliterans = #1 cause of death</span>. Rituximab less effective than PV. Anti-plakin antibodies. 5 polymorphous phenotypes. Castleman resection → remission possible.
+          <div class="s" id="nc-s-pcg">Plasma Cell Gingivitis &amp; Cinnamomum Reaction (PCG)</div>
+          Cinnamon flavoring (toothpaste, gum, candy) → <span class="hl">cinnamomum reaction</span>: lateral tongue + buccal mucosa erythema/erosion. <span class="hl">Plasma cell gingivitis</span> = bright red, sharply demarcated free + att gingiva. Tx: <span class="hl">eliminate cinnamon</span>.
 
-          <div class="s" id="nc-s-em-sjs">EM / SJS / TEN Spectrum</div>
-          EM: <span class="hl">HSV ~70%</span>; raised 3-ring targets; acral; self-limited. RIME: Mycoplasma; mucosa-dominant; minimal skin. SJS: <span class="hl">&lt;10% BSA; drugs ~85%; mortality 1–5%</span>. TEN: <span class="hl">&gt;30% BSA; mortality 25–50%</span>. SJS/TEN Overlap = 10–30% BSA.<br>
-          <span class="pg b"><span class="hl">High-risk drugs: sulfonamides, carbamazepine, phenytoin, lamotrigine, allopurinol</span></span>. Stop drug = most important intervention. EM prophylaxis: <span class="hl">valacyclovir 500 mg BID ≥6 mo</span>.
+          <div class="s" id="nc-s-immunobullous">Immunobullous Framework — Pegasus &amp; Hades</div>
+          <span class="hl">Pegasus</span> (intraepithelial, suprabasilar) = <span class="hl">PV</span> (DSG3/DSG1, IgG, "row of tombstones," chicken-wire DIF). <span class="hl">Hades</span> (subepithelial, BMZ) = <span class="hl">MMP, BP, EBA, LABD</span> (linear DIF along BMZ). <span class="hl">Nikolsky sign</span>: positive in PV, SJS/TEN, PNP; <span class="hl">negative</span> in MMP/BP (subepithelial tense roof), OLP, RAS, EM. <span class="hl">DIF</span>: PV chicken-wire intercellular IgG · MMP linear IgG/C3 BMZ · OLP shaggy fibrinogen BMZ.
 
-          <!-- clinical img placeholder -->
-          <div class="clinical-img" data-img-slot="nc-plasma-cell-gingivitis">Plasma cell gingivitis — fiery red generalized gingiva</div>
+          <div class="s" id="nc-s-olp">OLP (Oral Lichen Planus)</div>
+          <span class="hl">Auto-INFLAMMATORY, NOT autoimmune</span> (T-cell mediated). MC reticular (Wickham striae bilateral buccal); also erosive, plaque, atrophic, papular, bullous. <span class="hl">4 P's</span>: Pruritic · Purple · Polygonal · Papules (skin). Wickham striae = <span class="pg b"><span class="hl">white lacy bilateral buccal</span></span>. <span class="hl">OPMD controversy</span> — <span class="hl">~1.4% MT risk</span> (WHO classifies as OPMD; debated). Bx for atypical/erosive. Tx: clobetasol/fluocinonide; dex elixir; tacrolimus 0.1% if refractory.
 
-          <div class="s" id="nc-s-allergic-contact">Allergic Contact / PCG / Patch Testing</div>
-          Type IV contact triggers: <span class="hl">Ni, Cr, Co, acrylates, amalgam, cinnamon, mint, chlorhexidine</span>. Oral lichenoid reaction: unilateral, restoration-adjacent. <span class="hl">Patch testing = gold std for Type IV</span>; positive alone ≠ causation. Skin prick/RAST = Type I (latex, PCN). Plasma cell gingivitis: <span class="hl">eliminate cinnamaldehyde + benzoates</span>; avoid products listing "aroma." Latex allergy: <span class="hl">universal latex-free protocol</span>; schedule first AM.
+          <div class="s" id="nc-s-mmp">MMP (Mucous Membrane Pemphigoid)</div>
+          <span class="hl">Subepithelial split</span>, BMZ. <span class="hl">Nikolsky NEGATIVE</span> (tense subepithelial blister, thick roof). <span class="pg b"><span class="hl">Desquamative gingivitis = #1 oral presentation</span></span>. <span class="hl">REFER ALL TO OPHTHALMOLOGY</span> (symblepharon → blindness). <span class="pg b"><span class="hl">Anti-laminin 332+ MMP → 25% occult adenocarcinoma</span></span> — cancer screen mandatory. <span class="hl">Biopsy 2-vial trap</span>: <span class="hl">perilesional</span> (intact mucosa, NOT ulcer center) for <span class="hl">DIF in Michel's medium</span>; second specimen in <span class="hl">formalin for H&amp;E</span>. "<span class="hl">Don't Lose Your Sushi</span>" = Don't bx ulcer Lesion, Use 2 vials, Yes perilesional, Submit Michel's. Tx: clobetasol/dex; refractory → dapsone, MMF, rituximab.
 
-        </div><!-- end nc-col-right b -->
+          <div class="s" id="nc-s-pv">Pemphigus Vulgaris (PV)</div>
+          <span class="hl">IgG vs DSG3 (oral) ± DSG1 (skin)</span>. Acantholysis → <span class="pg b"><span class="hl">"row of tombstones" basal cells</span></span>. <span class="hl">&gt;50% present orally FIRST</span> (months before skin). Painful flaccid bullae → erosions, <span class="hl">Nikolsky+</span>. DIF <span class="hl">chicken-wire intercellular IgG</span>. Severity: <span class="hl">PDAI score</span>. Tx: high-dose pred ± rituximab, MMF, AZA, IVIG. Untreated mortality high.
 
-      </div><!-- end nc-cols side a -->
-    </div><!-- end nc-card side a -->
+          <div class="s" id="nc-s-em">EM / RIME vs SJS / TEN</div>
+          <span class="hl">EM</span>: target lesions, <span class="hl">~70% HSV-triggered</span> (EM/RIME combined infection-triggered ~90%); <span class="hl">EM minor</span> &lt;10% BSA + ≤1 mucosa, <span class="hl">EM major</span> ≥2 mucosa. <span class="hl">RIME</span> = post-infectious mucositis (Mycoplasma, COVID). <span class="hl">SJS</span> &lt;10% BSA, <span class="hl">SJS/TEN overlap</span> 10–30%, <span class="hl">TEN</span> &gt;30% BSA. Triggers: <span class="hl">drugs &gt;90%</span> — <span class="pg b"><span class="hl">allopurinol #1</span></span>, sulfonamides, anticonvulsants (carbamazepine, lamotrigine, phenytoin), NSAIDs (oxicams). <span class="hl">HLA-B*1502 + carbamazepine in Han Chinese/SE Asian</span> → screen. <span class="hl">SCORTEN</span> mortality. Refer burn unit.
+
+          <div class="s" id="nc-s-pnp">PNP / PAMS (Paraneoplastic Pemphigus)</div>
+          <span class="hl">Always = malignancy</span>: NHL, CLL, <span class="hl">Castleman dz</span>, thymoma, Waldenström. <span class="hl">Severe intractable stomatitis</span> + polymorphous skin. Anti-plakin Ab (envoplakin, periplakin). <span class="hl">Bronchiolitis obliterans → respiratory failure</span> = leading cause of death. Tx: treat underlying tumor + immunosuppression.
+
+          <div class="s" id="nc-s-l2-cross">L2 Cross-cutting Tables (high-yield)</div>
+          <span class="hl">Nikolsky+</span>: PV, SJS/TEN, PNP. <span class="hl">Nikolsky−</span>: MMP/BP, OLP, RAS, EM. <span class="hl">DIF chicken-wire</span> = PV; <span class="hl">linear BMZ</span> = MMP/BP; <span class="hl">shaggy fibrinogen</span> = OLP; <span class="hl">granular IgA dermal papillae</span> = DH. <span class="hl">BSA cutoffs</span>: SJS &lt;10 · overlap 10–30 · TEN &gt;30. <span class="hl">Histology</span>: PV intraepithelial suprabasilar; MMP/BP subepithelial; OLP saw-tooth rete + band-like lymphocytes; EM apoptotic keratinocytes. <span class="hl">Drug allergy</span>: PCN cross-react cephalosporins ~1%; sulfa cross-react furosemide; NSAID cross-react ASA. <span class="hl">Contact stomatitis</span>: nickel, chromium, gold, mercury, balsam of Peru, cinnamaldehyde, eugenol. <span class="hl">IBS vs IBD trap</span>: IBS no oral findings; <span class="hl">IBD (Crohn) = cobblestone, lip swelling, OFG, pyostomatitis vegetans, RAS-like</span>.
+
+        </div><!-- /nc-col-l2 -->
+
+      </div><!-- /nc-cols-side-a -->
+    </div><!-- /nc-card-side-a -->
 
 
     <!-- ═══════════ SIDE B LABEL ═══════════ -->
-    <div class="nc-label" id="nc-label-side-b">Side B</div>
+    <div class="nc-label" id="nc-label-side-b">Side B &mdash; L3 Epithelial/SCC + L4 Salivary</div>
 
     <div class="nc-card" id="nc-card-side-b">
       <div class="nc-card-title" id="nc-title-side-b">
-        SIDE B — L3 EPITHELIAL PATHOSES &amp; SCC (green) + L4 SALIVARY GLANDS (purple) | transformation rates · drugs · staging
+        SIDE B &mdash; L3 EPITHELIAL PATHOSES &amp; SCC (green) + L4 SALIVARY GLAND (purple) | rates, staging, anatomy
       </div>
 
       <div class="nc-cols" id="nc-cols-side-b">
 
-        <!-- ══════════════════════════════════
-             COLUMN LEFT — L3 EPITHELIAL PATHOSES (GREEN)
-             ══════════════════════════════════ -->
+        <!-- ══════════════════════════════════════════
+             COLUMN LEFT — L3 EPITHELIAL/SCC (GREEN)
+             ══════════════════════════════════════════ -->
         <div class="nc-col nc-col-left g" id="nc-col-l3" style="border-top:4px solid #2E7D5B">
 
-          <div class="h g" id="nc-h-l3">L3 · EPITHELIAL PATHOSES &amp; SCC</div>
+          <div class="h g" id="nc-h-l3">L3 &middot; EPITHELIAL PATHOSES &amp; SCC</div>
 
-          <div class="s" id="nc-s-epi-numbers">Epidemiology Numbers</div>
-          <span class="hl">36,600 new / 12,230 deaths/yr</span> (US 2024). <span class="hl">&gt;50% present with mets at diagnosis</span>. Oral tongue = <span class="hl">41.7% #1 site</span>; rising 1.8%/yr. 5-yr OS: localized 85% → regional 70% → distant 40%. <span class="hl">Tobacco + alcohol = ~30× (multiplicative, NOT additive)</span>. <span class="pg g"><span class="hl">Fanconi anemia OR ~40.6 — highest per-patient risk</span></span>. UV = lip vermilion ONLY, NOT intraoral SCC.
+          <div class="s" id="nc-s-l3-foundations">Foundations</div>
+          <span class="hl">Pathosis</span> = the disease/lesion; <span class="hl">pathology</span> = the study. WHO 2017: <span class="hl">OPMD</span> = oral potentially malignant disorder (replaces "premalignant"). <span class="hl">Dysplasia</span> = architectural + cytologic atypia confined above BM; <span class="hl">CIS</span> = full-thickness atypia; <span class="hl">SCC</span> = invasion through BM. Visual exam: <span class="hl">~60% sens, ~62% spec</span> — bx is gold std.
 
-          <!-- clinical img placeholder -->
-          <div class="clinical-img" data-img-slot="nc-leukoplakia-erythroplakia">Leukoplakia vs erythroplakia vs speckled lesion</div>
+          <div class="s" id="nc-s-l3-epi">Epi / Risk</div>
+          US 2024: <span class="hl">~36,600 new oral/oropharyngeal cancers, ~12,230 deaths</span>. M:F <span class="hl">2–4:1</span>. <span class="hl">Tongue (lateral) = 41.7%</span> oral cavity site. Risk: <span class="hl">tobacco × alcohol = 30× multiplicative</span> (not additive). <span class="hl">Fanconi anemia OR 40.6×</span>. Other: betel/areca, immunosuppression, prior cancer, UV (lip vermilion). <span class="hl">Lip vermilion = separate dz</span> (UV-driven, lower lip).
 
-          <div class="s" id="nc-s-leukoplakia">Leukoplakia — Definition &amp; MT Rates</div>
-          WHO: "white plaque of questionable risk, <span class="hl">diagnosis of exclusion</span>." Clinical sensitivity 60%, specificity 62% → <span class="hl">always biopsy</span>. 5-yr MT by dysplasia: no dysplasia <span class="hl">2.2%</span> → mild 2.6–11.9% → moderate 4.1–8.7% → <span class="pg g"><span class="hl">severe 29.2–32.2%</span></span>. Overall: 6.6–8.4%, ~2%/yr. <span class="hl">39.6% of progressors had NO dysplasia on first biopsy</span> → never "done" after one benign read. Annual re-biopsy if change. <span class="hl">Size &gt;200 mm² = 2–4× higher risk</span>. High-risk sites: lateral/ventral tongue, FOM. Female paradox: higher MT despite lower incidence.
+          <div class="s" id="nc-s-hpv-benign">HPV Benign Lesions (don't confuse with SCC)</div>
+          <span class="hl">Squamous papilloma</span> — HPV <span class="hl">6, 11</span>, single cauliflower. <span class="hl">Condyloma acuminatum</span> — HPV <span class="hl">6, 11</span>, STI, multiple. <span class="hl">Verruca vulgaris</span> — HPV <span class="hl">2, 4</span>, autoinoc fingers→lip. <span class="pg g"><span class="hl">Heck disease (focal epithelial hyperplasia)</span></span> — HPV <span class="hl">13, 32</span>, multiple soft pink papules, <span class="hl">NOT covered by Gardasil 9</span> (TRAP). Gardasil 9 = HPV 6/11/16/18/31/33/45/52/58.
 
-          <div class="s" id="nc-s-erythroplakia">Erythroplakia</div>
-          <span class="pg g"><span class="hl">~75–90% already severe dysplasia/CIS/SCC at first biopsy</span></span>. MT rate ~50%. <span class="hl">Median time to cancer: 3.7 months</span> (vs leukoplakia 25 mo). Biopsy the <span class="hl">RED component</span> in mixed lesions. Speckled/non-homogeneous = same risk as erythroplakia.
+          <div class="s" id="nc-s-leuko">Leukoplakia &amp; Malignant Transformation</div>
+          Definition: <span class="hl">CLINICAL term, not histologic</span> — white plaque that <span class="hl">cannot be wiped or scraped</span> (unlike pseudomembranous Candida); bx returns "hyperkeratosis," never "leukoplakia." <span class="hl">MT by morphology</span>: homogeneous ~2% · non-homogeneous 15–25% · verrucous/PVL 29–50%. <span class="hl">MT by dysplasia grade</span> (separate stat): no dysp 2.2% · mild 2.6–11.9% · mod 4.1–8.7% · <span class="pg g"><span class="hl">severe/CIS 29.2–32.2%</span></span>. <span class="hl">39.6% paradox</span>: 39.6% of leukoplakias that progressed to SCC had NO dysplasia on initial biopsy. Bx every clinically suspicious lesion.
 
-          <div class="s" id="nc-s-pvl">PVL — Worst OPMD</div>
-          <span class="hl">PVL MT 48–50%, some up to 100% over lifetime; 8× higher than conventional</span>; annual rate 9.3%. F:M 2:1; non-smokers; <span class="pg g"><span class="hl">gingiva most common "ring around the collar"</span></span>; multifocal, recurs after excision. Major criteria: ≥2 oral sites / new lesions during follow-up / recurrence after treatment.
+          <div class="s" id="nc-s-erythro">Erythroplakia (highest single MT)</div>
+          Velvety red plaque. <span class="pg g"><span class="hl">~50% MT</span></span>. <span class="hl">75–90% already dysplasia/CIS/SCC at biopsy</span>. <span class="hl">Mean 3.7 mo from dx → cancer</span>. <span class="hl">Floor of mouth, soft palate, ventral tongue</span> = highest-risk sites. Bx <span class="hl">always</span>, urgently.
 
-          <!-- clinical img placeholder -->
-          <div class="clinical-img" data-img-slot="nc-scc-clinical">SCC — indurated ulcer vs exophytic mass lateral tongue</div>
+          <div class="s" id="nc-s-pvl">Proliferative Verrucous Leukoplakia (PVL)</div>
+          <span class="pg g"><span class="hl">48–50% MT</span></span>, <span class="hl">~8× lifetime risk vs leukoplakia</span>. <span class="hl">F &gt; M, often non-smokers</span>. <span class="hl">Gingiva "ring around the collar"</span> = signature. Multifocal, recurrent despite tx. Cerero/Villa criteria. Long-term surveillance — <span class="hl">recurrence rule, not exception</span>.
 
-          <div class="s" id="nc-s-biopsy-rules">Biopsy Site Selection Rules</div>
-          <span class="pg g"><span class="hl">"Red over white, edge over center, deep for verrucous, multiple for big"</span></span>. Avoid necrotic ulcer center. Tumor seeding = myth (FNA ~0.00012%, core ~0.0011%). Verrucous: must biopsy to deep submucosa to see pushing border.
+          <div class="s" id="nc-s-opmd">OPMD ranking (highest→lowest MT)</div>
+          <span class="hl">①</span> PVL (~48–50%, highest of any OPMD) <span class="hl">②</span> Erythroplakia (~50% but smaller cohort) <span class="hl">③</span> Erythroleukoplakia <span class="hl">④</span> OSF (~5.1%) <span class="hl">⑤</span> Verrucous leukoplakia <span class="hl">⑥</span> Non-homogeneous leukoplakia <span class="hl">⑦</span> Homogeneous leukoplakia <span class="hl">⑧</span> Actinic cheilitis <span class="hl">⑨</span> OLP (1.4%, debated OPMD).
 
-          <div class="s" id="nc-s-dysplasia-tx">Dysplasia Management</div>
-          Scalpel gold std; positive margins OR 3.6 for recurrence; aim 5 mm peripheral. CO₂ laser HR 0.14 for MT vs observation; 52.6% recurrence. <span class="hl">ALA-PDT: 66–100% CR, 8.3% MT at 3 yr</span>; best for multifocal/large field. Imiquimod = <span class="hl">TLR-7 agonist</span>. Severe dysplasia: excise with clear margins + Q3-mo surveillance lifelong.
+          <div class="s" id="nc-s-osf">Oral Submucous Fibrosis (OSF)</div>
+          <span class="pg g"><span class="hl">Areca/betel nut</span></span> chewers (S Asian). <span class="hl">Trismus</span>, blanched mucosa, fibrous bands buccal. <span class="hl">5.1% MT</span>, mean <span class="hl">36 mo</span>. <span class="hl">IRREVERSIBLE</span> once established. <span class="hl">EMT cascade</span> drives fibrosis + transformation. Stop nut, intralesional steroids/hyaluronidase, mouth-opening exercises.
 
-          <div class="s" id="nc-s-scc-staging">SCC + AJCC 8th Ed Staging</div>
-          SCC &gt;90% all oral malignancies; median age ~66; M:F 2–4:1. Lateral/ventral tongue 42% #1 site. Warning: <span class="hl">non-healing ulcer &gt;2–3 wk, induration (most reliable), rolled borders, fixed nodes</span>. ~50% non-ulcerated at diagnosis. AJCC 8th: added <span class="hl">DOI to T-stage</span> (T1 ≤5 mm; T2 ≤10 mm; T3 &gt;10 mm) + <span class="pg g"><span class="hl">ENE to N-stage (N3b = ENE+ = worst; adjuvant CRT)</span></span>.
+          <div class="s" id="nc-s-bx-rules">Biopsy Rules (memorize)</div>
+          "<span class="pg g"><span class="hl">Red over white, edge over center, deep for verrucous, multiple for big</span></span>." Sample <span class="hl">most clinically alarming area</span> (red &gt; white, indurated). Edge = perilesional includes normal-abnormal junction. <span class="hl">Verrucous = deep wedge</span> (surface bx misses invasion). Lesions &gt;1.5 cm → ≥2 sites. <span class="hl">Tumor seeding from biopsy = MYTH</span> (do not delay bx for fear of seeding).
 
-          <div class="s" id="nc-s-hpv-opmd">HPV Benign + OPSCC</div>
-          Squamous papilloma: HPV 6/11, solitary 98%, vaccine-covered. Condyloma: HPV 6/11, multiple sessile, STI. Verruca: HPV 2/4, auto-inoculation, NOT vaccine-covered. <span class="pg g"><span class="hl">Heck disease: HPV 13/32, NOT covered by Gardasil 9</span></span>. HPV+ OPSCC (tonsil/BOT): 5-yr OS ~80–85% vs HPV− ~40%. <span class="hl">p16 IHC = reliable surrogate in OROPHARYNX only</span>; not oral cavity. E6 → degrades p53; E7 → inactivates Rb.
+          <div class="s" id="nc-s-dys-mgmt">Dysplasia Management</div>
+          <span class="hl">Mild</span> → observe + risk-factor mod ± laser. <span class="hl">Moderate–severe/CIS</span> → excision. Modalities: <span class="hl">scalpel OR 3.6</span>, <span class="pg g"><span class="hl">CO2 laser HR 0.14 (best recurrence ↓)</span></span>, <span class="hl">diode 93.5% CR</span>, <span class="hl">cryotherapy 100% CR</span>, <span class="hl">ALA-PDT 66–100% CR</span>. Re-bx if recur.
 
-          <div class="s" id="nc-s-osf-oll">OSF / OLP / OLL MT Rates</div>
-          OLP/OLL: ~1.4% MT each. OSF: <span class="hl">5.1% MT, ~36 mo to cancer</span>; areca nut Group 1 IARC; irreversible; trismus. Arecoline → fibroblast EMT → HIF-1α → SNAIL/SLUG → SCC. OLL 3 types: drug reactions / contact reactions / <span class="pg g"><span class="hl">oral lichenoid dysplasia (highest MT)</span></span>.
+          <div class="s" id="nc-s-chemoprev">Chemoprevention (background only)</div>
+          <span class="hl">Imiquimod (TLR-7 agonist)</span> — topical, mucosal trials. <span class="hl">Beta-carotene CARET trap</span>: ↑lung cancer in smokers, do NOT use. <span class="hl">RP2 trial</span> (BWH/Dana-Farber) — ongoing.
 
-        </div><!-- end nc-col-left g -->
+          <div class="s" id="nc-s-scc">Oral SCC</div>
+          <span class="hl">&gt;90% of oral malignancies</span>. Mean age <span class="hl">66</span>. <span class="hl">M:F 2–4:1</span>. Site MC <span class="hl">lateral tongue 42%</span> &gt; FOM &gt; soft palate. <span class="pg g"><span class="hl">Induration = #1 sign</span></span>. <span class="hl">5 warning signs</span>: ulcer &gt;2 wk · induration · fixed lymph node · pain/dysesthesia · loose tooth/poorly fitting denture. Bx mandatory if persistent.
 
+          <div class="s" id="nc-s-ajcc">AJCC 8th — what changed</div>
+          <span class="hl">DOI added to T-staging</span>: T1 ≤2 cm AND DOI ≤5 mm · T2 ≤4 cm AND DOI ≤10 mm · T3 &gt;4 cm OR DOI &gt;10 mm · T4 invades adj structures. <span class="hl">ENE added to N-stage</span>: <span class="hl">ENE+ upstages</span>. N1 single ipsi ≤3 cm ENE− · N2a single ipsi 3–6 cm ENE− OR ≤3 cm ENE+ · N3b ENE+. Stage I → IVC. <span class="hl">DOI = depth of invasion from BM</span>, NOT tumor thickness.
 
-        <!-- ══════════════════════════════════
-             COLUMN RIGHT — L4 SALIVARY GLANDS (PURPLE)
-             ══════════════════════════════════ -->
+          <div class="s" id="nc-s-hpv-opscc">HPV-OPSCC (oropharynx only)</div>
+          <span class="hl">Tonsil + base of tongue</span>. <span class="hl">HPV-16 in ~90%</span>. <span class="pg g"><span class="hl">5-yr OS HPV+ ~80–85% vs HPV− ~40%</span></span>. <span class="hl">p16 IHC</span> = surrogate for HPV — <span class="hl">reliable in oropharynx ONLY, NOT oral cavity</span>. <span class="hl">E6 → p53 inactivation; E7 → Rb inactivation</span>. <span class="hl">Gardasil 9 covers 9 types</span> (6/11/16/18/31/33/45/52/58). M&gt;F, oral sex, younger pts.
+
+          <div class="s" id="nc-s-carcinog">Carcinogenesis Cascade</div>
+          Normal → hyperplasia → mild → moderate → severe dysplasia → CIS → invasive SCC. Field cancerization = whole upper aerodigestive carcinogen-exposed; <span class="hl">2nd primary risk 3–7%/yr</span>. <span class="hl">~17% of OPMD progress</span>; remainder regress or stable.
+
+          <div class="s" id="nc-s-verrucous">Verrucous Carcinoma</div>
+          <span class="hl">Low-grade SCC variant</span>. White cauliflower, slow, <span class="hl">0% metastasis</span>. <span class="hl">Wide pushing border</span> (NOT infiltrative — that's classic SCC). <span class="pg g"><span class="hl">Deep wedge bx mandatory</span></span> — superficial bx misses dx (calls it "verrucous hyperplasia"). Surgical excision; <span class="hl">avoid RT</span> (anaplastic transformation risk).
+
+          <div class="s" id="nc-s-melanoma">Oral Melanoma</div>
+          <span class="hl">~50% on hard palate</span>. <span class="hl">UV NOT cause</span> (intraoral). <span class="hl">~15% amelanotic (NOT 25%)</span> — pink/red, easy miss. Mol: <span class="hl">c-KIT mutations → imatinib</span>; <span class="hl">BRAF mutations rare</span> (vs cutaneous). Poor prognosis, often advanced at dx. Bx any pigmented oral lesion that is new, growing, multifocal, or asymmetric.
+
+        </div><!-- /nc-col-l3 -->
+
+        <!-- ══════════════════════════════════════════
+             COLUMN RIGHT — L4 SALIVARY (PURPLE)
+             ══════════════════════════════════════════ -->
         <div class="nc-col nc-col-right p" id="nc-col-l4" style="border-top:4px solid #6B4C9A">
 
-          <div class="h p" id="nc-h-l4">L4 · SALIVARY GLAND DISORDERS</div>
+          <div class="h p" id="nc-h-l4">L4 &middot; SALIVARY GLAND DISORDERS</div>
 
-          <div class="s" id="nc-s-hyposalivation">Hyposalivation vs Xerostomia</div>
-          <span class="pg p"><span class="hl">Hyposalivation = objective (measurable); Xerostomia = subjective (sensation). Only hyposalivation causes dental damage</span></span>. Flow: unstimulated ≤0.1 mL/min; stimulated ≤0.5–0.7 mL/min. Overlap: <span class="hl">16–27%</span>. Xerostomia alone does NOT cause caries.
+          <div class="s" id="nc-s-anatomy">Anatomy &amp; Output</div>
+          <span class="hl">3 majors</span>: <span class="hl">parotid</span> (serous, <span class="hl">Stensen duct opp upper 2nd molar</span>), <span class="hl">submandibular</span> (mixed, <span class="hl">Wharton duct floor of mouth</span>, <span class="hl">~70% resting saliva</span>), <span class="hl">sublingual</span> (mucous, <span class="hl">Rivinus ducts</span>). 600–1000 minor glands (lip, palate, buccal). <span class="pg p"><span class="hl">Tubarial glands = "4th pair," Valstar 2021</span></span> (Radiother Oncol), torus tubarius. <span class="hl">Waterfall mnemonic</span>: parotid → over masseter → through buccinator → Stensen at upper 2M (everything flows down).
 
-          <div class="s" id="nc-s-gland-anatomy">Salivary Gland Anatomy</div>
-          Parotid: serous, largest, Stensen duct opposite upper 2nd molar. <span class="hl">Submandibular: mixed, Wharton duct, ~70% resting saliva, MOST PRONE to stones</span>. Sublingual: mucous, ducts of Rivinus. <span class="pg p"><span class="hl">Tubarial glands: 4th pair, nasopharynx near Eustachian tube openings</span></span> (discovered 2021).
+          <div class="s" id="nc-s-saliva-fxn">10 Functions of Saliva</div>
+          <span class="hl">①</span> Lubrication <span class="hl">②</span> Antimicrobial (lysozyme, lactoferrin, IgA) <span class="hl">③</span> Buffering (bicarbonate) <span class="hl">④</span> Remineralization (Ca, PO4, F) <span class="hl">⑤</span> Digestion (amylase) <span class="hl">⑥</span> Taste solubilization <span class="hl">⑦</span> Mucosal protection (mucins) <span class="hl">⑧</span> Speech/swallowing <span class="hl">⑨</span> Hormone barrier (kallikrein) <span class="hl">⑩</span> Wound healing (EGF, NGF).
 
-          <!-- clinical img placeholder -->
-          <div class="clinical-img" data-img-slot="nc-challacombe-scale">Challacombe Scale 1–10 clinical features</div>
+          <div class="s" id="nc-s-hypo-xero">Hyposalivation vs Xerostomia (different!)</div>
+          <span class="pg p"><span class="hl">Hyposalivation = OBJECTIVE flow ↓</span></span>. <span class="pg p"><span class="hl">Xerostomia = SUBJECTIVE dry-mouth complaint</span></span>. Cutoffs: <span class="hl">unstim ≤0.1 mL/min</span> · <span class="hl">stim ≤0.5–0.7 mL/min</span>. Normal unstim 0.3–0.4, stim 1–2. <span class="hl">~16–27% overlap</span> (some xerostomia w/ normal flow; some hyposal w/o complaint).
 
-          <div class="s" id="nc-s-challacombe">Challacombe Scale + Causes</div>
-          1–3 mild, 4–6 moderate, 7–10 severe. Item 9 = cervical caries (&gt;2 teeth). Item 10 = debris on palate/teeth = severe. Step 3: unstimulated whole saliva + stimulated (paraffin wax). Medication risk: <span class="hl">oxybutynin OR 18.9, antidepressants OR 4.7</span>. Polypharmacy (&gt;3 meds) <span class="hl">OR 2.9</span>. Radiation: <span class="hl">parotid &gt;25 Gy irreversible; submandibular &gt;39 Gy irreversible</span>. Radiation caries: <span class="pg p"><span class="hl">ipsilateral, cervical, smooth surfaces of mandibular anteriors, maxillary molars</span></span>; recall Q3–4 mo; PreviDent 5000 daily.
+          <div class="s" id="nc-s-challacombe">Challacombe Scale (10 items, score 1–10)</div>
+          <span class="hl">Mild 1–3</span>: mirror sticks to mucosa (item 2) · loss of palatal rugae · frothy saliva. <span class="hl">Moderate 4–6</span>: tongue lobulated/fissured · altered gingival architecture · glassy mucosa appearance. <span class="hl">Severe 7–10</span>: active dental decay · debris on palate / sticking to teeth · <span class="hl">item 9 cervical caries (&gt;2 teeth)</span> · <span class="hl">item 10 debris on palate or sticking to teeth</span>.
 
-          <div class="s" id="nc-s-sialagogues">Sialagogues (M3 Receptor)</div>
-          <span class="hl">M3 = secretion + smooth muscle = target of sialagogues</span>. Contraindications: asthma (M3 → bronchoconstriction), narrow-angle glaucoma, cardiac disease (M2). Drugs: <span class="pg p"><span class="hl">pilocarpine 5 mg TID (non-selective, highest M3 affinity)</span></span>; <span class="hl">cevimeline 30 mg TID (selective M1+M3, fewer side effects)</span>; bethanechol 25 mg TID (M2+M3). Avoid: caffeine, alcohol mouthwash, Vaseline/Aquaphor (seal moisture OUT → use lanolin).
+          <div class="s" id="nc-s-causes">Causes (ranked)</div>
+          <span class="hl">Top 3</span>: <span class="hl">anxiety</span> · <span class="hl">polypharmacy &gt;3 meds/day (OR 2.9)</span> · <span class="hl">dehydration</span>. Then: anticholinergics, antihistamines, antidepressants (TCAs, SSRIs), antihypertensives, opioids, diuretics, chemo, head/neck RT, Sjögren, diabetes (uncontrolled), HIV, hepatitis C. <span class="hl">OR table</span>: anticholinergics ~3–4×, polypharmacy ~2.9×.
 
-          <div class="s" id="nc-s-sjogren">Sjögren Syndrome</div>
-          Middle-aged female, <span class="hl">9:1 F:M</span>; 0.5–1% prevalence. Primary = alone; Secondary = + another AI disease (RA, SLE). 2016 ACR-EULAR: ≥4 points: <span class="hl">biopsy (focal lymphocytic sialadenitis) = 3 pts; anti-SSA(Ro) = 3 pts</span>; Schirmer/ocular = 1; flow ≤0.1 = 1; anti-SSB(La) = 1. <span class="hl">Seronegative Sjögren: up to 30%</span> — negative Ab ≠ ruled out. Exclude: HCV, radiation, sarcoidosis, IgG4-related disease. Order: anti-SSA + anti-SSB + ANA + RF → refer for labial minor gland biopsy. <span class="pg p"><span class="hl">Lymphoma risk: 5–10% lifetime NHL (MALT), 7–19× general population</span></span>. Red flags: <span class="hl">unilateral persistent enlargement (bilateral = typical)</span>, purpura, LAD, B symptoms.
+          <div class="s" id="nc-s-rad-caries">Radiation Caries (head/neck RT)</div>
+          <span class="hl">6 features</span>: <span class="hl">cervical &amp; incisal edges</span> · rapid progression · circumferential · brown-black · pulp involvement early · symmetric. Thresholds: <span class="hl">parotid &gt;25 Gy → permanent xerostomia</span>; <span class="hl">submandibular &gt;39 Gy</span>; <span class="hl">&gt;65–70 Gy → ORN risk</span>. Tx: <span class="hl">F⁻ trays 1.1% NaF nightly</span>, CPP-ACP, sialagogues, fastidious recall q3mo, pre-RT extractions.
 
-          <!-- clinical img placeholder -->
-          <div class="clinical-img" data-img-slot="nc-sialolithiasis-mucocele">Sialolith in Wharton duct + mucocele lower lip</div>
+          <div class="s" id="nc-s-sialagogues">Sialagogues — M3 Pharmacology</div>
+          <span class="pg p"><span class="hl">Pilocarpine</span></span> — non-selective M-agonist, 5 mg PO TID-QID. <span class="hl">Cevimeline</span> — M1+M3, 30 mg TID. <span class="hl">Bethanechol</span> — M2+M3 (off-label). CIs: <span class="hl">narrow-angle glaucoma, uncontrolled asthma, severe COPD/CHF, cardiac disease, GI/GU obstruction</span>. SE: sweating, GI cramps, urinary urgency, miosis, bradycardia. <span class="hl">Ramadan dosing</span>: pilocarpine pre-suhoor + post-iftar to comply with fasting.
 
-          <div class="s" id="nc-s-sialolithiasis">Sialolithiasis</div>
-          <span class="pg p"><span class="hl">Submandibular 80–90%</span></span>; why: longer tortuous Wharton duct, saliva flows against gravity, Ca-rich mucous secretion. <span class="hl">Pathognomonic: meal-time pain + swelling</span>; resolves between meals. Imaging: occlusal XR first; <span class="hl">not all stones radiopaque → ultrasound for negatives</span>. Tx: conservative (hydration 2L/d, massage, heat, sialagogues) → sialendoscopy if &gt;2 mm or recurrent (85–92% gland preservation).
+          <div class="s" id="nc-s-avoid-use">Avoid / Use Rules (DIE ON THIS HILL)</div>
+          <span class="pg p"><span class="hl">Vaseline = NO</span></span> on lips (petrolatum sits on surface, no hydration, dries the dry). <span class="pg p"><span class="hl">Lanolin (HPA-Lanolin) = YES</span></span> — biomimetic. <span class="hl">Avoid alcohol mouthwash</span> (Listerine red), <span class="hl">avoid SLS</span>. <span class="hl">Use</span>: <span class="hl">Biotene, Xylimelts at bedtime, OraCoat, ACT dry mouth, sip water, sugar-free gum (xylitol)</span>. Humidifier at night.
 
-          <div class="s" id="nc-s-sialadenitis">Acute Bacterial Sialadenitis</div>
-          <span class="hl">S. aureus #1</span>. Purulence at duct orifice = diagnostic. Tx: <span class="hl">Augmentin or clindamycin</span> + aggressive hydration + culture if purulent. Refer ED/ENT if airway/sepsis/immunocompromised.
+          <div class="s" id="nc-s-sjogren">Sjögren Syndrome (ACR-EULAR 2016)</div>
+          <span class="hl">Score ≥4 = classification</span>. Items: <span class="hl">labial salivary gland bx focus score ≥1 (=3 pts)</span>, <span class="hl">anti-SSA/Ro+ (=3)</span>, ocular staining ≥5 (=1), Schirmer ≤5 mm/5 min (=1), unstim flow ≤0.1 mL/min (=1), SSB+ (=1, cannot reach ≥4 alone). <span class="hl">Exclusions</span>: HCV, HIV, sarcoid, amyloid, GVHD, IgG4-RD, head/neck RT. <span class="hl">~30% seronegative</span>. <span class="hl">F:M 9:1</span>. Primary vs secondary (other CTD). <span class="hl">5–10% lifetime MALT lymphoma risk</span>, <span class="pg p"><span class="hl">7–19× RR</span></span>. Red flags: <span class="hl">persistent unilateral parotid swelling, fixed mass, B sx, ↑LDH, low C4</span>. Bilateral fluctuant = reassuring.
 
-          <div class="s" id="nc-s-mucocele">Mucocele / Ranula</div>
-          <span class="pg p"><span class="hl">Lower lip 60–70%</span></span>; bluish, fluctuant, painless. Cause: trauma severs minor gland duct. Extravasation type: <span class="hl">no epithelial lining = NOT a true cyst</span> (granulation wall). Retention type: has lining = true cyst. Tx: excise with <span class="hl">feeding gland</span> (not just drain → refills). Ranula = floor of mouth mucocele → may need sublingual gland removal.
+          <div class="s" id="nc-s-sialolith">Sialolithiasis (Stones)</div>
+          <span class="hl">Submandibular 80–90%</span> (Wharton, mucous, alkaline, gravity). <span class="pg p"><span class="hl">Meal-time pain &amp; swelling = pathognomonic</span></span> ("mealtime syndrome"). <span class="hl">3 mechanisms</span>: salivary stasis · sialomicrolith nidus · ductal inflammation. <span class="hl">Occlusal radiograph FIRST</span>; CT if non-radiopaque. <span class="hl">Sialendoscopy 85–92% success</span>; bimanual milking; conservative tx for small distal stones.
 
-        </div><!-- end nc-col-right p -->
+          <div class="s" id="nc-s-sialadenitis">Bacterial Sialadenitis</div>
+          <span class="hl">S. aureus #1</span>; also strep, anaerobes. Risk: dehydration, post-op, hyposalivation. Acute parotid swelling, pus from Stensen on milking. Tx: <span class="hl">Augmentin OR clindamycin</span>, hydration, sialagogues, warm compresses, gland massage. <span class="hl">ED criteria</span>: airway compromise, sepsis, abscess.
 
-      </div><!-- end nc-cols side b -->
-    </div><!-- end nc-card side b -->
+          <div class="s" id="nc-s-mucocele-ranula">Mucocele &amp; Ranula</div>
+          <span class="hl">Mucocele</span>: <span class="hl">lower lip 60–70%</span>, lip-biting trauma. <span class="hl">Extravasation</span> (no epithelial lining, MC) vs <span class="hl">retention</span> (lined, less common). Bluish dome, fluctuant, recurrent. Tx: <span class="hl">excise WITH feeding minor gland</span> (otherwise recurs). <span class="hl">Ranula</span> = FOM mucocele from <span class="hl">sublingual gland</span>; "frog belly." <span class="hl">Plunging ranula</span> dissects through mylohyoid → neck mass. Tx: marsupialization or sublingual gland excision (definitive).
+
+          <div class="s" id="nc-s-sg-tumors">Salivary Gland Tumors (gland-size paradox)</div>
+          <span class="pg p"><span class="hl">Larger gland = more benign; smaller gland = more malignant</span></span>. Parotid <span class="hl">~80% benign</span>; submand ~50/50; <span class="hl">sublingual + minor &gt;80% malignant</span>. <span class="hl">Pleomorphic adenoma</span> = MC benign (parotid tail), painless mobile mass, low MT to carcinoma-ex-PA. <span class="hl">Warthin tumor</span> = papillary cystadenoma lymphomatosum, <span class="hl">smokers, M&gt;F, often bilateral parotid</span>. <span class="hl">Mucoepidermoid carcinoma</span> = MC malignant, <span class="hl">palate</span> in minor glands, low/intermediate/high grade. Adenoid cystic = perineural invasion, late mets. <span class="hl">FNA + MRI</span> for any persistent salivary mass.
+
+        </div><!-- /nc-col-l4 -->
+
+      </div><!-- /nc-cols-side-b -->
+    </div><!-- /nc-card-side-b -->
 
 
-    <!-- ═══════════════════════════════════════════════
-         BOTTOM MASTER STRIP (BLACK / GOLD)
-    ════════════════════════════════════════════════ -->
-    <div class="nc-label" id="nc-label-master">Master Strip</div>
+    <!-- ═══════════ MASTER STRIP LABEL ═══════════ -->
+    <div class="nc-label" id="nc-label-master">Master Strip &mdash; Cross-Lecture Synthesis (gold)</div>
 
-    <div class="nc-card" id="nc-card-master">
+    <div class="nc-card" id="nc-card-master" style="border-top:4px solid #C8923E">
       <div class="nc-card-title" id="nc-title-master">
-        MASTER STRIP — Pathognomonic Anchors · Oral = First Sign · Avoid Rules · Drug Cross-Reference
+        MASTER STRIP &mdash; pathognomonic anchors · oral=first sign · avoid/use rules · drug cross-reference · reportable · mnemonics · prof-emphasis · numbers · DDx · QA corrections
       </div>
 
-      <!-- ROW 1 -->
-      <div class="nc-cols" id="nc-cols-master-row1">
+      <!-- ═══ ROW 1: Pathognomonic + Oral-First ═══ -->
+      <div class="nc-cols" id="nc-cols-master-r1">
 
-        <div class="nc-col k" id="nc-col-path-anchors" style="border-top:4px solid #C8923E">
-          <div class="h k" id="nc-h-pathognomonic">PATHOGNOMONIC MASTER</div>
-
-          <span class="pg r"><span class="hl">T. pallidum "cursed corkscrews"</span></span> → syphilis<br>
-          <span class="pg r"><span class="hl">Honey-colored crusts "cornflakes"</span></span> → impetigo<br>
-          <span class="pg r"><span class="hl">Koplik spots (bluish-white buccal, 1–2 d BEFORE rash)</span></span> → measles<br>
-          <span class="pg r"><span class="hl">Owl-eye nucleus</span></span> → CMV<br>
-          <span class="pg r"><span class="hl">Hutchinson sign (nasal tip VZV)</span></span> → HZO → blindness<br>
-          <span class="pg r"><span class="hl">PrHGS only on KERATINIZED tissue</span></span> → primary herpetic stomatitis<br>
-          <span class="pg b"><span class="hl">"Chicken-wire" intercellular IgG</span></span> → Pemphigus Vulgaris DIF<br>
-          <span class="pg b"><span class="hl">Linear IgG/IgA/C3 at BMZ</span></span> → MMP DIF<br>
-          <span class="pg b"><span class="hl">"PemphigoiD lives DEEP" (D = subepithelial = Nikolsky NEG)</span></span><br>
-          <span class="pg b"><span class="hl">Raised 3-ring target lesions (acral)</span></span> → EM (HSV-triggered)<br>
-          <span class="pg g"><span class="hl">Red over white, edge over center, deep for verrucous</span></span> → biopsy rule<br>
-          <span class="pg g"><span class="hl">39.6% of progressors had NO dysplasia on first biopsy</span></span> → never dismiss<br>
-          <span class="pg g"><span class="hl">Gingiva "ring around the collar"</span></span> → PVL<br>
-          <span class="pg p"><span class="hl">Meal-time pain + swelling (submandibular)</span></span> → sialolithiasis<br>
-          <span class="pg p"><span class="hl">Bluish fluctuant dome lower lip</span></span> → mucocele (extravasation type)
+        <div class="nc-col k" id="nc-col-pathog" style="border-top:4px solid #C8923E">
+          <div class="h k" id="nc-h-pathog">PATHOGNOMONIC ANCHORS (one-shot ID)</div>
+          <span class="pg r"><span class="hl">Honey-colored crusts</span></span> → impetigo. <span class="pg r"><span class="hl">Cursed corkscrews</span></span> on silver stain → T. pallidum. <span class="pg r"><span class="hl">Chancre painless ulcer</span></span> → 1° syphilis. <span class="pg r"><span class="hl">Mucous patches / snail-track</span></span> + palms/soles rash → 2° syphilis. <span class="pg r"><span class="hl">Hutchinson incisors + mulberry molars</span></span> → congenital syphilis. <span class="pg r"><span class="hl">Wipes off white plaque</span></span> → pseudomembranous candidiasis. <span class="pg r"><span class="hl">Owl-eye intranuclear inclusions</span></span> → CMV. <span class="pg r"><span class="hl">Koplik spots</span></span> (blue-white opp upper molars, precede rash 1–2 d) → measles. <span class="pg r"><span class="hl">Hutchinson sign nose-tip vesicle</span></span> → V1 zoster ophthalmicus. <span class="pg r"><span class="hl">Crops of vesicles on keratinized + non-keratinized</span></span> → primary HSV. <span class="pg r"><span class="hl">EBER ISH+ solitary indurated ulcer in immunosuppressed</span></span> → EBV-MCU.<br><br>
+          <span class="pg b"><span class="hl">Wickham striae bilateral buccal</span></span> → OLP. <span class="pg b"><span class="hl">Row of tombstones + chicken-wire DIF</span></span> → PV. <span class="pg b"><span class="hl">Desquamative gingivitis + linear IgG/C3 BMZ</span></span> → MMP. <span class="pg b"><span class="hl">Target lesions + HSV trigger</span></span> → EM. <span class="pg b"><span class="hl">Bronchiolitis obliterans + stomatitis + malignancy</span></span> → PNP. <span class="pg b"><span class="hl">Cobblestone mucosa + lip swelling + cheilitis granulomatosa</span></span> → Crohn/OFG.<br><br>
+          <span class="pg g"><span class="hl">Velvety red plaque FOM</span></span> → erythroplakia. <span class="pg g"><span class="hl">Gingiva "ring around the collar"</span></span> → PVL. <span class="pg g"><span class="hl">Trismus + blanched buccal bands + areca chewer</span></span> → OSF. <span class="pg g"><span class="hl">Multiple soft pink papules in child, Inuit/Native</span></span> → Heck (HPV 13/32). <span class="pg g"><span class="hl">Cauliflower exophytic mass, no metastasis</span></span> → verrucous CA. <span class="pg g"><span class="hl">Pigmented patch on hard palate, growing</span></span> → oral melanoma.<br><br>
+          <span class="pg p"><span class="hl">Mealtime swelling/pain submand floor</span></span> → sialolith. <span class="pg p"><span class="hl">Bilateral parotid + dry eyes/mouth + SSA+</span></span> → Sjögren. <span class="pg p"><span class="hl">FOM "frog belly" cystic swelling</span></span> → ranula. <span class="pg p"><span class="hl">Lower lip dome, recurs after pop</span></span> → mucocele. <span class="pg p"><span class="hl">Smoker, bilateral parotid mass</span></span> → Warthin. <span class="pg p"><span class="hl">Painless mobile parotid tail mass</span></span> → pleomorphic adenoma.
         </div>
 
         <div class="nc-col k" id="nc-col-oral-first" style="border-top:4px solid #C8923E">
-          <div class="h k" id="nc-h-oral-first">ORAL = FIRST SIGN</div>
-
-          <span class="hl">PV &gt;50%</span> — oral erosions precede skin by months–&gt;1 yr; dentist diagnoses first<br>
-          <span class="hl">MMP 85%</span> — desquamative gingivitis; misdiagnosed as "bad hygiene"<br>
-          <span class="hl">PAMS ~45%</span> — intractable stomatitis; oral before cancer diagnosis<br>
-          <span class="hl">Syphilis 4%</span> — oral chancre at commissure/gingiva; painless, indurated<br>
-          <span class="hl">Measles: Koplik spots 1–2 d before rash</span> — dentist may see first<br>
-          <span class="hl">Sjögren: hyposalivation</span> — dentist recognizes dry-mouth pattern → workup<br>
-          <span class="hl">Leukoplakia → 39.6% of SCC had benign biopsy first</span> — never discharge<br>
-          <span class="hl">EBV-MCU: oropharynx 62%</span> — EBER ISH required; distinct from lymphoma<br>
-          <span class="hl">EM Major: hemorrhagic lip crusting</span> — recognizable in dental chair before full work-up<br>
-          <span class="hl">SCC: lateral/ventral tongue 42%</span> — annual oral cancer screen catches T1 (85% 5-yr OS)
+          <div class="h k" id="nc-h-oral-first">ORAL = FIRST SIGN (don't miss these)</div>
+          <span class="hl">Pemphigus Vulgaris</span> — <span class="hl">&gt;50% present orally first</span>, months before skin. Painful flaccid bullae, Nikolsky+. <br>
+          <span class="hl">MMP</span> — desquamative gingivitis often only finding for years. <span class="hl">REFER OPHTHO</span> all cases (symblepharon → blindness).<br>
+          <span class="hl">Crohn disease (IBD)</span> — oral cobblestone, lip swelling, OFG, pyostomatitis vegetans, RAS-like ulcers can <span class="hl">precede GI sx</span>.<br>
+          <span class="hl">PNP / PAMS</span> — severe intractable stomatitis = clue to underlying NHL/CLL/Castleman/thymoma.<br>
+          <span class="hl">EBV-MCU</span> — solitary deep ulcer in immunosenescent (elderly on MTX/biologics) = first sign of dysregulation; often resolves with immunosuppressant taper.<br>
+          <span class="hl">Behçet</span> — recurrent oral aphthae triad with genital ulcers + uveitis.<br>
+          <span class="hl">SLE</span> — oral discoid lesions on hard palate.<br>
+          <span class="hl">Sarcoidosis</span> — granulomatous lip swelling.<br>
+          <span class="hl">Sjögren</span> — xerostomia + bilateral parotid swelling can precede sicca/ANA workup. Bx labial gland diagnostic.<br>
+          <span class="hl">Syphilis 2°</span> — mucous patches often noticed on dental exam before systemic dx.<br>
+          <span class="hl">HIV</span> — recurrent candidiasis (esp pseudomemb), HSV, HPV, NUG/NUP, Kaposi sarcoma palate.<br>
+          <span class="hl">Leukemia</span> — gingival hyperplasia (esp AML M4/M5), spontaneous bleeding, petechiae.<br>
+          <span class="hl">Vit deficiency</span> — angular cheilitis (Fe), atrophic glossitis (B12), bleeding gums (C).<br>
+          <span class="hl">Anorexia/bulimia</span> — perimylolysis (palatal erosion), parotid swelling.<br>
+          <span class="hl">EM/RIME</span> — hemorrhagic crusted lips + target oral lesions, often before skin (or only mucosa).
         </div>
 
-      </div><!-- end row 1 -->
+      </div><!-- /nc-cols-master-r1 -->
 
-      <!-- ROW 2 -->
-      <div class="nc-cols" id="nc-cols-master-row2">
+      <!-- ═══ ROW 2: Avoid + Drug Cross-Reference ═══ -->
+      <div class="nc-cols" id="nc-cols-master-r2">
 
         <div class="nc-col k" id="nc-col-avoid" style="border-top:4px solid #C8923E">
-          <div class="h k" id="nc-h-avoid">AVOID RULES (exam traps)</div>
-
-          <span class="hl">NEVER biopsy TB first</span> — isolate, NAAT (Xpert MTB/RIF) first<br>
-          <span class="hl">NEVER topical lidocaine in pediatrics</span> — seizure risk<br>
-          <span class="hl">NEVER topical benzocaine in pediatrics</span> — methemoglobinemia<br>
-          <span class="hl">NEVER silver nitrate cautery for RAS</span> — necrosis + argyria<br>
-          <span class="hl">NEVER patch test for Type I allergy</span> — use skin prick or RAST<br>
-          <span class="hl">NEVER reassure MMP without ophtho referral</span> — 61–70% ocular involvement, silent<br>
-          <span class="hl">NEVER "watch and wait" erythroplakia &gt;2 wk</span> — median time to cancer 3.7 mo<br>
-          <span class="hl">NEVER dismiss "benign" leukoplakia biopsy</span> — re-biopsy on ANY change<br>
-          <span class="hl">AVOID sialagogues in</span> asthma, narrow-angle glaucoma, cardiac disease<br>
-          <span class="hl">AVOID clotrimazole (Mycelex) in diabetics</span> — high sugar content<br>
-          <span class="hl">AVOID Vaseline/Aquaphor for dry mouth</span> — petroleum seals moisture OUT<br>
-          <span class="hl">AVOID alcohol mouthwash in dry mouth</span> — drying effect<br>
-          <span class="hl">AVOID polypharmacy assumption</span> — &gt;3 meds → OR 2.9 for dry mouth regardless of specific drug<br>
-          <span class="hl">SJS: Stop ALL suspected drugs immediately</span> — every hour matters
+          <div class="h k" id="nc-h-avoid">AVOID RULES (exam traps disguised as common practice)</div>
+          <span class="hl">Vermilion border NEVER</span> apply potent steroids (clobetasol/fluocinonide) → atrophy/telangiectasia.<br>
+          <span class="pg k"><span class="hl">Vaseline on lips = NO</span></span> in xerostomia (occlusive only, no biomimicry). Use <span class="hl">HPA-Lanolin YES</span>.<br>
+          <span class="hl">Sensodyne with SLS</span> aggravates RAS — switch to <span class="hl">SLS-free Sensodyne ProNamel / Biotene</span>.<br>
+          <span class="hl">Listerine alcohol</span> in xerostomia — drying. Use alcohol-free (Biotene rinse, ACT dry mouth).<br>
+          <span class="hl">Triamcinolone in Orabase = weakest</span>, do not lead with — exam expects clobetasol/dex elixir.<br>
+          <span class="hl">Clotrimazole troche CI in diabetics</span> (sucrose vehicle).<br>
+          <span class="hl">Amoxicillin/ampicillin in mono (EBV)</span> → near-100% maculopapular rash.<br>
+          <span class="hl">ASA in children &lt;18</span> with viral illness → Reye syndrome.<br>
+          <span class="hl">Viscous lidocaine in children &lt;3</span> → FDA boxed warning, seizures/death.<br>
+          <span class="hl">Beta-carotene in smokers</span> (CARET trial) → ↑lung cancer.<br>
+          <span class="hl">Carbamazepine in Han Chinese / SE Asian without HLA-B*1502 screen</span> → SJS/TEN.<br>
+          <span class="hl">RT to verrucous CA</span> → anaplastic transformation; surgical excision instead.<br>
+          <span class="hl">Sialagogues in narrow-angle glaucoma, uncontrolled asthma, severe COPD/CHF, cardiac disease, GI/GU obstruction</span> → CI.<br>
+          <span class="hl">Bx ulcer center alone</span> for immunobullous → false negative DIF; sample <span class="hl">perilesional in Michel's</span>.<br>
+          <span class="hl">Tumor seeding from biopsy = MYTH</span>; never delay biopsy of suspicious oral lesion.<br>
+          <span class="hl">p16 IHC in oral cavity SCC</span> = unreliable; only valid in <span class="hl">oropharynx</span>.<br>
+          <span class="hl">Empiric AB before bx of bacterial sialadenitis</span> if no culture? — clinical (S. aureus most likely) is fine; abscess drain.
         </div>
 
         <div class="nc-col k" id="nc-col-drugs" style="border-top:4px solid #C8923E">
-          <div class="h k" id="nc-h-drug-cross">DRUG CROSS-REFERENCE</div>
-
-          <strong>Infectious:</strong><br>
-          Syphilis: <span class="hl">Benzathine Pen G 2.4 MU IM ×1</span><br>
-          Impetigo: <span class="hl">mupirocin 2% TID ×5d (topical); Augmentin by WEIGHT</span><br>
-          Candida (oral): clotrimazole 10 mg 5×/d; nystatin 5 mL QID; <span class="hl">fluconazole 100–200 mg QD ×7–14d</span>. All -azoles → LFTs<br>
-          HSV: <span class="hl">acyclovir 400 mg 5×/d ×5d (start ≤5d)</span>; valacyclovir 1g BID ×5d (HSV) / TID ×7d (HZO)<br>
-          CMV: <span class="hl">valganciclovir 900 mg PO BID</span> (acyclovir FAILS)<br>
-          EM prophylaxis: <span class="hl">valacyclovir 500 mg BID ≥6 mo then taper</span><br>
-          TB: PIRE ×8 wk → IR ×16 wk DOT<br>
-          <strong>Immunologic:</strong><br>
-          RAS: triamcinolone 0.1% → fluocinonide 0.05% → <span class="hl">clobetasol 0.05%</span><br>
-          OLP: dexamethasone elixir swish &amp; spit BID; clobetasol gel<br>
-          MMP low-risk: topicals + <span class="hl">dapsone 50–100 mg/d</span>; ocular: prednisone + azathioprine/mycophenolate<br>
-          PV mod: <span class="hl">rituximab + prednisone 0.5 mg/kg</span>; severe: rituximab + prednisone 1.0–1.5 mg/kg<br>
-          SJS/TEN oral care: magic mouthwash; CHX 0.12%; petroleum jelly lips; no aggressive debridement<br>
-          Drug gingival hyperplasia: <span class="hl">phenytoin ~50%, cyclosporine 25–70%, nifedipine 6–25%</span><br>
-          <strong>Salivary:</strong><br>
-          Sialagogues: <span class="hl">pilocarpine 5 mg TID</span> (CI: asthma/glaucoma/cardiac); <span class="hl">cevimeline 30 mg TID</span> (M1+M3, fewer SE)<br>
-          Radiation caries: <span class="hl">PreviDent 5000 (1.1% NaF) daily; fluoride varnish 3×/yr</span><br>
-          Sialadenitis: <span class="hl">Augmentin or clindamycin</span><br>
-          <strong>Epithelial:</strong><br>
-          Dysplasia: <span class="hl">ALA-PDT (66–100% CR, tissue-preserving)</span>; imiquimod 5% (TLR-7 agonist, TLR/USC trial)<br>
-          CAUTION: beta-carotene may ↑ risk in smokers (CARET trial)
+          <div class="h k" id="nc-h-drugs">DRUG CROSS-REFERENCE (4-lecture grid)</div>
+          <span class="hl">L1 INFECTIOUS</span>: <span class="hl">Augmentin</span> (impetigo, weight-based; sialadenitis); <span class="hl">PCN G IM</span> (syphilis gold std); <span class="hl">Doxycycline</span> (PCN-allergic syphilis); <span class="hl">RIPE</span> (TB 2 mo) → <span class="hl">RI</span> (TB 4 mo); <span class="hl">INH 9 mo</span> latent TB; <span class="hl">Fluconazole 100–200 mg</span> (Candida 7–14d); <span class="hl">Clotrimazole troche</span> 5×/d (NOT diabetics); <span class="hl">Nystatin susp</span>; <span class="hl">Miconazole</span> gel/buccal; <span class="hl">Acyclovir 15 mg/kg 5×/d ×7d</span> primary HSV; <span class="hl">Penciclovir 1% q2h</span> RHL; <span class="hl">Valacyclovir 1 g TID ×7d</span> zoster; <span class="hl">Valganciclovir</span> CMV.<br><br>
+          <span class="hl">L2 ALLERGIES/IMMUNO</span>: <span class="hl">Clobetasol 0.05%</span> ultra-high; <span class="hl">Fluocinonide 0.05%</span> high; <span class="hl">Dex elixir 0.5 mg/5 mL</span> swish/spit BID-QID universal; <span class="hl">Triamcinolone in Orabase</span> low (trap); <span class="hl">Tacrolimus 0.1%</span> refractory OLP; <span class="hl">Prednisone PO</span> severe; <span class="hl">Dapsone</span> MMP/dermatitis herpetiformis; <span class="hl">Colchicine, apremilast</span> RAS; <span class="hl">Rituximab, MMF, AZA, IVIG</span> PV refractory; <span class="hl">Epi 0.3 mg IM lat thigh</span> anaphylaxis. Avoid: <span class="hl">SLS, alcohol mw, vermilion potent steroids</span>.<br><br>
+          <span class="hl">L3 EPITHELIAL/SCC</span>: <span class="hl">CO2 laser</span> dysplasia (HR 0.14); <span class="hl">Diode laser</span> 93.5% CR; <span class="hl">Cryotherapy</span> 100% CR; <span class="hl">ALA-PDT</span> 66–100% CR; <span class="hl">Imiquimod (TLR-7)</span> chemoprev trial; <span class="hl">Beta-carotene NO</span> in smokers (CARET); <span class="hl">Cisplatin/cetuximab/pembrolizumab</span> SCC systemic; <span class="hl">Imatinib</span> c-KIT+ oral melanoma. <span class="hl">Gardasil 9</span> (6/11/16/18/31/33/45/52/58) — HPV-OPSCC prevention but <span class="hl">NOT Heck</span> (13/32).<br><br>
+          <span class="hl">L4 SALIVARY</span>: <span class="hl">Pilocarpine 5 mg PO TID-QID</span> (non-selective M); <span class="hl">Cevimeline 30 mg TID</span> (M1+M3); <span class="hl">Bethanechol</span> (M2+M3, off-label); <span class="hl">F⁻ 1.1% NaF tray nightly</span> + <span class="hl">CPP-ACP</span> rad caries; <span class="hl">Augmentin or clindamycin</span> bacterial sialadenitis; <span class="hl">Xylitol gum, Xylimelts, Biotene rinse, OraCoat, ACT dry mouth</span>; <span class="hl">HPA-Lanolin</span> lips. CIs sialagogues = <span class="hl">narrow-angle glaucoma, uncontrolled asthma, severe COPD/CHF, cardiac disease, GI/GU obstruction</span>.
         </div>
 
-      </div><!-- end row 2 -->
-    </div><!-- end nc-card-master -->
+      </div><!-- /nc-cols-master-r2 -->
 
-  </div><!-- end guide-section-content nc -->
+      <!-- ═══ ROW 3: Reportable + Mnemonics + Prof-Quotes ═══ -->
+      <div class="nc-cols" id="nc-cols-master-r3">
 
-</div><!-- end guide-section sec-notecard-v2 -->
+        <div class="nc-col k" id="nc-col-reportable" style="border-top:4px solid #C8923E">
+          <div class="h k" id="nc-h-reportable">REPORTABLE DISEASES &amp; REFERRAL TRIGGERS</div>
+          <span class="hl">Mandatory report → MA DPH</span>: <span class="hl">Syphilis</span> (all stages), <span class="hl">Tuberculosis</span> (active &amp; latent in some categories), <span class="hl">Measles</span> (rubeola), <span class="hl">Mumps</span>, <span class="hl">HIV/AIDS</span>, hepatitis A/B/C (acute), pertussis, meningococcal dz.<br><br>
+          <span class="hl">Refer ophthalmology IMMEDIATELY</span>: <span class="hl">MMP (all)</span> — symblepharon → blindness · <span class="hl">V1 zoster (Hutchinson sign)</span> · severe Sjögren keratoconjunctivitis sicca.<br><br>
+          <span class="hl">Refer dermatology / oral med</span>: PV, PNP, refractory OLP, suspected EM/SJS, DRESS.<br>
+          <span class="hl">Refer OMFS / oral med</span>: any persistent salivary mass (FNA + MRI), submandibular stone refractory to sialendoscopy, suspected SCC, mucocele recurrence.<br>
+          <span class="hl">Refer rheumatology</span>: ACR-EULAR ≥4 Sjögren, RAS &gt;40 with workup positive (Behçet, IBD), suspected SLE/Crohn.<br>
+          <span class="hl">Refer ED / burn unit</span>: SJS/TEN (BSA, SCORTEN), anaphylaxis, deep neck space infection, severe sialadenitis with airway compromise.<br>
+          <span class="hl">Refer hematology/oncology</span>: PNP (always malignancy), MALT lymphoma red flags (unilateral persistent parotid mass, fixed, B sx, ↑LDH).
+        </div>
+
+        <div class="nc-col k" id="nc-col-mnemonics" style="border-top:4px solid #C8923E">
+          <div class="h k" id="nc-h-mnemonics">MNEMONICS MASTER LIST</div>
+          <span class="hl">L1</span>: <span class="hl">3 C's of measles</span> = Cough · Coryza · Conjunctivitis. <span class="hl">Hutchinson triad</span> (congenital syphilis) = Hutchinson incisors · mulberry molars · interstitial keratitis. <span class="hl">RIPE</span> TB intensive = Rifampin · Isoniazid · Pyrazinamide · Ethambutol → RI continuation. <span class="hl">HHV 1–8</span>: HSV1 · HSV2 · VZV · EBV · CMV · HHV6/7 roseola · HHV8 Kaposi. <span class="hl">5-step framework</span>: lesion → location → acuity/sx → risk → test/tx.<br><br>
+          <span class="hl">L2</span>: <span class="hl">Pegasus &amp; Hades</span> — Pegasus intraepithelial (PV row of tombstones, chicken wire DIF); Hades subepithelial BMZ (MMP, BP, EBA, LABD, linear DIF). <span class="hl">3 D's geographic tongue</span>: Depapillated · Demarcated white border · Dynamic (migrates). <span class="hl">4 P's lichen planus</span>: Pruritic · Purple · Polygonal · Papules. <span class="hl">Don't Lose Your Sushi</span> = Don't bx ulcer · Lesion perilesional · Use 2 vials · Yes 2nd specimen · Sushi=Submit Michel's medium for DIF. <span class="hl">"Doctor Bob"</span> dex elixir 0.5 mg/5 mL swish 2 min spit BID-QID ×2 wk.<br><br>
+          <span class="hl">L3</span>: <span class="hl">Biopsy rules</span>: "Red over white, edge over center, deep for verrucous, multiple for big." <span class="hl">OPMD ranking</span> mnemonic: ER &gt; PVL &gt; ELP &gt; OSF &gt; verrucous LK &gt; non-hom LK &gt; hom LK &gt; AC &gt; OLP &gt; DLE. <span class="hl">5 SCC warning signs</span>: ulcer &gt;2 wk · induration · fixed node · pain/dysesthesia · loose tooth/poor denture fit. <span class="hl">DOI not thickness</span> for AJCC 8.<br><br>
+          <span class="hl">L4</span>: <span class="hl">Waterfall</span> parotid → masseter → buccinator → Stensen at upper 2M. <span class="hl">10 saliva functions</span>: Lube · Antimicrobial · Buffer · Remin · Digest · Taste · Mucosal · Speech · Hormone · Wound. <span class="hl">Gland-size paradox</span>: bigger = benign, smaller = malignant. <span class="hl">Mealtime swelling = stone</span>. <span class="hl">Ramadan</span> sialagogue dosing pre-suhoor + post-iftar.<br><br>
+          <span class="hl">CROSS</span>: <span class="hl">IgM = current, IgG = past</span>. <span class="hl">"Wipes off" rule</span> = Candida vs leukoplakia/lichenoid. <span class="hl">Keratinized vs non-kerat</span>: RHL kerat only · aphthous non-kerat only.
+        </div>
+
+        <div class="nc-col k" id="nc-col-prof-quotes" style="border-top:4px solid #C8923E">
+          <div class="h k" id="nc-h-prof-quotes">PROF-EMPHASIS VERBATIM (high-yield quotes)</div>
+          <span class="hl">L1</span>: "Augmentin is dosed by <span class="hl">weight, not age</span>." · "If it <span class="hl">wipes off, it's Candida</span>; if it doesn't, it's leukoplakia or lichenoid." · "<span class="hl">Hutchinson sign</span> on the nose tip means the <span class="hl">eye is next</span>." · "Koplik spots <span class="hl">precede</span> the rash by 1–2 days — they are pathognomonic." · "<span class="hl">Treponema pallidum</span> looks like cursed corkscrews on silver stain." · "<span class="hl">Syphilis is The Great Imitator</span> — every stage." · "<span class="hl">EBV-MCU</span> in immunosenescent patients — bx and check EBER, often resolves with immunosuppressant taper."<br><br>
+          <span class="hl">L2</span>: "<span class="hl">Recurrent HSV is keratinized only</span>; aphthous is non-keratinized only — that's how you tell them apart." · "<span class="hl">Vermilion border, NEVER potent steroids.</span>" · "<span class="hl">SLS in toothpaste flares RAS</span> — ask the patient what toothpaste they use." · "If you suspect MMP, you <span class="hl">refer to ophthalmology, no exception</span>." · "Pemphigus vulgaris presents <span class="hl">in the mouth FIRST in more than half</span> of patients." · "<span class="hl">Allopurinol is the #1 cause of SJS/TEN</span> in 2024."<br><br>
+          <span class="hl">L3</span>: "<span class="hl">Induration is the #1 sign</span> of SCC — feel the lesion." · "<span class="hl">Erythroplakia &gt; leukoplakia</span> for malignant transformation — it's red, it's bad, biopsy now." · "<span class="hl">Don't be afraid to biopsy</span>. Tumor seeding is a myth." · "<span class="hl">DOI is in AJCC 8</span> — depth of invasion from BM, not tumor thickness." · "<span class="hl">p16 in oropharynx is reliable; in oral cavity it is NOT</span>." · "<span class="hl">HPV-OPSCC has 80–85% 5-yr OS</span> — it behaves differently."<br><br>
+          <span class="hl">L4</span>: "<span class="hl">Vaseline on lips? I will die on this hill — NO.</span> Use HPA-Lanolin." · "<span class="hl">Hyposalivation is objective; xerostomia is subjective</span> — they are not the same word." · [Standard teaching, not prof verbatim:] "<span class="hl">Submandibular gland makes ~70% of resting saliva</span> — that's why it matters." · "<span class="hl">Bigger gland = benign; smaller gland = malignant.</span>" · "<span class="hl">Mealtime swelling = stone</span> until proven otherwise."
+        </div>
+
+      </div><!-- /nc-cols-master-r3 -->
+
+      <!-- ═══ ROW 4: Numbers + DDx + QA Corrections ═══ -->
+      <div class="nc-cols" id="nc-cols-master-r4">
+
+        <div class="nc-col k" id="nc-col-numbers" style="border-top:4px solid #C8923E">
+          <div class="h k" id="nc-h-numbers">NUMBERS FACT BANK (memorize the digits)</div>
+          <span class="hl">EPI</span>: 36,600 new oral/oropharyngeal cancers · 12,230 deaths · 41.7% lateral tongue · M:F 2.4:1. <span class="hl">Tobacco × alcohol = 30× multiplicative</span>. Fanconi anemia OR 40.6×. <span class="hl">~17% OPMD progress</span>. 2nd primary 3–7%/yr.<br><br>
+          <span class="hl">MT BY OPMD</span>: PVL 48–50% (highest) · Erythroplakia 50% · OSF 5.1% · Homog leuko ~2% · Non-hom leuko 15–25% · OLP 1.4%. <span class="hl">MT BY DYSPLASIA GRADE (separate stat)</span> (different stat): no dysp 2.2% · mild 2.6–11.9% · moderate 4.1–8.7% · severe/CIS 29.2–32.2%. <span class="hl">39.6% paradox</span>: 39.6% of leukoplakias that progressed to SCC had NO dysplasia on initial bx. 75–90% erythroplakia already dysplasia/CIS at bx. Erythroplakia mean 3.7 mo to cancer.<br><br>
+          <span class="hl">STAGING (AJCC 8)</span>: T1 ≤2 cm + DOI ≤5 mm · T2 ≤4 cm AND DOI ≤10 mm · T3 &gt;4 cm OR DOI &gt;10 · T4 invades adj. N1 single ipsi ≤3 cm ENE− · N2a 3–6 cm ENE− OR ≤3 cm ENE+ · N3b ENE+. <span class="hl">DOI added · ENE upstages</span>.<br><br>
+          <span class="hl">HPV</span>: HPV-16 in ~90% HPV-OPSCC. <span class="hl">HPV+ 5-yr OS ~80–85% vs HPV− ~40%</span>. Heck HPV 13/32 NOT in Gardasil 9. Gardasil 9 covers 6/11/16/18/31/33/45/52/58.<br><br>
+          <span class="hl">SALIVARY</span>: Submand 80–90% of stones · 70% resting saliva. Parotid &gt;25 Gy permanent xerostomia · Submand &gt;39 Gy · ORN risk &gt;65–70 Gy. Sialendoscopy 85–92% success. Hyposal cutoff: unstim ≤0.1 · stim ≤0.5–0.7. Normal unstim 0.3–0.4 · stim 1–2. Sjögren ACR-EULAR ≥4: bx focus ≥1 = 3 pts, SSA = 3, others 1. <span class="hl">~30% Sjögren seronegative</span>. F:M 9:1. MALT 5–10% lifetime, 7–19× RR. Tubarial glands 4th pair 2020.<br><br>
+          <span class="hl">L1/L2</span>: Impetigo 2–5 yr olds · Augmentin &lt;40 kg = 25 mg/kg/d BID, ≥40 kg = 500 mg BID · acyclovir 15 mg/kg 5×/d ×7d primary HSV, valacyclovir 1 g TID ×7d zoster · PCN G IM single dose 1° syphilis. RAS minor &lt;1 cm, major Sutton &gt;1 cm. SJS &lt;10% BSA · overlap 10–30% · TEN &gt;30%. EM 90% HSV-trigger. Drug onset of DRGH 1–3 mo. PV mortality untreated very high.
+        </div>
+
+        <div class="nc-col k" id="nc-col-ddx" style="border-top:4px solid #C8923E">
+          <div class="h k" id="nc-h-ddx">DDx MINI-CARDS (presentation → top differentials)</div>
+          <span class="hl">Painless ulcer &gt;2 wk</span> → SCC #1 · primary syphilitic chancre · TB ulcer · NHL/EBV-MCU · deep fungal · traumatic ulcer (rule out by removing irritant). <span class="hl">Bx mandatory</span> if persists.<br><br>
+          <span class="hl">Painful necrotic deep ulcer in immunocompromised</span> → CMV · EBV-MCU · deep fungal (mucor, histo) · NUG/NUP · lymphoma · vasculitis (GPA). <span class="hl">Bx + cultures + EBER + viral PCR</span>.<br><br>
+          <span class="hl">White plaque "wipes off"</span> → pseudomembranous candidiasis (clotrim/nystatin/flucon). <span class="hl">Doesn't wipe</span> → leukoplakia, OLP, frictional, hairy leukoplakia (EBV in HIV), white sponge nevus, leukoedema.<br><br>
+          <span class="hl">Multiple oral vesicles in child &lt;5</span> → primary HSV gingivostomatitis · HFMD (Coxsackie A) · varicella · enteroviral herpangina (soft palate only).<br><br>
+          <span class="hl">Bilateral parotid swelling</span> → Sjögren · mumps · sialosis (alcoholism, bulimia, diabetes) · HIV-DILS · sarcoid · IgG4-RD · Warthin (smoker, often bilateral). <span class="hl">Reassuring if bilateral fluctuant</span>; <span class="hl">red flag if unilateral persistent fixed</span>.<br><br>
+          <span class="hl">Unilateral persistent parotid mass</span> → pleomorphic adenoma · Warthin (smoker) · mucoepidermoid CA · adenoid cystic CA (perineural pain) · MALT lymphoma in Sjögren · metastasis. <span class="hl">FNA + MRI</span>.<br><br>
+          <span class="hl">Desquamative gingivitis</span> → MMP &gt; OLP &gt; PV &gt; LABD &gt; chronic ulcerative stomatitis. <span class="hl">Perilesional bx + DIF</span>.<br><br>
+          <span class="hl">Target lesions + lip crusts</span> → EM (HSV) · RIME · SJS overlap (BSA, drugs). Drug + BSA &gt;10% = SJS, refer.<br><br>
+          <span class="hl">Pigmented hard palate patch</span> → oral melanoma · racial pigmentation · amalgam tattoo · smoker's melanosis · drug-induced (minocycline, OCP) · post-inflammatory · nevus. <span class="hl">Bx if growing/asymmetric/multifocal</span>.<br><br>
+          <span class="hl">Recurrent oral aphthae</span> → simple RAS · complex aphthosis · Behçet · IBD (Crohn/UC) · celiac · HIV · cyclic neutropenia · hematinic def (Fe, B12, folate, zinc). <span class="hl">Workup if onset &gt;40 or complex</span>.<br><br>
+          <span class="hl">Lower lip dome cystic</span> → mucocele (extravasation MC) · retention cyst · salivary gland tumor (uncommon lower lip — minor gland tumors typically palate). <span class="hl">FOM same</span> → ranula.<br><br>
+          <span class="hl">Mealtime swelling</span> → sialolithiasis (submand 80–90%) · ductal stenosis · juvenile recurrent parotitis · bacterial sialadenitis. <span class="hl">Occlusal XR first</span>.
+        </div>
+
+        <div class="nc-col k" id="nc-col-qa" style="border-top:4px solid #C8923E">
+          <div class="h k" id="nc-h-qa">QA-VERIFIED CORRECTIONS (don't fall for old slides)</div>
+          <span class="hl">Oral melanoma amelanotic = ~15%, NOT 25%</span> (older texts cite 25; current literature 15%).<br>
+          <span class="hl">HPV− OPSCC 5-yr OS ~40%, NOT 50–55%</span> (NCDB updated).<br>
+          <span class="hl">Tobacco + alcohol = 30× multiplicative, NOT additive</span>. Don't add the OR's.<br>
+          <span class="hl">p16 IHC reliable in oropharynx ONLY</span>. In oral cavity SCC, p16 does NOT correlate with HPV — do NOT use to drive tx.<br>
+          <span class="hl">PVL ~48–50% MT, F &gt; M, often non-smokers</span> — old slides may say "smoker." Updated: gingival "ring around the collar" classic.<br>
+          <span class="hl">Heck disease HPV 13/32 NOT in Gardasil 9</span> — common trap.<br>
+          <span class="hl">Verrucous CA</span>: 0% metastasis, defining feature is <span class="hl">wide pushing border (NOT infiltrative)</span>; needs <span class="hl">deep wedge bx</span>; superficial misses dx as "verrucous hyperplasia."<br>
+          <span class="hl">Tumor seeding from biopsy = MYTH</span> — never delay bx.<br>
+          <span class="hl">DOI &gt; tumor thickness</span> for AJCC 8 — measure from BM.<br>
+          <span class="hl">OLP MT ~1.4%, debated</span>; classified OPMD by WHO but lower than other OPMDs.<br>
+          <span class="hl">EBV-MCU in immunosenescent</span> often resolves with immunosuppressant taper — don't aggressively excise; bx + observe.<br>
+          <span class="hl">Triamcinolone in Orabase = LOW potency trap</span> — exam expects clobetasol/dex elixir as first-line.<br>
+          <span class="hl">Mumps 10–30% have NO parotid swelling</span> — don't rule out by absence; RT-PCR buccal swab.<br>
+          <span class="hl">Vaseline NO, Lanolin YES</span> for xerostomia lips — Vaseline is occlusive only, no biomimicry.<br>
+          <span class="hl">Erythroplakia 50% MT but 75–90% already dysplasia/CIS at biopsy</span> — different stat, both true.<br>
+          <span class="hl">Sjögren ~30% seronegative</span> — bx gold std (focus score ≥1, 3 pts in ACR-EULAR).<br>
+          <span class="hl">Submandibular gland 70% resting saliva</span>, parotid dominates only on stimulation.<br>
+          <span class="hl">Allopurinol is the #1 trigger of SJS/TEN</span> currently — older lists say sulfa first.<br>
+          <span class="hl">Carbamazepine + Han Chinese / SE Asian → screen HLA-B*1502</span> first — FDA boxed warning.<br>
+          <span class="hl">PV chicken-wire DIF intercellular IgG</span>; <span class="hl">MMP linear BMZ IgG/C3</span>; <span class="hl">OLP shaggy fibrinogen BMZ</span> — keep these straight.
+        </div>
+
+      </div><!-- /nc-cols-master-r4 -->
+
+    </div><!-- /nc-card-master -->
+
+  </div><!-- /guide-section-content -->
+
+</div><!-- /sec-notecard-v2 -->
