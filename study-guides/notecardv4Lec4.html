@@ -1,0 +1,626 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>OD 531 — Salivary Gland Disorders Notecard v4</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Crimson+Pro:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&family=Karla:ital,wght@0,400;0,500;0,600;0,700;1,400&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+    --bg: #FAF8F4;
+    --bg-card: #FFFFFF;
+    --bg-sidebar: #1B2838;
+    --text: #1B2838;
+    --text-muted: #5A6B7D;
+    --text-light: #8896A6;
+    --border: #E2DDD5;
+    --border-light: #F0ECE6;
+    --primary: #2B5E8C;
+    --primary-dark: #1E4366;
+    --primary-light: #E8F0F8;
+    --accent: #C8923E;
+    --accent-dark: #A87730;
+    --accent-light: #FEF7EC;
+    --success: #2E7D5B;
+    --success-light: #EBF5F0;
+    --danger: #B5483B;
+    --danger-light: #FDF0EE;
+    --purple: #6B4C9A;
+    --purple-light: #F3EFF8;
+    --teal: #1A8A7D;
+    --teal-light: #E6F6F4;
+    --shadow-sm: 0 1px 3px rgba(27,40,56,0.06);
+    --shadow-md: 0 4px 12px rgba(27,40,56,0.08);
+    --radius: 8px;
+    --radius-lg: 12px;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+html { scroll-behavior: smooth; scroll-padding-top: 80px; }
+body {
+    font-family: 'Karla', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    font-size: 16px;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+}
+::-webkit-scrollbar { width: 7px; }
+::-webkit-scrollbar-track { background: var(--bg); }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+::selection { background: rgba(43,94,140,0.2); }
+
+/* ═══ HERO ═══ */
+.hero {
+    background: linear-gradient(135deg, #1B2838 0%, #2B5E8C 50%, #1A8A7D 100%);
+    color: #fff;
+    padding: 40px 32px 32px;
+}
+.hero-inner { max-width: 960px; margin: 0 auto; }
+.hero-badge {
+    display: inline-block;
+    background: rgba(255,255,255,0.12);
+    border: 1px solid rgba(255,255,255,0.2);
+    border-radius: 20px;
+    padding: 4px 14px;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    margin-bottom: 12px;
+    font-family: 'JetBrains Mono', monospace;
+}
+.hero h1 {
+    font-family: 'Crimson Pro', serif;
+    font-size: clamp(28px, 4.5vw, 42px);
+    font-weight: 700;
+    line-height: 1.15;
+    margin-bottom: 6px;
+    letter-spacing: -0.5px;
+}
+.hero-sub { font-size: 15px; opacity: 0.85; }
+.hero-meta {
+    font-size: 12px; opacity: 0.65; margin-top: 14px; padding-top: 12px;
+    border-top: 1px solid rgba(255,255,255,0.15);
+    font-family: 'JetBrains Mono', monospace; letter-spacing: 0.3px;
+}
+
+/* ═══ NAV ═══ */
+.nav-sticky {
+    position: sticky; top: 0; z-index: 100;
+    background: rgba(250,248,244,0.94);
+    backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--border);
+    padding: 0 16px;
+}
+.nav-inner { max-width: 960px; margin: 0 auto; display: flex; gap: 2px; overflow-x: auto; scrollbar-width: none; }
+.nav-inner::-webkit-scrollbar { display: none; }
+.nav-link {
+    display: block; padding: 10px 12px; font-size: 12px; font-weight: 600;
+    color: var(--text-muted); text-decoration: none; white-space: nowrap;
+    border-bottom: 2px solid transparent; transition: all 0.15s;
+}
+.nav-link:hover { color: var(--primary); border-bottom-color: var(--primary); }
+
+/* ═══ NOTECARD ═══ */
+.nc {
+    max-width: 960px;
+    margin: 0 auto;
+    padding: 24px 16px 60px;
+}
+.nc-card {
+    background: #fffff8;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 22px 22px 18px;
+    margin-bottom: 18px;
+    box-shadow: var(--shadow-md);
+}
+.nc-card-title {
+    font-family: 'Crimson Pro', serif;
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--primary-dark);
+    border-bottom: 2px solid var(--primary);
+    padding-bottom: 8px;
+    margin-bottom: 14px;
+    letter-spacing: -0.3px;
+}
+
+/* Notecard typography */
+.nc h4 {
+    font-family: 'Karla', sans-serif;
+    font-weight: 700;
+    font-size: 15px;
+    color: var(--primary-dark);
+    margin: 14px 0 6px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+.nc h4:first-child { margin-top: 0; }
+.nc h5 {
+    font-weight: 700;
+    font-size: 14px;
+    color: var(--text);
+    margin: 10px 0 4px;
+    text-decoration: underline;
+    text-underline-offset: 3px;
+    text-decoration-thickness: 1px;
+}
+.nc p { margin-bottom: 8px; font-size: 14.5px; line-height: 1.55; }
+.nc ul { list-style: disc; margin: 6px 0 10px 22px; }
+.nc li { font-size: 14.5px; line-height: 1.55; margin-bottom: 4px; }
+.nc li ul { margin-top: 4px; margin-bottom: 4px; }
+
+/* Color classes */
+.nc .r { color: #c00; font-weight: 600; }
+.nc .b { color: #0a58a0; font-weight: 600; }
+.nc .g { color: #1a7a1a; font-weight: 600; }
+.nc .p { color: #7a2d8e; font-weight: 600; }
+.nc .k { color: #111; font-weight: 700; }
+
+/* Highlight (yellow marker) */
+.nc .hl { background: #ffe84d; padding: 0 3px; border-radius: 2px; font-weight: 600; }
+
+/* Pathognomonic / signature finding double-underline */
+.nc .pg {
+    border-bottom: 2px double currentColor;
+    font-weight: 700;
+}
+
+/* Boxed key term */
+.nc .bx {
+    display: inline-block;
+    border: 1.5px solid var(--primary);
+    color: var(--primary-dark);
+    background: var(--primary-light);
+    padding: 1px 7px;
+    border-radius: 4px;
+    font-weight: 700;
+    font-size: 13px;
+}
+
+/* Tables */
+.nc table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 10px 0;
+    font-size: 13.5px;
+    line-height: 1.4;
+}
+.nc th {
+    background: var(--bg-sidebar);
+    color: #fff;
+    font-weight: 600;
+    text-align: left;
+    padding: 7px 10px;
+    border: 1px solid var(--bg-sidebar);
+    font-size: 12px;
+    letter-spacing: 0.3px;
+}
+.nc td {
+    padding: 7px 10px;
+    border: 1px solid var(--border);
+    vertical-align: top;
+}
+.nc tbody tr:nth-child(even) td { background: rgba(0,0,0,0.02); }
+
+/* Inline callout strips */
+.nc .crit {
+    background: var(--danger-light);
+    border-left: 4px solid var(--danger);
+    border-radius: var(--radius);
+    padding: 10px 14px;
+    margin: 10px 0;
+    font-size: 14.5px;
+    line-height: 1.5;
+    color: var(--text);
+}
+.nc .crit::before {
+    content: '\26A0  ';
+    font-weight: 700;
+    color: var(--danger);
+}
+.nc .pearl {
+    background: var(--success-light);
+    border-left: 4px solid var(--success);
+    border-radius: var(--radius);
+    padding: 10px 14px;
+    margin: 10px 0;
+    font-size: 14.5px;
+    line-height: 1.5;
+}
+.nc .pearl::before {
+    content: '\2B50  ';
+    color: var(--success);
+}
+.nc .note {
+    background: var(--accent-light);
+    border-left: 4px solid var(--accent);
+    border-radius: var(--radius);
+    padding: 10px 14px;
+    margin: 10px 0;
+    font-size: 14px;
+    line-height: 1.5;
+}
+
+.nc hr.sep {
+    border: none;
+    border-top: 1px solid var(--border);
+    margin: 14px 0;
+}
+
+/* Footer */
+.guide-footer {
+    text-align: center; padding: 32px 16px 24px; color: var(--text-light);
+    font-size: 12px; border-top: 1px solid var(--border);
+    font-family: 'JetBrains Mono', monospace; letter-spacing: 0.5px;
+}
+
+/* Mobile */
+@media (max-width: 700px) {
+    .hero { padding: 28px 18px 24px; }
+    .nc { padding: 16px 10px 40px; }
+    .nc-card { padding: 16px 14px 14px; }
+    .nc-card-title { font-size: 19px; }
+    .nc h4 { font-size: 14px; }
+    .nc p, .nc li { font-size: 14px; }
+    .nc table { font-size: 12.5px; }
+    .nc th, .nc td { padding: 6px 8px; }
+}
+
+/* Print */
+@media print {
+    body { background: #fff; }
+    .nav-sticky { display: none; }
+    .hero { padding: 18px 24px; }
+    .nc-card { break-inside: avoid; box-shadow: none; border: 1px solid #aaa; }
+    .nc .crit, .nc .pearl, .nc .note { break-inside: avoid; }
+}
+</style>
+</head>
+<body>
+
+<header class="hero">
+    <div class="hero-inner">
+        <span class="hero-badge">OD 531 · Oral Medicine · Midterm</span>
+        <h1>Salivary Gland Disorders</h1>
+        <p class="hero-sub">Notecard v4 — Henderson lecture, BU GSDM</p>
+        <p class="hero-meta">SULEMAN SHAIKH, DMD · Midterm 02/27/2026</p>
+    </div>
+</header>
+
+<nav class="nav-sticky">
+    <div class="nav-inner">
+        <a class="nav-link" href="#pearls">Pearls</a>
+        <a class="nav-link" href="#fxn">Fxn</a>
+        <a class="nav-link" href="#glands">Glands</a>
+        <a class="nav-link" href="#hypo-xero">Hypo vs Xero</a>
+        <a class="nav-link" href="#causes">Causes</a>
+        <a class="nav-link" href="#workup">Workup</a>
+        <a class="nav-link" href="#meds">Meds</a>
+        <a class="nav-link" href="#rad">Rad</a>
+        <a class="nav-link" href="#tx">Tx</a>
+        <a class="nav-link" href="#sjogren">Sjögren</a>
+        <a class="nav-link" href="#sialolith">Sialolith</a>
+        <a class="nav-link" href="#sialaden">Sialadenitis</a>
+        <a class="nav-link" href="#mucocele">Mucocele</a>
+        <a class="nav-link" href="#compare">DDx</a>
+    </div>
+</nav>
+
+<main class="nc">
+
+    <!-- ═══ QUIZ REVIEW PEARLS ═══ -->
+    <section class="nc-card" id="pearls">
+        <div class="nc-card-title">Quiz Review Pearls</div>
+        <ul>
+            <li><span class="k">Hx + meds always</span> — open question first, then specific, no leading bias</li>
+            <li><span class="hl">Serpiginous</span> = white snakelike borders (geographic tongue)</li>
+            <li><span class="k">Measure every lesion</span>; describe each independently</li>
+            <li><span class="hl">Clotrimazole (Mycelex) = sugar</span> → <span class="r">NOT for diabetic patients</span></li>
+        </ul>
+    </section>
+
+    <!-- ═══ SALIVA FUNCTIONS ═══ -->
+    <section class="nc-card" id="fxn">
+        <div class="nc-card-title">Saliva Functions</div>
+        <p>Lubrication / mech protection · taste (sensory) · speech / communication · <span class="k">dental protection</span> (remin, pH buffer, pellicle) · digestion (bolus, carb/lipid, esophageal acid neutralization) · antimicrobial (Ig, microbiome) · cleansing &amp; clearance · wound healing · <span class="hl">hormone synthesis</span> · diagnostic biomarker reservoir</p>
+    </section>
+
+    <!-- ═══ GLAND TYPES ═══ -->
+    <section class="nc-card" id="glands">
+        <div class="nc-card-title">Gland Types</div>
+        <ul>
+            <li><span class="k">Parotid</span> = serous (thin, watery, fast-flowing)</li>
+            <li><span class="k">Submandibular + sublingual</span> = mixed serous + mucous; <span class="hl">affected first in hyposalivation</span></li>
+            <li>Why dry mouth = ropey/sticky: <span class="hl">water loss &gt;&gt; mucin loss</span> → mucins concentrate, altered, less lubricating</li>
+            <li>New gland: <span class="b">tubarial glands</span> (Valstar, <span class="hl">2021</span>)</li>
+        </ul>
+    </section>
+
+    <!-- ═══ HYPOSAL vs XEROSTOMIA ═══ -->
+    <section class="nc-card" id="hypo-xero">
+        <div class="nc-card-title">Hyposalivation vs Xerostomia <span style="font-size:13px;color:var(--danger);font-weight:600;">— CRITICAL</span></div>
+        <table>
+            <thead>
+                <tr><th></th><th>Hyposalivation</th><th>Xerostomia</th></tr>
+            </thead>
+            <tbody>
+                <tr><td><strong>Type</strong></td><td><span class="hl">Objective ↓ flow</span></td><td><span class="hl">Subjective dry feel</span></td></tr>
+                <tr><td><strong>Unstim flow</strong></td><td><span class="r">≤ 0.1 mL/min</span></td><td>Any</td></tr>
+                <tr><td><strong>Stim flow</strong></td><td><span class="r">≤ 0.5 – 0.7 mL/min</span></td><td>Any</td></tr>
+                <tr><td><strong>Risk</strong></td><td><span class="hl">↑ dental + medical</span></td><td>None alone</td></tr>
+                <tr><td><strong>Threshold</strong></td><td>—</td><td>Felt at 40 – 50% normal flow</td></tr>
+            </tbody>
+        </table>
+        <div class="crit"><span class="hl"><strong>Only hyposalivation</strong> = ↑ caries / infection risk.</span> Xerostomia alone (without ↓ flow) does NOT raise risk.</div>
+    </section>
+
+    <!-- ═══ CAUSES ═══ -->
+    <section class="nc-card" id="causes">
+        <div class="nc-card-title">Causes</div>
+
+        <h4>Hyposalivation <span class="r">40 – 60%</span></h4>
+        <p>Anxiety, <span class="hl">polypharmacy</span>, dehydration, uncontrolled DM, ESRD, <span class="hl">radiation / surgery</span>, Parkinson disease, GVHD, irAEs, <span class="hl">Sjögren</span>, sarcoidosis, GPA, IgG4-RD, HCV, HIV.</p>
+
+        <h4>Xerostomia <span class="r">20 – 42%</span></h4>
+        <p><span class="hl">Medications</span> (anticholinergic, antidepressant, antihypertensive, urological), oral dysesthesia / BMS, trigeminal neuropathy.</p>
+
+        <h4>Both <span class="r">16 – 27%</span></h4>
+    </section>
+
+    <!-- ═══ CHAIRSIDE WORKUP ═══ -->
+    <section class="nc-card" id="workup">
+        <div class="nc-card-title">Chairside Workup</div>
+
+        <h5>1. History</h5>
+        <p>Meds, radiation, autoimmune dz, duration, other dry sites (eyes / nose / throat), dysphagia.</p>
+
+        <h5>2. Exam — Challacombe Scale (10 features)</h5>
+        <p style="font-size:13px;color:var(--text-muted);margin-bottom:6px;font-style:italic;">Listed in order — items 1 → 10 increase in severity.</p>
+        <table>
+            <thead><tr><th style="width:40px;">#</th><th>Feature</th><th style="width:80px;">Severity</th></tr></thead>
+            <tbody>
+                <tr><td>1</td><td>Mirror sticks to <strong>buccal mucosa</strong></td><td><span class="g">Mild</span></td></tr>
+                <tr><td>2</td><td>Mirror sticks to <strong>tongue</strong></td><td><span class="g">Mild</span></td></tr>
+                <tr><td>3</td><td>Saliva frothy</td><td><span class="g">Mild</span></td></tr>
+                <tr><td>4</td><td>No saliva pooling in FOM</td><td><span class="b">Moderate</span></td></tr>
+                <tr><td><span class="hl">5</span></td><td><span class="hl">Tongue depapillation</span></td><td><span class="b">Moderate</span></td></tr>
+                <tr><td>6</td><td>Altered gingival architecture (smooth)</td><td><span class="b">Moderate</span></td></tr>
+                <tr><td>7</td><td>Glassy appearance of mucosa, esp. palate</td><td><span class="r">Severe</span></td></tr>
+                <tr><td><span class="hl">8</span></td><td><span class="hl">Tongue lobulated / fissured</span></td><td><span class="r">Severe</span></td></tr>
+                <tr><td>9</td><td>Cervical caries (&gt; 2 teeth)</td><td><span class="r">Severe</span></td></tr>
+                <tr><td>10</td><td>Debris on palate / sticking to teeth</td><td><span class="r">Severe</span></td></tr>
+            </tbody>
+        </table>
+        <ul>
+            <li><span class="g"><strong>1 – 3 mild</strong></span>: sugar-free gum, hydration</li>
+            <li><span class="b"><strong>4 – 6 moderate</strong></span>: saliva substitutes, topical fluoride</li>
+            <li><span class="r"><strong>7 – 10 severe</strong></span>: rule out Sjögren, refer specialist</li>
+        </ul>
+
+        <h5>3. Objective measurement</h5>
+        <p>Unstim + stim flow rates; refer if borderline / abnormal.</p>
+
+        <div class="crit">Pt c/o dry mouth + <strong>normal pooling on exam</strong> → <span class="hl">measure flow</span> to distinguish true hyposalivation from xerostomia alone.</div>
+    </section>
+
+    <!-- ═══ MED-INDUCED ═══ -->
+    <section class="nc-card" id="meds">
+        <div class="nc-card-title">Medication-Induced Hyposalivation</div>
+        <table>
+            <thead><tr><th>Tier</th><th>Drug class / drug</th><th>OR</th></tr></thead>
+            <tbody>
+                <tr><td><span class="r">Very high</span></td><td>Urological anticholinergic — <span class="hl">oxybutynin</span></td><td><span class="r"><strong>18.9</strong></span></td></tr>
+                <tr><td><span class="r">Very high</span></td><td>Tolterodine</td><td><span class="r">4.8</span></td></tr>
+                <tr><td>High</td><td>Antidepressants</td><td>4.7</td></tr>
+                <tr><td>High</td><td>Psycholeptics</td><td>2.6</td></tr>
+                <tr><td>High</td><td>Antihypertensives, antipsychotics, sedatives</td><td>—</td></tr>
+            </tbody>
+        </table>
+        <div class="crit"><span class="hl">Polypharmacy &gt; 3 meds/day → OR 2.9</span> independent of any specific drug.</div>
+    </section>
+
+    <!-- ═══ RADIATION ═══ -->
+    <section class="nc-card" id="rad">
+        <div class="nc-card-title">Radiation-Induced Hyposalivation</div>
+
+        <h4>Dose</h4>
+        <ul>
+            <li>H&amp;N rad total: <span class="hl">65 – 70 Gy</span></li>
+            <li>Parotid threshold: <span class="r">&gt; 25 Gy</span></li>
+            <li>Submandibular threshold: <span class="r">&gt; 39 Gy</span></li>
+            <li>Dose-dependent acinar destruction; <span class="r">irreversible past threshold</span></li>
+        </ul>
+
+        <h4>Caries Pattern</h4>
+        <p><span class="hl">Ipsilateral, cervical, facial → circumferential</span>, smooth surfaces of mandibular anterior dentition, maxillary molars.</p>
+
+        <h4>Fluoride / Caries Protocol</h4>
+        <ul>
+            <li><span class="hl">1.1% NaF (5000 ppm)</span> or <span class="hl">SnF₂</span> gel — daily brush-on or in trays</li>
+            <li>1.1% NaF dentifrice daily</li>
+            <li>Fluoride varnish <span class="hl">3× / year</span></li>
+            <li>Ca-PO₄ artificial saliva for remineralization</li>
+            <li><span class="k">Recall q 3 – 4 mo</span>, brush 2 – 4×/day, CHX rinses</li>
+        </ul>
+    </section>
+
+    <!-- ═══ CONSEQUENCES ═══ -->
+    <section class="nc-card">
+        <div class="nc-card-title">Consequences <span style="font-size:12px;color:var(--text-muted);font-weight:500;">(hyposalivation only — not xerostomia)</span></div>
+        <p><span class="hl">Root / cervical caries</span> (classic pattern), recurrent decay, <span class="r">erythematous candidiasis</span>, dysphagia, mucosal trauma, denture difficulty.</p>
+    </section>
+
+    <!-- ═══ TREATMENT ═══ -->
+    <section class="nc-card" id="tx">
+        <div class="nc-card-title">Treatment</div>
+
+        <h4>Avoid</h4>
+        <p><span class="r">Caffeine, alcohol</span> (drinks &amp; mouthwash), <span class="r">Vaseline, Aquaphor</span>.</p>
+
+        <h4>OTC</h4>
+        <ul>
+            <li>Hydration (± pineapple), bedside humidifier</li>
+            <li>Sugar-free lemon candy</li>
+            <li><span class="hl">Xylimelts</span>, Xerostrips, Biotene</li>
+            <li><span class="b">Lanolin HPA</span> for lips</li>
+        </ul>
+
+        <h4>Pharm — Sialagogues</h4>
+        <table>
+            <thead><tr><th>Drug</th><th>Dose</th><th>Selectivity</th></tr></thead>
+            <tbody>
+                <tr><td><span class="k">Pilocarpine</span></td><td>5 mg TID up to 6×/d</td><td><span class="hl">Non-selective, ↑ M3 affinity</span></td></tr>
+                <tr><td><span class="k">Cevimeline</span></td><td>30 mg TID</td><td>M1, M3 selective</td></tr>
+                <tr><td><span class="k">Bethanechol</span></td><td>25 mg TID</td><td>M2, M3 selective</td></tr>
+                <tr><td>Topical pilo</td><td>2 gtt 4% ophthalmic in 1 tsp water, hold 5 min, spit</td><td>—</td></tr>
+            </tbody>
+        </table>
+        <div class="crit"><strong>Sialagogue contraindications:</strong> <span class="hl">asthma, narrow-angle glaucoma, cardiac disease</span>.</div>
+
+        <h4>M-Receptor Cheat Sheet</h4>
+        <ul>
+            <li><span class="b">M1</span> — CNS / cognition</li>
+            <li><span class="b">M2</span> — heart (↓ HR)</li>
+            <li><span class="hl"><strong>M3</strong> — exocrine: saliva / tears / sweat; bronchoconstrict; GI motility; bladder</span></li>
+            <li><span class="b">M4 / M5</span> — CNS</li>
+        </ul>
+    </section>
+
+    <!-- ═══ SJÖGREN ═══ -->
+    <section class="nc-card" id="sjogren">
+        <div class="nc-card-title">Sjögren Syndrome</div>
+        <p><span class="k">Autoimmune destruction</span> of salivary + lacrimal glands.</p>
+        <ul>
+            <li>Middle-aged female; <span class="hl">F : M = 9 : 1</span>; prevalence <span class="hl">0.5 – 1%</span></li>
+            <li>Classic triad: <span class="hl">hyposalivation + xerophthalmia + bilateral parotid enlargement</span></li>
+            <li><span class="b">1° SS</span> = alone &nbsp; · &nbsp; <span class="b">2° SS</span> = with RA, SLE, thyroid disease, etc.</li>
+        </ul>
+
+        <div class="crit"><strong>Must exclude before dx:</strong> <span class="hl">H&amp;N radiation, active HCV</span>, sarcoidosis, IgG4-RD, <span class="r">recent anticholinergic use</span> (false positives).</div>
+
+        <h4>2016 ACR-EULAR Criteria — score ≥ 4 for diagnosis</h4>
+        <table>
+            <thead><tr><th>Item</th><th style="width:50px;">Pts</th></tr></thead>
+            <tbody>
+                <tr><td><span class="hl">Labial biopsy: focal lymphocytic sialadenitis (focus score ≥ 1)</span></td><td><strong>3</strong></td></tr>
+                <tr><td><span class="hl">Anti-SSA (Ro) positive</span></td><td><strong>3</strong></td></tr>
+                <tr><td>Ocular staining score ≥ 5 (or van Bijsterveld ≥ 4) in at least one eye</td><td>1</td></tr>
+                <tr><td><span class="hl">Schirmer test ≤ 5 mm / 5 min</span> in at least one eye</td><td>1</td></tr>
+                <tr><td><span class="hl">Unstimulated whole saliva ≤ 0.1 mL/min</span></td><td>1</td></tr>
+            </tbody>
+        </table>
+        <div class="note"><strong>Note:</strong> Anti-SSB / La is <span class="r">NOT</span> a 2016 ACR-EULAR scoring criterion (was in older 2002 AECG criteria). You still <strong>order it as part of workup</strong> — it just doesn't earn points toward the diagnostic score.</div>
+
+        <h4>Workup — what the dentist orders</h4>
+        <p><span class="k">Anti-SSA (Ro), anti-SSB (La), ANA, RF</span> → refer to <span class="b">OM / OMFS for minor salivary gland biopsy</span> (lower lip).</p>
+
+        <div class="crit"><span class="hl">Up to 30% are seronegative</span> but have positive biopsy / Schirmer — negative antibodies do not rule out Sjögren.</div>
+
+        <h4>Management</h4>
+        <p>↑ recall frequency, high-potency fluoride, OHI counseling, refer OM + rheumatology, sialagogues, OTC saliva, hydration, finish workup.</p>
+
+        <h4>Lymphoma Risk <span style="color:var(--danger);font-size:13px;">(critical)</span></h4>
+        <ul>
+            <li><span class="r"><strong>5 – 10% lifetime NHL risk</strong></span></li>
+            <li><span class="hl">MALT lymphoma</span> — most common type</li>
+            <li><span class="r">Highest lymphoma risk among autoimmune diseases — 7 – 19× general population</span></li>
+        </ul>
+
+        <div class="crit"><strong>Red flags → urgent rheum / heme referral:</strong>
+            <ul style="margin-top:6px;margin-bottom:0;">
+                <li><span class="hl">Persistent unilateral gland enlargement</span></li>
+                <li>Lymphadenopathy, purpura</li>
+                <li>Constitutional symptoms (fever, night sweats, weight loss)</li>
+            </ul>
+        </div>
+    </section>
+
+    <!-- ═══ SIALOLITHIASIS ═══ -->
+    <section class="nc-card" id="sialolith">
+        <div class="nc-card-title">Sialolithiasis</div>
+        <p><span class="pg p">Pathognomonic: mealtime pain + swelling</span>, unilateral.</p>
+        <ul>
+            <li><span class="hl">Submandibular 80 – 90%</span> (long tortuous Wharton duct, against gravity, mucous + Ca²⁺-rich saliva)</li>
+            <li><strong>Imaging ladder:</strong> occlusal radiograph (1st line, submand) → panoramic → ultrasound (catches non-radiopaque) → CT if surgical planning</li>
+        </ul>
+        <div class="crit"><span class="hl">Not all stones are radiopaque</span> — negative XR does not exclude.</div>
+
+        <h4>Conservative management (1st line)</h4>
+        <p><span class="hl">Hydrate 2 L/day</span>, gland massage, warm moist compress, OTC saliva substitutes, NSAIDs / acetaminophen, <span class="b">muscarinic agonist</span>.</p>
+
+        <h4>Refer for sialendoscopy</h4>
+        <p>If: <span class="hl">stone &gt; 2 mm in proximal duct</span>, failed conservative care 1 – 2 wk, or recurrent. <span class="g"><strong>85 – 92% gland preservation rate.</strong></span></p>
+    </section>
+
+    <!-- ═══ ACUTE BACTERIAL SIALADENITIS ═══ -->
+    <section class="nc-card" id="sialaden">
+        <div class="nc-card-title">Acute Bacterial Sialadenitis</div>
+        <p><span class="hl">Painful swollen unilateral gland + fever + purulence at duct orifice + erythema + firm / tender</span> on palpation.</p>
+        <ul>
+            <li><span class="r">#1 organism: <em>S. aureus</em></span>; also Strep, anaerobes</li>
+            <li><strong>Tx:</strong> <span class="hl">amoxicillin-clavulanate OR clindamycin</span> (cover Staph) + aggressive hydration</li>
+            <li>Culture purulent material; image to rule out stone / mass</li>
+        </ul>
+        <div class="crit"><strong>Urgent ED / ENT / OMFS</strong> if: sepsis, immunocompromised, trismus / severe swelling, airway concern.</div>
+    </section>
+
+    <!-- ═══ MUCOCELE ═══ -->
+    <section class="nc-card" id="mucocele">
+        <div class="nc-card-title">Mucocele</div>
+        <ul>
+            <li><span class="hl">Lower lip 60 – 70%</span> — #1 site</li>
+            <li>Fluctuant, bluish, painless swelling</li>
+            <li>Trauma history — lip bite, <span class="hl">sharp canine</span></li>
+        </ul>
+        <h4>Pathophysiology</h4>
+        <p>Trauma → minor salivary gland duct rupture → mucin extravasation into connective tissue (<span class="b">extravasation phenomenon</span>).</p>
+    </section>
+
+    <!-- ═══ QUICK COMPARE ═══ -->
+    <section class="nc-card" id="compare">
+        <div class="nc-card-title">Quick Compare — Unilateral Gland Swelling</div>
+        <table>
+            <thead>
+                <tr><th>Feature</th><th>Sialolithiasis</th><th>Acute sialadenitis</th><th>Lymphoma (Sjögren)</th></tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><strong>Pain</strong></td>
+                    <td><span class="hl">Mealtime ↑</span></td>
+                    <td>Constant + fever</td>
+                    <td>Often painless</td>
+                </tr>
+                <tr>
+                    <td><strong>Gland</strong></td>
+                    <td>Submandibular 80%</td>
+                    <td>Any (parotid common)</td>
+                    <td>Persistent, firm</td>
+                </tr>
+                <tr>
+                    <td><strong>Pus</strong></td>
+                    <td>No</td>
+                    <td><span class="r">Yes</span> at duct</td>
+                    <td>No</td>
+                </tr>
+                <tr>
+                    <td><strong>Treatment</strong></td>
+                    <td>Conservative → sialendoscopy</td>
+                    <td>Amox-clav / clinda</td>
+                    <td><span class="r">URGENT referral</span></td>
+                </tr>
+            </tbody>
+        </table>
+    </section>
+
+</main>
+
+<footer class="guide-footer">
+    Notecard v4 · OD 531 Salivary · Henderson 02/20/2026 · Built 2026-05-06
+</footer>
+
+</body>
+</html>
