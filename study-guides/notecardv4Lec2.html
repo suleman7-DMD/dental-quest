@@ -1,0 +1,696 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>OD 531 — Notecard v4: Allergies &amp; Immunologic Diseases</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Crimson+Pro:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&family=Karla:ital,wght@0,400;0,500;0,600;0,700;1,400&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+    --bg: #FAF8F4;
+    --bg-card: #FFFFFF;
+    --bg-sidebar: #1B2838;
+    --text: #1B2838;
+    --text-muted: #5A6B7D;
+    --text-light: #8896A6;
+    --border: #E2DDD5;
+    --border-light: #F0ECE6;
+    --primary: #2B5E8C;
+    --primary-dark: #1E4366;
+    --primary-light: #E8F0F8;
+    --accent: #C8923E;
+    --accent-dark: #A87730;
+    --accent-light: #FEF7EC;
+    --success: #2E7D5B;
+    --success-light: #EBF5F0;
+    --danger: #B5483B;
+    --danger-light: #FDF0EE;
+    --purple: #6B4C9A;
+    --purple-light: #F3EFF8;
+    --teal: #1A8A7D;
+    --teal-light: #E6F6F4;
+    --shadow-sm: 0 1px 3px rgba(27,40,56,0.06);
+    --shadow-md: 0 4px 12px rgba(27,40,56,0.08);
+    --radius: 8px;
+    --radius-lg: 12px;
+    --radius-md: 8px;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+html { scroll-behavior: smooth; scroll-padding-top: 80px; }
+body {
+    font-family: 'Karla', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    font-size: 16px;
+    line-height: 1.72;
+    -webkit-font-smoothing: antialiased;
+}
+
+body::before, .blood-cell, .heartbeat-line { display: none !important; }
+
+::-webkit-scrollbar { width: 7px; }
+::-webkit-scrollbar-track { background: var(--bg); }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+::-webkit-scrollbar-thumb:hover { background: var(--text-muted); }
+::selection { background: rgba(43,94,140,0.2); }
+
+/* ═══ HERO ═══ */
+.hero {
+    background: linear-gradient(135deg, #1B2838 0%, #2B5E8C 50%, #1A8A7D 100%);
+    color: #fff;
+    padding: 56px 40px 48px;
+    position: relative;
+    overflow: hidden;
+}
+.hero::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.03'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+    animation: none;
+}
+.hero-content { max-width: 900px; margin: 0 auto; position: relative; z-index: 1; }
+.hero-badge {
+    display: inline-block;
+    background: rgba(255,255,255,0.12);
+    border: 1px solid rgba(255,255,255,0.2);
+    border-radius: 20px;
+    padding: 4px 14px;
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    margin-bottom: 16px;
+    backdrop-filter: blur(4px);
+    font-family: 'JetBrains Mono', monospace;
+}
+.hero h1 {
+    font-family: 'Crimson Pro', serif;
+    font-size: clamp(32px, 5vw, 52px);
+    font-weight: 700;
+    line-height: 1.15;
+    margin-bottom: 12px;
+    letter-spacing: -0.5px;
+    color: #fff;
+}
+.hero h1 em { font-style: normal; }
+.hero-sub { font-size: 17px; opacity: 0.85; margin-bottom: 6px; max-width: none; color: #fff; }
+.hero-meta {
+    font-size: 13px; opacity: 0.65; margin-top: 20px; padding-top: 16px;
+    border-top: 1px solid rgba(255,255,255,0.15); color: #fff; letter-spacing: 0;
+    font-family: 'Karla', sans-serif;
+}
+
+/* ═══ CONTAINER ═══ */
+.container { max-width: 900px; margin: 0 auto; padding: 32px 24px 80px; }
+
+/* ═══ NOTECARD SECTION ═══ */
+.nc {
+    max-width: 960px;
+    margin: 0 auto;
+    padding: 24px 16px;
+}
+.nc .nc-label {
+    color: var(--text-muted);
+    font-size: 11px;
+    letter-spacing: 2.5px;
+    text-transform: uppercase;
+    text-align: center;
+    margin-bottom: 8px;
+    font-weight: 600;
+}
+.nc .nc-card {
+    background: #fffff8;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 20px 18px;
+    margin-bottom: 28px;
+    box-shadow: var(--shadow-md);
+    overflow: hidden;
+}
+.nc .nc-card-title {
+    text-align: center;
+    font-size: 11px;
+    color: var(--text-muted);
+    letter-spacing: 0.8px;
+    text-transform: uppercase;
+    border-bottom: 1px solid var(--border-light);
+    padding-bottom: 10px;
+    margin-bottom: 14px;
+    line-height: 1.5;
+}
+.nc .nc-cols {
+    display: flex;
+    gap: 20px;
+}
+.nc .nc-col {
+    flex: 1;
+    overflow: hidden;
+    font-size: 13px;
+    line-height: 1.45;
+    color: #222;
+}
+.nc .nc-col-left {
+    border-right: 1px solid var(--border-light);
+    padding-right: 18px;
+}
+.nc .nc-col-right {
+    padding-left: 2px;
+}
+.nc .r { color: #c00; }
+.nc .b { color: #0a58a0; }
+.nc .g { color: #1a7a1a; }
+.nc .p { color: #7a2d8e; }
+.nc .k { color: #111; }
+.nc .h {
+    font-weight: 700;
+    font-size: 15px;
+    border-bottom: 2px solid currentColor;
+    margin: 12px 0 8px;
+    padding-bottom: 4px;
+}
+.nc .h:first-child { margin-top: 0; }
+.nc .s {
+    font-weight: 700;
+    font-size: 14px;
+    margin: 10px 0 4px;
+    text-decoration: underline;
+    text-underline-offset: 2px;
+}
+.nc .ss {
+    font-weight: 600;
+    font-size: 13px;
+    margin: 8px 0 3px;
+}
+.nc table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 8px 0;
+    font-size: 12px;
+    line-height: 1.35;
+}
+.nc th {
+    background: rgba(0,0,0,0.06);
+    font-weight: 700;
+    text-align: left;
+    padding: 4px 8px;
+    border: 1px solid #bbb;
+    font-size: 11px;
+}
+.nc td {
+    padding: 4px 8px;
+    border: 1px solid #ccc;
+    vertical-align: top;
+}
+.nc .w { background: rgba(255,200,0,0.1); }
+.nc .hl { background: #ffe84d; padding: 0 3px; border-radius: 2px; }
+.nc .bx {
+    border: 1.5px solid currentColor;
+    padding: 1px 5px;
+    border-radius: 3px;
+    font-weight: 700;
+}
+.nc .pg {
+    border-bottom: 2px double currentColor;
+    font-weight: 700;
+}
+.nc .t { font-size: 12px; line-height: 1.35; }
+.nc .sep { border-top: 1px solid #ddd; margin: 8px 0; }
+.nc .btm {
+    font-size: 12px;
+    line-height: 1.35;
+    border-top: 2px solid var(--text-muted);
+    padding-top: 10px;
+    margin-top: 12px;
+}
+.nc br { display: block; margin-bottom: 2px; }
+
+/* ═══ NOTECARD MOBILE ═══ */
+@media (max-width: 768px) {
+    .nc { padding: 12px 8px; }
+    .nc .nc-card { padding: 14px 12px; }
+    .nc .nc-cols {
+        flex-direction: column;
+        gap: 0;
+    }
+    .nc .nc-col-left {
+        border-right: none;
+        border-bottom: 1px solid var(--border-light);
+        padding-right: 0;
+        padding-bottom: 16px;
+        margin-bottom: 16px;
+    }
+    .nc .nc-col-right { padding-left: 0; }
+    .nc .nc-col { font-size: 14px; line-height: 1.5; }
+    .nc .h { font-size: 17px; }
+    .nc .s { font-size: 15px; }
+    .nc table { font-size: 12.5px; }
+    .nc th { font-size: 12px; padding: 5px 6px; }
+    .nc td { padding: 5px 6px; }
+    .nc .t { font-size: 13px; }
+    .nc .btm { font-size: 13px; }
+    .nc .nc-card-title { font-size: 10px; }
+}
+
+/* ═══ FOOTER ═══ */
+.guide-footer {
+    text-align: center;
+    padding: 32px 20px;
+    color: var(--text-light);
+    font-size: 13px;
+    border-top: 1px solid var(--border-light);
+    margin-top: 48px;
+}
+
+/* ═══ MOBILE ═══ */
+@media (max-width: 700px) {
+    .hero { padding: 32px 20px; }
+    .hero h1 { font-size: 28px; }
+    .container { padding: 20px 16px 60px; }
+}
+
+/* ═══ PRINT ═══ */
+@media print {
+    .hero { padding: 24px; background: #1B2838; }
+    .nc .nc-card { break-inside: avoid; box-shadow: none; border: 1px solid #ccc; }
+    body { background: #fff; }
+}
+</style>
+</head>
+<body>
+
+<div class="hero">
+  <div class="hero-content">
+    <div class="hero-badge">Notecard v4 &middot; Immuno-2</div>
+    <h1>Allergies &amp; Immunologic Diseases</h1>
+    <p class="hero-sub">OD 531 Oral Medicine &mdash; Henderson 01/23/2026</p>
+    <p class="hero-meta">
+      <strong>T1</strong>: RAS, OLP, Geo Tongue, DRGH, Allergic Contact Stomatitis, TLP &nbsp;&bull;&nbsp;
+      <strong>T2</strong>: PV, MMP, EM/SJS, Lichenoid Contact Rxn &nbsp;&bull;&nbsp;
+      <strong>T3</strong>: PCG, OFG, EB, PNP, BP, Perioral Dermatitis, Beh&ccedil;et
+    </p>
+  </div>
+</div>
+
+<div class="nc">
+
+<!-- ════════════════════════════════════════ -->
+<!-- SIDE A — PART 1                         -->
+<!-- ════════════════════════════════════════ -->
+<div class="nc-label">Side A &mdash; Part 1</div>
+<div class="nc-card">
+  <div class="nc-card-title">Allergies &amp; Immunologic Oral Disease &mdash; Part 1 (RAS &bull; Steroids &bull; Geographic Tongue &bull; DRGH &bull; Allergic Rxns &bull; TLP)</div>
+  <div class="nc-cols">
+
+    <!-- ──── LEFT COLUMN ──── -->
+    <div class="nc-col nc-col-left">
+
+      <div class="h b">RAS (most common oral ulcer)</div>
+      <span class="hl">20%</span> prev (5&ndash;66%); 39&ndash;50% lifetime; <span class="hl">80%</span> before 30; <span class="hl">40%</span> +FHx; <strong>children w/ affected parents = 90% chance</strong>. <strong>NOT HSV</strong>. CD8+ T-cell, &uarr;inflam cytokines, &darr;IL-10. Genetic polymorphisms &uarr; susceptibility.
+      <br>
+      <table>
+        <tr><th>Variant</th><th>%</th><th>Size</th><th>Site</th><th>Duration</th></tr>
+        <tr><td>Minor</td><td>80</td><td>3&ndash;10 mm</td><td class="b"><strong>Nonkerat</strong> (labial/buccal/vent tongue/soft palate); <span class="hl">yellow-white fibrinopurulent + erythematous halo</span></td><td>7&ndash;14 d, no scar</td></tr>
+        <tr><td>Major</td><td>10&ndash;15</td><td>1&ndash;3 cm</td><td>Labial/soft palate/tonsillar fauces</td><td>2&ndash;6 wk, scars; onset post-puberty, can persist 20+ yr</td></tr>
+        <tr><td>Herpetiform</td><td>5&ndash;10</td><td>1&ndash;3 mm (&le;100, coalesce)</td><td>&mdash;</td><td>7&ndash;10 d; F &gt; M, adult onset</td></tr>
+      </table>
+
+      <div class="s b">vs HSV</div>
+      RAS: no fever, no vesicles, <strong>nonkerat</strong>; HSV: fever, vesicles, <strong>keratinized</strong> (hard palate/ging).
+
+      <div class="s b">Assoc</div>
+      Celiac, IBD, Beh&ccedil;et, cyclic neutropenia, <span class="pg b">PFAPA</span>, FMF, <strong>progesterone stomatitis</strong>, HIV, &darr;B12/folate/iron/VitD/Zn, meds (NSAID/BB/bisphos/nicorandil).
+      <br>
+      <strong>Nutritional</strong>: screen + supplement <em>only as needed</em>
+      <br>
+      &bull; New onset &gt;40 &rarr; workup<br>
+      &bull; Complex aphthosis (&ge;3, near-constant) &rarr; 60% systemic<br>
+      &bull; <span class="bx b">No bx</span> for typical recurrent ulcers w/ clear hx<br>
+      &bull; <strong>Bx if</strong>: single &gt;4 wk, atypical, new &gt;40
+
+      <div class="s b">Tx mild</div>
+      <span class="hl">SLS-free TP</span>. triamcinolone paste 0.1% QID; fluocinonide 0.05% gel under gauze 20 min 5&times;/d; dex 0.5 mg/5 mL 5 min QID; <strong>laser therapy (32.2% reduction vs placebo)</strong>
+
+      <div class="s b">Tx mod&ndash;severe</div>
+      clobetasol 0.05% gel; intralesional triam; <span class="pg b">prednisolone 15 mg/5 mL</span> 5 mL hold 5 min then swallow BID
+
+      <div class="s b">Refractory</div>
+      azathioprine, colchicine, dapsone, thalidomide; TNF-&alpha; (adalimumab/etanercept/infliximab); apremilast (Beh&ccedil;et FDA); <strong>probiotics as adjunct</strong> (reduce pain w/ steroids)
+      <br>
+      <span class="r"><strong>AVOID silver nitrate</strong> (necrosis, argyria)</span>
+      <br>
+      <strong>Workup</strong>: CBC, iron, B12, folate, VitD, celiac
+      <br>
+      Patient education: <em>breaking the cycle may increase disease-free intervals</em>
+
+      <div class="sep"></div>
+
+      <div class="h b">STEROID POTENCY</div>
+      <strong>G1 superhigh</strong>: clobetasol 0.05%, halobetasol 0.05%<br>
+      <strong>G2 high</strong>: fluocinonide 0.05%, betameth dipropionate 0.05%<br>
+      <strong>G4 med</strong>: triamcinolone 0.1%, betameth valerate 0.1%<br>
+      <strong>G6 low</strong>: desonide 0.05%<br>
+      <em>Unclassified</em>: <span class="pg b">dex elixir 0.5 mg/5 mL</span>
+
+      <div class="sep"></div>
+
+      <div class="h b">GEOGRAPHIC TONGUE &mdash; &ldquo;3 D&rsquo;s&rdquo;</div>
+      <span class="hl b">aka Erythema Migrans / Benign Migratory Glossitis</span>
+      <br>
+      <span class="pg b"><strong>D</strong>epapillated</span> + <span class="pg b"><strong>D</strong>emarcated</span> (white serpiginous borders) + <span class="pg b"><strong>D</strong>ynamic</span> (migrates).
+      <br>
+      3% prev; &lt;30 yo; 12% FHx. <strong>Etiology</strong>: immune-mediated inflammatory.
+      <br>
+      <strong>Assoc</strong>: fissured tongue, psoriasis, atopy (asthma/eczema/<strong>hay fever</strong>/<strong>IgE &ge;200</strong>), psych stress, GI, reactive arthritis
+      <br>
+      Mostly asx; if sx: burning, spicy/acidic/hot food sensitivity
+      <br>
+      <span class="hl"><strong>Migration = pathognomonic</strong> (rules out malignancy)</span>
+
+      <div class="ss b">DDx</div>
+      <strong>Geographic</strong>: migrates, white serpiginous, benign &middot;
+      <strong>Candidiasis</strong>: white patches <em>scrape off</em>, antifungal-responsive &middot;
+      <strong>Leukoplakia</strong>: fixed, adherent, dysplasia on bx &middot;
+      <span class="hl">Erythroplakia</span>: fixed red, &uarr;malignant potential, <strong>urgent bx</strong> &middot;
+      <strong>OLP</strong>: bilateral reticular, doesn&rsquo;t migrate, may erode &middot;
+      <strong>Median Rhomboid Glossitis</strong>: fixed rhomboid dorsal midline, candidal
+
+      <div class="s b">Tx</div>
+      Reassure; avoid triggers, <strong>avoid alcohol/mint/Sensodyne</strong>; kid&rsquo;s TP; viscous lido 2%; <span class="pg b">diphenhydramine 12.5 mg/5 mL</span> 5 min TID&ndash;QID; fluocinonide/clobetasol gel; <strong>tacrolimus 0.1% oint</strong>; <strong>acetaminophen</strong>
+
+    </div><!-- /col-left -->
+
+    <!-- ──── RIGHT COLUMN ──── -->
+    <div class="nc-col nc-col-right">
+
+      <div class="h b">DRUG-INDUCED GINGIVAL HYPERPLASIA</div>
+      <strong>Onset 1&ndash;3 mo</strong>. Begins <span class="pg b">interdental papillae</span> &rarr; spreads. Anterior/facial worst. Severe: covers crowns, interferes w/ speech/mastication. Edentulous spared (unless dentures/implants).
+
+      <table>
+        <tr><th>Class</th><th>%</th><th>Drug</th></tr>
+        <tr><td>Anticonvulsant</td><td>~50</td><td class="r"><strong>phenytoin</strong></td></tr>
+        <tr><td>Immunosuppressant</td><td>25&ndash;70</td><td class="r"><strong>cyclosporine</strong></td></tr>
+        <tr><td>CCB</td><td>6&ndash;25</td><td>nifedipine, amlodipine</td></tr>
+      </table>
+
+      &bull; <strong>Lower risk CCB</strong>: verapamil, felodipine; <strong>ACE/ARB safer</strong><br>
+      &bull; Cyclosporine + nifedipine = <span class="r"><strong>synergistic</strong></span><br>
+      &bull; <strong>RF</strong>: plaque, M (3&times;), &lt;40 yo (children/adolescents highest risk), higher dose, smoking
+
+      <div class="s b">Tx</div>
+      1. <span class="hl"><strong>Plaque control = most important</strong></span>; <strong>professional prophylaxis/SRP</strong>; CHX 0.12% BID&ndash;TID 5 min<br>
+      2. <strong>Azithromycin 500 mg QD &times;3 d</strong> OR <strong>metronidazole 250 mg TID &times;7 d</strong> (esp cyclosporine); folic acid 0.5 mg QD prevention<br>
+      3. Drug substitution (nifedipine &rarr; felodipine or &rarr; ACE/ARB) &mdash; regress 6&ndash;12 mo<br>
+      4. Gingivectomy (scalpel/laser) &mdash; <strong>35% recur in 18 mo</strong>
+
+      <div class="sep"></div>
+
+      <div class="h b">ALLERGIC RXNS IN DENTISTRY</div>
+      <strong>LA allergy &lt;1% (rarely true)</strong>. 50M US have allergies.
+
+      <table>
+        <tr><th>Type</th><th>Mech</th><th>Timing</th><th>Examples</th></tr>
+        <tr><td><strong>I (immediate)</strong></td><td>IgE</td><td>min&ndash;hrs</td><td>latex, PCN, CHX</td></tr>
+        <tr><td><strong>IV (delayed)</strong></td><td>T-cell</td><td>24&ndash;72 h</td><td>metals (Ni/Cr/Co), acrylate, amalgam, flavorings</td></tr>
+        <tr><td>Pseudoallergic</td><td>non-immune mast</td><td>variable</td><td>LA bisulfites</td></tr>
+      </table>
+
+      <div class="s b">Type IV oral presentations</div>
+      &bull; <strong>Oral lichenoid rxn (most common)</strong>: white striae/erosions/erythema <strong>adj to restoration</strong><br>
+      &bull; Allergic contact stomatitis: diffuse erythema, burning, ulcer<br>
+      &bull; Allergic contact cheilitis: lip inflammation/scaling/<strong>fissuring</strong><br>
+      &bull; <strong>Plasma cell gingivitis</strong>: diffuse ging erythema/edema (often <strong>cinnamon</strong>)
+
+      <div class="s b">Dx</div>
+      Hx + <span class="pg b">patch test (Type IV gold std)</span>; results must correlate (+test alone &ne; causation)
+
+      <div class="s b">Mgmt</div>
+      &bull; Lichenoid &rarr; replace restoration + top steroid<br>
+      &bull; Contact &rarr; eliminate allergen + steroid/tacrolimus<br>
+      &bull; Latex &rarr; latex-free gloves, rubber dams<br>
+      &bull; LA &rarr; refer allergist, preservative-free<br>
+      &bull; <strong>PCG &rarr; eliminate cinnamaldehyde + benzoates</strong> + patch test + steroid; <span class="hl">cinnamon/benzoate-free diet helps 70%</span>
+
+      <div class="sep"></div>
+
+      <div class="h b">TRANSIENT LINGUAL PAPILLITIS (&ldquo;lie bumps&rdquo;)</div>
+      Self-limited inflam of fungiform papillae. Tip/dorsolat tongue. <strong>2&ndash;15 d</strong> (mean 7).
+      <br>
+      Triggers: trauma, stress, food, ?virus, GI, hormone, URI, <span class="hl">contact hypersensitivity to foods, drinks, oral hygiene products</span>
+      <br>
+      <strong>Variants</strong>: Localized (1&ndash;few, F &gt; M, hrs&ndash;days) / Generalized eruptive (multi + fever/LAD/hypersalivation, ~7 d) / Papulokeratotic (multifocal asx w/ keratotic cap, chronic = friction hyperkeratosis?)
+      <br>
+      Tx: reassure; benzocaine; top steroid; cold
+
+    </div><!-- /col-right -->
+  </div><!-- /nc-cols -->
+</div><!-- /nc-card -->
+
+
+<!-- ════════════════════════════════════════ -->
+<!-- SIDE B — PART 2                         -->
+<!-- ════════════════════════════════════════ -->
+<div class="nc-label">Side B &mdash; Part 2</div>
+<div class="nc-card">
+  <div class="nc-card-title">Immune-Mediated &amp; Dermatologic Diseases &mdash; Part 2 (OLP &bull; MMP &bull; PV &bull; EM/RIME &bull; SJS/TEN &bull; PNP/PAMS &bull; Quick Compare)</div>
+  <div class="nc-cols">
+
+    <!-- ──── LEFT COLUMN ──── -->
+    <div class="nc-col nc-col-left">
+
+      <div class="h p">ORAL LICHEN PLANUS (OLP)</div>
+      Chronic T-cell mucocutaneous, auto-inflam. Prev 0.1&ndash;2.2%; <strong>F:M 3:2</strong>; middle age.
+      <br>
+      <span class="hl"><strong>Pathognomonic</strong>: bilateral posterior buccal muc + vent tongue + <strong>Wickham striae</strong>.</span>
+
+      <table>
+        <tr><th>Form</th><th>Features</th></tr>
+        <tr><td><strong>Reticular</strong></td><td>Bilat symmetric lacy lines; asx; waxes/wanes</td></tr>
+        <tr><td><strong>Erosive</strong></td><td>Atrophic/eryth &plusmn; ulcer w/ peripheral striae; <strong>painful</strong>; desquamative gingivitis; refractory</td></tr>
+      </table>
+
+      Skin: <span class="pg p">purple polygonal pruritic papules</span> wrist/ankle (more typical genitals)
+      <br>
+      ~50% cutaneous LP have oral
+      <br>
+      Assoc: thyroid, meds
+
+      <div class="s p">Dysplasia&ndash;OLP pitfall</div>
+      <table>
+        <tr><th></th><th>True OLP</th><th>Dysplasia w/ lichenoid</th></tr>
+        <tr><td>Distribution</td><td>Bilat symmetric</td><td>Unilateral/asymmetric</td></tr>
+        <tr><td>Site</td><td>Post buccal/vent tongue</td><td class="r"><strong>High-risk: tongue/FOM/soft palate</strong></td></tr>
+        <tr><td>Architecture</td><td>No atypia</td><td>Bulbous rete pegs, loss of stratification</td></tr>
+        <tr><td>Behavior</td><td>Waxes/wanes</td><td>Progressive</td></tr>
+      </table>
+
+      <div class="s p">Tx</div>
+      &bull; Asx reticular: no tx, annual FU<br>
+      &bull; Symptomatic: <strong>clobetasol 0.05% gel BID&ndash;TID</strong>; fluocinonide 0.05% gel BID&ndash;TID; dex 0.5 mg/5 mL 5 min QID; <strong>tacrolimus 0.1% oint</strong> (vermilion) BID&ndash;TID<br>
+      &bull; Refractory: refer OM; systemic steroids; doxycycline, cyclosporine, MTX, MMF<br>
+      &bull; Bx if atypical/unilateral/high-risk site<br>
+      &bull; FU: annual classic; <strong>q3&ndash;6 mo erosive</strong><br>
+      &bull; <span class="r"><strong>Monitor candidiasis</strong> (iatrogenic)</span><br>
+      &bull; If dysp + lichenoid &rarr; tx as <strong>dysplasia</strong>
+
+      <div class="sep"></div>
+
+      <div class="h p">MUCOUS MEMBRANE PEMPHIGOID (MMP)</div>
+      Autoimmune <strong>subepithelial</strong> blistering. Abs to BMZ (BP180, BP230, type VII collagen, <span class="pg p">laminin 332</span>).
+      <br>
+      Incidence 2/million/yr; <strong>age 60&ndash;65</strong>; F slight
+      <br>
+      <span class="hl"><strong>Nikolsky NEGATIVE</strong></span> (subepithelial = harder to shear). <em>Not done routinely orally</em> (traumatic, low yield).
+
+      <div class="s p">Sites</div>
+      &bull; <strong>Oral 85%</strong>: desquamative gingivitis, erosions, intact bullae rare; <em>may heal w/o scarring</em><br>
+      &bull; <strong>Conjunctiva 61&ndash;70%</strong>: burning/dryness/FB sensation &rarr; symblepharon, trichiasis &rarr; <span class="r"><strong>BLINDNESS</strong></span><br>
+      &bull; Skin 25&ndash;30%: tense bullae<br>
+      &bull; Nasal 20&ndash;40%: crusting, epistaxis<br>
+      &bull; Laryngeal 5&ndash;10% (airway risk)
+
+      <div class="s p">Dx</div>
+      Bx <strong>perilesional</strong>; H&amp;E (formalin) + <span class="pg p">DIF (Michel solution)</span>. DIF = <strong>linear IgG/IgA/C3 at BMZ</strong>. IIF salt-split skin; ELISA BP180/BP230. <span class="r"><strong>Anti-laminin 332 &rarr; 25% have malignancy (adenoCA)</strong></span>.
+      <br>
+      <strong>&ldquo;PemphigoiD lives DEEP&rdquo;</strong>
+
+      <div class="s p">Risk</div>
+      Low = oral &plusmn; skin only / High = ANY other mucosa
+
+      <div class="s p">Tx</div>
+      &bull; Oral only: clobetasol gel, dex rinse &plusmn; <strong>dapsone 50&ndash;100 mg/d</strong>; escalate: add prednisone 0.5 mg/kg/d &rarr; azathioprine or mycophenolate<br>
+      &bull; Ocular/high-risk: <strong>prednisone 1&ndash;1.5 mg/kg + dapsone or MMF</strong>; cyclophosphamide/rituximab/IVIG refractory
+      <br><br>
+      <span class="r"><strong>REFER ALL TO OPHTHO</strong> even if asx &mdash; scarring irreversible</span>
+
+      <div class="sep"></div>
+
+      <div class="h p">PEMPHIGUS VULGARIS (PV)</div>
+      Autoimmune <strong>intraepithelial</strong> blistering &mdash; <span class="pg p">anti-desmoglein</span>. Ragged painful erosions on <strong>all oral surfaces</strong>; <strong>intact blisters rare</strong> (rupture immediately).
+      <br>
+      <span class="hl"><strong>Nikolsky POSITIVE</strong></span>
+      <br>
+      <strong>&gt;50% present orally first</strong> &mdash; <strong>dentist often sees first</strong>
+      <br>
+      Oral can precede skin by mo&ndash;1+ yr
+      <br>
+      Skin (variable): <em>flaccid bullae rupture quickly</em>
+      <br>
+      Bx <strong>perilesional</strong> + Michel&rsquo;s
+      <br>
+      DIF: <span class="pg p"><strong>&ldquo;chicken wire&rdquo; intercellular IgG</strong></span>
+      <br>
+      <span class="hl"><strong>Early diagnosis = easier treatment = lives saved</strong></span>
+
+      <div class="s p">Serology (DSG1/DSG3 ELISA) &mdash; &ldquo;Pegasus flies through clouds&rdquo;</div>
+      <table>
+        <tr><th>Type</th><th>Anti-Dsg</th><th>Sites</th></tr>
+        <tr><td>Mucosal-dominant PV</td><td><strong>Dsg3 only</strong></td><td>Oral only</td></tr>
+        <tr><td>Mucocutaneous PV</td><td><strong>Dsg3 + Dsg1</strong></td><td>Oral + skin</td></tr>
+        <tr><td>Foliaceus</td><td><strong>Dsg1 only</strong></td><td>Skin only, <strong>NO oral</strong></td></tr>
+      </table>
+
+    </div><!-- /col-left -->
+
+    <!-- ──── RIGHT COLUMN ──── -->
+    <div class="nc-col nc-col-right">
+
+      <div class="s p">PDAI severity</div>
+      &bull; <strong>Mild &lt;15</strong> (oral only): <span class="hl">get OM on board</span>; clobetasol 0.05% gel under gauze 20 min BID&ndash;TID; dex 0.5 mg/5 mL 5 min BID&ndash;TID<br>
+      &bull; <strong>Mod 15&ndash;45</strong>: rituximab + <strong>prednisone 0.5 mg/kg</strong> &mdash; derm STAT<br>
+      &bull; <strong>Severe &gt;45</strong>: rituximab + <strong>prednisone 1&ndash;1.5 mg/kg</strong> &mdash; ED time
+      <br><br>
+      <span class="r">Bx <strong>BEFORE</strong> tx; apply non-bx areas immediately, bx area 5&ndash;7 d after</span>
+
+      <div class="sep"></div>
+
+      <div class="h p">EM vs RIME</div>
+      <table>
+        <tr><th></th><th>EM</th><th>RIME</th></tr>
+        <tr><td>Skin</td><td><strong>Target lesions (3 rings) acral</strong></td><td>Minimal/absent</td></tr>
+        <tr><td>Mucosa</td><td>Variable</td><td><strong>Always prominent</strong> (oral/ocular/genital)</td></tr>
+        <tr><td>Trigger</td><td><strong>HSV ~70%</strong></td><td><strong>Mycoplasma + other resp</strong></td></tr>
+        <tr><td>Pt</td><td>Young adults</td><td>Kids/teens</td></tr>
+      </table>
+
+      <span class="hl"><strong>90% infection-triggered = good prog</strong></span> (vs SJS/TEN drug-triggered = fatal)
+
+      <div class="s p">Dx</div>
+      HSV PCR swab; Mycoplasma IgM + throat PCR + CXR; resp viral panel
+      <br>
+      <strong>Triggers</strong>: HSV, Mycoplasma, adeno, flu, COVID, entero, EBV, Chlamydia
+
+      <div class="s p">Tx supportive</div>
+      &bull; Lidocaine 2% before meals; magic mouthwash q4h; Orabase<br>
+      &bull; Dex 0.5 mg/5 mL 5 min TID&ndash;QID; fluocinonide 0.05% gel 20 min TID&ndash;QID<br>
+      &bull; <strong>Sucralfate 1 g/10 mL</strong> 5 min TID&ndash;QID<br>
+      &bull; Soft cool foods, hydrate<br>
+      &bull; Mycoplasma: <strong>azithro 500 mg d1 &rarr; 250 mg d2&ndash;5</strong><br>
+      &bull; Hospitalize if can&rsquo;t eat; systemic steroids refractory<br>
+      &bull; <strong>Recurrent EM prophylaxis</strong>: <span class="pg p">valacyclovir 500 mg BID &ge;6 mo, then taper</span>
+
+      <div class="sep"></div>
+
+      <div class="h r">SJS/TEN</div>
+      <table>
+        <tr><th></th><th>EM/RIME</th><th>SJS/TEN</th></tr>
+        <tr><td>Trigger</td><td>Infection</td><td class="r"><strong>Drugs ~85%</strong></td></tr>
+        <tr><td>Skin</td><td>Target acral</td><td><strong>Flat macules &rarr; bullae &rarr; sloughing TRUNK</strong></td></tr>
+        <tr><td>Mucosa</td><td>Variable</td><td><strong>~100%</strong></td></tr>
+        <tr><td>Prognosis</td><td>Self-limit</td><td class="r"><strong>SJS 1&ndash;5% / TEN 25&ndash;50% mortality</strong></td></tr>
+      </table>
+
+      <strong>BSA</strong>: SJS &lt;10% / overlap 10&ndash;30% / TEN &gt;30%
+
+      <div class="s r">High-risk drugs (board favorite)</div>
+      &bull; Abx: <strong>sulfonamides (TMP-SMX)</strong>, &beta;-lactams, fluoroquinolones<br>
+      &bull; Anticonvulsants: <strong>carbamazepine, phenytoin, lamotrigine</strong>, phenobarbital<br>
+      &bull; <span class="pg r"><strong>Allopurinol</strong></span> (highest abs risk per new user)<br>
+      &bull; NSAIDs (esp <strong>etoricoxib</strong> COX-2)<br>
+      &bull; <strong>Onset 1&ndash;3 wk after new med</strong>
+
+      <div class="s r">Clinical</div>
+      Prodrome (fever/malaise/sore throat) &rarr; eryth macules trunk &rarr; flaccid bullae &rarr; &ldquo;scalded&rdquo; + diffuse oral erosions + hemorrhagic lip crust + conjunctivitis (<strong>50% perm scarring</strong>). <strong>Nikolsky +</strong>.
+
+      <div class="s r">SCORTEN</div>
+      (1 pt each): age &ge;40 / malignancy / HR &gt;120 / <strong>BSA &gt;10%</strong> / BUN &gt;28 / glucose &gt;252 / bicarb &lt;20
+      <br>
+      0&ndash;1 = 3% / 2 = 12% / 3 = 35% / 4 = 58% / <span class="r"><strong>&ge;5 = 90%</strong></span>
+
+      <div class="s r">Dentist role</div>
+      Recognize &rarr; <span class="hl"><strong>STOP DRUG</strong></span> &rarr; refer <strong>ED/burn unit</strong> &rarr; document meds + start dates. Do NOT manage in dental office.
+      <br>
+      <strong>Supportive</strong>: magic mouthwash, lido 2%, <strong>CHX 0.12%</strong>, <strong>petroleum jelly to lips</strong> (frequent, prevent adhesions), gentle supragingival cleaning, saline irrigation to soften crusts. <span class="r"><strong>AVOID</strong>: aggressive debridement, sulfonamides</span>
+
+      <div class="sep"></div>
+
+      <div class="h p">PNP / PAMS</div>
+      Rare (<strong>~500 reported</strong>), <strong>always w/ neoplasm</strong> (known or occult). <strong>PAMS = preferred term</strong> (affects multiple organs, not just skin). Mortality <strong>60&ndash;90%</strong>, most die in 1st yr. <strong>Oral first sign in 45%</strong> &mdash; may precede cancer dx. <strong>Oral lesions are first to show and last to go.</strong>
+
+      <div class="s p">5 phenotypes</div>
+      Lichen planus-like, pemphigus-like (classic), pemphigoid-like, EM-like, GVHD-like
+
+      <div class="s p">Assoc malignancy</div>
+      <strong>NHL ~40%</strong>, CLL ~20%, <strong>Castleman ~18%</strong> (Asia, benign but triggers PNP), thymoma, solid tumors ~16%
+
+      <div class="s p">Features</div>
+      &bull; <strong>Oral ~100%</strong>: severe <strong>intractable</strong> stomatitis, painful tongue ulcers (<em>more common than PV</em>), <strong>lip erosions to vermilion + hemorrhagic crusting</strong> (SJS-like), pharyngeal/laryngeal/esoph<br>
+      &bull; <strong>Other mucosal</strong>: genital (erosions/ulcers), nasal (crusting/erosions), GI tract<br>
+      &bull; Skin: polymorphous (mimics PV/BP/EM/LP/GVHD); <strong>palmar/plantar bullae uncommon in PV = distinguishing</strong><br>
+      &bull; <strong>Ocular 41&ndash;70%</strong>: cicatrizing conjunctivitis; <strong>symblepharon, fornix shortening</strong>, vision impairment<br>
+      &bull; <span class="r"><strong>Resp = MAJOR COD</strong></span>: bronchiolitis obliterans (autoabs vs resp epithelium; progressive dyspnea, cough; 6% Eur / 20% Japan / <strong>70% peds</strong>, more w/ Castleman) &mdash; often irreversible
+
+      <div class="s p">3 Causes of Death</div>
+      Underlying malignancy &bull; bronchiolitis obliterans &bull; sepsis from immunosuppression
+
+      <div class="s p">2021 Criteria</div>
+      Need all 3 major OR 2 maj + 2 min:
+      <br>
+      <strong>Major</strong>: mucosal lesions &plusmn; cutaneous / neoplasm / <strong>anti-plakin Abs</strong>
+      <br>
+      <strong>Minor</strong>: acantholysis &plusmn; lichenoid histo / DIF intercellular &plusmn; BMZ
+
+      <div class="s p">Prognosis</div>
+      <strong>Rituximab less effective</strong> than for PV. Better prog: Castleman (resectable), lichenoid pattern, oral-only initial.
+
+      <div class="s p">Dentist role</div>
+      Recognize &rarr; refer OM/derm/onc &rarr; <span class="hl"><strong>trigger cancer workup</strong></span> (PNP may be 1st sign of occult malignancy)
+      <br>
+      <strong>Supportive</strong>: dex 0.5 mg/5 mL, clobetasol/fluocinonide 0.05%, magic mouthwash, lido 2%, CHX 0.12%, lanolin or petroleum jelly, nutrition referral. <strong>Avoid crunchy / spicy / acidic / hot foods.</strong>
+
+      <div class="sep"></div>
+
+      <div class="h k">QUICK COMPARE &mdash; BLISTERING DZ</div>
+      <table>
+        <tr><th></th><th>MMP</th><th>PV</th><th>PNP</th></tr>
+        <tr><td>Level</td><td>Sub-epi</td><td>Intra-epi</td><td>Intra-epi</td></tr>
+        <tr><td>Nikolsky</td><td class="g"><strong>&minus;</strong></td><td class="r"><strong>+</strong></td><td class="r">+</td></tr>
+        <tr><td>DIF</td><td>Linear BMZ (IgG/A/C3)</td><td><strong>Chicken wire</strong> intercell IgG</td><td>Intercell + BMZ</td></tr>
+        <tr><td>Target</td><td>BP180/230, lam332</td><td><strong>Dsg3 &plusmn; Dsg1</strong></td><td>Plakins</td></tr>
+        <tr><td>Onset age</td><td>60&ndash;65</td><td>middle-age+</td><td>any (w/ CA)</td></tr>
+        <tr><td>Key</td><td>Ophtho referral; lam332 &rarr; CA</td><td>Oral first 50%+</td><td>Always w/ neoplasm; PAMS</td></tr>
+      </table>
+
+    </div><!-- /col-right -->
+  </div><!-- /nc-cols -->
+
+  <div class="btm">
+    <strong>Mnemonics</strong>: <span class="hl">PemphigoiD lives DEEP</span> (sub-epi, BMZ) &middot; <span class="hl">Pegasus flies through clouds</span> (Dsg1=skin/clouds, Dsg3=mucosa/ground) &middot; <span class="hl">3 D's</span> for Geographic Tongue (Depapillated, Demarcated, Dynamic).
+    <br>
+    <strong>Stop-the-drug pearls</strong>: SJS/TEN onset 1&ndash;3 wk after new med; allopurinol = highest risk per new user; sulfonamides + anticonvulsants + COX-2 etoricoxib are high-yield culprits.
+    <br>
+    <strong>Always-refer triad</strong>: MMP &rarr; ophtho (asx scarring &rarr; blindness) &middot; PV &rarr; derm STAT if PDAI 15&ndash;45, ED if &gt;45 &middot; PNP &rarr; oncology cancer workup.
+  </div>
+
+</div><!-- /nc-card -->
+
+</div><!-- /nc -->
+
+<div class="guide-footer">
+  OD 531 Oral Medicine &mdash; Notecard v4 Immuno-2 &mdash; Henderson 01/23/2026
+</div>
+
+</body>
+</html>
