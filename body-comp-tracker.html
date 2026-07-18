@@ -8771,7 +8771,8 @@
         }
 
         function formatNumber(num) {
-            return num.toLocaleString();
+            if (num === null || num === undefined || isNaN(num)) return '0';
+            return Number(num).toLocaleString();
         }
 
         // FIX: Escape HTML to prevent XSS in user input
@@ -9178,7 +9179,14 @@
          * @returns {number} Deficit (positive = under TDEE, negative = over)
          */
         function getDeficitForDate(dateStr) {
+            // Defensive: currently unused. Mirror the effective-deficit rule so an
+            // untracked day never produces a phantom full-TDEE deficit if this is
+            // ever wired into an aggregator. Use getEffectiveDeficit for aggregation.
+            const log = state.dailyLogs?.[dateStr];
+            if (log) return getEffectiveDeficit(log);
             const totals = getTotalsForDate(dateStr);
+            const nutritionTracked = (totals.calories || 0) > 0 || (totals.protein || 0) > 0 || (totals.mealCount || 0) > 0;
+            if (!nutritionTracked) return null;
             const tdee = getTDEEForDate(dateStr);
             return tdee - totals.calories;
         }
@@ -9442,6 +9450,21 @@
             }
             saveState();
             try { renderUnresolvedBanner(); } catch (e) { /* pre-DOM call */ }
+        }
+
+        // A weigh-in add/edit/delete changes the weight used for every historical
+        // day from that date until the NEXT remaining weigh-in (or yesterday). Those
+        // days' stored TDEE/deficit must be recomputed or they keep a stale value.
+        // No-op for today/future dates — today's targets refresh live.
+        function recalcAfterWeighInChange(changedDate) {
+            if (!changedDate || changedDate >= getLocalDateString()) return;
+            const nextDate = getValues(state.weighIns)
+                .map(w => w.date)
+                .filter(dateStr => dateStr > changedDate)
+                .sort()[0] || getLocalDateString();
+            const affectedDays = Math.max(0, Math.round(
+                (parseLocalDate(nextDate) - parseLocalDate(changedDate)) / 86400000) - 1);
+            recalcDateAndDependents(changedDate, affectedDays);
         }
 
         /**
@@ -9968,7 +9991,9 @@
         function renderDashboard() {
             const mode = state.today.mode || 'GREEN';
             const modeDisplay = getModeDisplay(mode);
-            const targets = state.today.targets;
+            // Fallback prevents a hard crash of the whole dashboard when targets
+            // haven't been computed yet (e.g. before autoStartDay on a fresh day).
+            const targets = state.today.targets || { calories: 2000, protein: 172, carbs: 150, floor: 1900 };
             const totals = getTodayTotals();
             const currentDeficit = getCurrentDeficit();
 
@@ -10001,7 +10026,7 @@
             const multiplier = ACTIVITY_MULTIPLIERS[activityLevel] || 1.2;
             const baseTDEE = Math.round(bmr * multiplier);
             // FIX: Use calculateTDEE() which includes activity multiplier (was bmr + avg, missing multiplier)
-            const tdee = calculateTDEE(state.profile.currentWeight_lbs, state.profile.height_cm, state.profile.age, state.today.activeCalories);
+            const tdee = calculateTDEE(state.profile.currentWeight_lbs, state.profile.height_cm, state.profile.age, state.today.date);
             const tdeeBreakdown = document.getElementById('tdeeBreakdown');
             if (tdeeBreakdown) {
                 tdeeBreakdown.innerHTML = `
@@ -10134,7 +10159,7 @@
 
             // Update burn summary (TDEE / Deficit)
             // FIXED: Use calculateTDEE() which includes activity multiplier (was using bmr + active directly)
-            const tdee = calculateTDEE(state.profile.currentWeight_lbs, state.profile.height_cm, state.profile.age, state.today.activeCalories);
+            const tdee = calculateTDEE(state.profile.currentWeight_lbs, state.profile.height_cm, state.profile.age, state.today.date);
             const deficit = tdee - totals.calories;
 
             const simpleTDEE = document.getElementById('simpleTDEE');
@@ -10281,6 +10306,14 @@
                 'YELLOW': { emoji: '🟡', label: 'YELLOW MODE', class: 'yellow' },
                 'ORANGE': { emoji: '🟠', label: 'ORANGE MODE', class: 'orange' }
             };
+            // FIX: `mode` was never declared here — renderSimpleView threw
+            // `ReferenceError: mode is not defined` on EVERY call, aborting before
+            // renderSimpleMealList() so the meal list/count never refreshed (showed
+            // "0 meals") even though the deficit/eaten (rendered earlier) updated.
+            const mode = state.today?.mode
+                || (state.today?.sleepHours != null
+                    ? calculateMode(state.today.sleepHours, state.today.isBrainDay)
+                    : 'GREEN');
             const mc = modeConfig[mode] || modeConfig['GREEN'];
             // Focus mode: show plain text without emoji/color
             if (state.settings?.focusMode) {
@@ -12330,6 +12363,11 @@
                 return;
             }
 
+            if (newDate && newDate > todayStr) {
+                showToast('Cannot set a future date');
+                return;
+            }
+
             // Get original meal
             let originalMeal;
             if (originalDateStr === todayStr) {
@@ -12380,9 +12418,7 @@
 
                 // Add to new location
                 if (newDate === todayStr) {
-                    if (!state.today.meals || Array.isArray(state.today.meals)) {
-                        state.today.meals = {};
-                    }
+                    state.today.meals = migrateArrayToObject(state.today.meals, 'meal');
                     state.today.meals[mealId] = updatedMeal;
                     saveDayLog();
                     renderMealsList();
@@ -12656,6 +12692,11 @@
                 return;
             }
 
+            if (newDate && newDate > todayStr) {
+                showToast('Cannot set a future date');
+                return;
+            }
+
             // Get original workout
             let originalWorkout;
             if (originalDateStr === todayStr) {
@@ -12718,9 +12759,7 @@
 
                 // Add to new location
                 if (newDate === todayStr) {
-                    if (!state.today.workouts || Array.isArray(state.today.workouts)) {
-                        state.today.workouts = {};
-                    }
+                    state.today.workouts = migrateArrayToObject(state.today.workouts, 'workout');
                     state.today.workouts[workoutId] = updatedWorkout;
                     state.today.workedOut = true;
                     state.today.activeCalories = (state.today.activeCalories || 0) + newCalories;
@@ -12944,9 +12983,7 @@ MEAL|Protein Shake|160|30|5|2"></textarea>
 
                 // Add to appropriate location
                 if (importTargetDate === todayStr) {
-                    if (!state.today.meals || Array.isArray(state.today.meals)) {
-                        state.today.meals = {};
-                    }
+                    state.today.meals = migrateArrayToObject(state.today.meals, 'meal');
                     state.today.meals[meal.id] = meal;
                 } else {
                     if (!state.dailyLogs[importTargetDate]) {
@@ -13081,9 +13118,7 @@ WORKOUT|Walk|20|80|07:00"></textarea>
 
                 // Add to appropriate location
                 if (importTargetDate === todayStr) {
-                    if (!state.today.workouts || Array.isArray(state.today.workouts)) {
-                        state.today.workouts = {};
-                    }
+                    state.today.workouts = migrateArrayToObject(state.today.workouts, 'workout');
                     state.today.workouts[workout.id] = workout;
                     totalCalories += workout.calories;
                 } else {
@@ -13296,12 +13331,32 @@ WORKOUT|Walk|20|80|07:00"></textarea>
             openQtySelector(foodId);
         }
 
+        // Read + commit the quick-log date picker at SUBMIT time. iOS Safari does
+        // not reliably fire the date input's onchange when a food button / recent
+        // chip / "Add Pasted" is tapped while the date wheel is still open — so
+        // trusting the onchange-set `pendingMealDate` silently backdates the entry
+        // to today (the "backadding gets bugged up" bug). blur() forces iOS to
+        // commit, we read the input value directly, and cache it into
+        // pendingMealDate so the qty-selector sub-modal (which reads it later) is
+        // correct even if the input is no longer reachable.
+        function commitQuickMealDate() {
+            const today = getLocalDateString();
+            const el = document.getElementById('quickMealDateInput');
+            if (el) {
+                el.blur();
+                pendingMealDate = (el.value && el.value !== today) ? el.value : null;
+            }
+            // Never let a future date slip through (max= is only a soft UI hint)
+            if (pendingMealDate && pendingMealDate > today) pendingMealDate = null;
+            return pendingMealDate || today;
+        }
+
         function repeatMeal(mealId) {
             const originalMeal = state.today.meals[mealId];
             if (!originalMeal) return;
 
             const today = getLocalDateString();
-            const targetDate = pendingMealDate || today;
+            const targetDate = commitQuickMealDate();
             const isForToday = targetDate === today;
 
             const newMealId = generateId('meal');
@@ -13356,7 +13411,7 @@ WORKOUT|Walk|20|80|07:00"></textarea>
             }
 
             const today = getLocalDateString();
-            const targetDate = pendingMealDate || today;
+            const targetDate = commitQuickMealDate();
             const isForToday = targetDate === today;
 
             const lines = text.split('\n').filter(line => line.trim());
@@ -13364,8 +13419,12 @@ WORKOUT|Walk|20|80|07:00"></textarea>
 
             for (const line of lines) {
                 // Format: MEAL|Name|Calories|Protein|Carbs|Fat
-                if (line.startsWith('MEAL|')) {
-                    const parts = line.split('|');
+                // Trim + case-insensitive prefix so pasted lines with leading
+                // whitespace or lowercase "meal|" still parse. Split the trimmed
+                // line so the meal name keeps its original casing.
+                const trimmedLine = line.trim();
+                if (trimmedLine.toUpperCase().startsWith('MEAL|')) {
+                    const parts = trimmedLine.split('|');
                     if (parts.length >= 4) {
                         const mealId = generateId('meal');
                         const meal = {
@@ -13436,6 +13495,10 @@ WORKOUT|Walk|20|80|07:00"></textarea>
 
             selectedFoodForQty = food;
             currentQty = 1;
+
+            // Capture the chosen date NOW while #quickMealDateInput is still in the
+            // DOM — the qty-selector sub-modal reads pendingMealDate at confirm time.
+            commitQuickMealDate();
 
             let modal = document.getElementById('qtySelectorModal');
             if (!modal) {
@@ -13526,7 +13589,7 @@ WORKOUT|Walk|20|80|07:00"></textarea>
             const food = selectedFoodForQty;
             const mealId = generateId('meal');
             const today = getLocalDateString();
-            const targetDate = pendingMealDate || today;
+            const targetDate = commitQuickMealDate();
             const isForToday = targetDate === today;
 
             const meal = {
@@ -14382,7 +14445,10 @@ WORKOUT|Walk|20|80|07:00"></textarea>
             const current = latest.weight;  // FIX: was weight_lbs
             const lost = start - current;
             const remaining = current - goal;
-            const progressPercent = Math.round((lost / (start - goal)) * 100);
+            // Guard div-by-zero when start === goal (or goal above start): the
+            // percent is undefined, so show 0 rather than NaN/Infinity.
+            const lossRange = start - goal;
+            const progressPercent = lossRange > 0 ? Math.round((lost / lossRange) * 100) : 0;
 
             // Calculate rate
             let weeklyRate = 0;
@@ -14519,15 +14585,7 @@ WORKOUT|Walk|20|80|07:00"></textarea>
 
             // A backdated weight changes every historical TDEE until the next
             // weigh-in (or yesterday when there is no later measurement).
-            if (weighInDate < getLocalDateString()) {
-                const nextDate = getValues(state.weighIns)
-                    .map(w => w.date)
-                    .filter(dateStr => dateStr > weighInDate)
-                    .sort()[0] || getLocalDateString();
-                const affectedDays = Math.max(0, Math.round(
-                    (parseLocalDate(nextDate) - parseLocalDate(weighInDate)) / 86400000) - 1);
-                recalcDateAndDependents(weighInDate, affectedDays);
-            }
+            recalcAfterWeighInChange(weighInDate);
 
             refreshTodayTargets();
             saveState();
@@ -15058,9 +15116,9 @@ TDEE TODAY: ~${formatNumber(calculateTDEE(state.profile.currentWeight_lbs, state
             let flagsHtml = '';
             const flags = [];
             if (weekData.totals.daysLogged < 5) flags.push('Low tracking consistency');
-            if (avgProtein < 130 && weekData.totals.daysLogged > 0) flags.push('Protein below target');
+            if (avgProtein < 130 && nutritionDays > 0) flags.push('Protein below target');
             if (avgSleep !== '--' && parseFloat(avgSleep) < 6) flags.push('Sleep debt accumulating');
-            if (weekData.totals.deficit < 2500 && weekData.totals.daysLogged >= 5) flags.push('Deficit below fat loss pace');
+            if (weekData.totals.deficit < 2500 && nutritionDays >= 5) flags.push('Deficit below fat loss pace');
             if (weekData.totals.workouts < 3) flags.push('Consider adding workouts');
 
             if (flags.length > 0) {
@@ -15150,9 +15208,9 @@ TDEE TODAY: ~${formatNumber(calculateTDEE(state.profile.currentWeight_lbs, state
             // Flags
             const flags = [];
             if (weekData.totals.daysLogged < 5) flags.push('LOW_TRACKING');
-            if (avgProtein < 130) flags.push('LOW_PROTEIN');
+            if (avgProtein < 130 && nutritionDays > 0) flags.push('LOW_PROTEIN');
             if (parseFloat(avgSleep) < 6 && avgSleep > 0) flags.push('SLEEP_DEBT');
-            if (weekData.totals.deficit < 2500 && weekData.totals.daysLogged >= 5) flags.push('SLOW_PROGRESS');
+            if (weekData.totals.deficit < 2500 && nutritionDays >= 5) flags.push('SLOW_PROGRESS');
             if (weekData.totals.workouts < 3) flags.push('LOW_ACTIVITY');
             if ((state.refeedTracker?.cumulativeDeficit || 0) >= 7000) flags.push('NEEDS_REFEED');
 
@@ -15804,8 +15862,12 @@ TDEE TODAY: ~${formatNumber(calculateTDEE(state.profile.currentWeight_lbs, state
             measurement.id = bcId;
             state.bodyCompHistory[bcId] = measurement;
 
-            // Also save as a weigh-in
-            const wiId = generateId('wi');
+            // Also save as a weigh-in — reuse today's weigh-in if one exists (no dupes)
+            if (!state.weighIns || Array.isArray(state.weighIns)) {
+                state.weighIns = migrateArrayToObject(state.weighIns, 'weighin');
+            }
+            const existingWi = getValues(state.weighIns).find(w => w.date === measurement.date);
+            const wiId = existingWi ? existingWi.id : generateId('wi');
             state.weighIns[wiId] = {
                 id: wiId,
                 date: measurement.date,
@@ -15864,8 +15926,12 @@ TDEE TODAY: ~${formatNumber(calculateTDEE(state.profile.currentWeight_lbs, state
             measurement.id = bcId;
             state.bodyCompHistory[bcId] = measurement;
 
-            // Also save as a weigh-in
-            const wiId = generateId('wi');
+            // Also save as a weigh-in — reuse today's weigh-in if one exists (no dupes)
+            if (!state.weighIns || Array.isArray(state.weighIns)) {
+                state.weighIns = migrateArrayToObject(state.weighIns, 'weighin');
+            }
+            const existingWi = getValues(state.weighIns).find(w => w.date === measurement.date);
+            const wiId = existingWi ? existingWi.id : generateId('wi');
             state.weighIns[wiId] = {
                 id: wiId,
                 date: measurement.date,
@@ -16308,6 +16374,7 @@ TDEE TODAY: ~${formatNumber(calculateTDEE(state.profile.currentWeight_lbs, state
         function saveEditingWeighIn() {
             if (!editingWeighInId) return;
 
+            const oldDate = state.weighIns[editingWeighInId]?.date;
             const newDate = document.getElementById('editWeighInDate').value;
             const newWeight = parseFloat(document.getElementById('editWeighInWeight').value);
             const newBf = document.getElementById('editWeighInBf').value ? parseFloat(document.getElementById('editWeighInBf').value) : null;
@@ -16341,12 +16408,18 @@ TDEE TODAY: ~${formatNumber(calculateTDEE(state.profile.currentWeight_lbs, state
 
             saveState();
 
+            // Editing weight and/or date changes the weight used for historical
+            // days. Recompute the new span, plus the old span when the date moved.
+            recalcAfterWeighInChange(newDate);
+            if (oldDate && oldDate !== newDate) recalcAfterWeighInChange(oldDate);
+
             // Recalculate targets since weight changed
             if (typeof refreshTodayTargets === 'function') refreshTodayTargets();
 
             closeEditWeighInModal();
             renderWeighInHistory();
             renderWeightTrend();
+            renderSimpleView();
             renderProgressTab();
             showToast('✓ Weigh-in updated');
         }
@@ -16354,6 +16427,7 @@ TDEE TODAY: ~${formatNumber(calculateTDEE(state.profile.currentWeight_lbs, state
         function deleteWeighIn(id) {
             if (!confirm('Delete this weigh-in?')) return;
 
+            const deletedDate = state.weighIns[id]?.date;
             delete state.weighIns[id];
 
             // Revert profile weight to most recent remaining weigh-in
@@ -16365,11 +16439,16 @@ TDEE TODAY: ~${formatNumber(calculateTDEE(state.profile.currentWeight_lbs, state
 
             saveState();
 
+            // Removing a backdated weigh-in changes the weight (thus TDEE/deficit)
+            // for every historical day in its span — recompute those stored logs.
+            recalcAfterWeighInChange(deletedDate);
+
             // Recalculate targets since weight changed
             if (typeof refreshTodayTargets === 'function') refreshTodayTargets();
 
             renderWeighInHistory();
             renderWeightTrend();
+            renderSimpleView();
             renderProgressTab();
             showToast('Weigh-in deleted');
         }
@@ -16378,6 +16457,7 @@ TDEE TODAY: ~${formatNumber(calculateTDEE(state.profile.currentWeight_lbs, state
             if (!editingWeighInId) return;
             if (!confirm('Delete this weigh-in?')) return;
 
+            const deletedDate = state.weighIns[editingWeighInId]?.date;
             delete state.weighIns[editingWeighInId];
 
             // Revert profile weight to most recent remaining weigh-in
@@ -16389,12 +16469,17 @@ TDEE TODAY: ~${formatNumber(calculateTDEE(state.profile.currentWeight_lbs, state
 
             saveState();
 
+            // Removing a backdated weigh-in changes the weight (thus TDEE/deficit)
+            // for every historical day in its span — recompute those stored logs.
+            recalcAfterWeighInChange(deletedDate);
+
             // Recalculate targets since weight changed
             if (typeof refreshTodayTargets === 'function') refreshTodayTargets();
 
             closeEditWeighInModal();
             renderWeighInHistory();
             renderWeightTrend();
+            renderSimpleView();
             renderProgressTab();
             showToast('Weigh-in deleted');
         }
@@ -17055,13 +17140,13 @@ TDEE TODAY: ~${formatNumber(calculateTDEE(state.profile.currentWeight_lbs, state
                     // Check if it's a new day
                     const today = getLocalDateString();
                     if (state.today.date && state.today.date !== today) {
-                        // Save yesterday's data to dailyLogs (DEEP COPY to prevent reference bugs)
-                        if (state.today.setupComplete) {
-                            state.dailyLogs[state.today.date] = JSON.parse(JSON.stringify(state.today));
-
-                            // Note: Cumulative deficit is now calculated from dailyLogs, not incremented
-                            // This prevents double-counting from day transitions
-                        }
+                        // Rich-builder snapshot of the finished day (computes
+                        // calories/deficit/status/tdee and preserves resolution fields).
+                        // Replaces a thin raw dump that clobbered a richer existing entry
+                        // and dropped the day's deficit-resolution state on every reopen.
+                        state.today.meals = migrateArrayToObject(state.today.meals, 'meal');
+                        state.today.workouts = migrateArrayToObject(state.today.workouts, 'workout');
+                        saveDayLogWithSnapshot();
 
                         // Reset for new day - MUST include ALL today fields
                         state.today = {
@@ -17258,10 +17343,11 @@ TDEE TODAY: ~${formatNumber(calculateTDEE(state.profile.currentWeight_lbs, state
                         // Check for new day
                         const today = getLocalDateString();
                         if (state.today.date && state.today.date !== today) {
-                            if (state.today.setupComplete) {
-                                // DEEP COPY to prevent reference bugs
-                                state.dailyLogs[state.today.date] = JSON.parse(JSON.stringify(state.today));
-                            }
+                            // Rich-builder snapshot (preserves resolution fields, no thin
+                            // clobber of a richer existing entry).
+                            state.today.meals = migrateArrayToObject(state.today.meals, 'meal');
+                            state.today.workouts = migrateArrayToObject(state.today.workouts, 'workout');
+                            saveDayLogWithSnapshot();
                             // Reset for new day - MUST include ALL today fields
                             state.today = {
                                 date: today,
@@ -17521,8 +17607,9 @@ TDEE TODAY: ~${formatNumber(calculateTDEE(state.profile.currentWeight_lbs, state
                             }
                         },
                         frequentFoods: mergedFrequentFoods,  // Already merged as object
-                        weighIns: migrateArrayToObject(firebaseState.weighIns || state.weighIns, 'weighin'),
-                        bodyCompHistory: migrateArrayToObject(firebaseState.bodyCompHistory || state.bodyCompHistory, 'bodycomp'),
+                        // Union local + cloud so local-only weigh-ins/measurements aren't dropped
+                        weighIns: mergeIdCollections(state.weighIns, firebaseState.weighIns, true, 'weighin'),
+                        bodyCompHistory: mergeIdCollections(state.bodyCompHistory, firebaseState.bodyCompHistory, true, 'bodycomp'),
                         dailyLogs: { ...state.dailyLogs, ...(firebaseState.dailyLogs || {}) },
                         refeedTracker: { ...state.refeedTracker, ...(firebaseState.refeedTracker || {}) },
                         gamification: {
@@ -18060,6 +18147,9 @@ TDEE TODAY: ~${formatNumber(calculateTDEE(state.profile.currentWeight_lbs, state
                 lastUpdated: saveTime
             })
             .then(() => {
+                // Record our own write so the realtime listener doesn't echo it
+                // back as a remote change (it compares data.lastUpdated to this).
+                lastKnownTimestamp = saveTime;
                 safeLocalStorageSet('bodyCompTrackerState', JSON.stringify(state));
                 updateSyncStatus('connected', 'Force uploaded ✓');
                 showToast('⬆️ Force uploaded to cloud');
@@ -18165,12 +18255,26 @@ TDEE TODAY: ~${formatNumber(calculateTDEE(state.profile.currentWeight_lbs, state
 
         let waitingForPin = false;  // Flag to prevent premature initializeUI
 
+        // Set guard flags for offline operation so saves persist to localStorage
+        // when Firebase is unreachable. Mirrors the flag block in skipPin() but
+        // leaves the PIN prompt / overlay alone (callers manage those). Without
+        // this, offline initFirebase branches call initializeUI() with the save
+        // guards still blocking, so nothing the user logs offline ever persists.
+        function enterOfflineMode() {
+            firebaseSyncEnabled = false;
+            pinValidated = true;
+            hasLoadedFromCloud = true;
+            isInitialLoad = false;
+            if (state) state._dataLoaded = true;
+        }
+
         function initFirebase() {
             const fallbackTimer = setTimeout(() => {
                 // Don't initialize UI if we're waiting for PIN input
                 if (!firebaseSyncEnabled && !waitingForPin) {
                     console.warn('Firebase timeout - running in offline mode');
                     updateSyncStatus('offline', 'Offline mode');
+                    enterOfflineMode();
                     initializeUI();
                 }
             }, 3000);
@@ -18187,6 +18291,7 @@ TDEE TODAY: ~${formatNumber(calculateTDEE(state.profile.currentWeight_lbs, state
                         waitingForPin = true;
                         setTimeout(() => promptForPin(), 300);
                     } else {
+                        enterOfflineMode();
                         initializeUI();
                     }
                     return;
@@ -18219,6 +18324,7 @@ TDEE TODAY: ~${formatNumber(calculateTDEE(state.profile.currentWeight_lbs, state
                     waitingForPin = true;
                     setTimeout(() => promptForPin(), 300);
                 } else {
+                    enterOfflineMode();
                     initializeUI();
                 }
             }
@@ -18648,15 +18754,11 @@ TDEE TODAY: ~${formatNumber(calculateTDEE(state.profile.currentWeight_lbs, state
 
         function skipPin() {
             waitingForPin = false;  // Clear the flag
-            firebaseSyncEnabled = false;
             updateSyncStatus('offline', 'Local only');
             showToast('Using offline mode');
 
             // Set guard flags so saves aren't blocked in offline mode
-            pinValidated = true;
-            hasLoadedFromCloud = true;
-            isInitialLoad = false;
-            state._dataLoaded = true;
+            enterOfflineMode();
 
             const overlay = document.getElementById('pinPromptOverlay');
             if (overlay) overlay.remove();
@@ -18963,14 +19065,25 @@ TDEE TODAY: ~${formatNumber(calculateTDEE(state.profile.currentWeight_lbs, state
             if (!state.gamification.badges) state.gamification.badges = {};
             state.gamification.badges[achievementId] = { id: achievementId, unlockedDate: achievement.unlockedDate };
 
-            // Award XP
+            // Award XP — mirror awardXP's level-up detection + XP-bar refresh so an
+            // achievement that crosses a level boundary still triggers the level-up
+            // celebration and repaints the bar. No XP toast here: the achievement
+            // celebration overlay already shows "+X XP", so awardXP's toast would dupe.
+            const oldLevel = getLevelInfo(state.gamification.xp).level;
             state.gamification.xp += achievement.xp;
+            const newLevel = getLevelInfo(state.gamification.xp).level;
 
             // Show celebration
             setTimeout(() => {
                 showCelebration('achievement', achievement);
             }, 300);
+            if (newLevel > oldLevel) {
+                setTimeout(() => {
+                    showCelebration('levelUp', newLevel);
+                }, 800);
+            }
 
+            if (typeof renderXPBar === 'function') renderXPBar();
             saveState();
         }
 
@@ -19212,13 +19325,26 @@ TDEE TODAY: ~${formatNumber(calculateTDEE(state.profile.currentWeight_lbs, state
             const recentWeighIns = weighIns.filter(w => w.date >= threeWeeksAgoStr);
 
             let actualWeeklyLoss = 0;
+            let canComputeLoss = false;
             if (recentWeighIns.length >= 2) {
                 const first = recentWeighIns[0];
                 const last = recentWeighIns[recentWeighIns.length - 1];
                 const days = (parseLocalDate(last.date) - parseLocalDate(first.date)) / (1000 * 60 * 60 * 24);
                 if (days >= 7) {
                     actualWeeklyLoss = ((first.weight - last.weight) / days) * 7;
+                    canComputeLoss = true;
                 }
+            }
+
+            // Without a real ≥7-day span of recent weigh-ins the effective TDEE is
+            // unknowable — leaving actualWeeklyLoss at 0 would fake a large
+            // adaptation gap. Show an honest "need data" state instead of flagging
+            // phantom metabolic slowdown.
+            if (!canComputeLoss) {
+                container.innerHTML = `<div style="background:var(--bg-secondary);border:1px solid var(--border-color);border-radius:14px;padding:18px;">
+                    <div style="font-size:0.82em;color:var(--text-muted);">Need two weigh-ins spanning 7+ days within the last 3 weeks to measure metabolic adaptation. Add a recent weigh-in to unlock this.</div>
+                </div>`;
+                return;
             }
 
             // Actual TDEE derived from weight change
@@ -20487,6 +20613,7 @@ TDEE TODAY: ~${formatNumber(calculateTDEE(state.profile.currentWeight_lbs, state
             let totalProtein = 0;
             let daysOnTrack = 0;
             let daysWithData = 0;
+            let proteinDays = 0; // days with real logged nutrition — protein-avg denominator
 
             for (let i = 0; i < 7; i++) {
                 const date = new Date(weekStart);
@@ -20518,7 +20645,12 @@ TDEE TODAY: ~${formatNumber(calculateTDEE(state.profile.currentWeight_lbs, state
                     daysWithData++;
 
                     if (dayDeficit != null) totalDeficit += dayDeficit;
-                    if (dayProtein !== undefined) totalProtein += dayProtein;
+                    // Protein average must exclude assumed-deficit days (no meals →
+                    // no logged protein) or the average is dragged toward zero.
+                    if (hasNutritionData(log) && dayProtein !== undefined) {
+                        totalProtein += dayProtein;
+                        proteinDays++;
+                    }
                     if (log.perfect || (dayDeficit > 0 && dayProtein >= (log.targetProtein ?? 172) * 0.9)) {
                         daysOnTrack++;
                     }
@@ -20531,6 +20663,7 @@ TDEE TODAY: ~${formatNumber(calculateTDEE(state.profile.currentWeight_lbs, state
                 const todayTotals = getTodayTotals();
                 if (todayTotals.calories > 0 || todayTotals.protein > 0 || todayTotals.mealCount > 0) {
                     daysWithData++;
+                    proteinDays++;
                     const todayDeficit = getCurrentDeficit();
                     totalDeficit += todayDeficit;
                     totalProtein += todayTotals.protein;
@@ -20547,7 +20680,7 @@ TDEE TODAY: ~${formatNumber(calculateTDEE(state.profile.currentWeight_lbs, state
             const onTrackEl = document.getElementById('weeklyDaysOnTrack');
 
             if (deficitEl) deficitEl.textContent = formatNumber(Math.round(totalDeficit));
-            if (proteinEl) proteinEl.textContent = daysWithData > 0 ? Math.round(totalProtein / daysWithData) + 'g' : '0g';
+            if (proteinEl) proteinEl.textContent = proteinDays > 0 ? Math.round(totalProtein / proteinDays) + 'g' : '0g';
             if (onTrackEl) onTrackEl.textContent = `${daysOnTrack}/7`;
 
             // Generate insight
@@ -21055,15 +21188,28 @@ TDEE TODAY: ~${formatNumber(calculateTDEE(state.profile.currentWeight_lbs, state
                 }
             }
 
-            // Calculate best weekly deficit (sliding 7-day window)
-            const logDates = sortedLogs.map(l => l[0]);
-            for (let i = 0; i <= logDates.length - 7; i++) {
-                let weekDef = 0;
-                for (let j = i; j < i + 7 && j < sortedLogs.length; j++) {
-                    weekDef += getEffectiveDeficit(sortedLogs[j][1]) || 0;
-                }
-                if (weekDef > bestWeekDeficit.value) {
-                    bestWeekDeficit = { value: Math.round(weekDef), label: `${logDates[i]} — ${logDates[Math.min(i+6, logDates.length-1)]}` };
+            // Calculate best weekly deficit — slide a true 7-consecutive-CALENDAR-day
+            // window across the logged span. Indexing by logged-day (7 log entries)
+            // silently spans weeks whenever there are untracked gaps, mislabeling the
+            // range and inflating the total.
+            const bwDates = sortedLogs.map(l => l[0]);
+            if (bwDates.length > 0) {
+                const bwEnd = parseLocalDate(bwDates[bwDates.length - 1]);
+                const winStart = parseLocalDate(bwDates[0]);
+                while (winStart <= bwEnd) {
+                    const winEnd = new Date(winStart);
+                    winEnd.setDate(winEnd.getDate() + 6);
+                    let weekDef = 0;
+                    const dayCursor = new Date(winStart);
+                    while (dayCursor <= winEnd) {
+                        const log = state.dailyLogs[getLocalDateString(dayCursor)];
+                        if (log) weekDef += getEffectiveDeficit(log) || 0;
+                        dayCursor.setDate(dayCursor.getDate() + 1);
+                    }
+                    if (weekDef > bestWeekDeficit.value) {
+                        bestWeekDeficit = { value: Math.round(weekDef), label: `${getLocalDateString(winStart)} — ${getLocalDateString(winEnd)}` };
+                    }
+                    winStart.setDate(winStart.getDate() + 1);
                 }
             }
 
@@ -21915,8 +22061,13 @@ TDEE TODAY: ~${formatNumber(calculateTDEE(state.profile.currentWeight_lbs, state
             const projectedWeightAtJune = currentWeight - (weeklyWeightLoss * weeksUntilJune);
             const onTrack = projectedWeightAtJune <= goalWeight;
 
-            // Body fat projection (if we have current BF%)
-            const latestBF = getValues(state.weighIns).filter(w => w.bodyFat != null).pop();
+            // Body fat projection (if we have current BF%). Sort by date before
+            // pop — getValues() yields object-key insertion order, not date order,
+            // so a bare .pop() can grab a stale BF reading.
+            const latestBF = getValues(state.weighIns)
+                .filter(w => w.bodyFat != null)
+                .sort((a, b) => parseLocalDate(a.date) - parseLocalDate(b.date))
+                .pop();
             let bfProjectionHTML = '';
             if (latestBF) {
                 const currentBF = latestBF.bodyFat;
@@ -22515,7 +22666,10 @@ TDEE TODAY: ~${formatNumber(calculateTDEE(state.profile.currentWeight_lbs, state
             let deficit = getEffectiveDeficit(log);
             let tdee = log.tdee;
 
-            // If calories is 0 or undefined but meals exist, recalculate
+            // If calories is 0 or undefined but meals exist, recompute for DISPLAY
+            // only — this is a read-only view. Never mutate/persist the stored log
+            // here (recalculateDayLog does a full saveState). Real repairs happen on
+            // the add/edit/import paths and the batch migration.
             const mealsArr = Array.isArray(log.meals) ? log.meals : (log.meals ? Object.values(log.meals) : []);
             if ((calories === undefined || calories === 0) && mealsArr.length > 0) {
                 const totals = getTotalsForDate(dateStr);
@@ -22524,9 +22678,6 @@ TDEE TODAY: ~${formatNumber(calculateTDEE(state.profile.currentWeight_lbs, state
                 carbs = totals.carbs;
                 tdee = getTDEEForDate(dateStr);
                 deficit = tdee - calories;
-
-                // Auto-fix the stored log
-                recalculateDayLog(dateStr);
             }
 
             const status = log.status || (log.perfect ? 'perfect' : deficit > 0 ? 'partial' : 'missed');
@@ -22549,7 +22700,7 @@ TDEE TODAY: ~${formatNumber(calculateTDEE(state.profile.currentWeight_lbs, state
                                 return `<div style="display: flex; justify-content: space-between; align-items: center; padding: 8px; margin-bottom: 6px; background: var(--bg-tertiary); border-radius: 8px;">
                                     <div style="flex: 1;">
                                         <div style="font-weight: 500;">${escapeHtml(m.name)}</div>
-                                        <div style="font-size: 0.85em; color: var(--text-muted);">${m.calories} cal • ${m.protein}g P • ${m.carbs || 0}g C • ${timeDisplay} ET</div>
+                                        <div style="font-size: 0.85em; color: var(--text-muted);">${m.calories || 0} cal • ${m.protein || 0}g P • ${m.carbs || 0}g C • ${timeDisplay} ET</div>
                                     </div>
                                     <div style="display: flex; gap: 4px;">
                                         <button onclick="editHistoricalMeal('${dateStr}', '${mealId}')" style="padding: 4px 8px; border: none; background: var(--bg-secondary); border-radius: 6px; cursor: pointer; font-size: 0.8em;">✏️</button>
@@ -22967,9 +23118,10 @@ TDEE TODAY: ~${formatNumber(calculateTDEE(state.profile.currentWeight_lbs, state
             // Check if it's a new day — reset even if setupComplete was false
             // FIX: Previously only reset if setupComplete, leaving stale activeCalories from previous day
             if (state.today.date && state.today.date !== todayStr) {
-                // Save previous day's data (only if setup was complete and had meals)
-                if (state.today.setupComplete && getCount(state.today.meals) > 0) {
-                    saveDayLog();
+                // Snapshot the finished day keyed by its own date. Rollover-safe builder
+                // captures workout-only days too (the old `meals > 0` gate dropped them)
+                // and preserves deficit-resolution fields instead of a thin raw dump.
+                if (saveDayLogWithSnapshot()) {
                     updateStreak();
                 }
 
@@ -23028,8 +23180,17 @@ TDEE TODAY: ~${formatNumber(calculateTDEE(state.profile.currentWeight_lbs, state
                 return;
             }
 
-            // Set today's date
+            // Set today's date. If the day was never initialized (date falsy), any
+            // meals/workouts present are orphans from a corrupt/partial state — they
+            // can't belong to a day that never started, so clear them for a clean
+            // start. A normal date rollover is archived+reset by initializeUI, so we
+            // only touch these when the prior date is genuinely absent.
+            const prevTodayDate = state.today.date;
             state.today.date = todayStr;
+            if (!prevTodayDate && (getCount(state.today.meals) > 0 || getCount(state.today.workouts) > 0)) {
+                state.today.meals = {};
+                state.today.workouts = {};
+            }
 
             // Get sleep hours from ecosystem context (already loaded) or fallback
             let sleepHours = state.ecosystemContext?.stimulant?.sleepHours;
