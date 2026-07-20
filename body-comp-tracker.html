@@ -671,6 +671,59 @@
             padding: 20px;
         }
 
+        /* ===== Unified Log Modal ===== */
+        .log-modal .modal { max-width: 460px; }
+        .log-date-stepper {
+            display: flex; align-items: center; gap: 8px;
+            background: var(--bg-primary); border: 1px solid var(--border-color);
+            border-radius: 12px; padding: 8px 10px; margin-bottom: 12px;
+            transition: opacity 0.15s;
+        }
+        .log-date-nav {
+            width: 38px; height: 38px; flex: 0 0 auto;
+            border: 1px solid var(--border-color); border-radius: 10px;
+            background: var(--bg-tertiary); color: var(--text-primary);
+            font-size: 1.2em; line-height: 1; cursor: pointer;
+            display: flex; align-items: center; justify-content: center;
+        }
+        .log-date-nav:hover { background: var(--border-color); }
+        .log-date-nav:disabled { opacity: 0.3; cursor: not-allowed; }
+        .log-date-center { flex: 1; text-align: center; cursor: pointer; position: relative; }
+        .log-date-label { font-weight: 600; font-size: 0.98em; }
+        .log-date-sub { font-size: 0.72em; color: var(--text-muted); margin-top: 1px; }
+        .log-date-native {
+            position: absolute; left: 50%; bottom: -4px; transform: translateX(-50%);
+            opacity: 0; width: 1px; height: 1px; pointer-events: none;
+        }
+        .log-today-chip {
+            flex: 0 0 auto; padding: 7px 11px; border-radius: 8px; cursor: pointer;
+            border: 1px solid var(--border-color); background: var(--bg-tertiary);
+            color: var(--text-secondary); font-size: 0.72em; font-weight: 700;
+        }
+        .log-today-chip:hover { color: var(--text-primary); }
+        .log-today-chip.hidden { visibility: hidden; }
+        .log-tabs {
+            display: flex; gap: 6px; margin-bottom: 16px;
+            overflow-x: auto; -webkit-overflow-scrolling: touch; padding-bottom: 2px;
+        }
+        .log-tabs::-webkit-scrollbar { height: 0; }
+        .log-tab {
+            flex: 1 0 auto; padding: 10px 12px; white-space: nowrap;
+            background: var(--bg-primary); border: 1px solid var(--border-color);
+            border-radius: 10px; color: var(--text-secondary);
+            font-size: 0.85em; font-weight: 600; cursor: pointer; transition: all 0.15s;
+        }
+        .log-tab:hover { background: var(--bg-tertiary); }
+        .log-tab.active {
+            background: linear-gradient(135deg, var(--accent-purple-dim), var(--accent-blue-dim));
+            border-color: var(--accent-purple); color: var(--text-primary);
+        }
+        .log-panel { display: none; }
+        .log-panel.active { display: block; }
+        .log-date-note {
+            font-size: 0.75em; color: var(--text-muted); margin: -4px 0 12px; text-align: center;
+        }
+
         /* Metabolic Adaptation Modal */
         .metabolic-modal {
             max-width: 380px;
@@ -6776,8 +6829,8 @@
                 <button class="action-btn" onclick="openWeighInModal()" style="background: linear-gradient(135deg, var(--accent-blue), #2563eb); color: white;">
                     <span>⚖️</span> Weigh In
                 </button>
-                <button class="action-btn" onclick="openPastDayHub()" style="background: linear-gradient(135deg, #b45309, #d97706); color: white;">
-                    <span>↩</span> Past Day
+                <button class="action-btn" onclick="openImportClaudeModal()" style="background: linear-gradient(135deg, #b45309, #d97706); color: white;">
+                    <span>📥</span> Import
                 </button>
             </div>
 
@@ -7507,126 +7560,271 @@
             </div>
         </div>
 
-    <!-- Add Meal Modal -->
-    <div id="addMealModal" class="modal-overlay">
+    <!-- ===== Unified Log Modal (single entry surface: date stepper + tabs) ===== -->
+    <div id="logModal" class="modal-overlay log-modal">
         <div class="modal">
             <div class="modal-header">
-                <span class="modal-title">🍽️ Add Meal</span>
-                <button class="modal-close" onclick="closeAddMealModal()">×</button>
+                <span class="modal-title" id="logModalTitle">➕ Log</span>
+                <button class="modal-close" onclick="closeLogModal()">×</button>
             </div>
             <div class="modal-body">
-                <!-- Date/Time Section (Phase 2A) -->
-                <div class="meal-date-section">
-                    <div class="meal-date-label">When did you eat?</div>
-                    <div class="date-picker-row">
-                        <div class="form-group">
-                            <label class="form-label">Date</label>
-                            <input type="date" id="mealDateInput" class="form-input">
-                        </div>
-                        <div class="form-group">
-                            <label class="form-label">Time</label>
-                            <input type="time" id="mealTimeInput" class="form-input">
-                        </div>
+                <!-- Shared date stepper (max = today; drives each tab's date input) -->
+                <div class="log-date-stepper" id="logDateStepper">
+                    <button type="button" class="log-date-nav" id="logDatePrev" onclick="logStepDate(-1)" aria-label="Previous day">‹</button>
+                    <div class="log-date-center" onclick="logOpenDatePicker()">
+                        <div class="log-date-label" id="logDateLabel">Today</div>
+                        <div class="log-date-sub" id="logDateSub">—</div>
+                        <input type="date" id="logDateInput" class="log-date-native" max="" onchange="logSetDate(this.value)">
                     </div>
-                    <div class="date-quick-btns">
-                        <button type="button" class="date-quick-btn active" onclick="setMealDate('today')">Today</button>
-                        <button type="button" class="date-quick-btn" onclick="setMealDate('yesterday')">Yesterday</button>
-                        <button type="button" class="date-quick-btn" onclick="setMealDate('custom')">Other</button>
-                    </div>
+                    <button type="button" class="log-date-nav" id="logDateNext" onclick="logStepDate(1)" aria-label="Next day">›</button>
+                    <button type="button" class="log-today-chip hidden" id="logTodayChip" onclick="logSetDate(getLocalDateString())">Today</button>
+                </div>
+                <div class="log-date-note" id="logDateNote" style="display:none;"></div>
+
+                <!-- Tabs -->
+                <div class="log-tabs" id="logTabs">
+                    <button type="button" class="log-tab active" data-tab="meal" onclick="logSwitchTab('meal')">🍽️ Meal</button>
+                    <button type="button" class="log-tab" data-tab="workout" onclick="logSwitchTab('workout')">🏋️ Workout</button>
+                    <button type="button" class="log-tab" data-tab="weighin" onclick="logSwitchTab('weighin')">⚖️ Weigh-In</button>
+                    <button type="button" class="log-tab" data-tab="bodycomp" onclick="logSwitchTab('bodycomp')">📏 Body Comp</button>
+                    <button type="button" class="log-tab" data-tab="import" onclick="logSwitchTab('import')">📥 Import</button>
                 </div>
 
-                <!-- Frequent Foods -->
-                <div class="frequent-foods-section">
-                    <div class="frequent-foods-label">Frequent Foods (tap to add)</div>
-                    <div class="frequent-foods-grid" id="frequentFoodsGrid">
+                <!-- Panels (field markup relocated here in Phases B–F) -->
+                <div class="log-panel active" id="logPanel-meal" data-tab="meal">
+                    <!-- Hidden date mirrors: the shared stepper writes into these; save fns read them -->
+                    <input type="date" id="mealDateInput" style="display:none;">
+                    <input type="date" id="quickMealDateInput" style="display:none;">
+
+                    <div class="form-group">
+                        <label class="form-label">Time</label>
+                        <input type="time" id="mealTimeInput" class="form-input">
+                    </div>
+
+                    <!-- Frequent Foods -->
+                    <div class="frequent-foods-section">
+                        <div class="frequent-foods-label">Frequent Foods (tap to add)</div>
+                        <div class="frequent-foods-grid" id="frequentFoodsGrid">
+                            <!-- Populated by renderFrequentFoods() -->
+                        </div>
+                        <button type="button" onclick="openFrequentFoodsModal()" style="width: 100%; margin-top: 10px; padding: 8px; background: var(--bg-tertiary); border: 1px dashed var(--border-color); border-radius: 8px; color: var(--text-muted); cursor: pointer; font-size: 0.85em;">⚙️ Manage Frequent Foods</button>
+                    </div>
+
+                    <!-- Paste from Claude (folds Quick Log into the Meal tab) -->
+                    <div class="quick-meal-divider">Paste from Claude</div>
+                    <div class="quick-meal-paste">
+                        <textarea id="quickMealPaste" placeholder="MEAL|Name|Calories|Protein|Carbs|Fat"></textarea>
+                        <div class="quick-meal-paste-hint">Multiple lines OK • one meal per line</div>
+                    </div>
+                    <button type="button" class="parse-btn" style="width:100%; margin-bottom: 14px;" onclick="parseQuickMealPaste()">Add Pasted</button>
+
+                    <div class="divider">OR enter manually</div>
+
+                    <!-- Custom Entry -->
+                    <div class="form-group">
+                        <label class="form-label">Food name</label>
+                        <input type="text" id="mealNameInput" class="form-input" placeholder="e.g., Chicken + rice">
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">Calories</label>
+                            <input type="number" id="mealCalInput" class="form-input" placeholder="e.g., 450">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Protein (g)</label>
+                            <input type="number" id="mealProteinInput" class="form-input" placeholder="e.g., 35">
+                        </div>
+                    </div>
+
+                    <div class="form-row" id="carbsInputRow">
+                        <div class="form-group">
+                            <label class="form-label">Carbs (g) <span style="color: var(--text-muted); font-size: 0.8em;">optional</span></label>
+                            <input type="number" id="mealCarbsInput" class="form-input" placeholder="e.g., 40">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Fat (g) <span style="color: var(--text-muted); font-size: 0.8em;">optional</span></label>
+                            <input type="number" id="mealFatInput" class="form-input" placeholder="e.g., 15">
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="checkbox-group">
+                            <input type="checkbox" id="saveToFrequent">
+                            <span class="checkbox-label">Save to Frequent Foods</span>
+                        </label>
+                    </div>
+
+                    <button class="submit-btn" id="logMealSubmitBtn" onclick="addCustomMeal()">Add Meal</button>
+                </div>
+                <div class="log-panel" id="logPanel-workout" data-tab="workout">
+                    <input type="hidden" id="workoutDateInput">
+
+                    <p style="margin-bottom: 12px; color: var(--text-secondary);">Quick add:</p>
+
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 20px;">
+                        <button class="action-btn secondary" onclick="logQuickWorkout('Lift')" style="padding: 20px;">
+                            🏋️ Lift
+                        </button>
+                        <button class="action-btn secondary" onclick="logQuickWorkout('Run')" style="padding: 20px;">
+                            🏃 Run
+                        </button>
+                        <button class="action-btn secondary" onclick="logQuickWorkout('Cardio')" style="padding: 20px;">
+                            💪 Cardio
+                        </button>
+                        <button class="action-btn secondary" onclick="logQuickWorkout('Walk')" style="padding: 20px;">
+                            🚶 Walk
+                        </button>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Or paste detailed data from Claude:</label>
+                        <textarea id="workoutPasteInput" class="form-input" rows="3" placeholder="WORKOUT|Lift|45|280|17:00|2026-01-26"></textarea>
+                        <div style="font-size: 0.8em; color: var(--text-muted); margin-top: 4px;">
+                            Format: WORKOUT|Type|Duration|Calories|Time|Date(optional)
+                        </div>
+                    </div>
+
+                    <button class="submit-btn" onclick="parseWorkoutInput()">Save Workout</button>
+
+                    <div id="logWorkoutHistory"></div>
+                </div>
+                <div class="log-panel" id="logPanel-weighin" data-tab="weighin">
+                    <input type="hidden" id="weighInDateInput">
+
+                    <div class="form-group">
+                        <label class="form-label">Weight (lbs)</label>
+                        <input type="number" id="weightInput" class="form-input" step="0.1" placeholder="e.g., 188.5">
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Body fat % (from smart scale, optional)</label>
+                        <input type="number" id="bodyFatInput" class="form-input" step="0.1" min="5" max="50" placeholder="e.g., 22.5">
+                        <div style="font-size: 0.75em; color: var(--text-muted); margin-top: 4px;">
+                            Leave blank if not using smart scale
+                        </div>
+                    </div>
+
+                    <button class="submit-btn" onclick="saveWeighIn()">Save Weigh-In</button>
+
+                    <div class="weight-trend" id="weightTrend">
                         <!-- Populated by JS -->
                     </div>
-                    <button type="button" onclick="openFrequentFoodsModal()" style="width: 100%; margin-top: 10px; padding: 8px; background: var(--bg-tertiary); border: 1px dashed var(--border-color); border-radius: 8px; color: var(--text-muted); cursor: pointer; font-size: 0.85em;">⚙️ Manage Frequent Foods</button>
-                </div>
 
-                <div class="divider">OR</div>
-
-                <!-- Import from Claude -->
-                <button type="button" onclick="importFromClaudeViaMealModal()" style="width: 100%; padding: 10px; margin-bottom: 15px; background: rgba(59, 130, 246, 0.1); border: 1px dashed rgba(59, 130, 246, 0.4); border-radius: 8px; color: var(--accent-blue); cursor: pointer; font-size: 0.85em; font-weight: 500;">📋 Import from Claude Log</button>
-
-                <!-- Custom Entry -->
-                <div class="form-group">
-                    <label class="form-label">Food name</label>
-                    <input type="text" id="mealNameInput" class="form-input" placeholder="e.g., Chicken + rice">
-                </div>
-
-                <div class="form-row">
-                    <div class="form-group">
-                        <label class="form-label">Calories</label>
-                        <input type="number" id="mealCalInput" class="form-input" placeholder="e.g., 450">
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">Protein (g)</label>
-                        <input type="number" id="mealProteinInput" class="form-input" placeholder="e.g., 35">
+                    <!-- Weigh-in History Section (Phase 2B) -->
+                    <div class="weighin-history-section">
+                        <div class="weighin-history-title">📊 Recent Weigh-Ins</div>
+                        <div class="weighin-history-list" id="weighInHistoryList">
+                            <!-- Populated by renderWeighInHistory() -->
+                        </div>
                     </div>
                 </div>
-
-                <div class="form-row" id="carbsInputRow">
-                    <div class="form-group">
-                        <label class="form-label">Carbs (g) <span style="color: var(--text-muted); font-size: 0.8em;">optional</span></label>
-                        <input type="number" id="mealCarbsInput" class="form-input" placeholder="e.g., 40">
+                <div class="log-panel" id="logPanel-bodycomp" data-tab="bodycomp">
+                    <!-- Method Tabs -->
+                    <div class="body-comp-tabs">
+                        <button class="body-comp-tab active" onclick="setBodyCompTab('navy')" id="navyTab">
+                            📏 Navy Method
+                        </button>
+                        <button class="body-comp-tab" onclick="setBodyCompTab('scale')" id="scaleTab">
+                            ⚖️ Smart Scale
+                        </button>
                     </div>
-                    <div class="form-group">
-                        <label class="form-label">Fat (g) <span style="color: var(--text-muted); font-size: 0.8em;">optional</span></label>
-                        <input type="number" id="mealFatInput" class="form-input" placeholder="e.g., 15">
+
+                    <!-- Navy Method Panel -->
+                    <div id="navyPanel" class="body-comp-panel active">
+                        <div class="navy-info">
+                            <span>📐</span> Measure with a soft tape measure
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">Current Weight (lbs)</label>
+                            <input type="number" id="navyWeightInput" class="form-input" step="0.1" placeholder="e.g., 188.5">
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="form-label">Neck (inches)</label>
+                                <input type="number" id="neckInput" class="form-input" step="0.1" placeholder="e.g., 15.5">
+                                <div class="measure-hint">Below Adam's apple</div>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Waist (inches)</label>
+                                <input type="number" id="waistInput" class="form-input" step="0.1" placeholder="e.g., 34">
+                                <div class="measure-hint">At belly button</div>
+                            </div>
+                        </div>
+
+                        <!-- Live Calculation Preview -->
+                        <div class="navy-preview" id="navyPreview">
+                            <div class="navy-preview-label">Estimated Body Fat</div>
+                            <div class="navy-preview-value" id="navyBfPreview">--%</div>
+                            <div class="navy-breakdown" id="navyBreakdown">
+                                Enter measurements above
+                            </div>
+                        </div>
+
+                        <button class="submit-btn" onclick="saveNavyMeasurement()">Save Body Comp</button>
+                    </div>
+
+                    <!-- Smart Scale Panel -->
+                    <div id="scalePanel" class="body-comp-panel">
+                        <div class="navy-info">
+                            <span>⚖️</span> Enter reading from your smart scale
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">Current Weight (lbs)</label>
+                            <input type="number" id="scaleWeightInput" class="form-input" step="0.1" placeholder="e.g., 188.5">
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">Body Fat % (from scale)</label>
+                            <input type="number" id="scaleBfInput" class="form-input" step="0.1" min="5" max="50" placeholder="e.g., 22.5">
+                        </div>
+
+                        <!-- Live Calculation Preview -->
+                        <div class="navy-preview" id="scalePreview">
+                            <div class="navy-preview-label">Body Composition</div>
+                            <div class="navy-preview-value" id="scaleBfPreview">--%</div>
+                            <div class="navy-breakdown" id="scaleBreakdown">
+                                Enter weight and body fat above
+                            </div>
+                        </div>
+
+                        <button class="submit-btn" onclick="saveScaleMeasurement()">Save Body Comp</button>
+                    </div>
+
+                    <!-- History Preview -->
+                    <div class="body-comp-history" id="bodyCompHistory">
+                        <!-- Populated by JS -->
                     </div>
                 </div>
-
-                <div class="form-group">
-                    <label class="checkbox-group">
-                        <input type="checkbox" id="saveToFrequent">
-                        <span class="checkbox-label">Save to Frequent Foods</span>
-                    </label>
-                </div>
-
-                <button class="submit-btn" onclick="addCustomMeal()">Add Meal</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- Weigh-in Modal -->
-    <div id="weighInModal" class="modal-overlay">
-        <div class="modal" style="max-width: 420px;">
-            <div class="modal-header">
-                <span class="modal-title">⚖️ Weekly Weigh-In</span>
-                <button class="modal-close" onclick="closeWeighInModal()">×</button>
-            </div>
-            <div class="modal-body">
-                <!-- Date selector for weigh-in -->
-                <div class="form-group">
-                    <label class="form-label">Date</label>
-                    <input type="date" id="weighInDateInput" class="form-input">
-                </div>
-
-                <div class="form-group">
-                    <label class="form-label">Weight (lbs)</label>
-                    <input type="number" id="weightInput" class="form-input" step="0.1" placeholder="e.g., 188.5">
-                </div>
-
-                <div class="form-group">
-                    <label class="form-label">Body fat % (from smart scale, optional)</label>
-                    <input type="number" id="bodyFatInput" class="form-input" step="0.1" min="5" max="50" placeholder="e.g., 22.5">
-                    <div style="font-size: 0.75em; color: var(--text-muted); margin-top: 4px;">
-                        Leave blank if not using smart scale
+                <div class="log-panel" id="logPanel-import" data-tab="import">
+                    <div class="import-format-help">
+                        <strong>Paste data from Claude in these formats:</strong><br><br>
+                        <code>MEAL|Name|Calories|Protein|Carbs|Fat|Time|Date</code><br>
+                        <code>WORKOUT|Type|Duration|Calories|Time|Date</code><br>
+                        <code>WEIGHIN|Weight|BodyFat|Date</code><br><br>
+                        <em>Example:</em><br>
+                        <code>MEAL|Chicken Bowl|450|35|40|12|12:30|2026-01-27</code><br>
+                        <code>WORKOUT|Lift|45|280|17:00|2026-01-26</code>
                     </div>
-                </div>
 
-                <button class="submit-btn" onclick="saveWeighIn()">Save Weigh-In</button>
+                    <textarea id="importClaudeInput" class="import-textarea" placeholder="Paste your data here..."></textarea>
 
-                <div class="weight-trend" id="weightTrend">
-                    <!-- Populated by JS -->
-                </div>
+                    <div id="importPreviewSection" class="import-preview-section" style="display: none;">
+                        <div class="import-preview-header">
+                            <span class="import-preview-title">Preview</span>
+                            <span class="import-preview-count" id="importPreviewCount">0 items</span>
+                        </div>
+                        <div class="import-preview-list" id="importPreviewList">
+                            <!-- Populated by JS -->
+                        </div>
+                    </div>
 
-                <!-- Weigh-in History Section (Phase 2B) -->
-                <div class="weighin-history-section">
-                    <div class="weighin-history-title">📊 Recent Weigh-Ins</div>
-                    <div class="weighin-history-list" id="weighInHistoryList">
-                        <!-- Populated by renderWeighInHistory() -->
+                    <div class="import-actions">
+                        <button class="import-btn preview" onclick="previewImportData()">👁️ Preview</button>
+                        <button class="import-btn import" id="importConfirmBtn" onclick="confirmImportData()" disabled>✓ Import All</button>
                     </div>
                 </div>
             </div>
@@ -7673,96 +7871,6 @@
                 </div>
                 <div class="weekly-export-hint">
                     Paste this into Claude for personalized feedback on your week
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Body Comp Check-In Modal (Phase 6) -->
-    <div id="bodyCompModal" class="modal-overlay">
-        <div class="modal" style="max-width: 420px;">
-            <div class="modal-header">
-                <span class="modal-title">📏 Monthly Body Comp</span>
-                <button class="modal-close" onclick="closeBodyCompModal()">×</button>
-            </div>
-            <div class="modal-body">
-                <!-- Method Tabs -->
-                <div class="body-comp-tabs">
-                    <button class="body-comp-tab active" onclick="setBodyCompTab('navy')" id="navyTab">
-                        📏 Navy Method
-                    </button>
-                    <button class="body-comp-tab" onclick="setBodyCompTab('scale')" id="scaleTab">
-                        ⚖️ Smart Scale
-                    </button>
-                </div>
-
-                <!-- Navy Method Panel -->
-                <div id="navyPanel" class="body-comp-panel active">
-                    <div class="navy-info">
-                        <span>📐</span> Measure with a soft tape measure
-                    </div>
-
-                    <div class="form-group">
-                        <label class="form-label">Current Weight (lbs)</label>
-                        <input type="number" id="navyWeightInput" class="form-input" step="0.1" placeholder="e.g., 188.5">
-                    </div>
-
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label class="form-label">Neck (inches)</label>
-                            <input type="number" id="neckInput" class="form-input" step="0.1" placeholder="e.g., 15.5">
-                            <div class="measure-hint">Below Adam's apple</div>
-                        </div>
-                        <div class="form-group">
-                            <label class="form-label">Waist (inches)</label>
-                            <input type="number" id="waistInput" class="form-input" step="0.1" placeholder="e.g., 34">
-                            <div class="measure-hint">At belly button</div>
-                        </div>
-                    </div>
-
-                    <!-- Live Calculation Preview -->
-                    <div class="navy-preview" id="navyPreview">
-                        <div class="navy-preview-label">Estimated Body Fat</div>
-                        <div class="navy-preview-value" id="navyBfPreview">--%</div>
-                        <div class="navy-breakdown" id="navyBreakdown">
-                            Enter measurements above
-                        </div>
-                    </div>
-
-                    <button class="submit-btn" onclick="saveNavyMeasurement()">Save Body Comp</button>
-                </div>
-
-                <!-- Smart Scale Panel -->
-                <div id="scalePanel" class="body-comp-panel">
-                    <div class="navy-info">
-                        <span>⚖️</span> Enter reading from your smart scale
-                    </div>
-
-                    <div class="form-group">
-                        <label class="form-label">Current Weight (lbs)</label>
-                        <input type="number" id="scaleWeightInput" class="form-input" step="0.1" placeholder="e.g., 188.5">
-                    </div>
-
-                    <div class="form-group">
-                        <label class="form-label">Body Fat % (from scale)</label>
-                        <input type="number" id="scaleBfInput" class="form-input" step="0.1" min="5" max="50" placeholder="e.g., 22.5">
-                    </div>
-
-                    <!-- Live Calculation Preview -->
-                    <div class="navy-preview" id="scalePreview">
-                        <div class="navy-preview-label">Body Composition</div>
-                        <div class="navy-preview-value" id="scaleBfPreview">--%</div>
-                        <div class="navy-breakdown" id="scaleBreakdown">
-                            Enter weight and body fat above
-                        </div>
-                    </div>
-
-                    <button class="submit-btn" onclick="saveScaleMeasurement()">Save Body Comp</button>
-                </div>
-
-                <!-- History Preview -->
-                <div class="body-comp-history" id="bodyCompHistory">
-                    <!-- Populated by JS -->
                 </div>
             </div>
         </div>
@@ -7882,44 +7990,6 @@
                     New Base TDEE: <span id="newTDEE">2,450</span> kcal
                 </div>
                 <button class="submit-btn" onclick="closeMetabolicModal()">Got it! 💪</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- Import from Claude Modal (Phase 2A) -->
-    <div id="importClaudeModal" class="modal-overlay">
-        <div class="modal" style="max-width: 480px;">
-            <div class="modal-header">
-                <span class="modal-title">📥 Import from Claude</span>
-                <button class="modal-close" onclick="closeImportClaudeModal()">×</button>
-            </div>
-            <div class="modal-body import-modal-body">
-                <div class="import-format-help">
-                    <strong>Paste data from Claude in these formats:</strong><br><br>
-                    <code>MEAL|Name|Calories|Protein|Carbs|Fat|Time|Date</code><br>
-                    <code>WORKOUT|Type|Duration|Calories|Time|Date</code><br>
-                    <code>WEIGHIN|Weight|BodyFat|Date</code><br><br>
-                    <em>Example:</em><br>
-                    <code>MEAL|Chicken Bowl|450|35|40|12|12:30|2026-01-27</code><br>
-                    <code>WORKOUT|Lift|45|280|17:00|2026-01-26</code>
-                </div>
-
-                <textarea id="importClaudeInput" class="import-textarea" placeholder="Paste your data here..."></textarea>
-
-                <div id="importPreviewSection" class="import-preview-section" style="display: none;">
-                    <div class="import-preview-header">
-                        <span class="import-preview-title">Preview</span>
-                        <span class="import-preview-count" id="importPreviewCount">0 items</span>
-                    </div>
-                    <div class="import-preview-list" id="importPreviewList">
-                        <!-- Populated by JS -->
-                    </div>
-                </div>
-
-                <div class="import-actions">
-                    <button class="import-btn preview" onclick="previewImportData()">👁️ Preview</button>
-                    <button class="import-btn import" id="importConfirmBtn" onclick="confirmImportData()" disabled>✓ Import All</button>
-                </div>
             </div>
         </div>
     </div>
@@ -8396,6 +8466,12 @@
         let isInitialLoad = true;      // Block ALL saves until data loaded
         let hasLoadedFromCloud = false; // Track if we've checked Firebase
         let pinValidated = false;       // Track if PIN has been validated (prevents race condition)
+        // True only once we have confirmed the FULL cloud history in memory this
+        // session (a successful cloud merge, or a confirmed-empty/fresh cloud).
+        // While false — e.g. after a failed cloud read left us on 90-day-pruned
+        // localStorage — saveToFirebase MUST NOT wholesale-replace /state, or it
+        // would permanently delete cloud dailyLogs older than the local window.
+        let historyFullyLoaded = false;
 
         // Check if state has real user data (not just defaults)
         function isEmptyState(data) {
@@ -8478,6 +8554,45 @@
             const local = migrateArrayToObject(localValue, prefix);
             const cloud = migrateArrayToObject(cloudValue, prefix);
             return cloudWins ? { ...local, ...cloud } : { ...cloud, ...local };
+        }
+
+        // Deep-merge two dailyLogs maps by date. A shallow date-key spread
+        // ({ ...local, ...cloud }) lets ONE side win a shared date wholesale —
+        // silently dropping meals/workouts (and deficit-resolution fields) the
+        // other device logged for that same day. For dates in both, this unions
+        // the ID-keyed meals/workouts and takes scalar/resolution fields from the
+        // entry with the newer `lastUpdated` (falling back to cloudWins when the
+        // timestamps are missing or equal). Dates in only one side pass through.
+        function mergeDailyLogs(localLogs, cloudLogs, cloudWins = true) {
+            localLogs = (localLogs && typeof localLogs === 'object') ? localLogs : {};
+            cloudLogs = (cloudLogs && typeof cloudLogs === 'object') ? cloudLogs : {};
+            const merged = {};
+            const dates = new Set([...Object.keys(localLogs), ...Object.keys(cloudLogs)]);
+            dates.forEach(date => {
+                const l = localLogs[date];
+                const c = cloudLogs[date];
+                if (l && !c) { merged[date] = l; return; }
+                if (c && !l) { merged[date] = c; return; }
+                if (!l && !c) { return; }
+                // Both present — never let one side erase the other's entries.
+                const lt = l.lastUpdated || '';
+                const ct = c.lastUpdated || '';
+                let base, other;
+                if (lt && ct && lt !== ct) {
+                    base = (ct > lt) ? c : l;
+                    other = (ct > lt) ? l : c;
+                } else {
+                    base = cloudWins ? c : l;
+                    other = cloudWins ? l : c;
+                }
+                merged[date] = {
+                    ...other,
+                    ...base,
+                    meals: mergeIdCollections(l.meals, c.meals, cloudWins, 'meal'),
+                    workouts: mergeIdCollections(l.workouts, c.workouts, cloudWins, 'workout')
+                };
+            });
+            return merged;
         }
 
         function makeFirebaseSafe(value) {
@@ -11842,6 +11957,11 @@
                     // Update workedOut flag for that day
                     state.dailyLogs[historicalDate].workedOut = getCount(state.dailyLogs[historicalDate].workouts) > 0;
                 }
+                // Recompute that day's activeCalories/TDEE/deficit/status AND the
+                // 6-day forward ripple, then persist (recalcDateAndDependents saves
+                // internally). Without this the edited day kept stale numbers and
+                // the trailing today-only saveDayLog() snapshotted the wrong day.
+                recalcDateAndDependents(historicalDate);
             } else {
                 // Delete from today
                 // Subtract calories from active calories
@@ -11855,18 +11975,14 @@
                 // Update workedOut flag
                 state.today.workedOut = getCount(state.today.workouts) > 0;
 
-                // Recalculate targets
-                const tdee = calculateTDEE(
-                    state.profile.currentWeight_lbs,
-                    state.profile.height_cm,
-                    state.profile.age,
-                    state.today.activeCalories
-                );
-                state.today.targets = calculateTargets(state.today.mode, tdee, state.profile.currentWeight_lbs, state.today.isBrainDay);
+                // Recompute TDEE + targets via the shared helper. The old inline
+                // calculateTDEE() passed state.today.activeCalories as the asOfDate
+                // argument, corrupting the 7-day workout window.
+                refreshTodayTargets();
+                saveState();
+                saveDayLog();
             }
 
-            saveState();
-            saveDayLog();
             renderWorkoutsList();
             renderWorkoutHistoryManager();
             renderDashboard();
@@ -11894,9 +12010,152 @@
         let editingMealId = null;
         let pendingMealDate = null;  // Tracks selected date through frequent food → qty selector flow
 
+        // ============================================================
+        // Unified Log Modal — single entry surface (date stepper + tabs)
+        // Panels host the ORIGINAL field IDs so the hardened save
+        // functions (addCustomMeal, saveWeighIn, saveNavyMeasurement, …)
+        // read them unchanged. The stepper mirrors its value into each
+        // tab's date input and into pendingMealDate.
+        // ============================================================
+        let logActiveTab = 'meal';
+        let logCurrentDate = null; // 'YYYY-MM-DD'
+
+        function openLogModal(tab, dateStr) {
+            const today = getLocalDateString();
+            logCurrentDate = (dateStr && /^\d{4}-\d{2}-\d{2}$/.test(dateStr) && dateStr <= today) ? dateStr : today;
+            const nativeInput = document.getElementById('logDateInput');
+            if (nativeInput) nativeInput.max = today;
+            const modal = document.getElementById('logModal');
+            if (modal) modal.classList.add('active');
+            logSwitchTab(tab || 'meal');
+            logSetDate(logCurrentDate);
+        }
+
+        function closeLogModal() {
+            const modal = document.getElementById('logModal');
+            if (modal) modal.classList.remove('active');
+        }
+
+        function logSwitchTab(tab) {
+            logActiveTab = tab;
+            document.querySelectorAll('#logTabs .log-tab').forEach(btn => {
+                btn.classList.toggle('active', btn.dataset.tab === tab);
+            });
+            document.querySelectorAll('#logModal .log-panel').forEach(p => {
+                p.classList.toggle('active', p.dataset.tab === tab);
+            });
+            const titles = {
+                meal: '🍽️ Log Meal', workout: '🏋️ Log Workout',
+                weighin: '⚖️ Weigh-In', bodycomp: '📏 Body Composition', import: '📥 Import Data'
+            };
+            const titleEl = document.getElementById('logModalTitle');
+            if (titleEl) titleEl.textContent = titles[tab] || '➕ Log';
+            applyLogDateConstraintsForTab(tab);
+            if (typeof mountLogTab === 'function') mountLogTab(tab);
+        }
+
+        // Body Comp saves to today only (its save path hardcodes today).
+        function applyLogDateConstraintsForTab(tab) {
+            const prev = document.getElementById('logDatePrev');
+            const stepper = document.getElementById('logDateStepper');
+            const note = document.getElementById('logDateNote');
+            const todayOnly = (tab === 'bodycomp');
+            if (todayOnly) {
+                logSetDate(getLocalDateString());
+                if (prev) prev.disabled = true;
+                if (stepper) stepper.style.opacity = '0.55';
+                if (note) { note.style.display = 'block'; note.textContent = 'Body composition is recorded for today only.'; }
+            } else {
+                if (prev) prev.disabled = false;
+                if (stepper) stepper.style.opacity = '1';
+                if (note) {
+                    if (tab === 'import') { note.style.display = 'block'; note.textContent = 'Pasted lines may carry their own dates; this is the default for lines without one.'; }
+                    else { note.style.display = 'none'; }
+                }
+            }
+        }
+
+        function logStepDate(delta) {
+            const base = logCurrentDate || getLocalDateString();
+            const d = parseLocalDate(base);
+            d.setDate(d.getDate() + delta);
+            let next = getLocalDateString(d);
+            const today = getLocalDateString();
+            if (next > today) next = today;
+            logSetDate(next);
+        }
+
+        function logOpenDatePicker() {
+            if (logActiveTab === 'bodycomp') return; // today-only tab
+            const el = document.getElementById('logDateInput');
+            if (!el) return;
+            el.value = logCurrentDate || getLocalDateString();
+            if (typeof el.showPicker === 'function') { try { el.showPicker(); return; } catch (e) {} }
+            el.focus();
+        }
+
+        function logSetDate(dateStr) {
+            const today = getLocalDateString();
+            if (!dateStr || !/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) dateStr = today;
+            if (dateStr > today) dateStr = today;
+            logCurrentDate = dateStr;
+            const d = parseLocalDate(dateStr);
+            const isToday = dateStr === today;
+            const yToday = parseLocalDate(today);
+            const yesterday = getLocalDateString(new Date(yToday.getTime() - 86400000));
+            const labelEl = document.getElementById('logDateLabel');
+            const subEl = document.getElementById('logDateSub');
+            const chip = document.getElementById('logTodayChip');
+            if (labelEl) {
+                labelEl.textContent = isToday ? 'Today'
+                    : (dateStr === yesterday ? 'Yesterday'
+                    : d.toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' }));
+            }
+            if (subEl) subEl.textContent = d.toLocaleDateString(undefined, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+            if (chip) chip.classList.toggle('hidden', isToday);
+            const nativeInput = document.getElementById('logDateInput');
+            if (nativeInput) nativeInput.value = dateStr;
+            // Mirror into per-tab date inputs the hardened save fns read
+            ['mealDateInput', 'quickMealDateInput', 'workoutDateInput', 'weighInDateInput'].forEach(id => {
+                const el = document.getElementById(id);
+                if (el) el.value = dateStr;
+            });
+            // pendingMealDate drives quick-paste + qty add (null == today)
+            if (typeof pendingMealDate !== 'undefined') pendingMealDate = isToday ? null : dateStr;
+            if (typeof syncMealDateQuickButtons === 'function') syncMealDateQuickButtons(dateStr);
+        }
+
+        // Per-tab population when the Log modal opens / switches tabs.
+        // Non-destructive: never wipes half-typed fields on a tab flip.
+        // Later phases extend this with workout/weighin/bodycomp/import cases.
+        function mountLogTab(tab) {
+            if (tab === 'meal') {
+                if (typeof renderFrequentFoods === 'function') renderFrequentFoods();
+                const timeInput = document.getElementById('mealTimeInput');
+                if (timeInput && !timeInput.value) timeInput.value = getCurrentTimeET();
+            } else if (tab === 'workout') {
+                const histEl = document.getElementById('logWorkoutHistory');
+                if (histEl) histEl.innerHTML = renderWorkoutHistory();
+            } else if (tab === 'weighin') {
+                if (typeof renderWeightTrend === 'function') renderWeightTrend();
+                if (typeof renderWeighInHistory === 'function') renderWeighInHistory();
+            } else if (tab === 'bodycomp') {
+                if (typeof setBodyCompTab === 'function') setBodyCompTab('navy');
+                if (typeof setupBodyCompListeners === 'function') setupBodyCompListeners();
+                if (typeof renderBodyCompHistory === 'function') renderBodyCompHistory();
+            }
+        }
+
         function openAddMealModal(initialDate = getLocalDateString()) {
-            renderFrequentFoods();
-            document.getElementById('addMealModal').classList.add('active');
+            // Fresh meal entry in the unified Log modal (Meal tab).
+            // openLogModal mounts the meal tab (renderFrequentFoods, seed time)
+            // and drives the stepper → #mealDateInput / #quickMealDateInput.
+            editingMealId = null;
+            openLogModal('meal', initialDate);
+
+            // Clear any stale "+ Another" banner + fields for a clean entry
+            const banner = document.getElementById('mealAddedBanner');
+            if (banner) banner.remove();
             document.getElementById('mealNameInput').value = '';
             document.getElementById('mealCalInput').value = '';
             document.getElementById('mealProteinInput').value = '';
@@ -11904,38 +12163,18 @@
             const fatInput = document.getElementById('mealFatInput');
             if (fatInput) fatInput.value = '';
             document.getElementById('saveToFrequent').checked = false;
+            const pasteBox = document.getElementById('quickMealPaste');
+            if (pasteBox) pasteBox.value = '';
 
-            // Initialize date/time pickers (Phase 2A)
-            const today = getLocalDateString();
-            const dateInput = document.getElementById('mealDateInput');
+            // Reset title/submit to add-mode (editMeal overrides these afterward)
+            const titleEl = document.getElementById('logModalTitle');
+            if (titleEl) titleEl.textContent = '🍽️ Log Meal';
+            const submitBtn = document.getElementById('logMealSubmitBtn');
+            if (submitBtn) submitBtn.textContent = 'Add Meal';
+
+            // Seed time
             const timeInput = document.getElementById('mealTimeInput');
-            if (dateInput) {
-                dateInput.max = today;
-                dateInput.value = initialDate && initialDate <= today ? initialDate : today;
-                // Sync quick date buttons when user changes date picker manually
-                dateInput.onchange = function() {
-                    const quickBtns = document.querySelectorAll('.date-quick-btn');
-                    const selectedDate = dateInput.value;
-                    const todayDate = getLocalDateString();
-                    const yesterdayDate = getLocalDateString(new Date(new Date().getTime() - 86400000));
-                    quickBtns.forEach(btn => btn.classList.remove('active'));
-                    if (selectedDate === todayDate) {
-                        quickBtns[0]?.classList.add('active');
-                    } else if (selectedDate === yesterdayDate) {
-                        quickBtns[1]?.classList.add('active');
-                    } else {
-                        quickBtns[2]?.classList.add('active'); // "Other"
-                    }
-                };
-            }
-            if (timeInput) {
-                timeInput.value = getCurrentTimeET();
-            }
-            // Reset quick date buttons
-            const quickBtns = document.querySelectorAll('.date-quick-btn');
-            quickBtns.forEach((btn, idx) => {
-                btn.classList.toggle('active', idx === 0 && dateInput?.value === today);
-            });
+            if (timeInput) timeInput.value = getCurrentTimeET();
 
             // Highlight carbs input on Brain Days
             const carbsRow = document.getElementById('carbsInputRow');
@@ -11952,18 +12191,21 @@
         }
 
         function closeAddMealModal() {
-            document.getElementById('addMealModal').classList.remove('active');
+            // Meal entry now lives in the unified Log modal.
+            closeLogModal();
 
-            // Reset form
-            document.getElementById('mealNameInput').value = '';
-            document.getElementById('mealCalInput').value = '';
-            document.getElementById('mealProteinInput').value = '';
-            document.getElementById('mealCarbsInput').value = '';
+            // Reset form + banner
+            const banner = document.getElementById('mealAddedBanner');
+            if (banner) banner.remove();
+            const nm = document.getElementById('mealNameInput'); if (nm) nm.value = '';
+            const cl = document.getElementById('mealCalInput'); if (cl) cl.value = '';
+            const pr = document.getElementById('mealProteinInput'); if (pr) pr.value = '';
+            const cb = document.getElementById('mealCarbsInput'); if (cb) cb.value = '';
 
-            // Reset title and button
-            const modalTitle = document.querySelector('#addMealModal .modal-title');
-            const submitBtn = document.querySelector('#addMealModal .submit-btn');
-            if (modalTitle) modalTitle.textContent = '🍽️ Add Meal';
+            // Reset title and button to add-mode
+            const modalTitle = document.getElementById('logModalTitle');
+            const submitBtn = document.getElementById('logMealSubmitBtn');
+            if (modalTitle) modalTitle.textContent = '🍽️ Log Meal';
             if (submitBtn) submitBtn.textContent = 'Add Meal';
 
             editingMealId = null;
@@ -11982,23 +12224,28 @@
             const meal = state.today.meals[mealId];
             if (!meal) return;
 
+            // Route through openAddMealModal FIRST so every field — including the
+            // date/time pickers and fat — is reset to a known state. Opening the
+            // modal directly left a stale #mealDateInput that could silently move
+            // this today-meal to a past date on save, and never prefilled fat
+            // (zeroing it). openAddMealModal also adds the .active class.
+            openAddMealModal(meal.date || getLocalDateString());
+
             editingMealId = mealId;
 
-            // Pre-fill the form
+            // Pre-fill the form with this meal's values (override the reset blanks)
             document.getElementById('mealNameInput').value = meal.name;
             document.getElementById('mealCalInput').value = meal.calories;
             document.getElementById('mealProteinInput').value = meal.protein;
             document.getElementById('mealCarbsInput').value = meal.carbs || 0;
+            const fatInput = document.getElementById('mealFatInput');
+            if (fatInput) fatInput.value = meal.fat || 0;
 
-            // Change modal title and button
-            const modalTitle = document.querySelector('#addMealModal .modal-title');
-            const submitBtn = document.querySelector('#addMealModal .submit-btn');
-
+            // Change modal title and button to edit mode
+            const modalTitle = document.getElementById('logModalTitle');
+            const submitBtn = document.getElementById('logMealSubmitBtn');
             if (modalTitle) modalTitle.textContent = '✏️ Edit Meal';
             if (submitBtn) submitBtn.textContent = 'Update Meal';
-
-            // Open modal
-            document.getElementById('addMealModal').classList.add('active');
         }
 
         function addFrequentFood(foodId) {
@@ -12142,7 +12389,7 @@
                 closeAddMealModal();
             } else {
                 // New meal: show "Add Another" option instead of auto-closing
-                const modalBody = document.querySelector('#addMealModal .modal-body');
+                const modalBody = document.getElementById('logPanel-meal');
                 if (modalBody) {
                     let banner = document.getElementById('mealAddedBanner');
                     if (!banner) {
@@ -12363,7 +12610,16 @@
                 return;
             }
 
-            if (newDate && newDate > todayStr) {
+            // Reject an empty/malformed date BEFORE the move logic. An empty value
+            // slipped past the old `newDate && ...` check, then dateChanged became
+            // true and the meal was moved into an orphaned dailyLogs[''] bucket —
+            // silently lost from every date-keyed view.
+            if (!newDate || !/^\d{4}-\d{2}-\d{2}$/.test(newDate)) {
+                showToast('Please select a valid date');
+                return;
+            }
+
+            if (newDate > todayStr) {
                 showToast('Cannot set a future date');
                 return;
             }
@@ -12692,7 +12948,11 @@
                 return;
             }
 
-            if (newDate && newDate > todayStr) {
+            if (!newDate || !/^\d{4}-\d{2}-\d{2}$/.test(newDate)) {
+                showToast('Please select a valid date');
+                return;
+            }
+            if (newDate > todayStr) {
                 showToast('Cannot set a future date');
                 return;
             }
@@ -12742,13 +13002,7 @@
                     state.today.workedOut = getCount(state.today.workouts) > 0;
 
                     // Recalculate today's TDEE
-                    const tdee = calculateTDEE(
-                        state.profile.currentWeight_lbs,
-                        state.profile.height_cm,
-                        state.profile.age,
-                        state.today.activeCalories
-                    );
-                    state.today.targets = calculateTargets(state.today.mode, tdee, state.profile.currentWeight_lbs, state.today.isBrainDay);
+                    refreshTodayTargets();
                     saveDayLog();
                 } else {
                     ensureWorkoutsObject(originalDateStr);
@@ -12764,13 +13018,7 @@
                     state.today.workedOut = true;
                     state.today.activeCalories = (state.today.activeCalories || 0) + newCalories;
 
-                    const tdee = calculateTDEE(
-                        state.profile.currentWeight_lbs,
-                        state.profile.height_cm,
-                        state.profile.age,
-                        state.today.activeCalories
-                    );
-                    state.today.targets = calculateTargets(state.today.mode, tdee, state.profile.currentWeight_lbs, state.today.isBrainDay);
+                    refreshTodayTargets();
                     saveDayLog();
                     renderWorkoutsList();
                     renderDashboard();
@@ -12797,13 +13045,7 @@
                     state.today.workouts[workoutId] = updatedWorkout;
                     state.today.activeCalories = Math.max(0, (state.today.activeCalories || 0) + calDiff);
 
-                    const tdee = calculateTDEE(
-                        state.profile.currentWeight_lbs,
-                        state.profile.height_cm,
-                        state.profile.age,
-                        state.today.activeCalories
-                    );
-                    state.today.targets = calculateTargets(state.today.mode, tdee, state.profile.currentWeight_lbs, state.today.isBrainDay);
+                    refreshTodayTargets();
 
                     saveDayLog();
                     renderWorkoutsList();
@@ -12846,14 +13088,9 @@
                     delete state.today.workouts[workoutId];
                     state.today.workedOut = getCount(state.today.workouts) > 0;
 
-                    // Recalculate TDEE and targets
-                    const tdee = calculateTDEE(
-                        state.profile.currentWeight_lbs,
-                        state.profile.height_cm,
-                        state.profile.age,
-                        state.today.activeCalories
-                    );
-                    state.today.targets = calculateTargets(state.today.mode, tdee, state.profile.currentWeight_lbs, state.today.isBrainDay);
+                    // Recompute TDEE + targets via the shared helper. The old inline
+                    // calculateTDEE() passed activeCalories as the asOfDate argument.
+                    refreshTodayTargets();
                 }
                 saveDayLog();
                 renderWorkoutsList();
@@ -12898,283 +13135,14 @@
          * Open modal to import meals from Claude text format
          * @param {string} dateStr - Target date for imported meals
          */
+        // Day-scoped import buttons now route into the unified Log → Import tab.
+        // The stepper date becomes the default for any pasted line without its own date.
         function openImportMealModal(dateStr) {
-            importTargetDate = dateStr;
-            const todayStr = getLocalDateString();
-
-            let modal = document.getElementById('importMealModal');
-            if (!modal) {
-                modal = document.createElement('div');
-                modal.id = 'importMealModal';
-                modal.className = 'modal-overlay';
-                document.body.appendChild(modal);
-            }
-
-            modal.innerHTML = `
-                <div class="modal" style="max-width: 420px;">
-                    <div class="modal-header">
-                        <span class="modal-title">Import Meals from Claude</span>
-                        <button class="modal-close" onclick="closeImportMealModal()">x</button>
-                    </div>
-                    <div class="modal-body">
-                        <div style="background: var(--bg-tertiary); padding: 12px; border-radius: 8px; margin-bottom: 15px;">
-                            <div style="font-weight: 600; margin-bottom: 8px;">Target Date: ${dateStr}</div>
-                            <div style="font-size: 0.85em; color: var(--text-muted);">Meals will be added to this day</div>
-                        </div>
-
-                        <div class="form-group" style="margin-bottom: 12px;">
-                            <label class="form-label">Paste meal data from Claude:</label>
-                            <textarea id="importMealText" class="form-input" rows="6" placeholder="MEAL|Chicken Breast|350|45|0|8
-MEAL|Rice Bowl|280|6|52|2
-MEAL|Protein Shake|160|30|5|2"></textarea>
-                        </div>
-
-                        <div style="background: rgba(59, 130, 246, 0.1); padding: 10px; border-radius: 8px; margin-bottom: 15px; font-size: 0.8em;">
-                            <div style="font-weight: 600; color: var(--accent-blue); margin-bottom: 4px;">Format:</div>
-                            <code style="color: var(--text-secondary);">MEAL|Name|Calories|Protein|Carbs|Fat</code>
-                            <div style="color: var(--text-muted); margin-top: 4px;">One meal per line. Fat is optional.</div>
-                        </div>
-
-                        <button onclick="processImportedMeals()" class="submit-btn" style="width: 100%;">Import Meals</button>
-                    </div>
-                </div>
-            `;
-
-            modal.classList.add('active');
-            modal.onclick = function(e) {
-                if (e.target === modal) closeImportMealModal();
-            };
+            openImportClaudeModal(dateStr);
         }
 
-        function closeImportMealModal() {
-            const modal = document.getElementById('importMealModal');
-            if (modal) modal.classList.remove('active');
-            importTargetDate = null;
-        }
-
-        function processImportedMeals() {
-            if (!importTargetDate) return;
-
-            const text = document.getElementById('importMealText').value.trim();
-            if (!text) {
-                showToast('Please paste meal data');
-                return;
-            }
-
-            const todayStr = getLocalDateString();
-            const lines = text.split('\n').filter(line => line.trim());
-            let imported = 0;
-
-            for (const line of lines) {
-                const parts = line.split('|').map(p => p.trim());
-                if (parts[0]?.toUpperCase() !== 'MEAL' || parts.length < 4) continue;
-
-                const meal = {
-                    id: generateId('meal'),
-                    name: parts[1] || 'Unknown',
-                    calories: parseInt(parts[2]) || 0,
-                    protein: parseInt(parts[3]) || 0,
-                    carbs: parseInt(parts[4]) || 0,
-                    fat: parseInt(parts[5]) || 0,
-                    time: formatTimeET(new Date()),
-                    date: importTargetDate,
-                    _importedAt: new Date().toISOString()
-                };
-
-                // Add to appropriate location
-                if (importTargetDate === todayStr) {
-                    state.today.meals = migrateArrayToObject(state.today.meals, 'meal');
-                    state.today.meals[meal.id] = meal;
-                } else {
-                    if (!state.dailyLogs[importTargetDate]) {
-                        state.dailyLogs[importTargetDate] = {
-                            date: importTargetDate,
-                            meals: {},
-                            workouts: {}
-                        };
-                    }
-                    ensureMealsObject(importTargetDate);
-                    state.dailyLogs[importTargetDate].meals[meal.id] = meal;
-                }
-
-                imported++;
-            }
-
-            if (imported === 0) {
-                showToast('No valid meals found. Check format.');
-                return;
-            }
-
-            // Recalculate and save
-            if (importTargetDate === todayStr) {
-                refreshTodayTargets();
-                saveDayLog();
-                renderMealsList();
-                renderDashboard();
-                renderSimpleView();
-                saveState();
-            } else {
-                recalcDateAndDependents(importTargetDate);
-                saveStateImmediate(); // Bypass debounce for historical
-                renderCalendarHeatmap();
-            }
-
-            const savedDate = importTargetDate;
-            closeImportMealModal();
-            showToast(`Imported ${imported} meal${imported > 1 ? 's' : ''}`);
-
-            // Refresh day detail modal
-            setTimeout(() => showDayDetails(savedDate), 300);
-        }
-
-        /**
-         * Open modal to import workouts from Claude text format
-         * @param {string} dateStr - Target date for imported workouts
-         */
         function openImportWorkoutModal(dateStr) {
-            importTargetDate = dateStr;
-            const todayStr = getLocalDateString();
-
-            let modal = document.getElementById('importWorkoutModal');
-            if (!modal) {
-                modal = document.createElement('div');
-                modal.id = 'importWorkoutModal';
-                modal.className = 'modal-overlay';
-                document.body.appendChild(modal);
-            }
-
-            modal.innerHTML = `
-                <div class="modal" style="max-width: 420px;">
-                    <div class="modal-header">
-                        <span class="modal-title">Import Workouts from Claude</span>
-                        <button class="modal-close" onclick="closeImportWorkoutModal()">x</button>
-                    </div>
-                    <div class="modal-body">
-                        <div style="background: var(--bg-tertiary); padding: 12px; border-radius: 8px; margin-bottom: 15px;">
-                            <div style="font-weight: 600; margin-bottom: 8px;">Target Date: ${dateStr}</div>
-                            <div style="font-size: 0.85em; color: var(--text-muted);">Workouts will be added to this day</div>
-                        </div>
-
-                        <div class="form-group" style="margin-bottom: 12px;">
-                            <label class="form-label">Paste workout data from Claude:</label>
-                            <textarea id="importWorkoutText" class="form-input" rows="5" placeholder="WORKOUT|Lift|45|280|17:00
-WORKOUT|Run|30|320|18:30
-WORKOUT|Walk|20|80|07:00"></textarea>
-                        </div>
-
-                        <div style="background: rgba(34, 197, 94, 0.1); padding: 10px; border-radius: 8px; margin-bottom: 15px; font-size: 0.8em;">
-                            <div style="font-weight: 600; color: var(--accent-green); margin-bottom: 4px;">Format:</div>
-                            <code style="color: var(--text-secondary);">WORKOUT|Type|Duration|Calories|Time</code>
-                            <div style="color: var(--text-muted); margin-top: 4px;">One workout per line. Time is optional (HH:MM).</div>
-                        </div>
-
-                        <button onclick="processImportedWorkouts()" class="submit-btn" style="width: 100%;">Import Workouts</button>
-                    </div>
-                </div>
-            `;
-
-            modal.classList.add('active');
-            modal.onclick = function(e) {
-                if (e.target === modal) closeImportWorkoutModal();
-            };
-        }
-
-        function closeImportWorkoutModal() {
-            const modal = document.getElementById('importWorkoutModal');
-            if (modal) modal.classList.remove('active');
-            importTargetDate = null;
-        }
-
-        function processImportedWorkouts() {
-            if (!importTargetDate) return;
-
-            const text = document.getElementById('importWorkoutText').value.trim();
-            if (!text) {
-                showToast('Please paste workout data');
-                return;
-            }
-
-            const todayStr = getLocalDateString();
-            const lines = text.split('\n').filter(line => line.trim());
-            let imported = 0;
-            let totalCalories = 0;
-
-            for (const line of lines) {
-                const parts = line.split('|').map(p => p.trim());
-                if (parts[0]?.toUpperCase() !== 'WORKOUT' || parts.length < 4) continue;
-
-                const timeStr = parts[5] || parts[4];
-                const hasTime = timeStr && timeStr.match(/^\d{1,2}:\d{2}$/);
-
-                const workout = {
-                    id: generateId('workout'),
-                    type: parts[1] || 'Workout',
-                    duration: parseInt(parts[2]) || 0,
-                    calories: parseInt(parts[3]) || 0,
-                    time: hasTime ? formatTimeET(timeStr) : formatTimeET(new Date()),
-                    date: importTargetDate,
-                    _importedAt: new Date().toISOString()
-                };
-
-                // Add to appropriate location
-                if (importTargetDate === todayStr) {
-                    state.today.workouts = migrateArrayToObject(state.today.workouts, 'workout');
-                    state.today.workouts[workout.id] = workout;
-                    totalCalories += workout.calories;
-                } else {
-                    if (!state.dailyLogs[importTargetDate]) {
-                        state.dailyLogs[importTargetDate] = {
-                            date: importTargetDate,
-                            meals: {},
-                            workouts: {},
-                            workedOut: false
-                        };
-                    }
-                    ensureWorkoutsObject(importTargetDate);
-                    state.dailyLogs[importTargetDate].workouts[workout.id] = workout;
-                    state.dailyLogs[importTargetDate].workedOut = true;
-                }
-
-                imported++;
-            }
-
-            if (imported === 0) {
-                showToast('No valid workouts found. Check format.');
-                return;
-            }
-
-            // Update today's active calories and recalculate
-            if (importTargetDate === todayStr) {
-                state.today.workedOut = true;
-                state.today.activeCalories = (state.today.activeCalories || 0) + totalCalories;
-
-                const tdee = calculateTDEE(
-                    state.profile.currentWeight_lbs,
-                    state.profile.height_cm,
-                    state.profile.age,
-                    state.today.activeCalories
-                );
-                state.today.targets = calculateTargets(state.today.mode, tdee, state.profile.currentWeight_lbs, state.today.isBrainDay);
-
-                saveDayLog();
-                renderWorkoutsList();
-                renderWorkoutHistoryManager();
-                renderDashboard();
-                renderSimpleView();
-                saveState();
-            } else {
-                recalcDateAndDependents(importTargetDate);
-                saveStateImmediate(); // Bypass debounce for historical
-                renderWorkoutHistoryManager();
-                renderCalendarHeatmap();
-            }
-
-            const savedDate = importTargetDate;
-            closeImportWorkoutModal();
-            showToast(`Imported ${imported} workout${imported > 1 ? 's' : ''}`);
-
-            // Refresh day detail modal
-            setTimeout(() => showDayDetails(savedDate), 300);
+            openImportClaudeModal(dateStr);
         }
 
         // ============================================
@@ -13241,82 +13209,9 @@ WORKOUT|Walk|20|80|07:00"></textarea>
         // ============================================
 
         function openQuickMealModal() {
-            pendingMealDate = null;  // Reset date selection on open
-            // Create quick meal modal if it doesn't exist
-            let modal = document.getElementById('quickMealModal');
-            if (!modal) {
-                modal = document.createElement('div');
-                modal.id = 'quickMealModal';
-                modal.className = 'modal-overlay';
-                document.body.appendChild(modal);
-            }
-
-            // Get ALL frequent foods sorted by usage (most used first)
-            const topFoods = getValues(state.frequentFoods)
-                .sort((a, b) => (b.uses || 0) - (a.uses || 0));
-
-            // Get recent meals from today (last 3)
-            const recentMeals = getValues(state.today.meals)
-                .slice(-3)
-                .reverse();
-
-            modal.innerHTML = `
-                <div class="modal" style="max-width: 400px; max-height: 90vh; display: flex; flex-direction: column;">
-                    <div class="modal-header">
-                        <span class="modal-title">🍽️ Quick Log (${topFoods.length} foods)</span>
-                        <button class="modal-close" onclick="closeQuickMealModal()">×</button>
-                    </div>
-                    <div class="modal-body" style="overflow-y: auto; flex: 1;">
-                        <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 12px;">
-                            <label style="font-size: 0.85em; color: var(--text-secondary); white-space: nowrap;">Date:</label>
-                            <input type="date" id="quickMealDateInput" class="form-input" value="${getLocalDateString()}" max="${getLocalDateString()}" style="flex: 1; padding: 6px 8px; font-size: 0.85em;" onchange="pendingMealDate = (this.value === getLocalDateString()) ? null : this.value;">
-                        </div>
-                        <p style="margin-bottom: 12px; color: var(--text-secondary); font-size: 0.9em;">Tap to select serving size:</p>
-
-                        <div class="quick-meal-grid" style="max-height: 280px; overflow-y: auto; padding-right: 5px;">
-                            ${topFoods.length > 0 ? topFoods.map(food => `
-                                <button class="quick-meal-btn" onclick="openQtySelector('${food.id}')">
-                                    <div class="quick-meal-name">${escapeHtml(food.name)}</div>
-                                    <div class="quick-meal-macros">${food.calories} cal • ${food.protein}g P • ${food.carbs || 0}g C</div>
-                                </button>
-                            `).join('') : `<div style="text-align: center; color: var(--text-muted); padding: 20px;">No frequent foods saved yet.<br>Add meals in Detailed View first.</div>`}
-                        </div>
-
-                        ${recentMeals.length > 0 ? `
-                            <div class="quick-meal-recent">
-                                <div class="quick-meal-recent-label">Today's Meals (tap to repeat)</div>
-                                ${recentMeals.map((meal) => `
-                                    <div class="recent-meal-item" onclick="repeatMeal('${meal.id}')">
-                                        <span class="recent-meal-name">${escapeHtml(meal.name)}</span>
-                                        <span class="recent-meal-macros">${meal.calories} cal</span>
-                                    </div>
-                                `).join('')}
-                            </div>
-                        ` : ''}
-
-                        <div class="quick-meal-divider">Claude paste</div>
-
-                        <div class="quick-meal-paste">
-                            <textarea id="quickMealPaste" placeholder="MEAL|Name|Calories|Protein|Carbs|Fat"></textarea>
-                            <div class="quick-meal-paste-hint">Paste from Claude • Multiple lines OK</div>
-                        </div>
-
-                        <div class="quick-meal-actions">
-                            <button class="parse-btn" onclick="parseQuickMealPaste()">Add Pasted</button>
-                            <button class="custom-btn" onclick="closeQuickMealModal(); openAddMealModal();">Custom Entry</button>
-                        </div>
-                    </div>
-                </div>
-            `;
-
-            modal.classList.add('active');
-
-            // Click outside to close
-            modal.onclick = function(e) {
-                if (e.target === modal) {
-                    closeQuickMealModal();
-                }
-            };
+            // Quick Log is merged into the unified Log modal's Meal tab
+            // (frequent foods + Claude paste + custom entry all in one surface).
+            openAddMealModal();
         }
 
         function closeQuickMealModal() {
@@ -13827,62 +13722,10 @@ WORKOUT|Walk|20|80|07:00"></textarea>
         // ============================================
 
         function openWorkoutModal(initialDate = getLocalDateString()) {
-            // Create workout modal if it doesn't exist
-            let modal = document.getElementById('workoutModal');
-            if (!modal) {
-                modal = document.createElement('div');
-                modal.id = 'workoutModal';
-                modal.className = 'modal-overlay';
-                document.body.appendChild(modal);
-            }
-
-            const today = getLocalDateString();
-
-            modal.innerHTML = `
-                <div class="modal" style="max-width: 380px;">
-                    <div class="modal-header">
-                        <span class="modal-title">💪 Log Workout</span>
-                        <button class="modal-close" onclick="closeWorkoutModal()">×</button>
-                    </div>
-                    <div class="modal-body">
-                        <div class="form-group" style="margin-bottom: 15px;">
-                            <label class="form-label">Date</label>
-                            <input type="date" id="workoutDateInput" class="form-input" value="${initialDate <= today ? initialDate : today}" max="${today}">
-                        </div>
-
-                        <p style="margin-bottom: 15px; color: var(--text-secondary);">Quick add:</p>
-
-                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 20px;">
-                            <button class="action-btn secondary" onclick="logQuickWorkout('Lift')" style="padding: 20px;">
-                                🏋️ Lift
-                            </button>
-                            <button class="action-btn secondary" onclick="logQuickWorkout('Run')" style="padding: 20px;">
-                                🏃 Run
-                            </button>
-                            <button class="action-btn secondary" onclick="logQuickWorkout('Cardio')" style="padding: 20px;">
-                                💪 Cardio
-                            </button>
-                            <button class="action-btn secondary" onclick="logQuickWorkout('Walk')" style="padding: 20px;">
-                                🚶 Walk
-                            </button>
-                        </div>
-
-                        <div class="form-group">
-                            <label class="form-label">Or paste detailed data from Claude:</label>
-                            <textarea id="workoutPasteInput" class="form-input" rows="3" placeholder="WORKOUT|Lift|45|280|17:00|2026-01-26"></textarea>
-                            <div style="font-size: 0.8em; color: var(--text-muted); margin-top: 4px;">
-                                Format: WORKOUT|Type|Duration|Calories|Time|Date(optional)
-                            </div>
-                        </div>
-
-                        <button class="submit-btn" onclick="parseWorkoutInput()">Save Workout</button>
-
-                        ${renderWorkoutHistory()}
-                    </div>
-                </div>
-            `;
-
-            modal.classList.add('active');
+            // Clear any stale paste input, then open unified log modal on the Workout tab.
+            const pasteInput = document.getElementById('workoutPasteInput');
+            if (pasteInput) pasteInput.value = '';
+            openLogModal('workout', initialDate);
         }
 
         function renderWorkoutHistory() {
@@ -13913,8 +13756,7 @@ WORKOUT|Walk|20|80|07:00"></textarea>
         }
 
         function closeWorkoutModal() {
-            const modal = document.getElementById('workoutModal');
-            if (modal) modal.classList.remove('active');
+            closeLogModal();
         }
 
         function logQuickWorkout(type) {
@@ -14408,7 +14250,7 @@ WORKOUT|Walk|20|80|07:00"></textarea>
         // ============================================
 
         function closeWeighInModal() {
-            document.getElementById('weighInModal').classList.remove('active');
+            closeLogModal();
         }
 
         function showMetabolicAdaptationModal(lbsLost, adjustment, newTDEE) {
@@ -15637,34 +15479,28 @@ TDEE TODAY: ~${formatNumber(calculateTDEE(state.profile.currentWeight_lbs, state
         // ============================================
 
         function openBodyCompModal() {
-            // Pre-fill weight if available
+            // Pre-fill weight if available, clear measurement inputs, reset previews.
             const currentWeight = state.profile.currentWeight_lbs;
-            document.getElementById('navyWeightInput').value = currentWeight || '';
-            document.getElementById('scaleWeightInput').value = currentWeight || '';
-
-            // Clear other inputs
-            document.getElementById('neckInput').value = '';
-            document.getElementById('waistInput').value = '';
-            document.getElementById('scaleBfInput').value = '';
-
-            // Reset previews
+            const navyW = document.getElementById('navyWeightInput');
+            const scaleW = document.getElementById('scaleWeightInput');
+            const neck = document.getElementById('neckInput');
+            const waist = document.getElementById('waistInput');
+            const scaleBf = document.getElementById('scaleBfInput');
+            if (navyW) navyW.value = currentWeight || '';
+            if (scaleW) scaleW.value = currentWeight || '';
+            if (neck) neck.value = '';
+            if (waist) waist.value = '';
+            if (scaleBf) scaleBf.value = '';
             resetNavyPreview();
             resetScalePreview();
 
-            // Set default tab
-            setBodyCompTab('navy');
-
-            // Render history
-            renderBodyCompHistory();
-
-            document.getElementById('bodyCompModal').classList.add('active');
-
-            // Set up live calculation listeners
-            setupBodyCompListeners();
+            // Open unified Log modal on the Body Comp tab (today-only; stepper locks).
+            // mountLogTab('bodycomp') sets the nested Navy tab, wires listeners, renders history.
+            openLogModal('bodycomp');
         }
 
         function closeBodyCompModal() {
-            document.getElementById('bodyCompModal').classList.remove('active');
+            closeLogModal();
         }
 
         function setBodyCompTab(tab) {
@@ -16043,16 +15879,24 @@ TDEE TODAY: ~${formatNumber(calculateTDEE(state.profile.currentWeight_lbs, state
         // --- Import from Claude Modal (Phase 2A) ---
         let parsedImportData = [];
 
-        function openImportClaudeModal() {
-            document.getElementById('importClaudeInput').value = '';
-            document.getElementById('importPreviewSection').style.display = 'none';
-            document.getElementById('importConfirmBtn').disabled = true;
-            parsedImportData = [];
-            document.getElementById('importClaudeModal').classList.add('active');
+        function openImportClaudeModal(initialDate = getLocalDateString()) {
+            resetImportTab();
+            openLogModal('import', initialDate);
         }
 
         function closeImportClaudeModal() {
-            document.getElementById('importClaudeModal').classList.remove('active');
+            closeLogModal();
+        }
+
+        // Clears the Import tab's paste box + preview. Called on open and on tab mount.
+        function resetImportTab() {
+            const input = document.getElementById('importClaudeInput');
+            const previewSection = document.getElementById('importPreviewSection');
+            const confirmBtn = document.getElementById('importConfirmBtn');
+            if (input) input.value = '';
+            if (previewSection) previewSection.style.display = 'none';
+            if (confirmBtn) confirmBtn.disabled = true;
+            parsedImportData = [];
         }
 
         function previewImportData() {
@@ -16083,6 +15927,17 @@ TDEE TODAY: ~${formatNumber(calculateTDEE(state.profile.currentWeight_lbs, state
             document.getElementById('importConfirmBtn').disabled = false;
         }
 
+        // Default date for import lines that omit their own date: the Log modal's
+        // stepper date when the Import tab is active, else today.
+        function logImportDefaultDate() {
+            const today = getLocalDateString();
+            if (typeof logActiveTab !== 'undefined' && logActiveTab === 'import' &&
+                typeof logCurrentDate === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(logCurrentDate) && logCurrentDate <= today) {
+                return logCurrentDate;
+            }
+            return today;
+        }
+
         function parseImportLine(line) {
             const parts = line.split('|');
             if (parts.length < 2) return null;
@@ -16100,7 +15955,7 @@ TDEE TODAY: ~${formatNumber(calculateTDEE(state.profile.currentWeight_lbs, state
                     carbs: parseInt(parts[4]) || 0,
                     fat: parseInt(parts[5]) || 0,
                     time: parts[6] || getCurrentTimeET(),
-                    date: parts[7] || getLocalDateString()
+                    date: parts[7] || logImportDefaultDate()
                 };
             } else if (type === 'WORKOUT') {
                 // WORKOUT|Type|Duration|Calories|Time|Date
@@ -16111,7 +15966,7 @@ TDEE TODAY: ~${formatNumber(calculateTDEE(state.profile.currentWeight_lbs, state
                     duration: parseInt(parts[2]) || 30,
                     calories: parseInt(parts[3]) || 200,
                     time: parts[4] || getCurrentTimeET(),
-                    date: parts[5] || getLocalDateString()
+                    date: parts[5] || logImportDefaultDate()
                 };
             } else if (type === 'WEIGHIN') {
                 // WEIGHIN|Weight|BodyFat|Date
@@ -16120,7 +15975,7 @@ TDEE TODAY: ~${formatNumber(calculateTDEE(state.profile.currentWeight_lbs, state
                     type: 'weighin',
                     weight: parseFloat(parts[1]) || 0,
                     bodyFat: parts[2] ? parseFloat(parts[2]) : null,
-                    date: parts[3] || getLocalDateString()
+                    date: parts[3] || logImportDefaultDate()
                 };
             }
 
@@ -16292,9 +16147,15 @@ TDEE TODAY: ~${formatNumber(calculateTDEE(state.profile.currentWeight_lbs, state
             saveState();
             saveDayLog();
             closeImportClaudeModal();
+            resetImportTab();  // clear paste + preview so a stale re-open can't double-import
             renderSimpleView();
             renderMealsList();
             renderWorkoutsList();
+            // Historical/weigh-in imports change past cells — keep the calendar in sync
+            // (day-details no longer auto-reopens after a day-scoped import).
+            if ((touchedHistoricalDates.size > 0 || weighInsAdded > 0) && typeof renderCalendarHeatmap === 'function') {
+                renderCalendarHeatmap();
+            }
 
             const parts = [];
             if (mealsAdded > 0) parts.push(`${mealsAdded} meal${mealsAdded !== 1 ? 's' : ''}`);
@@ -16308,15 +16169,13 @@ TDEE TODAY: ~${formatNumber(calculateTDEE(state.profile.currentWeight_lbs, state
         let editingWeighInId = null;
 
         function openWeighInModal(initialDate = getLocalDateString()) {
-            const today = getLocalDateString();
-            const dateInput = document.getElementById('weighInDateInput');
-            dateInput.max = today;
-            dateInput.value = initialDate && initialDate <= today ? initialDate : today;
-            document.getElementById('weightInput').value = '';
-            document.getElementById('bodyFatInput').value = '';
-            renderWeightTrend();
-            renderWeighInHistory();
-            document.getElementById('weighInModal').classList.add('active');
+            // Clear entry fields, then open the unified Log modal on the Weigh-In tab.
+            // Trend + history render via mountLogTab('weighin'); stepper drives #weighInDateInput.
+            const weightEl = document.getElementById('weightInput');
+            const bfEl = document.getElementById('bodyFatInput');
+            if (weightEl) weightEl.value = '';
+            if (bfEl) bfEl.value = '';
+            openLogModal('weighin', initialDate);
         }
 
         function renderWeighInHistory() {
@@ -17252,10 +17111,33 @@ TDEE TODAY: ~${formatNumber(calculateTDEE(state.profile.currentWeight_lbs, state
 
             // Update only the state envelope so the sibling /checkpoints branch
             // is not deleted on every ordinary save.
-            database.ref(userPath).update({
-                state: stateToSave,
-                lastUpdated: saveTime
-            })
+            let updatePayload;
+            if (historyFullyLoaded) {
+                // Full history is represented in memory — replacing the whole
+                // /state envelope is safe and cheapest.
+                updatePayload = {
+                    state: stateToSave,
+                    lastUpdated: saveTime
+                };
+            } else {
+                // We have NOT confirmed the full cloud history this session (e.g. a
+                // failed cloud read left us on 90-day-pruned localStorage). Writing
+                // the whole /state envelope would REPLACE — and permanently delete —
+                // cloud dailyLogs older than our local window. Instead write each
+                // field at its own deep path and MERGE dailyLogs per-date, so any
+                // cloud-only history we don't hold locally is preserved untouched.
+                updatePayload = { lastUpdated: saveTime };
+                Object.keys(stateToSave).forEach(key => {
+                    if (key === 'dailyLogs') return; // merged per-date below
+                    updatePayload['state/' + key] = stateToSave[key];
+                });
+                const safeDailyLogs = stateToSave.dailyLogs || {};
+                Object.keys(safeDailyLogs).forEach(date => {
+                    updatePayload['state/dailyLogs/' + date] = safeDailyLogs[date];
+                });
+            }
+
+            database.ref(userPath).update(updatePayload)
             .then(() => {
                 updateSyncStatus('connected', 'Saved ✓');
             })
@@ -17309,9 +17191,7 @@ TDEE TODAY: ~${formatNumber(calculateTDEE(state.profile.currentWeight_lbs, state
                             frequentFoods: mergedFrequentFoods,  // Already merged as object
                             weighIns: mergeIdCollections(state.weighIns, firebaseState.weighIns, cloudWins, 'weighin'),
                             bodyCompHistory: mergeIdCollections(state.bodyCompHistory, firebaseState.bodyCompHistory, cloudWins, 'bodycomp'),
-                            dailyLogs: cloudWins
-                                ? { ...state.dailyLogs, ...(firebaseState.dailyLogs || {}) }
-                                : { ...(firebaseState.dailyLogs || {}), ...state.dailyLogs },
+                            dailyLogs: mergeDailyLogs(state.dailyLogs, firebaseState.dailyLogs, cloudWins),
                             refeedTracker: { ...state.refeedTracker, ...(firebaseState.refeedTracker || {}) },
                             gamification: {
                                 ...state.gamification,
@@ -17398,6 +17278,11 @@ TDEE TODAY: ~${formatNumber(calculateTDEE(state.profile.currentWeight_lbs, state
 
                     // Mark that we've loaded from cloud (even if empty)
                     hasLoadedFromCloud = true;
+                    // We reached here only via the success path — cloud history was
+                    // either fully merged (data.state present) or confirmed empty
+                    // (nothing to lose). Either way a wholesale /state write is now
+                    // safe. The catch path below deliberately leaves this false.
+                    historyFullyLoaded = true;
 
                     // Initialize UI
                     initializeUI();
@@ -17518,7 +17403,7 @@ TDEE TODAY: ~${formatNumber(calculateTDEE(state.profile.currentWeight_lbs, state
                         frequentFoods: mergedFrequentFoods,  // Already merged as object
                         weighIns: mergeIdCollections(state.weighIns, firebaseState.weighIns, true, 'weighin'),
                         bodyCompHistory: mergeIdCollections(state.bodyCompHistory, firebaseState.bodyCompHistory, true, 'bodycomp'),
-                        dailyLogs: { ...state.dailyLogs, ...(firebaseState.dailyLogs || {}) },
+                        dailyLogs: mergeDailyLogs(state.dailyLogs, firebaseState.dailyLogs, true),
                         refeedTracker: { ...state.refeedTracker, ...(firebaseState.refeedTracker || {}) },
                         gamification: {
                             ...state.gamification,
@@ -17540,6 +17425,9 @@ TDEE TODAY: ~${formatNumber(calculateTDEE(state.profile.currentWeight_lbs, state
 
                     // Preserve _dataLoaded flag after merge so saves aren't blocked
                     state._dataLoaded = true;
+                    // A realtime push carries the full cloud state — history is now
+                    // fully represented in memory, so wholesale writes are safe again.
+                    historyFullyLoaded = true;
 
                     safeLocalStorageSet('bodyCompTrackerState', JSON.stringify(state));
 
@@ -17610,7 +17498,7 @@ TDEE TODAY: ~${formatNumber(calculateTDEE(state.profile.currentWeight_lbs, state
                         // Union local + cloud so local-only weigh-ins/measurements aren't dropped
                         weighIns: mergeIdCollections(state.weighIns, firebaseState.weighIns, true, 'weighin'),
                         bodyCompHistory: mergeIdCollections(state.bodyCompHistory, firebaseState.bodyCompHistory, true, 'bodycomp'),
-                        dailyLogs: { ...state.dailyLogs, ...(firebaseState.dailyLogs || {}) },
+                        dailyLogs: mergeDailyLogs(state.dailyLogs, firebaseState.dailyLogs, true),
                         refeedTracker: { ...state.refeedTracker, ...(firebaseState.refeedTracker || {}) },
                         gamification: {
                             ...state.gamification,
@@ -17631,6 +17519,8 @@ TDEE TODAY: ~${formatNumber(calculateTDEE(state.profile.currentWeight_lbs, state
                     });
 
                     safeLocalStorageSet('bodyCompTrackerState', JSON.stringify(state));
+                    // Full cloud history merged into memory — wholesale writes safe.
+                    historyFullyLoaded = true;
 
                     initializeUI();
                     updateSyncStatus('connected', 'Synced ✓');
@@ -22922,51 +22812,11 @@ TDEE TODAY: ~${formatNumber(calculateTDEE(state.profile.currentWeight_lbs, state
             openWeighInModal(dateStr);
         }
 
-        function openPastDayHub() {
-            const yesterday = parseLocalDate(getLocalDateString());
-            yesterday.setDate(yesterday.getDate() - 1);
-            const defaultDate = getLocalDateString(yesterday);
-            let modal = document.getElementById('pastDayHubModal');
-            if (!modal) {
-                modal = document.createElement('div');
-                modal.id = 'pastDayHubModal';
-                modal.className = 'modal-overlay';
-                document.body.appendChild(modal);
-            }
-            modal.innerHTML = `
-                <div class="modal" style="max-width:390px;">
-                    <div class="modal-header">
-                        <span class="modal-title">Add to a Past Day</span>
-                        <button class="modal-close" onclick="closePastDayHub()">×</button>
-                    </div>
-                    <div class="modal-body">
-                        <label class="form-label" for="pastDayHubDate">Which day?</label>
-                        <input id="pastDayHubDate" class="form-input" type="date" value="${defaultDate}" max="${defaultDate}">
-                        <div style="display:grid; gap:10px; margin-top:16px;">
-                            <button class="submit-btn" onclick="startPastDayEntry('meal')">Add meal</button>
-                            <button class="submit-btn" onclick="startPastDayEntry('workout')">Add workout</button>
-                            <button class="submit-btn" onclick="startPastDayEntry('weighin')">Add weigh-in</button>
-                        </div>
-                    </div>
-                </div>`;
-            modal.classList.add('active');
-        }
-
-        function closePastDayHub() {
-            document.getElementById('pastDayHubModal')?.classList.remove('active');
-        }
-
-        function startPastDayEntry(type) {
-            const dateStr = document.getElementById('pastDayHubDate')?.value;
-            if (!dateStr || dateStr >= getLocalDateString()) {
-                showToast('Choose a date before today');
-                return;
-            }
-            closePastDayHub();
-            if (type === 'meal') openAddMealModal(dateStr);
-            if (type === 'workout') openWorkoutModal(dateStr);
-            if (type === 'weighin') openWeighInModal(dateStr);
-        }
+        // Past Day Hub retired — the unified #logModal date stepper (with max=today and
+        // back-navigation) now handles past-day entry across every tab, so a separate
+        // date-picker hub is redundant. Day-scoped entry still routes through
+        // openAddMealModal(date)/openWorkoutModal(date)/openWeighInModal(date), which all
+        // open the unified modal on the requested date.
 
         function copyDayLog(dateStr) {
             const log = state.dailyLogs[dateStr];
@@ -23221,7 +23071,7 @@ TDEE TODAY: ~${formatNumber(calculateTDEE(state.profile.currentWeight_lbs, state
                 state.profile.currentWeight_lbs,
                 state.profile.height_cm,
                 state.profile.age,
-                state.today.activeCalories
+                state.today.date
             );
             state.today.targets = applyTargetModifiers(
                 calculateTargets(state.today.mode, tdee, state.profile.currentWeight_lbs, state.today.isBrainDay));
@@ -23420,6 +23270,22 @@ TDEE TODAY: ~${formatNumber(calculateTDEE(state.profile.currentWeight_lbs, state
             // Empty day: never write a phantom snapshot (these used to record a
             // full-TDEE "deficit" for days where nothing was logged)
             if (!hasNutrition && !isWorkedOut && !existing) return false;
+
+            // Rich→empty protection: today's live buffer is empty, but a real
+            // snapshot already exists for this date. This happens when a rollover
+            // or reset path fires saveDayLogWithSnapshot() after state.today was
+            // already cleared (backgrounded tab, double-fire). Overwriting would
+            // wipe the persisted meals/workouts/macros — the saved rich day wins.
+            // (An existing *assumed/unresolved* placeholder has no real data, so
+            // it still falls through to be refreshed below.)
+            if (!hasNutrition && !isWorkedOut && existing) {
+                const existingHasData = getCount(existing.meals) > 0
+                    || getCount(existing.workouts) > 0
+                    || (existing.calories || 0) > 0
+                    || (existing.protein || 0) > 0
+                    || (existing.mealCount || 0) > 0;
+                if (existingHasData) return false;
+            }
 
             const targets = today.targets || { calories: 1900, protein: 172, carbs: 150, floor: 1900 };
             const tdee = calculateTDEE(
