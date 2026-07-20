@@ -12076,6 +12076,7 @@
         }
 
         function logStepDate(delta) {
+            if (logActiveTab === 'bodycomp') return; // today-only tab — stepper locked (matches logOpenDatePicker + disabled prev button)
             const base = logCurrentDate || getLocalDateString();
             const d = parseLocalDate(base);
             d.setDate(d.getDate() + delta);
