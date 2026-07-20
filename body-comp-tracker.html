@@ -4226,12 +4226,18 @@
         .calendar-day.deficit-gym { background: rgba(6, 182, 212, 0.4); }
         .calendar-day.gym-only { background: rgba(139, 92, 246, 0.35); }
 
-        /* Day exists but nutrition untracked & unresolved — needs a deficit decision */
+        /* Day exists but nutrition untracked — CALM, neutral "no data" affordance (was an
+           amber "needs a decision" alarm). Untracked days auto-exclude from progress, so this
+           is purely a quiet, optional "tap to backfill in the calendar" cue — never a nag.
+           Matches .past-empty so all untracked days read the same, low-pressure way. */
         .calendar-day.needs-resolution {
-            border: 1.5px dashed rgba(245, 158, 11, 0.7);
+            border: 1.5px dashed var(--border-color);
+            opacity: 0.7;
+            color: var(--text-muted);
         }
         .calendar-day.needs-resolution:hover {
-            border-color: var(--accent-yellow, #f59e0b);
+            opacity: 1;
+            border-color: var(--accent-blue);
         }
 
         /* Untracked-day resolution banner (home tab) + resolve modal rows */
@@ -6753,12 +6759,12 @@
                 </div>
             </div>
 
-            <!-- Untracked-day resolution banner -->
-            <div id="unresolvedBanner" class="unresolved-banner" style="display: none;" onclick="openResolveDaysModal()">
-                <span>⚖️</span>
-                <span id="unresolvedBannerText"></span>
-                <span class="unresolved-banner-cta">Resolve →</span>
-            </div>
+            <!-- Untracked-day resolution banner retired — untracked past days auto-exclude
+                 from all deficit math (getEffectiveDeficit → null), so there is nothing to
+                 "resolve." The homepage never nags about them. If the user WANTS to backfill a
+                 specific day (0 / recent avg / custom), that option lives ONLY in the calendar
+                 day-detail (showDayDetails → resolveDayFromDetail). renderUnresolvedBanner()
+                 no-ops safely now that #unresolvedBanner is gone. -->
 
             <!-- Progress Bars -->
             <div class="simple-progress">
@@ -22417,7 +22423,7 @@ TDEE TODAY: ~${formatNumber(calculateTDEE(state.profile.currentWeight_lbs, state
                 let cellTitle = 'No data';
                 if (log) {
                     cellTitle = needsResolution
-                        ? (hasWorkoutData(log) ? displayCalories + ' cal untracked, workout logged — tap to resolve' : 'Nutrition untracked — tap to resolve')
+                        ? (hasWorkoutData(log) ? 'Workout logged · nutrition not tracked' : 'No nutrition tracked')
                         : displayCalories + ' cal, ' + displayProtein + 'g P' + (log.nutritionStatus === 'assumed' ? ' (assumed deficit)' : '');
                 } else if (isPastNoData) {
                     cellTitle = 'Tap to add data';
@@ -22686,10 +22692,11 @@ TDEE TODAY: ~${formatNumber(calculateTDEE(state.profile.currentWeight_lbs, state
             if (canResolve) {
                 const recentForDay = getRecentAverageDeficit(dateStr);
                 resolveSectionHtml = `
-                    <div style="background: rgba(245, 158, 11, 0.08); border: 1.5px dashed rgba(245, 158, 11, 0.7); padding: 12px; border-radius: 10px; margin-bottom: 10px;">
-                        <div style="font-weight: 600; font-size: 0.9em; margin-bottom: 4px;">⚖️ Untracked day — how should it count?</div>
+                    <div style="background: var(--bg-tertiary); border: 1px solid var(--border-color); padding: 12px; border-radius: 10px; margin-bottom: 10px;">
+                        <div style="font-weight: 600; font-size: 0.9em; margin-bottom: 4px;">⚖️ Untracked day <span style="font-weight: 400; color: var(--text-muted); font-size: 0.85em;">— optional</span></div>
                         <div style="font-size: 0.78em; color: var(--text-muted); margin-bottom: 10px;">
-                            No nutrition was logged, so this day adds nothing to your deficit history.
+                            This day is automatically left out of your progress — nothing to fix.
+                            If you remember it, you can backfill an estimate below.
                             ${recentForDay ? `Recent average: <strong>${recentForDay.avg > 0 ? '+' : ''}${recentForDay.avg} cal/day</strong>.` : ''}
                         </div>
                         <div style="display: flex; gap: 8px;">
