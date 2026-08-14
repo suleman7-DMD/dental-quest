@@ -1379,7 +1379,7 @@ function getCompetencyGaps() {
     // Calculate weeks remaining to graduation and total program weeks (hoisted outside loops)
     var today = new Date();
     today.setHours(0, 0, 0, 0);
-    var graduation = new Date(2027, 4, 12); // May 12, 2027
+    var graduation = new Date(2027, 4, 15); // May 15, 2027 — graduation window opens (May 15–20)
     var weeksRemaining = Math.max(1, Math.ceil((graduation - today) / (7 * 24 * 60 * 60 * 1000)));
     var totalWeeks = Math.ceil((graduation - new Date(2025, 7, 1)) / (7 * 24 * 60 * 60 * 1000)); // D3 start Aug 1, 2025
     var pastMidpoint = weeksRemaining < totalWeeks / 2;
@@ -1474,9 +1474,9 @@ function calculatePaceProjection(currentCount, targetCount, dataStartDate) {
     projectedDate.setDate(projectedDate.getDate() + daysToTarget);
 
     // Deadline awareness: flag if projected date exceeds key milestones
-    var d3End = new Date(2026, 4, 15);       // May 15, 2026 — D3 year ends
-    var graduation = new Date(2027, 4, 12);  // May 12, 2027 — graduation
-    var behindSchedule = projectedDate > d3End;
+    var sem1End = new Date(2026, 11, 21);    // Dec 21, 2026 — D4 Sem 1 ends (soft warning)
+    var graduation = new Date(2027, 4, 15);  // May 15, 2027 — graduation window opens
+    var behindSchedule = projectedDate > sem1End;
     var pastGraduation = projectedDate > graduation;
 
     return {

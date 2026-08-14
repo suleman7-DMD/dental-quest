@@ -778,6 +778,18 @@ function renderDashboard() {
             + '</div>';
     });
 
+    // Summatives tally — item-based, no mutation (manual check-off is the source of truth)
+    var summativesDone = 0, summativesTotal = 0;
+    Object.entries(competencies).forEach(function(entry) {
+        getValues(entry[1].sections).forEach(function(sec) {
+            getValues(sec.items).forEach(function(item) {
+                if (!item || !item.isSummative) return;
+                summativesTotal++;
+                if ((item.completed ?? 0) >= (item.required ?? 1)) summativesDone++;
+            });
+        });
+    });
+
     // === Row 2: Deadline helper ===
     function renderDeadlineItems(items, emptyMessage) {
         if (items.length === 0) {
@@ -828,9 +840,9 @@ function renderDashboard() {
     });
 
     // === Row 4: Key Dates Countdown ===
-    const d3End = new Date(2026, 4, 15);       // May 15, 2026
-    const extStart = new Date(2026, 4, 18);    // May 18, 2026
-    const graduation = new Date(2027, 4, 12);  // May 12, 2027
+    const sem1End = new Date(2026, 11, 21);    // Dec 21, 2026 — D4 Sem 1 ends
+    const sem2Start = new Date(2027, 0, 4);    // Jan 4, 2027 — D4 Sem 2 starts
+    const graduation = new Date(2027, 4, 15);  // May 15, 2027 — graduation window opens (May 15–20)
     const daysTo = function(target) { return Math.max(0, Math.ceil((target - today) / (1000 * 60 * 60 * 24))); };
     var useTopRailSplit = dashboardUseSplitTopRail();
     var topRailHeight = dashboardTopRailMaxHeight();
@@ -849,11 +861,45 @@ function renderDashboard() {
         + today.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })
         + '</div>';
 
-    // === ROW 1: Clinic Requirements Hero Card ===
-    html += '<div class="mission-card" style="background:linear-gradient(135deg, rgba(30,41,59,0.9), rgba(15,23,42,0.95)); border:1px solid rgba(59,130,246,0.3); border-radius:14px; padding:20px; margin-bottom:16px;">';
-    html += '<h2 style="color:#93c5fd; margin:0 0 16px 0; font-size:1.3em;">🏥 Clinic Requirements</h2>';
+    // === ROW 1: Graduation Requirements Hero Card (competency-primary for D4) ===
+    html += '<div class="mission-card" style="background:linear-gradient(135deg, rgba(30,41,59,0.9), rgba(15,23,42,0.95)); border:1px solid rgba(124,58,237,0.3); border-radius:14px; padding:20px; margin-bottom:16px;">';
+    html += '<h2 style="color:#c4b5fd; margin:0 0 16px 0; font-size:1.3em;">🎓 Graduation Requirements</h2>';
 
-    // Headline counters
+    // PRIMARY: overall competency completion — manual check-off is the graduation source of truth
+    html += '<div style="background:rgba(124,58,237,0.12); border:1px solid rgba(124,58,237,0.3); border-radius:10px; padding:14px; margin-bottom:14px;">';
+    html += '<div style="display:flex; align-items:baseline; justify-content:space-between; gap:10px; margin-bottom:8px; flex-wrap:wrap;">';
+    html += '<div style="font-size:0.9em; color:#c4b5fd; font-weight:600;">Competency Completion</div>';
+    html += '<div style="font-size:1.3em; font-weight:800; color:#a78bfa;">' + overallStats.completedItems + '/' + overallStats.totalItems
+        + ' <span style="font-size:0.7em; color:#94a3b8; font-weight:600;">(' + overallStats.overallPercent + '%)</span></div>';
+    html += '</div>';
+    html += '<div style="background:rgba(100,116,139,0.3); border-radius:4px; height:8px; overflow:hidden;">';
+    html += '<div style="background:linear-gradient(90deg, #7c3aed, #a78bfa); height:100%; width:' + overallStats.overallPercent + '%; transition:width 0.3s;"></div>';
+    html += '</div>';
+    html += '<div style="font-size:0.7em; color:#94a3b8; margin-top:6px;">Summatives: ' + summativesDone + '/' + summativesTotal + ' passed</div>';
+    html += '</div>';
+
+    // === Graduation Readiness Score ===
+    html += '<div style="display:flex; align-items:center; justify-content:space-between; background:rgba(124,58,237,0.1); border:1px solid rgba(124,58,237,0.25); border-radius:10px; padding:12px 16px; margin-bottom:12px;">';
+    html += '<div style="display:flex; align-items:center; gap:10px;">';
+    html += '<div style="font-size:1.6em; font-weight:800; color:' + (readiness.percent >= 50 ? '#a78bfa' : readiness.percent > 0 ? '#f59e0b' : '#ef4444') + ';">' + readiness.percent + '%</div>';
+    html += '<div><div style="font-size:0.9em; color:#e2e8f0; font-weight:600;">Graduation Readiness</div>';
+    html += '<div style="font-size:0.7em; color:#94a3b8;">Weighted across ' + Object.keys(readiness.details).length + ' competency categories</div></div>';
+    html += '</div>';
+    if (gaps.total > 0) {
+        html += '<div style="font-size:0.75em; color:#f59e0b; text-align:right;">';
+        if (gaps.zeroProgress.length > 0) html += gaps.zeroProgress.length + ' items at 0%<br>';
+        if (gaps.behindPace.length > 0) html += gaps.behindPace.length + ' behind pace';
+        html += '</div>';
+    }
+    html += '</div>';
+
+    // Competency category grid
+    html += '<div style="display:grid; grid-template-columns:repeat(auto-fill, minmax(150px, 1fr)); gap:8px; margin-bottom:12px;">';
+    html += categoryProgressHTML;
+    html += '</div>';
+
+    // SECONDARY: clinic volume counters — supporting metrics, no semester framing
+    html += '<div style="font-size:0.9em; color:#93c5fd; font-weight:600; margin:4px 0 10px;">🏥 Clinic Volume</div>';
     html += '<div style="display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-bottom:16px;">';
 
     // Appointments counter — smart aggregation from all sources
@@ -880,7 +926,7 @@ function renderDashboard() {
         if (smartApts.fromSnapshot > 0) aptBreakdown.push('SPS: ' + smartApts.fromSnapshot);
     }
     html += '<div style="font-size:0.65em; color:#64748b; margin-top:4px;">' + (aptBreakdown.length > 0 ? aptBreakdown.join(' + ') : 'No data yet') + '</div>';
-    // Pace projection — red if behind schedule (projected past D3 end)
+    // Pace projection — yellow if projected past Sem 1 end, red if past graduation
     if (aptPace) {
         var aptPaceColor = aptPace.daysToTarget === 0 ? '#10b981' : aptPace.pastGraduation ? '#dc2626' : aptPace.behindSchedule ? '#f87171' : '#93c5fd';
         var aptPaceText = aptPace.daysToTarget === 0 ? 'Target met!' : aptPace.ratePerWeek + '/wk pace — target by ' + aptPace.projectedDate;
@@ -922,32 +968,6 @@ function renderDashboard() {
     html += '</div>';
 
     html += '</div>'; // end headline counters grid
-
-    // === Graduation Readiness Score ===
-    html += '<div style="display:flex; align-items:center; justify-content:space-between; background:rgba(124,58,237,0.1); border:1px solid rgba(124,58,237,0.25); border-radius:10px; padding:12px 16px; margin-bottom:12px;">';
-    html += '<div style="display:flex; align-items:center; gap:10px;">';
-    html += '<div style="font-size:1.6em; font-weight:800; color:' + (readiness.percent >= 50 ? '#a78bfa' : readiness.percent > 0 ? '#f59e0b' : '#ef4444') + ';">' + readiness.percent + '%</div>';
-    html += '<div><div style="font-size:0.9em; color:#e2e8f0; font-weight:600;">Graduation Readiness</div>';
-    html += '<div style="font-size:0.7em; color:#94a3b8;">Weighted across ' + Object.keys(readiness.details).length + ' competency categories</div></div>';
-    html += '</div>';
-    if (gaps.total > 0) {
-        html += '<div style="font-size:0.75em; color:#f59e0b; text-align:right;">';
-        if (gaps.zeroProgress.length > 0) html += gaps.zeroProgress.length + ' items at 0%<br>';
-        if (gaps.behindPace.length > 0) html += gaps.behindPace.length + ' behind pace';
-        html += '</div>';
-    }
-    html += '</div>';
-
-    // Competency category grid
-    html += '<div style="display:grid; grid-template-columns:repeat(auto-fill, minmax(150px, 1fr)); gap:8px; margin-bottom:12px;">';
-    html += categoryProgressHTML;
-    html += '</div>';
-
-    // Overall competency total
-    html += '<div style="text-align:center; color:#94a3b8; font-size:0.85em; margin-bottom:12px;">'
-        + 'Competency items: ' + overallStats.completedItems + '/' + overallStats.totalItems + ' completed'
-        + ' (' + overallStats.overallPercent + '%)'
-        + '</div>';
 
     // Quick action buttons
     html += '<div style="display:flex; flex-wrap:wrap; gap:8px; justify-content:center; margin-bottom:12px;">';
@@ -1081,44 +1101,71 @@ function renderDashboard() {
         html += '</div>';
     }
 
-    // === ROW 4: Key Dates Countdown ===
+    // === ROW 4: Key Dates Countdown (D4 / Class of 2027) ===
     html += '<div class="mission-card" style="background:rgba(30,41,59,0.8); border:1px solid rgba(245,158,11,0.3); border-radius:14px; padding:16px; margin-bottom:16px;">';
     html += '<h3 style="color:#fbbf24; margin:0 0 12px 0; font-size:1.1em;">🎯 Key Dates</h3>';
     html += '<div style="display:grid; grid-template-columns:repeat(auto-fill, minmax(140px, 1fr)); gap:10px;">';
 
-    // D3 End — with appointment context
-    var d3Remaining = clinicHeadlines.appointments.target - clinicHeadlines.appointments.completed;
-    html += '<div style="background:rgba(59,130,246,0.1); border:1px solid rgba(59,130,246,0.25); border-radius:10px; padding:12px; text-align:center;">';
-    html += '<div style="font-size:1.8em; font-weight:800; color:#60a5fa;">' + daysTo(d3End) + '</div>';
-    html += '<div style="font-size:0.75em; color:#94a3b8; margin-top:2px;">days to D3 End</div>';
-    html += '<div style="font-size:0.7em; color:#64748b;">May 15, 2026</div>';
-    if (d3Remaining > 0) {
-        html += '<div style="font-size:0.6em; color:#93c5fd; margin-top:4px;">' + d3Remaining + ' apts remaining</div>';
-    } else if (d3Remaining < 0) {
-        html += '<div style="font-size:0.6em; color:#10b981; margin-top:4px;">Target exceeded by ' + Math.abs(d3Remaining) + '!</div>';
+    // Tile helper — dated tiles get countdowns; TBD tiles deep-link to the D4 Schedule card
+    var keyDateTile = function(rgb, accent, bigText, label, subLabel, extraLine) {
+        var tile = '<div style="background:rgba(' + rgb + ',0.1); border:1px solid rgba(' + rgb + ',0.25); border-radius:10px; padding:12px; text-align:center;">';
+        tile += '<div style="font-size:1.8em; font-weight:800; color:' + accent + ';">' + bigText + '</div>';
+        tile += '<div style="font-size:0.75em; color:#94a3b8; margin-top:2px;">' + label + '</div>';
+        tile += '<div style="font-size:0.7em; color:#64748b;">' + subLabel + '</div>';
+        if (extraLine) tile += extraLine;
+        tile += '</div>';
+        return tile;
+    };
+    var fmtKeyDate = function(dateStr) {
+        var kd = parseLocalDate(dateStr);
+        return kd ? kd.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : '';
+    };
+    var tbdSetDateLine = '<div style="font-size:0.65em; margin-top:4px;"><a onclick="switchTab(\'schedule\', event)" style="color:#93c5fd; cursor:pointer; text-decoration:underline;">set date →</a></div>';
+
+    // Static semester tiles — auto-retire once past
+    if (sem1End >= today) {
+        html += keyDateTile('59,130,246', '#60a5fa', daysTo(sem1End), 'days to Sem 1 End', 'Dec 21, 2026');
     }
-    html += '</div>';
+    if (sem2Start >= today) {
+        html += keyDateTile('16,185,129', '#34d399', daysTo(sem2Start), 'days to Sem 2 Start', 'Jan 4, 2027');
+    }
 
-    // Externship Start — with readiness context
-    html += '<div style="background:rgba(16,185,129,0.1); border:1px solid rgba(16,185,129,0.25); border-radius:10px; padding:12px; text-align:center;">';
-    html += '<div style="font-size:1.8em; font-weight:800; color:#34d399;">' + daysTo(extStart) + '</div>';
-    html += '<div style="font-size:0.75em; color:#94a3b8; margin-top:2px;">days to Externship</div>';
-    html += '<div style="font-size:0.7em; color:#64748b;">May 18, 2026</div>';
-    html += '<div style="font-size:0.6em; color:#6ee7b7; margin-top:4px;">' + readiness.percent + '% ready</div>';
-    html += '</div>';
-
-    // Graduation — with overall progress
+    // Graduation window — with procedures context
     var procRemaining = clinicHeadlines.procedures.target - clinicHeadlines.procedures.completed;
-    html += '<div style="background:rgba(245,158,11,0.1); border:1px solid rgba(245,158,11,0.25); border-radius:10px; padding:12px; text-align:center;">';
-    html += '<div style="font-size:1.8em; font-weight:800; color:#fbbf24;">' + daysTo(graduation) + '</div>';
-    html += '<div style="font-size:0.75em; color:#94a3b8; margin-top:2px;">days to Graduation</div>';
-    html += '<div style="font-size:0.7em; color:#64748b;">May 12, 2027</div>';
+    var gradExtra = '';
     if (procRemaining > 0) {
-        html += '<div style="font-size:0.6em; color:#fbbf24; margin-top:4px;">' + procRemaining + ' procs remaining</div>';
+        gradExtra = '<div style="font-size:0.6em; color:#fbbf24; margin-top:4px;">' + procRemaining + ' procs remaining</div>';
     } else if (procRemaining < 0) {
-        html += '<div style="font-size:0.6em; color:#10b981; margin-top:4px;">Target exceeded by ' + Math.abs(procRemaining) + '!</div>';
+        gradExtra = '<div style="font-size:0.6em; color:#10b981; margin-top:4px;">Target exceeded by ' + Math.abs(procRemaining) + '!</div>';
     }
-    html += '</div>';
+    html += keyDateTile('245,158,11', '#fbbf24', daysTo(graduation), 'days to Graduation', 'Window: May 15–20, 2027', gradExtra);
+
+    // Dynamic tiles from D4 events — INBDE, ADEX, next rotation, next mock sim
+    var kdTodayStr = getLocalDateString(today);
+    var d4EventList = getValues(roadmapData.d4Events || {});
+    var kdBoardTile = function(ev, fallbackLabel, rgb, accent) {
+        if (ev && !ev.tbd && ev.startDate) {
+            if ((ev.endDate || ev.startDate) < kdTodayStr) return; // fully past — no tile
+            if (ev.startDate <= kdTodayStr) {
+                html += keyDateTile(rgb, accent, 'NOW', escapeHtml(ev.title || fallbackLabel), fmtKeyDate(ev.startDate));
+            } else {
+                html += keyDateTile(rgb, accent, daysTo(parseLocalDate(ev.startDate)), 'days to ' + escapeHtml(ev.title || fallbackLabel), fmtKeyDate(ev.startDate));
+            }
+        } else {
+            html += keyDateTile(rgb, accent, 'TBD', escapeHtml((ev && ev.title) || fallbackLabel), 'date not set', tbdSetDateLine);
+        }
+    };
+    var kdNextOfType = function(type) {
+        return d4EventList
+            .filter(function(ev) { return ev && ev.type === type && !ev.tbd && ev.startDate && (ev.endDate || ev.startDate) >= kdTodayStr; })
+            .sort(function(a, b) { return a.startDate < b.startDate ? -1 : 1; })[0] || null;
+    };
+    kdBoardTile(d4EventList.find(function(ev) { return ev && ev.type === 'inbde'; }), 'INBDE', '139,92,246', '#a78bfa');
+    kdBoardTile(d4EventList.find(function(ev) { return ev && ev.type === 'adex'; }), 'ADEX Clinical Exam', '239,68,68', '#f87171');
+    var kdNextRotation = kdNextOfType('rotation');
+    if (kdNextRotation) kdBoardTile(kdNextRotation, 'Next Rotation', '99,102,241', '#818cf8');
+    var kdNextMockSim = kdNextOfType('mocksim');
+    if (kdNextMockSim) kdBoardTile(kdNextMockSim, 'Next Mock Sim', '245,158,11', '#fbbf24');
 
     html += '</div>'; // end countdown grid
     html += '</div>'; // end key dates card
@@ -1373,42 +1420,19 @@ function renderGraduationPrep() {
     if (!container) return;
 
     const gp = roadmapData.graduationPrep || {};
-    const ext = gp.externship || {};
     const cdca = gp.cdcaAdex || {};
     const inbde = gp.inbde || {};
     const jobs = gp.jobSearch || {};
 
     let html = '<h2 style="color:#f59e0b; margin-bottom:16px; font-size:1.3em;">🎓 Graduation Prep</h2>';
 
-    // Externship Card
-    html += '<div style="background:rgba(30,41,59,0.8); border:1px solid rgba(16,185,129,0.3); border-radius:14px; padding:18px; margin-bottom:14px;">';
-    html += '<h3 style="color:#6ee7b7; margin:0 0 12px 0;">🌴 Externship (Florida)</h3>';
-    html += '<div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:12px;">';
-    html += '<label style="display:flex; flex-direction:column; gap:4px; color:#94a3b8; font-size:0.85em;">Start Date';
-    html += '<input type="date" value="' + (ext.startDate || '') + '" onchange="updateGradPrep(\'externship\',\'startDate\',this.value)" '
-        + 'style="background:rgba(30,41,59,0.9); border:1px solid rgba(100,116,139,0.4); border-radius:6px; color:#e2e8f0; padding:6px 8px;">';
-    html += '</label>';
-    html += '<label style="display:flex; flex-direction:column; gap:4px; color:#94a3b8; font-size:0.85em;">End Date';
-    html += '<input type="date" value="' + (ext.endDate || '') + '" onchange="updateGradPrep(\'externship\',\'endDate\',this.value)" '
-        + 'style="background:rgba(30,41,59,0.9); border:1px solid rgba(100,116,139,0.4); border-radius:6px; color:#e2e8f0; padding:6px 8px;">';
-    html += '</label>';
-    html += '</div>';
-    html += '<h4 style="color:#94a3b8; font-size:0.9em; margin:8px 0 6px 0;">Active Patients Needing Management</h4>';
-    html += '<textarea placeholder="Track patients with active treatments, denture deliveries, etc..." '
-        + 'onchange="updateGradPrep(\'externship\',\'notes\',this.value)" '
-        + 'style="width:100%; min-height:70px; background:rgba(30,41,59,0.9); border:1px solid rgba(100,116,139,0.4); border-radius:8px; color:#e2e8f0; padding:10px; font-size:0.9em; resize:vertical; box-sizing:border-box;">'
-        + escapeHtml(ext.notes || '') + '</textarea>';
-    html += '<h4 style="color:#94a3b8; font-size:0.9em; margin:12px 0 6px 0;">Logistics</h4>';
-    html += '<textarea placeholder="Housing, travel, schedule details..." '
-        + 'onchange="updateGradPrep(\'externship\',\'logistics\',this.value)" '
-        + 'style="width:100%; min-height:70px; background:rgba(30,41,59,0.9); border:1px solid rgba(100,116,139,0.4); border-radius:8px; color:#e2e8f0; padding:10px; font-size:0.9em; resize:vertical; box-sizing:border-box;">'
-        + escapeHtml(ext.logistics || '') + '</textarea>';
-    html += '</div>';
+    // Externship card retired Aug 2026 (externship complete) — graduationPrep.externship state
+    // and updateGradPrep('externship', ...) remain for old-data compatibility.
 
     // CDCA/ADEX Card
     html += '<div style="background:rgba(30,41,59,0.8); border:1px solid rgba(59,130,246,0.3); border-radius:14px; padding:18px; margin-bottom:14px;">';
     html += '<h3 style="color:#93c5fd; margin:0 0 8px 0;">🦷 CDCA/ADEX</h3>';
-    html += '<p style="color:#9ca3af; font-size:0.8em; margin:0 0 10px 0;">1 formative + 2-3 summative sessions before externship. Summative scores = 10% of Fixed 2 grade.</p>';
+    html += '<p style="color:#9ca3af; font-size:0.8em; margin:0 0 10px 0;">Mock sim sessions precede the ADEX clinical exam — track dates in the D4 Schedule card on the planner.</p>';
     html += '<textarea placeholder="Session dates, scores, prep notes..." '
         + 'onchange="updateGradPrep(\'cdcaAdex\',\'notes\',this.value)" '
         + 'style="width:100%; min-height:70px; background:rgba(30,41,59,0.9); border:1px solid rgba(100,116,139,0.4); border-radius:8px; color:#e2e8f0; padding:10px; font-size:0.9em; resize:vertical; box-sizing:border-box;">'
