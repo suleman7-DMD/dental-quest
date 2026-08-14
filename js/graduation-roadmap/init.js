@@ -1734,10 +1734,7 @@ function initUI() {
     // ALWAYS try to render, even if above steps failed
     try { renderDashboard(); } catch(e) { console.error('renderDashboard error:', e); }
     try { renderDeadlines(); } catch(e) { console.error('renderDeadlines error:', e); }
-    try { loadCourseGrades(); } catch(e) { console.error('loadCourseGrades error:', e); }
-    try { renderExamCountdown(); } catch(e) { console.error('renderExamCountdown error:', e); }
     try { initMonthlyPlanner(); } catch(e) { console.error('initMonthlyPlanner error:', e); }
-    // Exam Content tab uses dropdown - no auto-load needed
 
     // Initialize Clinical tab if data exists
     try { initClinicalTab(); } catch(e) { console.error('initClinicalTab error:', e); }

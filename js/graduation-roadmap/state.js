@@ -1001,12 +1001,14 @@ function formatDate(dateStr) {
 // Map old tab IDs to new ones for backward compatibility
 const TAB_ID_MAP = {
     'dashboard': 'missioncontrol',
-    'grades': 'academics',
-    'mandatory': 'academics',
     'dailyplanner': 'schedule',
     'monthlyplanner': 'schedule',
-    'exams': 'academics',
-    'examcontent': 'academics'
+    // D3 Academics retired 2026-08-13 — old aliases land on Mission Control
+    'academics': 'missioncontrol',
+    'grades': 'missioncontrol',
+    'mandatory': 'missioncontrol',
+    'exams': 'missioncontrol',
+    'examcontent': 'missioncontrol'
 };
 
 function switchTab(tabId, evt) {
@@ -1037,7 +1039,6 @@ function switchTab(tabId, evt) {
     if (resolvedTabId === 'missioncontrol') renderDashboard();
     if (resolvedTabId === 'deadlines') renderDeadlines();
     if (resolvedTabId === 'clinical') initClinicalTab();
-    if (resolvedTabId === 'academics' && typeof loadCourseGrades === 'function') loadCourseGrades();
     if (resolvedTabId === 'gradprep' && typeof renderGraduationPrep === 'function') renderGraduationPrep();
     if (resolvedTabId === 'competencies' && typeof renderCompetencies === 'function') renderCompetencies();
     if (resolvedTabId === 'patients' && typeof initPatientsTab === 'function') initPatientsTab();
@@ -1046,16 +1047,6 @@ function switchTab(tabId, evt) {
     if (resolvedTabId === 'minireview' && typeof renderMiniReview === 'function') renderMiniReview();
     if (resolvedTabId === 'troubleshooting' && typeof renderTroubleshooting === 'function') renderTroubleshooting();
     // schedule and remember tabs: sub-tabs / static content handle their own init
-
-    // If navigating to exam content, open the exams accordion
-    if (tabId === 'examcontent' || tabId === 'exams') {
-        const examsContent = document.getElementById('academics-exams-content');
-        const examsArrow = document.getElementById('academics-exams-arrow');
-        if (examsContent) {
-            examsContent.style.display = 'block';
-            if (examsArrow) examsArrow.textContent = '\u25be';
-        }
-    }
 }
 
 // ==================== SCHEDULE SUB-TABS ====================
@@ -1069,20 +1060,6 @@ function switchScheduleSubTab(subTabId) {
     if (btn) btn.classList.add('active');
     if (subTabId === 'monthly' && typeof initMonthlyPlanner === 'function') initMonthlyPlanner();
     if (subTabId === 'daily' && typeof initDailyPlanner === 'function') initDailyPlanner();
-}
-
-// ==================== ACADEMICS ACCORDION ====================
-function toggleAcademicsSection(sectionId) {
-    const content = document.getElementById('academics-' + sectionId + '-content');
-    const arrow = document.getElementById('academics-' + sectionId + '-arrow');
-    if (!content) return;
-    const isOpen = content.style.display !== 'none';
-    content.style.display = isOpen ? 'none' : 'block';
-    if (arrow) arrow.textContent = isOpen ? '\u25b8' : '\u25be';
-    // Auto-load exam content when opening exams section
-    if (!isOpen && sectionId === 'exams' && typeof loadExamCourseContent === 'function') {
-        loadExamCourseContent();
-    }
 }
 
 // ==================== REMEMBER TAB TOGGLE ====================

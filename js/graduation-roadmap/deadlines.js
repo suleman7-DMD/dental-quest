@@ -120,17 +120,8 @@ const STATIC_DEADLINES = [
 // to prevent duplicate custom deadlines from accumulating
 let deadlines = [];
 
-const exams = [
-    { name: 'PC2 Midterm', date: '2026-02-02', weight: '30%', priority: '🔴 HIGH' },
-    { name: 'Ortho Final', date: '2026-02-06', weight: '50%', priority: '🔴 HIGH' },
-    { name: 'Geriatrics Final', date: '2026-02-11', weight: 'TBD', priority: '🟡 MEDIUM', note: 'Short course ends!' },
-    { name: 'Peds Exam 2', date: '2026-02-18', weight: '45%', priority: '🔴 CRITICAL' },
-    { name: 'Oral Med Midterm', date: '2026-02-27', weight: '25%', priority: '🟡 MEDIUM' },
-    { name: 'Perio 2 Final', date: '2026-03-11', weight: '45%', priority: '🟡 MEDIUM' },
-    { name: 'PC2 Final', date: '2026-03-19', weight: '40%', priority: '🟡 MEDIUM' },
-    { name: 'Peds Exam 3', date: '2026-03-30', weight: '7.5%', priority: '🟢 LOW' },
-    { name: 'Oral Med Final', date: '2026-04-17', weight: '25%', priority: '🟢 LOW' }
-];
+// D3 Spring-2026 exam countdown retired 2026-08-13 (renderExamCountdown + its
+// #examCountdownTable in the Academics tab were deleted with the tab).
 
 function renderDeadlines() {
     const months = ['january', 'february', 'march', 'april'];
@@ -477,25 +468,6 @@ function handleDeadlineKeydown(event, inputEl) {
     }
 }
 
-function renderExamCountdown() {
-    const tbody = document.getElementById('examCountdownTable').querySelector('tbody');
-
-    tbody.innerHTML = exams.map(e => {
-        const days = getCountdown(e.date);
-        const isPassed = days < 0;
-
-        return `
-            <tr class="${isPassed ? 'passed' : ''}">
-                <td><strong>${e.name}</strong></td>
-                <td>${formatDate(e.date)}</td>
-                <td>${getCountdownBadge(days)}</td>
-                <td>${e.weight}</td>
-                <td>${e.priority}</td>
-            </tr>
-        `;
-    }).join('');
-}
-
 // ==================== ADD NEW DEADLINE ====================
 function addNewDeadline() {
     // Prevent modal stacking
@@ -714,7 +686,6 @@ function toggleDeadlineDone(index) {
         renderDeadlines();
         renderDashboard();
         rebuildUpcomingDeadlines();
-        loadCourseGrades();
         if (typeof renderAppointmentsList === 'function') renderAppointmentsList();
         if (typeof mpRenderAllCalendars === 'function') mpRenderAllCalendars();
 
@@ -902,7 +873,6 @@ function submitDeadlineGrade(index) {
     renderDeadlines();
     renderDashboard();
     rebuildUpcomingDeadlines();
-    loadCourseGrades();
     if (typeof renderAppointmentsList === 'function') renderAppointmentsList();
     if (typeof mpRenderAllCalendars === 'function') mpRenderAllCalendars();
 
