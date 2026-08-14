@@ -306,6 +306,7 @@ function dashboardGetUpcomingAppointmentFeed(todayStr, maxDaysAhead) {
     getValues(roadmapData.clinicalData?.appointments).forEach(function(apt) {
         if (!apt || !apt.date || apt.date < todayStr || apt.date > cutoffStr) return;
         if (apt.status === 'cancelled' || apt.status === 'completed') return;
+        if (apt.patientId && patients[apt.patientId]?.archived) return; // Archived patients off the feed
         var event = dashboardCreateClinicalEvent(apt, patients);
         if (seen[event.dedupKey]) return;
         seen[event.dedupKey] = true;
@@ -979,7 +980,7 @@ function renderDashboard() {
     // Patient tracker summary
     if (typeof getPatientRecords === 'function') {
         const ptRecords = (typeof getAllPatientRecords === 'function') ? getAllPatientRecords() : (roadmapData.clinicalData?.patientRecords || {});
-        const ptCount = Object.keys(ptRecords).length;
+        const ptCount = Object.keys(ptRecords).filter(function(id) { return !ptRecords[id]?.archived; }).length;
         if (ptCount > 0) {
             html += '<div class="card" style="border: 2px solid #7c3aed; margin-top: 15px;">'
                 + '<div class="card-header"><span class="card-title">🩺 Patient Tracker</span>'
@@ -1014,6 +1015,7 @@ function renderDashboard() {
     }
     // Recalls due
     var recallsDue = getValues(roadmapData.clinicalData?.patientRecords || {}).filter(function(p) {
+        if (p.archived) return false;
         if ((p.activeStatus || 'Active') === 'Inactive') return false;
         var recallMatch = (p.recallHistory || '').match(/Next due:\s*([0-9]{1,2}\/[0-9]{1,2}\/[0-9]{4})/i);
         if (!recallMatch) return false;

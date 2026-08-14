@@ -14,7 +14,7 @@ function createPatientRecord(overrides) {
         lastVisit: '', nextVisit: '', nextVisitManual: false,
         lastFMX: '', lastBW: '', lastCBCT: '', lastPANO: '',
         phone: '', notes: '',
-        recallHistory: '', activeStatus: 'Active',
+        recallHistory: '', activeStatus: 'Active', archived: false,
         reliability: 'yellow', lastUpdated: new Date().toISOString()
     };
     if (overrides) {
@@ -258,6 +258,7 @@ var patientEditMode = false;
 var patientViewTab = 'brief'; // 'brief' or 'record'
 var collapsedSections = {};
 var inactiveCollapsed = true; // Red/inactive patients collapsed by default
+var archivedCollapsed = true; // Archived patients collapsed by default
 
 function initPatientsTab() {
     // Initialize default records if empty
@@ -512,9 +513,10 @@ function renderPatientsSidebar() {
         allItems.push({ id: id, patient: p });
     });
 
-    // Sort into 3 groups by reliability
-    var greenItems = [], yellowItems = [], redItems = [];
+    // Sort into 4 groups: archived first, then by reliability
+    var greenItems = [], yellowItems = [], redItems = [], archivedItems = [];
     allItems.forEach(function(item) {
+        if (item.patient.archived) { archivedItems.push(item); return; }
         var r = item.patient.reliability || 'yellow';
         if (r === 'green') greenItems.push(item);
         else if (r === 'red') redItems.push(item);
@@ -525,13 +527,14 @@ function renderPatientsSidebar() {
     greenItems.sort(sortFn);
     yellowItems.sort(sortFn);
     redItems.sort(sortFn);
+    archivedItems.sort(sortFn);
 
     // Build a single patient row — all user text is escaped via escapeHtml()
     function patientRow(item) {
         var p = item.patient;
         var isActive = item.id === activePatientId;
         var dotColors = { green: '#22c55e', yellow: '#eab308', red: '#ef4444' };
-        var dotColor = dotColors[p.reliability] || '#6b7280';
+        var dotColor = p.archived ? '#9ca3af' : (dotColors[p.reliability] || '#6b7280');
         var chart = p.chartNumber ? '#' + escapeHtml(p.chartNumber) : '';
         var safeId = escapeHtml(item.id).replace(/'/g, "\\'");
 
@@ -550,14 +553,18 @@ function renderPatientsSidebar() {
             +   (p.phone ? '<span class="pts-phone-icon" title="' + escapeHtml(phoneTitle) + '">\uD83D\uDCF1</span>' : '')
             +   (p.clinicalBrief && p.clinicalBrief.snapshot ? '<span class="pts-brief-badge" title="Has clinical brief">\uD83D\uDCCB</span>' : '')
             + '</div>'
+            + (p.archived ? '<button onclick="event.stopPropagation(); restorePatient(\'' + safeId + '\')" title="Restore patient" '
+                + 'style="background:none; border:1px solid #d1d5db; color:#6b7280; font-size:0.7em; padding:2px 7px; border-radius:5px; cursor:pointer; flex-shrink:0;">Restore</button>' : '')
             + '</div>';
     }
 
-    // Build section with header
-    function sectionBlock(label, color, items, collapsible) {
+    // Build section with header. collapseFlag: '' (always open) | 'inactive' | 'archived'
+    function sectionBlock(label, color, items, collapseFlag) {
         if (items.length === 0) return '';
-        var isCollapsed = collapsible && inactiveCollapsed;
-        var toggleJs = collapsible ? ' onclick="inactiveCollapsed=!inactiveCollapsed; renderPatientsSidebar()"' : '';
+        var collapsible = !!collapseFlag;
+        var isCollapsed = collapseFlag === 'inactive' ? inactiveCollapsed
+            : collapseFlag === 'archived' ? archivedCollapsed : false;
+        var toggleJs = collapsible ? ' onclick="' + collapseFlag + 'Collapsed=!' + collapseFlag + 'Collapsed; renderPatientsSidebar()"' : '';
 
         var html = '<div class="pts-section-header"' + toggleJs + '>'
             + (collapsible ? '<span class="pts-section-arrow">' + (isCollapsed ? '\u25B6' : '\u25BC') + '</span>' : '')
@@ -572,9 +579,18 @@ function renderPatientsSidebar() {
 
     // Build list with grouped sections
     var listHtml = '';
-    listHtml += sectionBlock('ACTIVE', '#1a7f79', greenItems, false);
-    listHtml += sectionBlock('NEEDS ATTENTION', '#c86b4b', yellowItems, false);
-    listHtml += sectionBlock('UNRELIABLE', '#94a3af', redItems, true);
+    listHtml += sectionBlock('ACTIVE', '#1a7f79', greenItems, '');
+    listHtml += sectionBlock('NEEDS ATTENTION', '#c86b4b', yellowItems, '');
+    listHtml += sectionBlock('UNRELIABLE', '#94a3af', redItems, 'inactive');
+    listHtml += sectionBlock('ARCHIVED', '#6b7280', archivedItems, 'archived');
+
+    // Bulk archive — shown when live (non-archived) patients exist
+    if (greenItems.length + yellowItems.length + redItems.length > 0) {
+        listHtml += '<div style="padding:10px 0 6px; text-align:center;">'
+            + '<button onclick="archiveAllPatients()" '
+            + 'style="background:none; border:1px solid #d1d5db; color:#94a3af; font-size:0.7em; padding:4px 10px; border-radius:6px; cursor:pointer;">'
+            + 'Archive all patients</button></div>';
+    }
 
     if (allItems.length === 0 && searchTerm) {
         listHtml = '<div style="padding:20px; text-align:center; color:#64748b; font-size:0.8em;">No patients match search</div>';
@@ -1075,6 +1091,9 @@ function renderPatientRecord(patientId) {
         +   '<div class="ptr-actions">'
         +     editBtnHtml
         +     '<button class="ptr-action-btn" onclick="navigator.clipboard.writeText(\'' + (patient.chartNumber || '').replace(/['"\\]/g, '') + '\');showToast(\'Copied\')" title="Copy chart #">Copy #</button>'
+        +     (patient.archived
+                ? '<button class="ptr-action-btn" onclick="restorePatient(\'' + safePatientId + '\')" title="Restore patient">Restore</button>'
+                : '<button class="ptr-action-btn" onclick="archivePatient(\'' + safePatientId + '\')" title="Archive patient (restorable)">Archive</button>')
         +     '<button class="ptr-action-btn danger" onclick="deletePatientRecord(\'' + safePatientId + '\')" title="Delete patient">Del</button>'
         +   '</div>'
         + '</div>'
@@ -1149,6 +1168,58 @@ function deletePatientRecord(id) {
             if (typeof renderAppointmentsList === 'function') try { renderAppointmentsList(); } catch(e) {}
             showToast('Patient deleted');
         }
+    );
+}
+
+// ==================== PATIENT ARCHIVE (D4) ====================
+// Archived patients keep ALL data (appointments, procedures, briefs) but are
+// hidden from active views: sidebar main sections, active roster, mini review,
+// patient to-do tab, recall KPIs, dashboard feed/counts, competency matching.
+// Fully restorable from the ARCHIVED sidebar section or the detail view.
+
+function setPatientArchived(patientId, archived) {
+    var records = getPatientRecords();
+    var rec = records[patientId];
+    if (!rec) { showToast('Patient not found', 'error'); return; }
+    clinicalDataDirty = true;
+    rec.archived = !!archived;
+    rec.lastUpdated = new Date().toISOString();
+    safeLocalStorageSet(STORAGE_KEY, JSON.stringify(roadmapData));
+    saveData();
+    showToast(archived ? 'Patient archived' : 'Patient restored');
+    if (typeof propagateClinicalChanges === 'function') {
+        // Covers sidebar, active roster, mini review, todo tab, dashboard
+        propagateClinicalChanges({ patients: true, calendars: false, source: 'setPatientArchived' });
+    } else {
+        renderPatientsSidebar();
+    }
+    if (activePatientId === patientId) renderPatientRecord(patientId);
+}
+
+function archivePatient(patientId) { setPatientArchived(patientId, true); }
+function restorePatient(patientId) { setPatientArchived(patientId, false); }
+
+function archiveAllPatients() {
+    var records = getPatientRecords();
+    var live = Object.keys(records).filter(function(id) { return records[id] && !records[id].archived; });
+    if (!live.length) { showToast('No active patients to archive'); return; }
+    showCustomConfirm(
+        'Archive all ' + live.length + ' patients? They stay fully restorable from the Archived section.',
+        function() {
+            clinicalDataDirty = true;
+            var now = new Date().toISOString();
+            live.forEach(function(id) { records[id].archived = true; records[id].lastUpdated = now; });
+            safeLocalStorageSet(STORAGE_KEY, JSON.stringify(roadmapData));
+            saveData();
+            showToast(live.length + ' patients archived');
+            if (typeof propagateClinicalChanges === 'function') {
+                propagateClinicalChanges({ patients: true, calendars: false, source: 'archiveAllPatients' });
+            } else {
+                renderPatientsSidebar();
+            }
+            if (activePatientId) renderPatientRecord(activePatientId);
+        },
+        null, 'Archive all patients'
     );
 }
 
@@ -3567,8 +3638,9 @@ function renderMiniReview() {
     var allPatients = getAllPatientRecords();
     var allIds = Object.keys(allPatients);
 
-    // Filter: exclude red (inactive/unreliable) patients
+    // Filter: exclude archived and red (inactive/unreliable) patients
     var ids = allIds.filter(function(id) {
+        if (allPatients[id].archived) return false;
         return (allPatients[id].reliability || 'yellow') !== 'red';
     });
 

@@ -640,6 +640,7 @@ function mergeRemoteCollectionsIntoLocal(data) {
                 if (getValues(local.importedRequirements).length === 0 && getValues(remote.importedRequirements).length > 0) local.importedRequirements = remote.importedRequirements;
                 if (!local.priorityNotes && remote.priorityNotes) local.priorityNotes = remote.priorityNotes;
                 if (local.highValue === undefined && remote.highValue !== undefined) local.highValue = remote.highValue;
+                if (local.archived === undefined && remote.archived !== undefined) local.archived = remote.archived;
                 if (!local.allergies && remote.allergies) local.allergies = remote.allergies;
                 if (!local.txCompletedByMe && remote.txCompletedByMe) local.txCompletedByMe = remote.txCompletedByMe;
                 if (!local.recallHistory && remote.recallHistory) local.recallHistory = remote.recallHistory;

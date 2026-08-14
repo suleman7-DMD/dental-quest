@@ -255,6 +255,7 @@ function renderPatientTodoTab() {
     var openTaskCount = 0;
 
     patientIds.forEach(function(patientId) {
+        if (patients[patientId]?.archived) return; // Archived patients excluded from to-do board
         var entry = board.patients[patientId];
         if (entry?.hidden) hiddenIds.push(patientId);
         else {

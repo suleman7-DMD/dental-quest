@@ -48,6 +48,7 @@ function updateClinicalStats() {
 
     // Count recalls due
     const recallsDue = getValues(patients).filter(p => {
+        if (p.archived) return false;
         if ((p.activeStatus || 'Active') === 'Inactive') return false;
         var recallMatch = (p.recallHistory || '').match(/Next due:\s*([0-9]{1,2}\/[0-9]{1,2}\/[0-9]{4})/i);
         if (!recallMatch) return false;
@@ -89,6 +90,7 @@ function renderActiveRoster() {
     Object.entries(records).forEach(function(entry) {
         var id = entry[0], p = entry[1];
         if (!p || !p.name) return;
+        if (p.archived) return;
         if ((p.activeStatus || 'Active') === 'Inactive') return;
         var nextApt = patientNextApt[id];
         var item = { id: id, patient: p, nextApt: nextApt };
@@ -1334,6 +1336,7 @@ function getPatientsFulfilling(itemId) {
     Object.entries(records).forEach(function(entry) {
         var ptId = entry[0], pt = entry[1];
         if (!pt || !pt.name) return;
+        if (pt.archived) return;
         var ptReqs = getValues(pt.importedRequirements);
         if (ptReqs.length > 0) {
             var hasMatch = ptReqs.some(function(req) {
