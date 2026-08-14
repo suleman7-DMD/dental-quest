@@ -6,13 +6,13 @@
 - **Never assume constraints.** Do not pre-compromise features, scope, or ambition. The user has AI-augmented development velocity.
 - **No time estimates.** Never estimate how long something will take. Just describe the work.
 - **Vision before scope.** Explore the ideal unconstrained version FIRST. Only scope down when explicitly asked. Never suggest "a simpler approach" unprompted.
-- **Match the user's ambition.** This codebase has 22k-line apps, 12-module architectures, cross-app Firebase sync with 6 guards, pharmacokinetic models, and clinical import systems with 9 block types. Don't patronize with "start small."
+- **Match the user's ambition.** This codebase has 22k-line apps, 12-module architectures, cross-app Firebase sync with 6 guards, pharmacokinetic models, and clinical import systems with 8 block types. Don't patronize with "start small."
 - **No hedging.** Never say "realistically," "given your constraints," "that's ambitious but," or "a good MVP would be."
 - **"Dream big" trigger.** When the user says "dream big" → invoke the `vision-first` skill.
 
 ### Never Rebuild Entire Files
 - Body-comp is ~22,444 lines. Use surgical `Edit` tool only. Read section first.
-- **Split apps** (index.html: 12 modules, graduation-roadmap: 12 modules, stim-calc: 11 modules) — surgical edits on individual JS module files. `js/d3-roadmap/` deleted; modules in `js/graduation-roadmap/`.
+- **Split apps** (index.html: 12 modules, graduation-roadmap: 12 modules, stim-calc: 12 modules) — surgical edits on individual JS module files. `js/d3-roadmap/` deleted; modules in `js/graduation-roadmap/`. `grades.js` and `exam-content.js` retired in the Aug 2026 D4 overhaul (academics tab removed; `grades`/`exams` state fields retained for schema compat).
 
 ### Date Parsing (COMMON BUG)
 ```javascript
@@ -99,11 +99,12 @@ const date = new Date(year, month - 1, day);
 - **CRUD must merge**: `savePatient()`/`saveAppointment()` MUST spread existing record (`{ ...existing, ...formFields }`).
 - **Chart number normalization**: Leading-zero canonical form. `migrateLeadingZeroDedup()` gated by `leadingZeroDedupDone_v1`. FK remapping: `appointments[].patientId`, `completedProcedures[].patientId`, `monthlyPlanner.customTasks[].patientId`.
 - **`getPatientRecords()` is read-only**: Injects defaults into memory but does NOT persist. Persistence via next CRUD `saveData()`.
+- **Patient `archived` flag (Aug 2026)**: Per-record boolean. Filtering happens at RENDER sites (sidebar, roster, mini review, KPIs), NOT inside `getAllPatientRecords()` — CRUD/restore and accessor-bypassing KPIs must still see archived records. Sidebar has an ARCHIVED section + bulk archive. Merge rule: remote fills gap only when local `archived === undefined` (local wins otherwise).
 - **Skeleton patient records**: `prSavePatientField()` must copy `name` and `chartNumber` from `clinicalData.patients`.
 - **PATIENT_UPDATE must validate chart number**: Reject empty (prevents `'pt_'` overwrite).
 
 ### Clinical Import System
-- **9 block types**: PATIENT_RECORD, PATIENT_UPDATE, REQUIREMENTS_MATCH, REQUIREMENTS_STATUS, SPS_DASHBOARD_UPDATE, APPOINTMENTS, MISSING_NOTES, TODO_LIST, CLINICAL_BRIEF — all parseable in one atomic paste.
+- **8 block types**: PATIENT_RECORD, PATIENT_UPDATE, REQUIREMENTS_MATCH, SPS_DASHBOARD_UPDATE, APPOINTMENTS, MISSING_NOTES, TODO_LIST, CLINICAL_BRIEF — all parseable in one atomic paste. REQUIREMENTS_STATUS removed Aug 2026 (competency counts are manual-only via Competencies tab; pasted REQUIREMENTS_STATUS blocks are simply not parsed).
 - **Import dedup**: By patient NAME + date + time, not just `patientId`.
 - **Clinical Brief**: Full-overwrite. Push old to `briefHistory[]` (max 3). Lives on `patientRecords[id]`.
 - **Multi-line parser**: Lenient — any non-empty line as field continuation, joins with `'\n'`.
@@ -113,7 +114,7 @@ const date = new Date(year, month - 1, day);
 - **Dual import propagation**: Both paths MUST call `syncClinicalToMonthlyPlanner()` + `buildCurrentWeekSchedule()` + `mpRenderAllCalendars()`.
 - **Import modal defaults**: NEVER set `checked` on destructive-mode checkboxes.
 - **Requirement ID matching**: Case-insensitive at both `applyRequirementCheckoffs()` and parse time.
-- **`applyRequirementCheckoffs` (V2)**: COMPLETED_TODAY (`isDelta`) creates procedure records but does NOT touch competency counts/notes (gated by `!item.isDelta`). REQUIREMENTS_STATUS sets absolute counts, `lastVerified`, status, note. Only REQUIREMENTS_STATUS modifies counts. Dedup: COMPLETED_TODAY matches on procedure+date+patient.
+- **`applyRequirementCheckoffs` (V3, Aug 2026)**: COMPLETED_TODAY (`isDelta`) creates procedure records but NEVER touches competency counts/notes. The REQUIREMENTS_STATUS absolute-count path was deleted — NO import path modifies competency counts anymore. Dedup: COMPLETED_TODAY matches on procedure+date+patient.
 - **Invalid competency IDs**: `total-procedures` and `clinical-summatives` are synthetic — silently ignored.
 - **`PHONE:` field**: In PATIENT_RECORD/UPDATE. Stored as `patient.phone` (pipe-delimited). Display: primary + "+N more". Propagated to profile, mini review, PR roster/writeups, competency popup, sidebar, Active Roster.
 - **`MEDICAL_HX_APPEND:`**: PATIENT_UPDATE only. Appends to `medicalHx` with `\n\n` (sets `_medicalHxAppend` flag).
@@ -123,25 +124,27 @@ const date = new Date(year, month - 1, day);
 - **Missing Notes**: 7 pipe-delimited fields, dedup by ID, 6-limit. `clinicalData.missingNotes{}`.
 - **To-Do list**: 5 pipe-delimited fields. Sources: MANUAL/EMAIL/SCREENSHOT/CLINIC/SYSTEM. `todoList{ items{}, _nextSeq, lastUpdated }`.
 - **Dashboard snapshot dedup**: Same `capturedAt` date replaces instead of duplicating.
-- **Format D Safeguard**: Console warning when REQUIREMENTS_STATUS sets clinical procedure counts directly. For patient-level tracking, use COMPLETED_TODAY.
 - **Competency ID changes**: See `docs/GROUND_TRUTH_REQUIREMENTS.md` for canonical list. `COMPETENCY_ALIASES` maps old→new.
-- **SPS vs REQUIREMENTS_STATUS**: SPS saves summary snapshot. REQUIREMENTS_STATUS sets individual counts. If counts aren't updating, need Format D.
-- **`showToast(msg, type, options)`**: `{ html: true }` for HTML. Default is `textContent` (safe).
+- **SPS snapshots**: SPS_DASHBOARD_UPDATE saves a summary snapshot only. Individual competency counts change ONLY via the Competencies tab UI (Format D / REQUIREMENTS_STATUS retired Aug 2026).
+- **`showToast(msg, type, options)`**: `{ html: true }` for HTML. Default is `textContent` (safe). `options.duration` overrides auto-hide ms (default 2000, errors 4000) — used by undo toasts (5000).
 
 ### Competencies V2 (Manual-Count Model)
 - **V2 model**: Flat manual counts. Item shape: `{ id, text, required, completed, note, lastVerified, d3Deadline, isSummative, status, custom, d4Carryover }`. Old evidence-trail model (completionEntries, review queue, unlock chains) was deleted.
-- **Counts are manual-only**: Change via (a) REQUIREMENTS_STATUS import or (b) inline +/- buttons. COMPLETED_TODAY does NOT touch counts.
-- **`lastVerified`**: Set on every manual edit and REQUIREMENTS_STATUS import. Used by `mergeCompetencies()` for conflict resolution.
+- **Counts are manual-only (Aug 2026)**: Change ONLY via the Competencies tab — check-off button (required=1), +/- counters, inline count edit, or edit modal. NO import path touches counts (REQUIREMENTS_STATUS deleted; COMPLETED_TODAY only creates procedure records).
+- **`lastVerified`**: Set on every manual edit. Used by `mergeCompetencies()` for conflict resolution.
 - **`migrateToCompetencyV2()`**: One-time migration gated by `competencyV2Migrated`. Wipes old fields, seeds verified values. Must NOT delete `item.custom` flag.
 - **V3 orphan removal**: `syncSchemaFields` deletes items missing from DEFAULT_COMPETENCIES — must guard with `!item.custom` to preserve user-added items. V3 must NOT zero manual counts (completionEntries is dead in V2).
 - **Summative ring target**: Dynamic count from `isSummative` items (was hardcoded 7, fixed Apr 2026). Fallback to 7 only if zero summatives found.
-- **`adjustCompItem()` / `setCompItemStatus()`**: Simple +/- or toggle. Sets `lastVerified`, derives status.
+- **`adjustCompItem()` / `setCompItemStatus()`**: Simple +/- or toggle. Sets `lastVerified`, derives status. Both snapshot `cv2LastChange` (prev completed/status/lastVerified) BEFORE mutating and show an Undo toast (`{ html: true, duration: 5000 }`).
+- **`cv2UndoLastChange()`**: One-step undo. Clears `cv2LastChange` before restoring; if the item no longer exists, toasts an error WITHOUT saving.
+- **Targeted re-render pattern**: check-off/counter edits call `cv2UpdateItemRow(catKey, itemId)` + `cv2UpdateHeader()` + `cv2UpdateCategoryHeader(catKey)` (row id `cv2row-{catKey}-{itemId}`) — NEVER a full `renderCompetencies()` in the hot path. Each falls back to full render if its DOM anchor is missing.
 - **`saveCompItem()` must set `lastVerified`**: Both add-new (when completed > 0) and edit-existing paths must set `lastVerified = getLocalDateString(new Date())`.
 - **Smart counting**: `getSmartProcedureCount()` sums `item.completed` across procedure categories `{ fixed, operative, dentures, rpd, endo, oralsurg, perio }`. SPS snapshot AUTHORITATIVE when exists.
 - **`autoLinkReviewQueue`**: DELETED. Field kept as `[]` for schema compat only.
-- **V2 UI**: Warm Atlas Console design, `cv2-*` CSS classes. 4 panels: D3/D4 year tabs, milestone KPI strip, D3 alert + category accordion, What's Next.
+- **V2 UI (unified, Aug 2026)**: Warm Atlas Console design, `cv2-*` CSS classes. Single unified list — NO D3/D4 year tabs. Layout: item-based header (`#cv2header`: %, N/M requirements, days-to-graduation, left/summatives pills) → search + 5 filter chips (all/left/done/summatives/carryover, same-chip click toggles back to all) → expandable D3-carryover alert card (past-deadline unfinished items only) → 13-category accordion with passive D3/D4/D3+D4 year chips. Category bodies build lazily on expand.
 - **Pipeline badges**: `importedRequirements[]` on patient records is source. All `'planned'` (yellow) in V2.
-- **Migration flag versioning**: ALL restore/import paths must clear: `unifiedPatientStoreDone_v1`, `competencyEnhancementsDone_v2`, `competencyEnhancementsDone_v3`, `competencyV2Migrated`, `competencyD3D4SplitDone_v1`, `leadingZeroDedupDone_v2`, `perioNoiseCleanupDone_v1`. Add new flags to ALL 4 sites (importBackup, restoreCheckpoint, importAndRestoreDirectly, resetCompetencies).
+- **Migration flag versioning**: ALL restore/import paths must clear 8 flags: `unifiedPatientStoreDone_v1`, `competencyEnhancementsDone_v2`, `competencyEnhancementsDone_v3`, `competencyV2Migrated`, `competencyD3D4SplitDone_v1`, `leadingZeroDedupDone_v2`, `perioNoiseCleanupDone_v1`, `d4EventsSeeded_v1`. Add new flags to ALL 4 sites (importBackup, restoreCheckpoint, importAndRestoreDirectly, resetCompetencies).
+- **`resetCompetencies()` double-confirm**: Nested `showCustomConfirm()` + `createCheckpoint('pre-comp-reset')` before wiping.
 - **Guard F (V2)**: Auto-converts `dashboardSnapshots` objects→arrays. No `autoLinkReviewQueue` check.
 - **`showCustomConfirm()` escapes HTML**: Never pass raw HTML. Use DOM overlays for rich content.
 - **`persistExpandedState()`**: MUST call `safeLocalStorageSet()`.
@@ -149,15 +152,13 @@ const date = new Date(year, month - 1, day);
 - **`getDashboardSnapshots()` / `saveDashboardSnapshot()`**: Must use `getValues()` before `.findIndex()`, `.unshift()`, `.slice()`.
 - **`briefHistory` array safety**: Use `getValues()` before `.unshift()` / `.slice()`.
 
-### D3/D4 Year Split (Apr 2026)
-- **13 categories** (was 14 — `srp` absorbed into `perio` via migration). Each has `yearTarget: 'd3' | 'd4' | 'both'`.
+### D3/D4 Year Data Model (Apr 2026; unified UI Aug 2026)
+- **13 categories** (was 14 — `srp` absorbed into `perio` via migration). Each has `yearTarget: 'd3' | 'd4' | 'both'` — now DISPLAY-ONLY metadata driving the passive year chip (`cv2-year-chip`); it no longer filters rendering.
 - **Category keys NEVER renamed**: `grouppractice`, `grouppractice4`, `perio`, `txplanning`, `peds`, `oralsurg`, `geriatrics` (both), `fixed`, `operative`, `dentures`, `rpd`, `endo`, `externship` (d4), `grouppractice` (d3).
-- **`d4Carryover: true`** on items: renders in BOTH D3 and D4 tabs. D3 shows "Cumulative D3+D4" badge, D4 shows "Should have been completed in D3" badge. Currently on: `perio-form-reeval-ging`, `perio-sum-reeval-ging`, `gp4-pms`.
-- **D3 tab**: Shows `yearTarget === 'd3'` (all items) + `'both'` (only items WITH `d3Deadline`) + d4Carryover items from `'d4'` categories. Dashboard: 3 milestone KPI cards (Appointments/Procedures/Summatives) + full-width completion bar (item-based %) + D3 deadline alert.
-- **D4 tab**: Shows `yearTarget === 'd4'` (all items) + `'both'` (only items WITHOUT `d3Deadline`) + d4Carryover items from `'d3'` categories. `dentures` + `rpd` grouped under "Removable Prosthodontics" visual header. Dashboard: 1 D4 Summatives KPI card + full-width completion bar (item-based %). NO appointments/procedures milestones (those are D3-only).
-- **Completion %**: Strictly item-based — counts competency items where `completed >= required`, NOT milestone appointments/procedures. Each tab computes independently. Updates in real time on counter +/-.
-- **D3 deadline alert dedup**: `cv2BuildD3Alert` uses `seenIds` to prevent duplicate items from migration artifacts.
-- **`cv2ActiveYearTab`**: State variable (`'d3'` or `'d4'`). Switched by `cv2SwitchYearTab(tab)`.
+- **Year tabs DELETED (Aug 2026)**: `cv2ActiveYearTab`, `cv2SwitchYearTab`, `cv2CategoryVisibleForTab`, `cv2ItemVisibleForTab`, `cv2BuildMilestoneStrip`, `cv2BuildD3Alert`, `cv2GetCarryoverBadge`, `cv2GetCarryoverItems`, `cv2ShowPipeline` all removed. Do NOT reintroduce.
+- **`d4Carryover: true`** on items: legacy field, kept in schema and still synced by `syncSchemaFields()`. Currently on: `perio-form-reeval-ging`, `perio-sum-reeval-ging`, `gp4-pms`.
+- **"D3 carryover" is now deadline-derived**: `cv2BuildCarryoverAlert()` collects items with a `d3Deadline` that has PASSED and `completed < required` (with `seenIds` dedup), rendered as an expandable alert card + row badge + filter chip. NOT based on the `d4Carryover` flag.
+- **Completion %**: Strictly item-based — counts competency items where `completed >= required`, NOT milestone appointments/procedures. Updates in real time on counter +/- via targeted DOM updates.
 - **`migrateCompetencyD3D4Split()`**: One-time migration gated by `competencyD3D4SplitDone_v1`. Moves leadership items from `grouppractice4` → `grouppractice`, SRP items from `srp` → `perio`, resolves 3 perio duplicate pairs, adds 4 new items. MUST run before `migrateCompetencyEnhancements()` and `syncSchemaFields()`.
 - **`syncSchemaFields()` syncs**: `d3Deadline`, `rules`, `text`, `required`, `isSummative`, `d4Carryover`. Also removes orphaned categories not in DEFAULT_COMPETENCIES (prevents stale `srp` from cloud merge).
 - **`migrateCompetencyEnhancements()` leadership exclusion**: The gp4-* removal block (line ~1045) has `leadershipInGP` exclusion set for 6 leadership IDs that now correctly live in `grouppractice`. Prevents fresh-install edge case from undoing the D3/D4 migration.
@@ -176,6 +177,10 @@ const date = new Date(year, month - 1, day);
 - **Clinic task delete**: `_mpDeleteCurrentTaskConfirmed()` must add to `hiddenClinicTasks`.
 - **`syncClinicalToMonthlyPlanner` gating**: Gated by `clinicalDataDirty` flag.
 - **TBD deadlines**: Separate "Unscheduled" card on Mission Control.
+- **Dynamic deadlines (Aug 2026)**: `STATIC_DEADLINES = []` — ALL deadlines are user-created (`customDeadlines`), rendered month-grouped. Never re-seed static Spring-2026 deadlines.
+- **`MP_WEEKS` is dynamic**: Built by an IIFE from the current date (no hardcoded week list). Planner weeks rebase automatically.
+- **`d4Events` collection (Aug 2026)**: `roadmapData.d4Events{}` — schedule manager + calendar chips. Seeded once via `d4EventsSeeded_v1` flag (cleared at all 4 restore sites). Merged via `addMissing` in `mergeRemoteCollectionsIntoLocal` and handled in `reconstructState`.
+- **`monthlyPlanner.criticalReminders`**: Editable persisted card on Mission Control (was static Spring-2026 copy). Object keyed by id; include in merges.
 - **Cross-app dedup**: Stim calc dedup by `clinicalAppointmentId` and `date|time|name`.
 - **Cross-app write exception**: `toggleMainAppTask()` writes to index.html's Firebase path. Only cross-app write.
 
@@ -188,7 +193,7 @@ const date = new Date(year, month - 1, day);
 | Deadline mutation | `rebuildUpcomingDeadlines()` |
 | `uncompleteAppointment()` | Remove procedure records, recalc patient `lastVisit` |
 | `backfillClinicalData()` | `createCheckpoint('pre-backfill')` before mutations |
-| Competency adjustment / status toggle | `renderDashboard()` |
+| Competency adjustment / status toggle | `cv2UpdateItemRow()` + `cv2UpdateHeader()` + `cv2UpdateCategoryHeader()` + `renderDashboard()` |
 | `mpToggleTaskComplete` | `dpSyncAppointmentsToTimeline()` |
 | Quick-fix schedule changes | `syncClinicalToMonthlyPlanner()`, `buildCurrentWeekSchedule()` |
 | Reliability change (`setPatientReliability`) | `propagateClinicalChanges({ patients: true })` |
@@ -242,7 +247,7 @@ const date = new Date(year, month - 1, day);
 |------|---------|
 | `index.html` + `js/dental-quest/*.js` (12 modules) | Main app: gamified tasks, focus mode, financials, calendar, meds |
 | `d3-roadmap.html` (REDIRECT SHIM) | Redirects to graduation-roadmap.html |
-| `graduation-roadmap.html` + `js/graduation-roadmap/*.js` (12 modules) | Graduation tracker: mission control, deadlines, clinical, patients, competencies, schedule, academics, grad prep, periodic review |
+| `graduation-roadmap.html` + `js/graduation-roadmap/*.js` (12 modules) | Graduation tracker (D4 era): mission control, deadlines, clinical, patients, competencies, schedule, grad prep, to-do tabs, troubleshooting (academics tab retired Aug 2026) |
 | `stimulant-elimination-calculator.html` + `js/stimcalc/*.js` (12 modules) | Sleep prediction: pharmacokinetics, circadian, workout planning |
 | `body-comp-tracker.html` (~22,444 lines, single file) | Calorie/protein/workout tracking, cross-app ecosystem |
 | `lecture-prompt-transformer.html` (~2,800 lines) | Lecture notes prompt builder (standalone) |

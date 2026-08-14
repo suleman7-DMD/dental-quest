@@ -98,8 +98,8 @@ function runAllIntegrityChecks() {
 
 function tsCheckParser() {
     var checks = [];
-    checks.push(tsCheck('9 block types registered', TS_BLOCK_TYPES.length === 9 ? 'pass' : 'fail',
-        TS_BLOCK_TYPES.length + '/9 block types: ' + TS_BLOCK_TYPES.join(', ')));
+    checks.push(tsCheck('8 block types registered', TS_BLOCK_TYPES.length === 8 ? 'pass' : 'fail',
+        TS_BLOCK_TYPES.length + '/8 block types: ' + TS_BLOCK_TYPES.join(', ')));
     checks.push(tsCheck('PATIENT_RECORD field map (' + TS_PR_FIELD_COUNT + ' fields)',
         TS_PR_FIELD_COUNT >= 20 ? 'pass' : 'warn',
         TS_PR_FIELD_COUNT + ' fields mapped: NAME, CHART, TYPE, MEDICAL_HX, MEDICATIONS, ALLERGIES, DENTAL_HX, TX_SUMMARY_BU, TX_COMPLETED_BY_ME, POE_LAST/NEXT, TX_PLAN, LAST_VISIT, NEXT_VISIT, imaging, NOTES, RECALL_HISTORY, ACTIVE_STATUS, RELIABILITY.'));
@@ -120,7 +120,10 @@ function tsCheckPatients() {
     var records = {}; try { records = getAllPatientRecords(); } catch (e) { console.error('[TS] Error loading patients:', e); }
     var ids = Object.keys(records);
     if (ids.length === 0) return [tsCheck('Patient records exist', 'fail', 'No patient records found.')];
-    checks.push(tsCheck('Patient records loaded', 'pass', ids.length + ' patient record(s) found.'));
+    var archivedCount = 0;
+    for (var ai = 0; ai < ids.length; ai++) { if (records[ids[ai]] && records[ids[ai]].archived) archivedCount++; }
+    checks.push(tsCheck('Patient records loaded', 'pass', ids.length + ' patient record(s) found' +
+        (archivedCount > 0 ? ' — ' + archivedCount + ' archived (excluded from renders)' : '') + '.'));
 
     var missingBrief = [], incompleteBrief = [], noReq = [], schemaIssues = [];
     for (var i = 0; i < ids.length; i++) {
@@ -346,6 +349,10 @@ function tsCheckFirebase() {
     if (roadmapData.todoList !== undefined && (typeof roadmapData.todoList !== 'object' || !roadmapData.todoList)) errs.push('todoList');
     checks.push(tsCheck('Critical structure integrity', errs.length === 0 ? 'pass' : 'fail',
         errs.length === 0 ? 'All 8 critical structures valid.' : errs.length + ' missing: ' + errs.join(', ')));
+
+    var d4EvCount = getCount(roadmapData.d4Events || {});
+    checks.push(tsCheck('D4 events collection', 'info',
+        d4EvCount + ' d4Event(s) stored (schedule manager + calendar chips).'));
 
     var fbSync = typeof firebaseSyncEnabled !== 'undefined' ? firebaseSyncEnabled : false;
     var fbInit = typeof firebaseInitialized !== 'undefined' ? firebaseInitialized : false;
