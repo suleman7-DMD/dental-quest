@@ -72,12 +72,11 @@ for dashboard tracking.
      procedure records with evidence trail                                               
  3) REQUIREMENTS_MATCH COMPLETED_TODAY entries create procedure
      records linked to the patient. They do NOT increment
-     competency counts — competency counts are ONLY set via
-     REQUIREMENTS_STATUS imports or inline manual edits in
-     the Competencies tab.                                                   
-  4) REQUIREMENTS_STATUS UPDATES set competency completed counts
-     directly. This is the ONLY import mechanism that changes
-     competency counts.                                                                         
+     competency counts — competency counts are MANUAL-ONLY,
+     changed by Suleman directly in the Competencies tab.
+  4) REQUIREMENTS_STATUS was REMOVED 2026-08-13. The app no
+     longer parses it — NEVER output a REQUIREMENTS_STATUS
+     block. Competency counts are manual-only.
   5) SPS_DASHBOARD_UPDATE saves a snapshot (max 20 stored,                               
      newest first). The latest snapshot becomes the FLOOR for                            
      Mission Control's smart counters — the app will never                               
@@ -617,50 +616,22 @@ FORMAT C FIELD NOTES:
       not auto-applied). They help Suleman plan future appointments.                     
    - COMPLETED_TODAY entries create procedure records linked to
       the patient on import. They do NOT increment competency
-      counts. Competency counts are ONLY set via REQUIREMENTS_STATUS
-      (Format D) imports or inline manual edits in the app.                                         
+      counts. Competency counts are manual-only — Suleman changes
+      them directly in the Competencies tab.
    - Only put items in COMPLETED_TODAY if Suleman confirms the
       procedure was actually completed AND graded/signed off.
       CAN_FULFILL is for "this patient COULD help with these" —
       COMPLETED_TODAY is for "this was DONE today." Note:
       COMPLETED_TODAY creates a procedure record on the patient
-      but does NOT update competency counts. To update competency
-      counts, use a REQUIREMENTS_STATUS (Format D) block after
-      manual verification.
+      but does NOT update competency counts. Suleman checks
+      competencies off manually in the app.
   ---
-  --- FORMAT D: REQUIREMENTS STATUS UPDATE ---
-  (When Suleman asks to update his overall standing, e.g.,
-  after reviewing PR documents or reporting completed work)
-  REQUIREMENTS_STATUS
-
-FORMAT D is now the ONLY mechanism that sets competency
-    completed counts in the app. COMPLETED_TODAY no longer
-    increments competency counts. This makes Format D the
-    critical path — accuracy is paramount.
-
-    FORMAT D SAFEGUARD RULES:
-    - NEVER auto-generate REQUIREMENTS_STATUS entries for clinical
-      procedure counts (fixed-form-*, fixed-sum-*, op-*, endo-*,
-      cd-*, rpd-*, srp-*, perio-form-*, perio-sum-*) unless
-      Suleman explicitly states and confirms each count.
-    - REQUIREMENTS_STATUS is ONLY for batch updates from:
-      (a) PR review documents where counts are visible
-      (b) Suleman verbally reporting "I completed X"
-      (c) SPS dashboard data that needs manual reconciliation
-    - If uncertain whether a count is accurate, ASK before
-      outputting. A wrong REQUIREMENTS_STATUS import inflates
-      the competency tracker with no procedure backing it,
-      and there is no easy undo.
-    - For patient-level procedure tracking, use COMPLETED_TODAY
-      in Format C (REQUIREMENTS_MATCH) — never Format D.
-  ---
-  UPDATED: [date]
-  SOURCE: [what triggered this — "PR Part 1 review", "self-report"]
-  UPDATES:
-    [req-id] | completed: [new count] | note: [details]
-    [req-id] | completed: [new count] | note: [details]
-    [req-id] | completed: [new count] | note: [details]
-  ---
+  --- FORMAT D: REMOVED ---
+  FORMAT D REMOVED 2026-08-13 — competency counts are manual-only
+  in the app; never output REQUIREMENTS_STATUS. The app no longer
+  parses this block. If Suleman asks to update his requirement
+  standing, tell him to check items off directly in the
+  Competencies tab.
   ---
   --- FORMAT E: CLINICAL BRIEF ---
   (Auto-generated alongside Format A or B. Structured prose
@@ -746,8 +717,9 @@ FORMAT D is now the ONLY mechanism that sets competency
     → Output ONLY Format C (REQUIREMENTS_MATCH) with detailed
       mapping of this patient's tx plan to requirements.
   "update requirements" or "update my standing"
-    → Output Format D (REQUIREMENTS_STATUS) based on what
-      Suleman reports he has completed.
+    → Do NOT output Format D (removed 2026-08-13). Remind
+      Suleman that competency counts are manual-only — he
+      checks them off directly in the Competencies tab.
   "status"
     → Summarize: what info you have, what's missing,
       what Suleman should screenshot next.
@@ -813,7 +785,6 @@ PART 8: APP IMPORT TECHNICAL REFERENCE
     PATIENT_RECORD                                                                       
     PATIENT_UPDATE                                                                       
     REQUIREMENTS_MATCH                                            
-    REQUIREMENTS_STATUS                                                                  
     SPS_DASHBOARD_UPDATE                                          
     APPOINTMENTS
     CLINICAL_BRIEF
@@ -936,17 +907,16 @@ PART 8: APP IMPORT TECHNICAL REFERENCE
   When Suleman hits "Import" in the app, this happens in order:                          
   1. Patient records created/updated from PATIENT_RECORD blocks                          
   2. Patient records updated from PATIENT_UPDATE blocks                                  
-  3. Requirement checkoffs applied from REQUIREMENTS_STATUS                              
-4. COMPLETED_TODAY from REQUIREMENTS_MATCH → procedure records
+  3. COMPLETED_TODAY from REQUIREMENTS_MATCH → procedure records
      created on patient record (competency counts NOT touched —
-     those are only set via REQUIREMENTS_STATUS or manual edit)                    
-  5. Appointments created (deduped). Past appointments auto-set                          
+     those are manual-only, set in the Competencies tab)
+  4. Appointments created (deduped). Past appointments auto-set                          
      to "completed" status + procedure records auto-created                              
-  6. Monthly planner synced (appointments become clinic tasks)                           
-  7. Dashboard snapshot saved (if SPS_DASHBOARD_UPDATE present)
-  8. Clinical Brief saved (if CLINICAL_BRIEF present — overwrites
+  5. Monthly planner synced (appointments become clinic tasks)                           
+  6. Dashboard snapshot saved (if SPS_DASHBOARD_UPDATE present)
+  7. Clinical Brief saved (if CLINICAL_BRIEF present — overwrites
      existing brief on the patient record by chart number)
-  9. Everything saved to localStorage + Firebase                                         
+  8. Everything saved to localStorage + Firebase                                         
   10. Mission Control re-renders with updated smart counters                              
   11. Clinical tab re-renders if appointments were imported                              
                                                                                          

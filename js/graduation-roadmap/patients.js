@@ -1561,7 +1561,7 @@ function buildImportModalHtml() {
         +   '<h3 style="color:#60a5fa; margin:0; font-size:1.2em;">Import from Claude</h3>'
         +   '<button onclick="closePatientImportModal()" style="background:none; border:none; color:#94a3b8; font-size:1.4em; cursor:pointer; padding:4px 8px;">&times;</button>'
         + '</div>'
-        + '<textarea id="patientImportText" placeholder="Paste Claude output here...\n\nSupported formats:\n--- PATIENT_RECORD ---\nNAME: Last, First\nCHART: 1234567\n...\n\n--- PATIENT_UPDATE ---\nCHART: 1234567\nNOTES_APPEND: New note text\n...\n\n--- REQUIREMENTS_MATCH ---\nCAN_FULFILL: req-id | description | procedure\n...\n\n--- REQUIREMENTS_STATUS ---\nUPDATES: req-id | completed: 1 | note: text\n..." '
+        + '<textarea id="patientImportText" placeholder="Paste Claude output here...\n\nSupported formats:\n--- PATIENT_RECORD ---\nNAME: Last, First\nCHART: 1234567\n...\n\n--- PATIENT_UPDATE ---\nCHART: 1234567\nNOTES_APPEND: New note text\n...\n\n--- REQUIREMENTS_MATCH ---\nCAN_FULFILL: req-id | description | procedure\n..." '
         +   'style="flex:1; min-height:200px; padding:12px; background:#0f172a; border:1px solid #334155; border-radius:8px; color:#e2e8f0; font-family:monospace; font-size:0.85em; resize:vertical; max-height:200px; outline:none; margin-bottom:12px;"></textarea>'
         + '<div style="display:flex; gap:8px; margin-bottom:12px; flex-shrink:0;">'
         +   '<button onclick="previewPatientImport()" style="flex:1; padding:10px; background:#1e40af; border:none; border-radius:8px; color:#93c5fd; font-weight:600; cursor:pointer;">Preview</button>'
@@ -1579,7 +1579,7 @@ function closePatientImportModal() {
 }
 
 function parsePatientImportText(text) {
-    var result = { records: [], updates: [], reqMatches: [], reqStatuses: [], reqStatusUpdated: null, reqStatusSource: null, dashboardUpdate: null, appointments: [], missingNotes: null, todoList: null, clinicalBriefs: [] };
+    var result = { records: [], updates: [], reqMatches: [], dashboardUpdate: null, appointments: [], missingNotes: null, todoList: null, clinicalBriefs: [] };
     if (!text || !text.trim()) return result;
 
     // Normalize line endings (iPhone/Windows clipboard may have \r\n or \r)
@@ -1601,7 +1601,6 @@ function parsePatientImportText(text) {
         if (firstLine.indexOf('PATIENT_RECORD') !== -1) header = 'PATIENT_RECORD';
         else if (firstLine.indexOf('PATIENT_UPDATE') !== -1) header = 'PATIENT_UPDATE';
         else if (firstLine.indexOf('REQUIREMENTS_MATCH') !== -1) header = 'REQUIREMENTS_MATCH';
-        else if (firstLine.indexOf('REQUIREMENTS_STATUS') !== -1) header = 'REQUIREMENTS_STATUS';
         else if (firstLine.indexOf('SPS_DASHBOARD_UPDATE') !== -1) header = 'SPS_DASHBOARD_UPDATE';
         else if (firstLine.indexOf('MISSING_NOTES') !== -1) header = 'MISSING_NOTES';
         else if (firstLine.indexOf('TODO_LIST') !== -1) header = 'TODO_LIST';
@@ -1629,11 +1628,6 @@ function parsePatientImportText(text) {
         } else if (effectiveHeader === 'REQUIREMENTS_MATCH') {
             var parsed3 = parseRequirementsMatch(bodyText);
             if (parsed3.canFulfill.length > 0 || parsed3.completedToday.length > 0 || parsed3.highValue || parsed3.priorityNotes) result.reqMatches.push(parsed3);
-        } else if (effectiveHeader === 'REQUIREMENTS_STATUS') {
-            var parsed4 = parseRequirementsStatus(bodyText);
-            if (parsed4.statuses.length > 0) result.reqStatuses = result.reqStatuses.concat(parsed4.statuses);
-            if (parsed4.updated) result.reqStatusUpdated = parsed4.updated;
-            if (parsed4.source) result.reqStatusSource = parsed4.source;
         } else if (effectiveHeader === 'SPS_DASHBOARD_UPDATE') {
             var parsed5 = parseDashboardUpdate(bodyText);
             if (parsed5) {
@@ -1879,65 +1873,7 @@ function parseRequirementsMatch(text) {
     return result;
 }
 
-function parseRequirementsStatus(text) {
-    var statuses = [];
-    var updated = null;
-    var source = null;
-    var lines = text.split('\n');
-    var inUpdates = false;
-
-    lines.forEach(function(line) {
-        var trimmed = line.trim();
-        if (!trimmed) return;
-        var upper = trimmed.toUpperCase();
-
-        // Section header
-        if (upper.indexOf('UPDATES:') === 0) {
-            inUpdates = true;
-            // Check for inline content
-            var inlineVal = trimmed.substring(trimmed.indexOf(':') + 1).trim();
-            if (inlineVal && inlineVal.indexOf('|') !== -1) {
-                var parts = inlineVal.split('|').map(function(s) { return s.trim(); });
-                if (parts[0]) {
-                    var status = { reqId: parts[0].toLowerCase().trim() };
-                    for (var i = 1; i < parts.length; i++) {
-                        var kv = parts[i].split(':').map(function(s) { return s.trim(); });
-                        if (kv[0] === 'completed') status.completed = parseInt(kv[1], 10) || 0;
-                        if (kv[0] === 'note') status.note = kv.slice(1).join(':').trim();
-                    }
-                    statuses.push(status);
-                }
-            }
-            return;
-        }
-
-        // Capture metadata fields instead of discarding
-        if (upper.indexOf('UPDATED:') === 0) {
-            updated = trimmed.substring(trimmed.indexOf(':') + 1).trim();
-            return;
-        }
-        if (upper.indexOf('SOURCE:') === 0) {
-            source = trimmed.substring(trimmed.indexOf(':') + 1).trim();
-            return;
-        }
-
-        // In updates section: parse lines with | delimiter
-        if (inUpdates && trimmed.indexOf('|') !== -1) {
-            var parts2 = trimmed.split('|').map(function(s) { return s.trim(); });
-            if (parts2[0]) {
-                var status2 = { reqId: parts2[0].toLowerCase().trim() };
-                for (var j = 1; j < parts2.length; j++) {
-                    var kv2 = parts2[j].split(':').map(function(s) { return s.trim(); });
-                    if (kv2[0] === 'completed') status2.completed = parseInt(kv2[1], 10) || 0;
-                    if (kv2[0] === 'note') status2.note = kv2.slice(1).join(':').trim();
-                }
-                statuses.push(status2);
-            }
-        }
-    });
-
-    return { statuses: statuses, updated: updated, source: source };
-}
+// REQUIREMENTS_STATUS parser removed 2026-08-13 — competency counts are manual-only (Competencies tab).
 
 // ==================== MISSING NOTES PARSER ====================
 // Parses MISSING_NOTES block: pipe-delimited rows with 7 fields
@@ -2193,17 +2129,6 @@ function previewPatientImport() {
         });
     }
 
-    // Preview requirement statuses
-    if (parsed.reqStatuses.length > 0) {
-        hasContent = true;
-        html += '<div style="padding:8px; margin-bottom:6px; background:#1e1b4b; border-radius:6px; border-left:3px solid #818cf8;">'
-            + '<div style="color:#a5b4fc; font-weight:600; font-size:0.9em;">REQUIREMENT STATUS UPDATES (' + parsed.reqStatuses.length + ')</div>';
-        parsed.reqStatuses.forEach(function(rs) {
-            html += '<div style="color:#94a3b8; font-size:0.8em;">' + escapeHtml(rs.reqId) + ': completed=' + (rs.completed || 0) + (rs.note ? ', note: ' + escapeHtml(rs.note) : '') + '</div>';
-        });
-        html += '</div>';
-    }
-
     // Preview appointments
     if (parsed.appointments.length > 0) {
         hasContent = true;
@@ -2411,17 +2336,6 @@ function confirmUnifiedImport() {
             console.warn('[IMPORT] REQUIREMENTS_MATCH skipped — no patient found for chart: ' + (rm.chartNumber || '?') + ', name: ' + (rm.name || '?'));
         }
     });
-
-    // Apply requirement statuses
-    if (parsed.reqStatuses.length > 0) {
-        var reqResult = applyRequirementCheckoffs(parsed.reqStatuses);
-        // Persist metadata about this requirements status import
-        roadmapData.lastRequirementsStatusImport = {
-            updated: parsed.reqStatusUpdated || null,
-            source: parsed.reqStatusSource || null,
-            importedAt: new Date().toISOString()
-        };
-    }
 
     // Handle completed-today from reqMatches — pass patient context for procedure records
     var completedItems = [];
@@ -2705,14 +2619,14 @@ function confirmUnifiedImport() {
     if (created > 0) msg += created + ' patient(s) created. ';
     if (updated > 0) msg += updated + ' patient(s) updated. ';
     if (aptsCreated > 0) msg += aptsCreated + ' appointment(s) imported. ';
-    if (parsed.reqStatuses.length > 0 || completedItems.length > 0) msg += 'Requirements updated. ';
+    if (completedItems.length > 0) msg += 'Requirements updated. ';
     if (parsed.dashboardUpdate) msg += 'Dashboard snapshot saved. ';
     if (notesImported > 0) msg += notesImported + ' missing note(s) imported. ';
     if (todosImported > 0) msg += todosImported + ' to-do item(s) imported. ';
     if (briefsImported > 0) msg += briefsImported + ' clinical brief(s) imported. ';
     var skipped = (reqMatchSkipped || 0) + (briefsSkipped || 0);
-    var totalRemoved = (reqResult ? reqResult.removedIdCount : 0) + (compResult ? compResult.removedIdCount : 0);
-    var allUnmatched = (reqResult ? reqResult.unmatchedIds : []).concat(compResult ? compResult.unmatchedIds : []);
+    var totalRemoved = compResult ? compResult.removedIdCount : 0;
+    var allUnmatched = compResult ? compResult.unmatchedIds : [];
     if (skipped > 0) msg += skipped + ' item(s) skipped (no matching patient). ';
     if (totalRemoved > 0) msg += totalRemoved + ' obsolete requirement ID(s) skipped. ';
     if (allUnmatched.length > 0) msg += allUnmatched.length + ' unrecognized ID(s): ' + allUnmatched.join(', ') + '. ';
@@ -2923,6 +2837,8 @@ function migrateLeadingZeroDedup() {
     try { safeLocalStorageSet('leadingZeroDedupDone_v2', 'true'); } catch(e) {}
 }
 
+// V2 manual-only: this function records procedures from COMPLETED_TODAY deltas. It must NEVER
+// write competency counts/status/notes — those change only via the Competencies tab.
 function applyRequirementCheckoffs(items, importContext) {
     if (!items || items.length === 0) return { removedIdCount: 0, unmatchedIds: [] };
 
@@ -2972,44 +2888,10 @@ function applyRequirementCheckoffs(items, importContext) {
                 var itemList = getValues(sec.items);
                 for (var i = 0; i < itemList.length; i++) {
                     if ((itemList[i].id || '').toLowerCase() === (resolvedId || '').toLowerCase()) {
-                        // Format D Safeguard: warn if REQUIREMENTS_STATUS (absolute-set) touches clinical procedure counts
-                        var clinicalProcCategories = { fixed: 1, operative: 1, dentures: 1, rpd: 1, srp: 1, endo: 1, oralsurg: 1, perio: 1 };
-                        if (!item.isDelta && clinicalProcCategories[catKey]) {
-                            console.warn('[COMPETENCY-SAFEGUARD] REQUIREMENTS_STATUS absolute-set on clinical category "' + catKey + '" item "' + resolvedId + '" = ' + item.completed + '. This sets the count directly with NO procedure record. If this inflates progress, the webchat export may have been incorrect. Use COMPLETED_TODAY (isDelta) for patient-level procedures.');
-                        }
-
-                        // Only REQUIREMENTS_STATUS (absolute-set, !isDelta) modifies competency counts.
-                        // COMPLETED_TODAY (isDelta) creates procedure records but does NOT touch counts.
-                        if (!item.isDelta && typeof item.completed === 'number') {
-                            itemList[i].completed = item.completed;
-                        }
-                        if (item.note && !item.isDelta) {
-                            itemList[i].note = item.note;
-                        }
-
-                        // Write back to the actual storage (handle object-based storage)
+                        // Locate the matched item in actual storage (handle object-based storage)
                         if (typeof sec.items === 'object' && !Array.isArray(sec.items)) {
                             for (var key in sec.items) {
                                 if (sec.items[key] && (sec.items[key].id || '').toLowerCase() === (resolvedId || '').toLowerCase()) {
-                                    // REQUIREMENTS_STATUS (!isDelta): write the absolute count + set lastVerified
-                                    if (!item.isDelta) {
-                                        sec.items[key].completed = itemList[i].completed;
-                                        // Set lastVerified to today's local date
-                                        var now = new Date();
-                                        sec.items[key].lastVerified = now.getFullYear() + '-' +
-                                            String(now.getMonth() + 1).padStart(2, '0') + '-' +
-                                            String(now.getDate()).padStart(2, '0');
-                                        // Derive status from completed count
-                                        if (sec.items[key].completed >= (sec.items[key].required || 999)) {
-                                            sec.items[key].status = 'completed';
-                                        } else if (sec.items[key].completed > 0) {
-                                            sec.items[key].status = 'in_progress';
-                                        } else {
-                                            sec.items[key].status = 'pending';
-                                        }
-                                    }
-                                    if (item.note && !item.isDelta) sec.items[key].note = item.note;
-
                                     // COMPLETED_TODAY (isDelta): create procedure record but do NOT touch competency counts
                                     if (item.isDelta && typeof recordProcedure === 'function') {
                                         var procDate = ctx.date || item.date || getLocalDateString();
