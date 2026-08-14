@@ -1148,7 +1148,8 @@ function showToast(message, type, options) {
     if (type === 'error') toast.classList.add('toast-error');
     else if (type === 'warning') toast.classList.add('toast-warning');
     toast.classList.add('show');
-    setTimeout(() => toast.classList.remove('show'), type === 'error' ? 4000 : 2000);
+    var duration = (options && options.duration) || (type === 'error' ? 4000 : 2000);
+    setTimeout(() => toast.classList.remove('show'), duration);
 }
 
 // Custom Alert Modal (replaces blocking alert())

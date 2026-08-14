@@ -1504,21 +1504,10 @@ function initUI() {
         }
     } catch(e) { console.error('Error filtering deleted deadlines:', e); }
 
-    // Sync static exams array to roadmapData for cross-app integration
-    // Body Comp Tracker pulls this from Firebase
-    if (!roadmapData.exams || getCount(roadmapData.exams) === 0) {
-        // Convert static exams array to object format
+    // Ensure exams collection exists for cross-app integration (Body Comp Tracker reads it
+    // from Firebase). Static exam seeding retired with the academics module (D4 overhaul).
+    if (!roadmapData.exams) {
         roadmapData.exams = {};
-        exams.forEach((e, i) => {
-            const examId = e.id || generateId('exam') + '_' + i;
-            roadmapData.exams[examId] = { ...e, id: examId };
-        });
-        // Save to Firebase so Body Comp Tracker can access exams
-        // GUARD: Only save if Firebase load is complete — prevents saving defaults during race
-        if (hasLoadedFromCloud && !awaitingFirebaseLoad) {
-            safeLocalStorageSet(STORAGE_KEY, JSON.stringify(roadmapData));
-            setTimeout(() => saveData(), 100);
-        }
     }
 
     try {

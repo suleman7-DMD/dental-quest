@@ -1306,16 +1306,18 @@ function getWhatsNextItems(competencies) {
 // Track expanded categories
 var expandedCompCategories = new Set();
 
-// D3/D4 year tab state ('d3' or 'd4')
-var cv2ActiveYearTab = 'd3';
+// Active filter chip for the unified competency list ('all'|'left'|'done'|'summatives'|'carryover')
+var cv2ActiveFilter = 'all';
+
+// Undo snapshot for the last manual competency change (set by setCompItemStatus/adjustCompItem)
+var cv2LastChange = null;
 
 // ==================== CIS v2: COMPETENCY TAB RENDERING HELPERS ====================
 // Tasks 4.3-4.18: Milestone dashboard, D3 deadlines, search/filter, evidence cards,
 // unlock chains, quick-record, patient view, pace projections, etc.
 
-// Active filter state for competency search/filter
+// Active search query for the competency list
 var compSearchQuery = '';
-var compActiveFilters = []; // status filters: 'pending','in_progress','completed','planned'
 
 // --- Task 4.3: Milestone Dashboard (3 Progress Rings) ---
 // --- Task 4.6: Review Queue UI ---
@@ -1650,60 +1652,7 @@ function renderCategoryPace(catKey, stats) {
         + remaining + ' remaining &middot; ' + unitsPerWeek + '/wk needed</span>';
 }
 
-// --- Task 4.12: Search and Filter Bar ---
-function renderCompSearchBar() {
-    var container = document.getElementById('compSearchBar');
-    if (!container) return;
-
-    var filters = [
-        { key: 'all', label: 'All' },
-        { key: 'pending', label: 'Not Started' },
-        { key: 'in_progress', label: 'In Progress' },
-        { key: 'completed', label: 'Completed' },
-        { key: 'planned', label: 'Planned' }
-    ];
-
-    var html = '<input type="text" placeholder="Search competencies..." value="' + escapeHtml(compSearchQuery) + '" '
-        + 'oninput="compSearchQuery = this.value; filterCompetencies();">';
-
-    filters.forEach(function(f) {
-        var isActive = (f.key === 'all' && compActiveFilters.length === 0) || compActiveFilters.indexOf(f.key) !== -1;
-        html += '<span class="comp-filter-chip' + (isActive ? ' active' : '') + '" onclick="toggleCompFilter(\'' + f.key + '\')">'
-            + f.label + '</span>';
-    });
-
-    if (compSearchQuery || compActiveFilters.length > 0) {
-        html += '<span class="comp-filter-chip" onclick="clearCompFilters()" style="color:#f87171; border-color:rgba(239,68,68,0.3);">Clear</span>';
-    }
-
-    container.innerHTML = html;
-}
-
-function filterCompetencies() {
-    renderCompetencies();
-}
-
-function toggleCompFilter(key) {
-    if (key === 'all') {
-        compActiveFilters = [];
-    } else {
-        var idx = compActiveFilters.indexOf(key);
-        if (idx !== -1) {
-            compActiveFilters.splice(idx, 1);
-        } else {
-            compActiveFilters.push(key);
-        }
-    }
-    renderCompetencies();
-}
-
-function clearCompFilters() {
-    compSearchQuery = '';
-    compActiveFilters = [];
-    renderCompetencies();
-}
-
-// Check if an item matches current search/filter criteria
+// --- Search + filter-chip matching (unified list) ---
 function compItemMatchesFilter(item) {
     // Text search
     if (compSearchQuery) {
@@ -1714,12 +1663,16 @@ function compItemMatchesFilter(item) {
             return false;
         }
     }
-    // Status filter
-    if (compActiveFilters.length > 0) {
-        var status = getItemStatus(item);
-        if (compActiveFilters.indexOf(status) === -1) return false;
+    // Filter chip
+    var completed = item.completed ?? 0;
+    var required = item.required ?? 1;
+    switch (cv2ActiveFilter) {
+        case 'left': return completed < required;
+        case 'done': return completed >= required;
+        case 'summatives': return !!item.isSummative;
+        case 'carryover': return !!item.d3Deadline && completed < required;
+        default: return true;
     }
-    return true;
 }
 
 // Check if any item in a category matches filters (for hiding empty categories)
@@ -1960,67 +1913,60 @@ function renderCompetencies() {
     var oldReviewQueue = document.getElementById('compReviewQueue');
     if (oldReviewQueue) oldReviewQueue.innerHTML = '';
 
-    // === ALL 3 PANELS rendered into competenciesContainer ===
+    // Preserve search focus across re-render (oninput triggers a full rebuild)
+    var wasSearchFocused = document.activeElement && document.activeElement.classList
+        && document.activeElement.classList.contains('cv2-search');
+
+    // === UNIFIED LIST rendered into competenciesContainer ===
     var html = '<div class="cv2-container">';
 
-    // === D3/D4 YEAR TABS ===
-    html += '<div class="cv2-year-tabs">';
-    html += '<button class="cv2-year-tab' + (cv2ActiveYearTab === 'd3' ? ' active-d3' : '') + '" onclick="cv2SwitchYearTab(\'d3\')">'
-        + 'By End of D3<span class="cv2-tab-deadline">Due: May 15, 2026</span></button>';
-    html += '<button class="cv2-year-tab' + (cv2ActiveYearTab === 'd4' ? ' active-d4' : '') + '" onclick="cv2SwitchYearTab(\'d4\')">'
-        + 'By End of D4<span class="cv2-tab-deadline">Due: May 15, 2027</span></button>';
-    html += '</div>';
+    // === HEADER: overall progress + summatives + items left ===
+    html += cv2BuildHeader(competencies);
 
-    // === PANEL 1: MILESTONE STRIP + D3 ALERT ===
-    html += cv2BuildMilestoneStrip(competencies, stats);
+    // === TOOLBAR: search + filter chips ===
+    html += cv2BuildToolbar();
 
-    // === SEARCH BAR (inline) ===
-    html += '<input class="cv2-search" type="text" placeholder="Search requirements..." oninput="cv2FilterCompetencies(this.value)"'
-        + (compSearchQuery ? ' value="' + escapeHtml(compSearchQuery) + '"' : '') + '>';
+    // === CARRYOVER ALERT: incomplete items whose D3 deadline has passed ===
+    html += cv2BuildCarryoverAlert(competencies);
 
-    // === PANEL 2: CATEGORY ACCORDION ===
+    // === CATEGORY ACCORDION ===
     var sortedCategories = getUrgencySortedCategoryKeys(competencies);
+    var filterActive = !!compSearchQuery || cv2ActiveFilter !== 'all';
 
-    // Track whether Removable Prosthodontics visual group header has been rendered (D4 tab)
+    // Keep dentures + rpd adjacent so the Removable Prosthodontics group header covers both
+    var dentIdx = -1, rpdIdx = -1;
+    sortedCategories.forEach(function(e, i) {
+        if (e.key === 'dentures') dentIdx = i;
+        if (e.key === 'rpd') rpdIdx = i;
+    });
+    if (dentIdx !== -1 && rpdIdx !== -1 && Math.abs(dentIdx - rpdIdx) > 1) {
+        var firstIdx = Math.min(dentIdx, rpdIdx);
+        var moved = sortedCategories.splice(Math.max(dentIdx, rpdIdx), 1)[0];
+        sortedCategories.splice(firstIdx + 1, 0, moved);
+    }
     var removableGroupRendered = false;
 
     sortedCategories.forEach(function(entry) {
         var key = entry.key, cat = entry.cat, catStats = entry.stats;
-        var catYearTarget = cat.yearTarget || DEFAULT_COMPETENCIES[key]?.yearTarget || null;
 
-        // D3/D4 year tab filtering
-        if (!cv2CategoryVisibleForTab(key, cat, cv2ActiveYearTab)) return;
+        // Skip if search/filter active and no visible items
+        if (filterActive && !compCategoryHasVisibleItems(cat)) return;
 
-        // For 'both' categories, recompute stats for only visible items in this tab
-        var tabFilteredStats = catStats;
-        if (catYearTarget === 'both') {
-            var filteredCompleted = 0, filteredTotal = 0;
-            getValues(cat.sections).forEach(function(sec) {
-                getValues(sec.items).forEach(function(item) {
-                    if (cv2ItemVisibleForTab(item, catYearTarget, cv2ActiveYearTab) || item.d4Carryover) {
-                        filteredTotal += item.required ?? 0;
-                        filteredCompleted += Math.min(item.completed ?? 0, item.required ?? 0);
-                    }
-                });
-            });
-            if (filteredTotal === 0) return; // No visible items in this tab
-            tabFilteredStats = {
-                completedUnits: filteredCompleted,
-                totalUnits: filteredTotal,
-                percent: filteredTotal > 0 ? Math.round((filteredCompleted / filteredTotal) * 100) : 0
-            };
-        }
-
-        var isExpanded = expandedCompCategories.has(key);
-        var pct = tabFilteredStats.percent || 0;
+        // Force-expand while searching/filtering so matches are visible
+        var isExpanded = filterActive || expandedCompCategories.has(key);
+        var pct = catStats.percent || 0;
         var barCls = pct >= 100 ? 'cv2-bar-done' : pct > 0 ? 'cv2-bar-wip' : 'cv2-bar-critical';
         var safeKey = (key || '').replace(/['"\\]/g, '');
 
-        // Skip if search/filter active and no visible items
-        if ((compSearchQuery || compActiveFilters.length > 0) && !compCategoryHasVisibleItems(cat)) return;
+        // Passive year chip (informational only \u2014 no filtering)
+        var yt = cat.yearTarget || DEFAULT_COMPETENCIES[key]?.yearTarget || null;
+        var yearChip = '';
+        if (yt === 'd3') yearChip = '<span class="cv2-year-chip cv2-year-d3">D3</span>';
+        else if (yt === 'd4') yearChip = '<span class="cv2-year-chip cv2-year-d4">D4</span>';
+        else if (yt === 'both') yearChip = '<span class="cv2-year-chip cv2-year-both">D3+D4</span>';
 
-        // Removable Prosthodontics visual grouping (D4 tab: dentures + rpd under one header)
-        if (cv2ActiveYearTab === 'd4' && (key === 'dentures' || key === 'rpd') && !removableGroupRendered) {
+        // Removable Prosthodontics visual grouping (dentures + rpd under one header)
+        if ((key === 'dentures' || key === 'rpd') && !removableGroupRendered) {
             html += '<div class="cv2-visual-group-header">Removable Prosthodontics</div>';
             removableGroupRendered = true;
         }
@@ -2028,8 +1974,8 @@ function renderCompetencies() {
         html += '<div class="cv2-category' + (isExpanded ? ' expanded' : '') + '" data-cat="' + escapeHtml(key) + '">';
         html += '<div class="cv2-cat-header" onclick="cv2ToggleCategory(\'' + safeKey + '\')">';
         html += '<span class="cv2-cat-icon">' + (cat.icon || '') + '</span>';
-        html += '<span class="cv2-cat-name">' + escapeHtml(cat.name || key) + '</span>';
-        html += '<span class="cv2-cat-count">' + tabFilteredStats.completedUnits + '/' + tabFilteredStats.totalUnits + '</span>';
+        html += '<span class="cv2-cat-name">' + escapeHtml(cat.name || key) + yearChip + '</span>';
+        html += '<span class="cv2-cat-count">' + catStats.completedUnits + '/' + catStats.totalUnits + '</span>';
         html += '<div class="cv2-cat-bar"><div class="cv2-cat-bar-fill ' + barCls + '" style="width:' + pct + '%"></div></div>';
         html += '<span class="cv2-cat-pct">' + pct + '%</span>';
         html += '<span class="cv2-cat-chevron">' + (isExpanded ? '\u25BC' : '\u25B6') + '</span>';
@@ -2053,12 +1999,7 @@ function renderCompetencies() {
             // Sections and items
             getValues(cat.sections).forEach(function(sec) {
                 var visibleItems = getValues(sec.items).filter(function(item) {
-                    if (!compItemMatchesFilter(item)) return false;
-                    // Year tab filtering for 'both' categories
-                    if (catYearTarget === 'both') {
-                        if (!cv2ItemVisibleForTab(item, catYearTarget, cv2ActiveYearTab) && !item.d4Carryover) return false;
-                    }
-                    return true;
+                    return compItemMatchesFilter(item);
                 });
                 if (visibleItems.length === 0) return;
 
@@ -2067,56 +2008,7 @@ function renderCompetencies() {
                 }
 
                 visibleItems.forEach(function(item) {
-                    if (!item || !item.id) return;
-                    var completed = item.completed ?? 0;
-                    var required = item.required ?? 1;
-                    var safeItemId = (item.id || '').replace(/['"\\]/g, '');
-
-                    // Status icon
-                    var statusIcon = '\u2B1C'; // white square
-                    if (completed >= required) {
-                        statusIcon = '\u2705'; // green check
-                    } else if (completed > 0) {
-                        statusIcon = '\uD83D\uDFE1'; // yellow circle
-                    }
-
-                    var pipelineCount = typeof getPatientsFulfilling === 'function' ? getPatientsFulfilling(item.id).length : 0;
-                    var hasNote = item.note && item.note.trim().length > 0;
-
-                    html += '<div class="cv2-req-row" data-item="' + escapeHtml(item.id) + '">';
-                    var carryoverBadge = cv2GetCarryoverBadge(item, catYearTarget, cv2ActiveYearTab);
-                    html += '<span class="cv2-req-name" onclick="cv2ShowPipeline(\'' + safeItemId + '\')">' + escapeHtml(item.text || item.id) + carryoverBadge + '</span>';
-                    html += '<div class="cv2-counter">';
-                    html += '<button class="cv2-counter-btn" onclick="event.stopPropagation();adjustCompItem(\'' + safeKey + '\',\'' + safeItemId + '\',-1)">\u2212</button>';
-                    html += '<span class="cv2-counter-val" onclick="event.stopPropagation();cv2EditCount(\'' + safeKey + '\',\'' + safeItemId + '\',this)">'
-                        + completed + '/' + required + '</span>';
-                    html += '<button class="cv2-counter-btn" onclick="event.stopPropagation();adjustCompItem(\'' + safeKey + '\',\'' + safeItemId + '\',1)">+</button>';
-                    html += '</div>';
-                    html += '<span class="cv2-status">' + statusIcon + '</span>';
-
-                    // Pipeline badge
-                    if (pipelineCount > 0) {
-                        html += '<span class="cv2-pipeline" onclick="event.stopPropagation();cv2ShowPipeline(\'' + safeItemId + '\')">'
-                            + pipelineCount + ' pt' + (pipelineCount > 1 ? 's' : '') + '</span>';
-                    } else {
-                        html += '<span class="cv2-pipeline cv2-pipeline-empty">0 pts</span>';
-                    }
-
-                    // Notes icon
-                    html += '<span class="cv2-notes-icon' + (hasNote ? ' cv2-has-note' : '') + '" onclick="event.stopPropagation();cv2ToggleNote(\'' + safeKey + '\',\'' + safeItemId + '\',this)"'
-                        + ' title="' + (hasNote ? escapeHtml(item.note) : 'Add note') + '">\uD83D\uDCDD</span>';
-
-                    // Quick record for incomplete items
-                    if (completed < required) {
-                        html += '<span class="cv2-quick-record" onclick="openCompQuickRecord(\'' + safeItemId + '\'); event.stopPropagation();" title="Quick record">+</span>';
-                    }
-
-                    // Custom item delete
-                    if (item.custom === true) {
-                        html += '<span class="cv2-delete-btn" onclick="deleteCompItem(\'' + safeKey + '\',\'' + safeItemId + '\'); event.stopPropagation();" title="Delete">\u2716</span>';
-                    }
-
-                    html += '</div>'; // close cv2-req-row
+                    html += cv2BuildItemRow(key, item);
                 });
 
                 // Add requirement button per section
@@ -2135,237 +2027,191 @@ function renderCompetencies() {
         html += '</div></div>'; // close cv2-cat-body and cv2-category
     });
 
-    // === CARRYOVER ITEMS (from other year tab) ===
-    var carryoverItems = cv2GetCarryoverItems(competencies, cv2ActiveYearTab);
-    if (carryoverItems.length > 0) {
-        var carryoverTitle = cv2ActiveYearTab === 'd3' ? 'Also Tracked (Cumulative D3+D4)' : 'D3 Carryover Items';
-        html += '<div class="cv2-section-title" style="margin-top:16px;font-size:0.85rem;color:var(--cv2-muted);">' + carryoverTitle + '</div>';
-        carryoverItems.forEach(function(co) {
-            var item = co.item;
-            var completed = item.completed ?? 0;
-            var required = item.required ?? 1;
-            var safeItemId = (item.id || '').replace(/['"\\]/g, '');
-            var safeKey = (co.catKey || '').replace(/['"\\]/g, '');
-            var statusIcon = completed >= required ? '\u2705' : (completed > 0 ? '\uD83D\uDFE1' : '\u2B1C');
-            html += '<div class="cv2-req-row" data-item="' + escapeHtml(item.id) + '">';
-            html += '<span class="cv2-req-name">' + escapeHtml(item.text || item.id) + co.badge + '</span>';
-            html += '<div class="cv2-counter">';
-            html += '<button class="cv2-counter-btn" onclick="event.stopPropagation();adjustCompItem(\'' + safeKey + '\',\'' + safeItemId + '\',-1)">\u2212</button>';
-            html += '<span class="cv2-counter-val" onclick="event.stopPropagation();cv2EditCount(\'' + safeKey + '\',\'' + safeItemId + '\',this)">'
-                + completed + '/' + required + '</span>';
-            html += '<button class="cv2-counter-btn" onclick="event.stopPropagation();adjustCompItem(\'' + safeKey + '\',\'' + safeItemId + '\',1)">+</button>';
-            html += '</div>';
-            html += '<span class="cv2-status">' + statusIcon + '</span>';
-            html += '</div>';
-        });
-    }
-
-    // === PANEL 3: WHAT'S NEXT ===
+    // === WHAT'S NEXT ===
     html += cv2BuildWhatsNext(competencies);
 
     html += '</div>'; // close cv2-container
 
     container.innerHTML = html;
     if (scrollParent) scrollParent.scrollTop = savedScroll;
+
+    // Restore search focus with cursor at end
+    if (wasSearchFocused) {
+        var searchEl = container.querySelector('.cv2-search');
+        if (searchEl) {
+            searchEl.focus();
+            var vlen = searchEl.value.length;
+            searchEl.setSelectionRange(vlen, vlen);
+        }
+    }
 }
 
-// === CV2 PANEL 1: Build Milestone Strip + D3 Alert (returns HTML string) ===
-// Tab-aware: D3 shows apt/proc/summative milestones + D3 competency %. D4 shows only D4 summatives + D4 competency %.
-function cv2BuildMilestoneStrip(competencies, stats) {
-    var tab = cv2ActiveYearTab;
+// === Build a single requirement row (shared by full render + targeted row updates) ===
+function cv2BuildItemRow(catKey, item) {
+    if (!item || !item.id) return '';
+    var completed = item.completed ?? 0;
+    var required = item.required ?? 1;
+    var isDone = completed >= required;
+    var safeKey = (catKey || '').replace(/['"\\]/g, '');
+    var safeItemId = (item.id || '').replace(/['"\\]/g, '');
+    var hasNote = item.note && item.note.trim().length > 0;
 
-    // Compute tab-specific competency stats (units from visible items only)
-    var tabTotalUnits = 0, tabCompletedUnits = 0;
-    var tabSummativeCompleted = 0, tabSummativeTotal = 0;
+    var html = '<div class="cv2-req-row' + (isDone ? ' cv2-row-done' : '') + '" id="cv2row-' + safeKey + '-' + safeItemId + '" data-item="' + escapeHtml(item.id) + '">';
+
+    // Check-off control: one-tap checkbox for single-count items, big \u2212/+ counter for multi-count
+    if (required === 1) {
+        html += '<button class="cv2-check' + (isDone ? ' checked' : '') + '" onclick="event.stopPropagation();cv2ToggleDone(\'' + safeKey + '\',\'' + safeItemId + '\')" title="' + (isDone ? 'Mark not done' : 'Mark done') + '">' + (isDone ? '\u2713' : '') + '</button>';
+    } else {
+        html += '<div class="cv2-counter">';
+        html += '<button class="cv2-counter-btn" onclick="event.stopPropagation();adjustCompItem(\'' + safeKey + '\',\'' + safeItemId + '\',-1)">\u2212</button>';
+        html += '<span class="cv2-counter-val" onclick="event.stopPropagation();cv2EditCount(\'' + safeKey + '\',\'' + safeItemId + '\',this)">'
+            + completed + '/' + required + '</span>';
+        html += '<button class="cv2-counter-btn" onclick="event.stopPropagation();adjustCompItem(\'' + safeKey + '\',\'' + safeItemId + '\',1)">+</button>';
+        html += '</div>';
+    }
+
+    // Name (click to edit) + badges
+    var badges = '';
+    if (item.isSummative) badges += '<span class="cv2-sum-badge">SUMMATIVE</span>';
+    if (item.d3Deadline && !isDone) badges += '<span class="cv2-carryover-badge">D3 carryover</span>';
+    html += '<span class="cv2-req-name" onclick="openEditCompItemModal(\'' + safeKey + '\',\'' + safeItemId + '\')">' + escapeHtml(item.text || item.id) + badges + '</span>';
+
+    // Notes icon
+    html += '<span class="cv2-notes-icon' + (hasNote ? ' cv2-has-note' : '') + '" onclick="event.stopPropagation();cv2ToggleNote(\'' + safeKey + '\',\'' + safeItemId + '\',this)"'
+        + ' title="' + (hasNote ? escapeHtml(item.note) : 'Add note') + '">\uD83D\uDCDD</span>';
+
+    // Quick record for incomplete items
+    if (!isDone) {
+        html += '<span class="cv2-quick-record" onclick="openCompQuickRecord(\'' + safeItemId + '\'); event.stopPropagation();" title="Quick record">+</span>';
+    }
+
+    // Custom item delete
+    if (item.custom === true) {
+        html += '<span class="cv2-delete-btn" onclick="deleteCompItem(\'' + safeKey + '\',\'' + safeItemId + '\'); event.stopPropagation();" title="Delete">\u2716</span>';
+    }
+
+    html += '</div>'; // close cv2-req-row
+    return html;
+}
+
+// === CV2 HEADER: overall item-based progress + summatives + items left (stats only) ===
+// Toolbar (search + chips) is separate so header refreshes never touch the search input.
+function cv2BuildHeader(competencies) {
+    var itemsDone = 0, itemsTotal = 0;
+    var sumDone = 0, sumTotal = 0;
 
     Object.entries(competencies).forEach(function(entry) {
-        var catKey = entry[0], cat = entry[1];
-        var yt = cat.yearTarget || DEFAULT_COMPETENCIES[catKey]?.yearTarget || null;
-
-        // Skip categories not visible in this tab
-        if (!cv2CategoryVisibleForTab(catKey, cat, tab)) return;
-
+        var cat = entry[1];
         getValues(cat.sections).forEach(function(sec) {
             getValues(sec.items).forEach(function(item) {
-                // For 'both' categories, only count items visible in this tab
-                if (yt === 'both' && !cv2ItemVisibleForTab(item, yt, tab) && !item.d4Carryover) return;
-
-                var req = item.required ?? 0;
-                var comp = Math.min(item.completed ?? 0, req);
-                tabTotalUnits += req;
-                tabCompletedUnits += comp;
-
+                var required = item.required ?? 1;
+                var completed = item.completed ?? 0;
+                itemsTotal++;
+                if (completed >= required) itemsDone++;
                 if (item.isSummative) {
-                    tabSummativeTotal++;
-                    if ((item.completed ?? 0) >= req && req > 0) tabSummativeCompleted++;
+                    sumTotal++;
+                    if (completed >= required) sumDone++;
                 }
             });
         });
     });
 
-    // Also count d4Carryover items from the other tab
-    var carryoverItems = cv2GetCarryoverItems(competencies, tab);
-    carryoverItems.forEach(function(co) {
-        var item = co.item;
-        var req = item.required ?? 0;
-        var comp = Math.min(item.completed ?? 0, req);
-        tabTotalUnits += req;
-        tabCompletedUnits += comp;
-        if (item.isSummative) {
-            tabSummativeTotal++;
-            if ((item.completed ?? 0) >= req && req > 0) tabSummativeCompleted++;
-        }
-    });
+    var pct = itemsTotal > 0 ? Math.round((itemsDone / itemsTotal) * 100) : 0;
+    var itemsLeft = itemsTotal - itemsDone;
+    var barColor = pct >= 80 ? 'var(--cv2-done)' : pct >= 40 ? 'var(--cv2-wip)' : 'var(--cv2-critical)';
+    var scoreColor = pct >= 80 ? 'done' : pct >= 40 ? 'wip' : 'critical';
 
-    if (tabSummativeTotal === 0) tabSummativeTotal = 1; // fallback
-
-    var tabPct = tabTotalUnits > 0 ? Math.round((tabCompletedUnits / tabTotalUnits) * 100) : 0;
-
-    // Deadline for this tab
-    var deadlineDate = tab === 'd3' ? new Date(2026, 4, 15) : new Date(2027, 4, 15);
+    // Days until graduation (May 15, 2027)
     var today = new Date();
     today.setHours(0, 0, 0, 0);
-    var daysLeft = Math.max(0, Math.ceil((deadlineDate - today) / 86400000));
-    var weeksLeft = Math.max(1, Math.floor(daysLeft / 7));
-    var remainingUnits = Math.max(0, tabTotalUnits - tabCompletedUnits);
-    var itemsPerWeek = weeksLeft > 0 ? (remainingUnits / weeksLeft).toFixed(1) : '0';
+    var gradDate = new Date(2027, 4, 15);
+    var daysLeft = Math.max(0, Math.ceil((gradDate - today) / 86400000));
 
-    var html = '<div class="cv2-milestones">';
-
-    if (tab === 'd3') {
-        // D3: Show Appointments, Procedures, Summatives milestone cards
-        var aptCount = typeof getSmartAppointmentCount === 'function' ? getSmartAppointmentCount() : { total: 0 };
-        var procCount = typeof getSmartProcedureCount === 'function' ? getSmartProcedureCount() : { total: 0 };
-        var aptTarget = roadmapData.clinicHeadlines?.appointments?.target ?? 90;
-        var procTarget = roadmapData.clinicHeadlines?.procedures?.target ?? 116;
-
-        var kpis = [
-            { label: 'Appointments', current: aptCount.total, target: aptTarget },
-            { label: 'Procedures', current: procCount.total, target: procTarget },
-            { label: 'Summatives', current: tabSummativeCompleted, target: tabSummativeTotal }
-        ];
-
-        kpis.forEach(function(kpi) {
-            var pct = kpi.target > 0 ? Math.min(100, Math.round((kpi.current / kpi.target) * 100)) : 0;
-            var colorClass = pct >= 80 ? 'on-track' : pct >= 40 ? 'behind' : 'critical';
-            var barClass = pct >= 100 ? 'cv2-bar-done' : pct > 0 ? 'cv2-bar-wip' : 'cv2-bar-critical';
-            html += '<div class="cv2-kpi-card">'
-                + '<div class="cv2-kpi-value cv2-color-' + colorClass + '">' + kpi.current + '/' + kpi.target + '</div>'
-                + '<div class="cv2-kpi-label">' + escapeHtml(kpi.label) + '</div>'
-                + '<div class="cv2-kpi-bar"><div class="cv2-kpi-bar-fill ' + barClass + '" style="width:' + pct + '%;"></div></div>'
-                + '<div class="cv2-kpi-pct">' + pct + '%</div>'
-                + '</div>';
-        });
-    } else {
-        // D4: Show only Summatives KPI (no appointments/procedures — those are D3 milestones)
-        var sumPct = tabSummativeTotal > 0 ? Math.min(100, Math.round((tabSummativeCompleted / tabSummativeTotal) * 100)) : 0;
-        var sumColorClass = sumPct >= 80 ? 'on-track' : sumPct >= 40 ? 'behind' : 'critical';
-        var sumBarClass = sumPct >= 100 ? 'cv2-bar-done' : sumPct > 0 ? 'cv2-bar-wip' : 'cv2-bar-critical';
-        html += '<div class="cv2-kpi-card">'
-            + '<div class="cv2-kpi-value cv2-color-' + sumColorClass + '">' + tabSummativeCompleted + '/' + tabSummativeTotal + '</div>'
-            + '<div class="cv2-kpi-label">D4 Summatives</div>'
-            + '<div class="cv2-kpi-bar"><div class="cv2-kpi-bar-fill ' + sumBarClass + '" style="width:' + sumPct + '%;"></div></div>'
-            + '<div class="cv2-kpi-pct">' + sumPct + '%</div>'
-            + '</div>';
-    }
-
-    // Tab-specific competency completion — count ITEMS where completed >= required
-    var tabItemsDone = 0, tabItemsTotal = 0;
-    Object.entries(competencies).forEach(function(entry) {
-        var catKey = entry[0], cat = entry[1];
-        var yt = cat.yearTarget || DEFAULT_COMPETENCIES[catKey]?.yearTarget || null;
-        if (!cv2CategoryVisibleForTab(catKey, cat, tab)) return;
-        getValues(cat.sections).forEach(function(sec) {
-            getValues(sec.items).forEach(function(item) {
-                if (yt === 'both' && !cv2ItemVisibleForTab(item, yt, tab) && !item.d4Carryover) return;
-                tabItemsTotal++;
-                if ((item.completed ?? 0) >= (item.required ?? 1)) tabItemsDone++;
-            });
-        });
-    });
-    // Also count carryover items
-    carryoverItems.forEach(function(co) {
-        tabItemsTotal++;
-        if ((co.item.completed ?? 0) >= (co.item.required ?? 1)) tabItemsDone++;
-    });
-    var itemPct = tabItemsTotal > 0 ? Math.round((tabItemsDone / tabItemsTotal) * 100) : 0;
-    var itemColor = itemPct >= 80 ? 'done' : itemPct >= 40 ? 'wip' : 'critical';
-    var tabLabel = tab === 'd3' ? 'D3' : 'D4';
-
-    var barFillColor = itemPct >= 80 ? 'var(--cv2-done)' : itemPct >= 40 ? 'var(--cv2-wip)' : 'var(--cv2-critical)';
-    html += '<div class="cv2-readiness">'
-        + '<div class="cv2-readiness-score cv2-color-' + itemColor + '">' + itemPct + '%</div>'
-        + '<div class="cv2-readiness-bar"><div class="cv2-readiness-bar-fill" style="width:' + itemPct + '%;background:' + barFillColor + ';"></div></div>'
-        + '<div class="cv2-readiness-meta">' + tabItemsDone + '/' + tabItemsTotal + ' ' + tabLabel + ' items \u00B7 ' + daysLeft + 'd left</div>'
-        + '</div>';
-
-    html += '</div>'; // close cv2-milestones
-
-    // D3 Deadline alert bar (only on D3 tab)
-    if (tab === 'd3') {
-        html += cv2BuildD3Alert(competencies, daysLeft);
-    }
-
+    var html = '<div class="cv2-header" id="cv2header">';
+    html += '<div class="cv2-header-main">';
+    html += '<div class="cv2-header-score cv2-color-' + scoreColor + '">' + pct + '%</div>';
+    html += '<div class="cv2-header-bar"><div class="cv2-header-bar-fill" style="width:' + pct + '%;background:' + barColor + ';"></div></div>';
+    html += '<div class="cv2-header-meta">' + itemsDone + '/' + itemsTotal + ' requirements done · ' + daysLeft + ' days to graduation</div>';
+    html += '</div>';
+    html += '<div class="cv2-header-pills">';
+    html += '<span class="cv2-header-pill cv2-pill-left">' + itemsLeft + ' left</span>';
+    html += '<span class="cv2-header-pill cv2-pill-sum">' + sumDone + '/' + sumTotal + ' summatives</span>';
+    html += '</div>';
+    html += '</div>'; // close cv2-header
     return html;
 }
 
-// === D3 Alert Bar (returns HTML string) ===
-function cv2BuildD3Alert(comp, daysLeft) {
-    var d3Items = [];
+// === CV2 TOOLBAR: search + filter chips (returns HTML string) ===
+function cv2BuildToolbar() {
+    var chips = [
+        { key: 'all', label: 'All' },
+        { key: 'left', label: 'Left to do' },
+        { key: 'done', label: 'Done' },
+        { key: 'summatives', label: 'Summatives' },
+        { key: 'carryover', label: 'D3 carryover' }
+    ];
+    var html = '<div class="cv2-toolbar">';
+    html += '<input class="cv2-search" type="text" placeholder="Search requirements..." oninput="cv2FilterCompetencies(this.value)"'
+        + (compSearchQuery ? ' value="' + escapeHtml(compSearchQuery) + '"' : '') + '>';
+    html += '<div class="cv2-filter-chips">';
+    chips.forEach(function(c) {
+        html += '<span class="cv2-filter-chip' + (cv2ActiveFilter === c.key ? ' active' : '') + '" onclick="cv2SetFilter(\'' + c.key + '\')">' + c.label + '</span>';
+    });
+    html += '</div></div>';
+    return html;
+}
+
+// Set the active filter chip (tapping the active chip again resets to 'all')
+function cv2SetFilter(f) {
+    cv2ActiveFilter = (f === cv2ActiveFilter) ? 'all' : f;
+    renderCompetencies();
+}
+
+// === D3 Carryover Alert: items whose D3 deadline has passed but are still incomplete ===
+function cv2BuildCarryoverAlert(competencies) {
+    var carryover = [];
     var today = new Date();
     today.setHours(0, 0, 0, 0);
 
     var seenIds = {};
-    Object.entries(comp).forEach(function(entry) {
+    Object.entries(competencies).forEach(function(entry) {
         var catKey = entry[0], cat = entry[1];
         getValues(cat.sections).forEach(function(sec) {
             getValues(sec.items).forEach(function(item) {
-                if (item.d3Deadline && item.completed < (item.required ?? 1)) {
-                    // Dedup by item ID — prevents duplicates from migration artifacts
-                    if (seenIds[item.id]) return;
-                    seenIds[item.id] = true;
-                    var parts = item.d3Deadline.split('-').map(Number);
-                    var dlDate = new Date(parts[0], parts[1] - 1, parts[2]);
-                    var itemDaysLeft = Math.floor((dlDate - today) / 86400000);
-                    d3Items.push({
-                        catKey: catKey,
-                        item: item,
-                        catName: cat.name || catKey,
-                        catColor: cat.color || '#94a3b8',
-                        daysLeft: itemDaysLeft
-                    });
-                }
+                if (!item.d3Deadline || (item.completed ?? 0) >= (item.required ?? 1)) return;
+                // Dedup by item ID — prevents duplicates from migration artifacts
+                if (seenIds[item.id]) return;
+                seenIds[item.id] = true;
+                var parts = item.d3Deadline.split('-').map(Number);
+                var dlDate = new Date(parts[0], parts[1] - 1, parts[2]);
+                if (dlDate >= today) return; // deadline not yet passed
+                carryover.push({ catKey: catKey, item: item, catName: cat.name || catKey });
             });
         });
     });
 
-    if (d3Items.length === 0) return '';
+    if (carryover.length === 0) return '';
 
-    d3Items.sort(function(a, b) { return a.daysLeft - b.daysLeft; });
-    var zeroProgress = d3Items.filter(function(d) { return (d.item.completed ?? 0) === 0; });
+    carryover.sort(function(a, b) { return (a.item.d3Deadline || '').localeCompare(b.item.d3Deadline || ''); });
 
-    var html = '<div class="cv2-d3-alert" onclick="this.classList.toggle(\'expanded\')">'
-        + '<div class="cv2-d3-alert-header">'
-        + '<span class="cv2-d3-alert-icon">\u26A0\uFE0F</span>'
-        + '<span class="cv2-d3-alert-text">' + d3Items.length + ' D3 deadline' + (d3Items.length > 1 ? 's' : '') + ' remaining';
-    if (zeroProgress.length > 0) {
-        html += ' \u00B7 <strong>' + zeroProgress.length + ' with zero progress</strong>';
-    }
-    html += ' \u00B7 ' + daysLeft + ' days left</span>'
-        + '<span class="cv2-d3-alert-toggle">\u25BC</span>'
+    var html = '<div class="cv2-carryover-card" onclick="this.classList.toggle(\'expanded\')">'
+        + '<div class="cv2-carryover-header">'
+        + '<span class="cv2-carryover-icon">⚠️</span>'
+        + '<span class="cv2-carryover-title">' + carryover.length + ' D3 carryover item' + (carryover.length > 1 ? 's' : '') + ' — missed D3 deadline, still required</span>'
+        + '<span class="cv2-carryover-toggle">▼</span>'
         + '</div>';
 
-    html += '<div class="cv2-d3-alert-list">';
-    d3Items.forEach(function(d) {
-        var urgency = d.daysLeft < 0 ? 'overdue' : d.daysLeft < 7 ? 'soon' : d.daysLeft < 30 ? 'upcoming' : 'ok';
-        var label = d.daysLeft < 0 ? (Math.abs(d.daysLeft) + 'd overdue') : d.daysLeft === 0 ? 'TODAY' : (d.daysLeft + 'd left');
+    html += '<div class="cv2-carryover-list">';
+    carryover.forEach(function(d) {
         var safeCatKey = (d.catKey || '').replace(/['"\\]/g, '');
         var safeItemId = (d.item.id || '').replace(/['"\\]/g, '');
-        html += '<div class="cv2-d3-item cv2-d3-' + urgency + '" onclick="event.stopPropagation();navigateToCompetencyItem(\'' + safeCatKey + '\',\'' + safeItemId + '\')">'
-            + '<span class="cv2-d3-cat" style="color:' + d.catColor + ';">' + escapeHtml(d.catName) + '</span>'
-            + '<span class="cv2-d3-name">' + escapeHtml(d.item.text.length > 40 ? d.item.text.substring(0, 40) + '...' : d.item.text) + '</span>'
-            + '<span class="cv2-d3-countdown cv2-d3-' + urgency + '">' + label + '</span>'
-            + '<span class="cv2-d3-progress">' + d.item.completed + '/' + d.item.required + '</span>'
+        var txt = d.item.text || d.item.id || '';
+        if (txt.length > 48) txt = txt.substring(0, 48) + '...';
+        html += '<div class="cv2-carryover-item" onclick="event.stopPropagation();cv2ShowItemDetail(\'' + safeCatKey + '\',\'' + safeItemId + '\')">'
+            + '<span class="cv2-carryover-cat">' + escapeHtml(d.catName) + '</span>'
+            + '<span class="cv2-carryover-name">' + escapeHtml(txt) + '</span>'
+            + '<span class="cv2-carryover-due">was due ' + escapeHtml(d.item.d3Deadline || '') + '</span>'
+            + '<span class="cv2-carryover-progress">' + (d.item.completed ?? 0) + '/' + (d.item.required ?? 1) + '</span>'
             + '</div>';
     });
     html += '</div></div>';
@@ -2458,72 +2304,6 @@ function cv2FilterCompetencies(query) {
     renderCompetencies();
 }
 
-// Switch D3/D4 year tab
-function cv2SwitchYearTab(tab) {
-    cv2ActiveYearTab = tab;
-    renderCompetencies();
-}
-
-// Check if a category should be visible in the current year tab
-function cv2CategoryVisibleForTab(catKey, cat, tab) {
-    var yt = cat.yearTarget || DEFAULT_COMPETENCIES[catKey]?.yearTarget || null;
-    if (tab === 'd3') {
-        return yt === 'd3' || yt === 'both';
-    } else {
-        return yt === 'd4' || yt === 'both';
-    }
-}
-
-// Filter items within a 'both' category for the active year tab
-function cv2ItemVisibleForTab(item, catYearTarget, tab) {
-    if (catYearTarget !== 'both') return true; // d3/d4 categories show all items
-    if (tab === 'd3') {
-        return !!item.d3Deadline; // D3 tab: only items WITH d3Deadline
-    } else {
-        return !item.d3Deadline; // D4 tab: only items WITHOUT d3Deadline
-    }
-}
-
-// Check if an item should show as a carryover in the current tab
-function cv2GetCarryoverBadge(item, catYearTarget, tab) {
-    if (!item.d4Carryover) return '';
-    if (tab === 'd3') {
-        // In D3 tab, d4Carryover items from 'd4' categories show with badge
-        if (catYearTarget === 'd4') {
-            return '<span class="cv2-carryover-badge cv2-carryover-d4">Cumulative D3+D4</span>';
-        }
-        return ''; // d3/both items with carryover show normally in D3
-    } else {
-        // In D4 tab, d4Carryover items from 'd3' or 'both' categories show with badge
-        if (catYearTarget === 'd3' || (catYearTarget === 'both' && item.d3Deadline)) {
-            return '<span class="cv2-carryover-badge cv2-carryover-warn">Should have been completed in D3</span>';
-        }
-        return '';
-    }
-}
-
-// Collect d4Carryover items that need to show in the OTHER tab
-function cv2GetCarryoverItems(competencies, tab) {
-    var items = [];
-    Object.entries(competencies).forEach(function(entry) {
-        var catKey = entry[0], cat = entry[1];
-        var yt = cat.yearTarget || DEFAULT_COMPETENCIES[catKey]?.yearTarget || null;
-        getValues(cat.sections).forEach(function(sec) {
-            getValues(sec.items).forEach(function(item) {
-                if (!item.d4Carryover) return;
-                if (tab === 'd3' && yt === 'd4') {
-                    // D3 tab: show d4 items with d4Carryover
-                    items.push({ item: item, catKey: catKey, cat: cat, badge: '<span class="cv2-carryover-badge cv2-carryover-d4">Cumulative D3+D4</span>' });
-                } else if (tab === 'd4' && yt === 'd3') {
-                    // D4 tab: show d3-only items with d4Carryover (both-category items already render inline)
-                    items.push({ item: item, catKey: catKey, cat: cat, badge: '<span class="cv2-carryover-badge cv2-carryover-warn">Should have been completed in D3</span>' });
-                }
-            });
-        });
-    });
-    return items;
-}
-
 // === CV2 HELPER: Inline count edit ===
 function cv2EditCount(catKey, itemId, el) {
     var parts = el.textContent.split('/');
@@ -2547,13 +2327,13 @@ function cv2EditCount(catKey, itemId, el) {
         if (delta !== 0) {
             adjustCompItem(catKey, itemId, delta);
         } else {
-            renderCompetencies();
+            cv2UpdateItemRow(catKey, itemId);
         }
     }
     input.addEventListener('blur', commit);
     input.addEventListener('keydown', function(e) {
         if (e.key === 'Enter') commit();
-        if (e.key === 'Escape') { committed = true; renderCompetencies(); }
+        if (e.key === 'Escape') { committed = true; cv2UpdateItemRow(catKey, itemId); }
     });
 }
 
@@ -2589,48 +2369,6 @@ function cv2ToggleNote(catKey, itemId, el) {
     });
 }
 
-// === CV2 HELPER: Show pipeline patients for a requirement ===
-function cv2ShowPipeline(itemId) {
-    var patients = typeof getPatientsFulfilling === 'function' ? getPatientsFulfilling(itemId) : [];
-    if (patients.length === 0) {
-        showToast('No patients in pipeline for this requirement', 'info');
-        return;
-    }
-    if (patients.length === 1) {
-        showPatientCompPreview(patients[0].id || patients[0].patientId, itemId);
-        return;
-    }
-    // Multi-patient popup using DOM construction (XSS safe)
-    var overlay = document.createElement('div');
-    overlay.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.6);z-index:10000;display:flex;align-items:center;justify-content:center;';
-    var card = document.createElement('div');
-    card.style.cssText = 'background:#fff;border:1px solid #ddd;border-radius:12px;padding:20px;max-width:340px;width:90%;box-shadow:0 8px 32px rgba(0,0,0,0.15);';
-    var title = document.createElement('h4');
-    title.textContent = 'Pipeline Patients';
-    title.style.cssText = 'margin:0 0 12px;color:#1a1a2e;font-size:1em;';
-    card.appendChild(title);
-    patients.forEach(function(p) {
-        var row = document.createElement('div');
-        row.style.cssText = 'padding:10px 8px;cursor:pointer;border-bottom:1px solid #eee;color:#1a1a2e;font-size:0.9em;border-radius:6px;';
-        row.textContent = (p.name || 'Unknown') + ' #' + (p.chartNumber || '');
-        row.onmouseenter = function() { row.style.background = '#f0f0f0'; };
-        row.onmouseleave = function() { row.style.background = 'transparent'; };
-        row.onclick = function() {
-            overlay.remove();
-            showPatientCompPreview(p.id || p.patientId, itemId);
-        };
-        card.appendChild(row);
-    });
-    var closeBtn = document.createElement('button');
-    closeBtn.textContent = 'Close';
-    closeBtn.style.cssText = 'margin-top:12px;padding:8px 20px;border:1px solid #ddd;border-radius:6px;background:#f5f5f5;color:#666;cursor:pointer;font-size:0.85em;';
-    closeBtn.onclick = function() { overlay.remove(); };
-    card.appendChild(closeBtn);
-    overlay.appendChild(card);
-    overlay.onclick = function(e) { if (e.target === overlay) overlay.remove(); };
-    document.body.appendChild(overlay);
-}
-
 // === CV2 HELPER: Show item detail (navigate + expand category) ===
 function cv2ShowItemDetail(catKey, itemId) {
     if (!expandedCompCategories.has(catKey)) {
@@ -2662,6 +2400,7 @@ function setCompItemStatus(catKey, itemId, newStatus) {
     let wasCompleted = false;
     let isNowCompleted = false;
     let itemText = '';
+    let found = false;
 
     // Use object-based storage
     for (const sec of getValues(cat.sections)) {
@@ -2669,6 +2408,16 @@ function setCompItemStatus(catKey, itemId, newStatus) {
             const item = sec.items[itemId];
             wasCompleted = item.completed >= item.required;
             itemText = item.text;
+            found = true;
+
+            // Snapshot for one-step undo
+            cv2LastChange = {
+                catKey: catKey,
+                itemId: itemId,
+                prevCompleted: item.completed ?? 0,
+                prevStatus: item.status ?? 'pending',
+                prevLastVerified: item.lastVerified ?? null
+            };
 
             // V2: Simple status toggle — no evidence entries
             const currentStatus = getItemStatus(item);
@@ -2697,12 +2446,107 @@ function setCompItemStatus(catKey, itemId, newStatus) {
     clinicalDataDirty = true;
     safeLocalStorageSet(STORAGE_KEY, JSON.stringify(roadmapData));
     saveData();
-    renderCompetencies();
+    cv2UpdateItemRow(catKey, itemId);
+    cv2UpdateHeader();
+    cv2UpdateCategoryHeader(catKey);
     if (typeof renderDashboard === 'function') renderDashboard();
+
+    if (found) {
+        showToast(escapeHtml((itemText || '').substring(0, 40)) + ' updated <button class="cv2-undo-btn" onclick="cv2UndoLastChange()">Undo</button>', null, { html: true, duration: 5000 });
+    }
 
     // Show milestone toast if just completed
     if (!wasCompleted && isNowCompleted) {
         showCompMilestone(itemText);
+    }
+}
+
+// Toggle a required=1 item done/undone (checkbox in the unified list)
+function cv2ToggleDone(catKey, itemId) {
+    setCompItemStatus(catKey, itemId, 'completed');
+}
+
+// Undo the last manual competency change (one-step)
+function cv2UndoLastChange() {
+    if (!cv2LastChange) {
+        showToast('Nothing to undo');
+        return;
+    }
+    var change = cv2LastChange;
+    cv2LastChange = null;
+    var competencies = getCompetenciesData();
+    var cat = competencies[change.catKey];
+    var restored = false;
+    if (cat) {
+        getValues(cat.sections).forEach(function(sec) {
+            if (sec.items && sec.items[change.itemId]) {
+                var item = sec.items[change.itemId];
+                item.completed = change.prevCompleted ?? 0;
+                item.status = change.prevStatus ?? 'pending';
+                item.lastVerified = change.prevLastVerified ?? null;
+                restored = true;
+            }
+        });
+    }
+    if (!restored) {
+        showToast('Item no longer exists', 'error');
+        return;
+    }
+    clinicalDataDirty = true;
+    safeLocalStorageSet(STORAGE_KEY, JSON.stringify(roadmapData));
+    saveData();
+    cv2UpdateItemRow(change.catKey, change.itemId);
+    cv2UpdateHeader();
+    cv2UpdateCategoryHeader(change.catKey);
+    if (typeof renderDashboard === 'function') renderDashboard();
+    showToast('Change undone');
+}
+
+// Replace a single requirement row in place (falls back to full render)
+function cv2UpdateItemRow(catKey, itemId) {
+    var safeKey = (catKey || '').replace(/['"\\]/g, '');
+    var safeItemId = (itemId || '').replace(/['"\\]/g, '');
+    var row = document.getElementById('cv2row-' + safeKey + '-' + safeItemId);
+    if (!row) { renderCompetencies(); return; }
+    var competencies = getCompetenciesData();
+    var cat = competencies[catKey];
+    var item = null;
+    if (cat) {
+        getValues(cat.sections).forEach(function(sec) {
+            if (sec.items && sec.items[itemId]) item = sec.items[itemId];
+        });
+    }
+    if (!item) { renderCompetencies(); return; }
+    var wrapper = document.createElement('div');
+    wrapper.innerHTML = cv2BuildItemRow(catKey, item);
+    if (wrapper.firstChild) row.replaceWith(wrapper.firstChild);
+}
+
+// Refresh the header stats block in place (falls back to full render)
+function cv2UpdateHeader() {
+    var header = document.getElementById('cv2header');
+    if (!header) { renderCompetencies(); return; }
+    var wrapper = document.createElement('div');
+    wrapper.innerHTML = cv2BuildHeader(getCompetenciesData());
+    if (wrapper.firstChild) header.replaceWith(wrapper.firstChild);
+}
+
+// Refresh a category accordion header's count/bar/pct in place
+function cv2UpdateCategoryHeader(catKey) {
+    var safeKey = (catKey || '').replace(/['"\\]/g, '');
+    var catEl = document.querySelector('.cv2-category[data-cat="' + safeKey + '"]');
+    var competencies = getCompetenciesData();
+    var cat = competencies[catKey];
+    if (!catEl || !cat) { renderCompetencies(); return; }
+    var catStats = calculateCategoryStats(cat);
+    var countEl = catEl.querySelector('.cv2-cat-count');
+    if (countEl) countEl.textContent = catStats.completedUnits + '/' + catStats.totalUnits;
+    var pctEl = catEl.querySelector('.cv2-cat-pct');
+    if (pctEl) pctEl.textContent = catStats.percent + '%';
+    var barEl = catEl.querySelector('.cv2-cat-bar-fill');
+    if (barEl) {
+        barEl.style.width = catStats.percent + '%';
+        barEl.className = 'cv2-cat-bar-fill ' + (catStats.percent >= 100 ? 'cv2-bar-done' : catStats.percent > 0 ? 'cv2-bar-wip' : 'cv2-bar-critical');
     }
 }
 
@@ -2715,6 +2559,7 @@ function adjustCompItem(catKey, itemId, delta) {
     let wasCompleted = false;
     let isNowCompleted = false;
     let itemText = '';
+    let found = false;
 
     // Use object-based storage
     for (const sec of getValues(cat.sections)) {
@@ -2722,6 +2567,16 @@ function adjustCompItem(catKey, itemId, delta) {
             const item = sec.items[itemId];
             wasCompleted = item.completed >= item.required;
             itemText = item.text;
+            found = true;
+
+            // Snapshot for one-step undo
+            cv2LastChange = {
+                catKey: catKey,
+                itemId: itemId,
+                prevCompleted: item.completed ?? 0,
+                prevStatus: item.status ?? 'pending',
+                prevLastVerified: item.lastVerified ?? null
+            };
 
             const newCompleted = Math.max(0, Math.min(item.required, item.completed + delta));
             item.completed = newCompleted;
@@ -2750,8 +2605,14 @@ function adjustCompItem(catKey, itemId, delta) {
     clinicalDataDirty = true;
     safeLocalStorageSet(STORAGE_KEY, JSON.stringify(roadmapData));
     saveData();
-    renderCompetencies();
+    cv2UpdateItemRow(catKey, itemId);
+    cv2UpdateHeader();
+    cv2UpdateCategoryHeader(catKey);
     if (typeof renderDashboard === 'function') renderDashboard();
+
+    if (found) {
+        showToast(escapeHtml((itemText || '').substring(0, 40)) + ' updated <button class="cv2-undo-btn" onclick="cv2UndoLastChange()">Undo</button>', null, { html: true, duration: 5000 });
+    }
 
     // Show milestone toast if just completed
     if (!wasCompleted && isNowCompleted) {
@@ -2789,6 +2650,8 @@ function showCompMilestone(itemText) {
 
 function resetCompetencies() {
     showCustomConfirm('Reset ALL competencies to default values? This cannot be undone.', function() {
+        showCustomConfirm('Are you SURE? All manual check-offs and counts will be wiped. A checkpoint will be saved first.', function() {
+        if (typeof createCheckpoint === 'function') createCheckpoint('pre-comp-reset');
         // Reset and migrate to object-based storage
         roadmapData.clinicalData.competencies = migrateCompetencies(
             JSON.parse(JSON.stringify(DEFAULT_COMPETENCIES))
@@ -2814,6 +2677,7 @@ function resetCompetencies() {
         }
         renderCompetencies();
         showToast('Competencies reset to defaults and synced to cloud');
+        }, null, 'Confirm Reset');
     }, null, 'Reset Competencies');
 }
 

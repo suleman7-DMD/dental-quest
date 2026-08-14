@@ -5220,6 +5220,348 @@
             }
         }
 
+        /* ── Unified Header (progress + pills) ── */
+        .cv2-header {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            background: var(--cv2-surface);
+            border: 1px solid var(--cv2-border);
+            border-radius: var(--cv2-radius);
+            padding: 14px 16px;
+            margin-bottom: 12px;
+            box-shadow: var(--cv2-shadow-sm);
+        }
+
+        .cv2-header-main {
+            flex: 1 1 auto;
+            min-width: 0;
+        }
+
+        .cv2-header-score {
+            font-family: var(--cv2-font-heading);
+            font-size: 1.6rem;
+            font-weight: 700;
+            line-height: 1.1;
+        }
+
+        .cv2-header-bar {
+            height: 8px;
+            background: var(--cv2-surface-inset);
+            border-radius: 4px;
+            overflow: hidden;
+            margin: 6px 0 4px;
+        }
+
+        .cv2-header-bar-fill {
+            height: 100%;
+            border-radius: 4px;
+            transition: width 0.3s ease;
+        }
+
+        .cv2-header-meta {
+            font-size: 0.75rem;
+            color: var(--cv2-muted);
+        }
+
+        .cv2-header-pills {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            flex: 0 0 auto;
+        }
+
+        .cv2-header-pill {
+            font-size: 0.72rem;
+            font-weight: 600;
+            padding: 4px 10px;
+            border-radius: 12px;
+            text-align: center;
+            white-space: nowrap;
+        }
+
+        .cv2-pill-left {
+            background: var(--cv2-wip-bg);
+            color: var(--cv2-wip-fg);
+            border: 1px solid rgba(196, 146, 58, 0.25);
+        }
+
+        .cv2-pill-sum {
+            background: var(--cv2-accent-light);
+            color: var(--cv2-accent);
+            border: 1px solid rgba(107, 124, 94, 0.25);
+        }
+
+        /* ── Toolbar (search + filter chips) ── */
+        .cv2-toolbar {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+
+        .cv2-toolbar .cv2-search {
+            flex: 1 1 200px;
+            min-width: 0;
+        }
+
+        .cv2-filter-chips {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+        }
+
+        .cv2-filter-chip {
+            font-size: 0.75rem;
+            font-weight: 600;
+            padding: 6px 12px;
+            border-radius: 14px;
+            border: 1px solid var(--cv2-border-strong);
+            background: var(--cv2-surface);
+            color: var(--cv2-ink-soft);
+            cursor: pointer;
+            user-select: none;
+            transition: all 0.15s ease;
+        }
+
+        .cv2-filter-chip:hover {
+            border-color: var(--cv2-accent);
+            color: var(--cv2-accent);
+        }
+
+        .cv2-filter-chip.active {
+            background: var(--cv2-accent);
+            border-color: var(--cv2-accent);
+            color: #fff;
+        }
+
+        /* ── Check-off button (required=1 items) ── */
+        .cv2-check {
+            width: 40px;
+            height: 40px;
+            min-width: 40px;
+            border: 2px solid var(--cv2-border-strong);
+            border-radius: var(--cv2-radius-sm);
+            background: var(--cv2-surface);
+            color: transparent;
+            font-size: 1.1rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.15s ease;
+            flex: 0 0 auto;
+        }
+
+        .cv2-check:hover {
+            border-color: var(--cv2-done);
+        }
+
+        .cv2-check.checked {
+            background: var(--cv2-done);
+            border-color: var(--cv2-done);
+            color: #fff;
+        }
+
+        /* ── Done-row styling ── */
+        .cv2-req-row.cv2-row-done {
+            opacity: 0.65;
+        }
+
+        .cv2-req-row.cv2-row-done .cv2-req-name {
+            color: var(--cv2-muted);
+            text-decoration: line-through;
+            text-decoration-color: rgba(94, 138, 94, 0.5);
+        }
+
+        /* ── Summative badge ── */
+        .cv2-sum-badge {
+            display: inline-block;
+            font-size: 0.62rem;
+            font-weight: 700;
+            padding: 1px 6px;
+            border-radius: 3px;
+            margin-left: 6px;
+            vertical-align: middle;
+            letter-spacing: 0.04em;
+            background: var(--cv2-accent-light);
+            color: var(--cv2-accent);
+            border: 1px solid rgba(107, 124, 94, 0.3);
+        }
+
+        /* Bare carryover badge on rows (modifier classes retired) */
+        .cv2-carryover-badge {
+            background: var(--cv2-critical-bg);
+            color: var(--cv2-critical-fg);
+            border: 1px solid rgba(184, 92, 92, 0.3);
+        }
+
+        /* ── D3 Carryover alert card ── */
+        .cv2-carryover-card {
+            background: var(--cv2-critical-bg);
+            border: 1px solid rgba(184, 92, 92, 0.3);
+            border-radius: var(--cv2-radius);
+            margin-bottom: 12px;
+            cursor: pointer;
+            overflow: hidden;
+        }
+
+        .cv2-carryover-header {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 14px;
+        }
+
+        .cv2-carryover-icon {
+            flex: 0 0 auto;
+        }
+
+        .cv2-carryover-title {
+            flex: 1 1 auto;
+            font-size: 0.8125rem;
+            font-weight: 600;
+            color: var(--cv2-critical-fg);
+        }
+
+        .cv2-carryover-toggle {
+            flex: 0 0 auto;
+            font-size: 0.7rem;
+            color: var(--cv2-critical-fg);
+            transition: transform 0.2s ease;
+        }
+
+        .cv2-carryover-card.expanded .cv2-carryover-toggle {
+            transform: rotate(180deg);
+        }
+
+        .cv2-carryover-list {
+            display: none;
+            border-top: 1px solid rgba(184, 92, 92, 0.2);
+        }
+
+        .cv2-carryover-card.expanded .cv2-carryover-list {
+            display: block;
+        }
+
+        .cv2-carryover-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 8px 14px;
+            font-size: 0.78rem;
+            border-bottom: 1px solid rgba(184, 92, 92, 0.12);
+            background: var(--cv2-surface);
+        }
+
+        .cv2-carryover-item:last-child {
+            border-bottom: none;
+        }
+
+        .cv2-carryover-item:hover {
+            background: var(--cv2-surface-alt);
+        }
+
+        .cv2-carryover-cat {
+            flex: 0 0 auto;
+            font-weight: 600;
+            color: var(--cv2-ink-soft);
+            max-width: 120px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .cv2-carryover-name {
+            flex: 1 1 auto;
+            color: var(--cv2-ink);
+            min-width: 0;
+        }
+
+        .cv2-carryover-due {
+            flex: 0 0 auto;
+            color: var(--cv2-critical-fg);
+            font-size: 0.72rem;
+        }
+
+        .cv2-carryover-progress {
+            flex: 0 0 auto;
+            font-family: var(--cv2-mono);
+            font-weight: 600;
+            color: var(--cv2-ink-soft);
+        }
+
+        /* ── Undo button inside toast ── */
+        .cv2-undo-btn {
+            margin-left: 10px;
+            padding: 4px 12px;
+            border: 1px solid rgba(255, 255, 255, 0.4);
+            border-radius: 6px;
+            background: rgba(255, 255, 255, 0.15);
+            color: inherit;
+            font-size: 0.8em;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .cv2-undo-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        /* ── Passive year chip on category headers ── */
+        .cv2-year-chip {
+            display: inline-block;
+            font-size: 0.62rem;
+            font-weight: 700;
+            padding: 1px 6px;
+            border-radius: 3px;
+            margin-left: 8px;
+            vertical-align: middle;
+            letter-spacing: 0.04em;
+        }
+
+        .cv2-year-d3 {
+            background: rgba(88, 166, 255, 0.12);
+            color: #3D6FA8;
+            border: 1px solid rgba(88, 166, 255, 0.3);
+        }
+
+        .cv2-year-d4 {
+            background: rgba(240, 136, 62, 0.12);
+            color: #A8642E;
+            border: 1px solid rgba(240, 136, 62, 0.3);
+        }
+
+        .cv2-year-both {
+            background: var(--cv2-surface-inset);
+            color: var(--cv2-ink-soft);
+            border: 1px solid var(--cv2-border-strong);
+        }
+
+        @media (max-width: 640px) {
+            .cv2-header {
+                flex-direction: column;
+                align-items: stretch;
+                gap: 10px;
+            }
+
+            .cv2-header-pills {
+                flex-direction: row;
+            }
+
+            .cv2-header-pill {
+                flex: 1 1 auto;
+            }
+
+            .cv2-carryover-item {
+                flex-wrap: wrap;
+            }
+
+            .cv2-carryover-cat {
+                max-width: none;
+                min-width: 100%;
+            }
+        }
+
         /* ═══ End Competencies V2 CSS ═══ */
 
         /* Patient task in modal */
@@ -10809,17 +11151,17 @@ NOTES: ...
     <!-- Toast Notification -->
     <div class="toast" id="toast">Saved!</div>
 
-    <script src="js/graduation-roadmap/state.js?v=20260405"></script>
-    <script src="js/graduation-roadmap/firebase-sync.js?v=20260405"></script>
-    <script src="js/graduation-roadmap/deadlines.js?v=20260403"></script>
-    <script src="js/graduation-roadmap/clinical.js?v=20260405b"></script>
-    <script src="js/graduation-roadmap/patients.js?v=20260405"></script>
-    <script src="js/graduation-roadmap/patient-todo-tab.js?v=20260428b"></script>
-    <script src="js/graduation-roadmap/general-todo-tab.js?v=20260428"></script>
-    <script src="js/graduation-roadmap/import-system.js?v=20260403"></script>
-    <script src="js/graduation-roadmap/daily-planner.js?v=20260403"></script>
-    <script src="js/graduation-roadmap/monthly-planner.js?v=20260403"></script>
-    <script src="js/graduation-roadmap/troubleshooting.js?v=20260403"></script>
-    <script src="js/graduation-roadmap/init.js?v=20260405"></script>
+    <script src="js/graduation-roadmap/state.js?v=20260814"></script>
+    <script src="js/graduation-roadmap/firebase-sync.js?v=20260814"></script>
+    <script src="js/graduation-roadmap/deadlines.js?v=20260814"></script>
+    <script src="js/graduation-roadmap/clinical.js?v=20260814"></script>
+    <script src="js/graduation-roadmap/patients.js?v=20260814"></script>
+    <script src="js/graduation-roadmap/patient-todo-tab.js?v=20260814"></script>
+    <script src="js/graduation-roadmap/general-todo-tab.js?v=20260814"></script>
+    <script src="js/graduation-roadmap/import-system.js?v=20260814"></script>
+    <script src="js/graduation-roadmap/daily-planner.js?v=20260814"></script>
+    <script src="js/graduation-roadmap/monthly-planner.js?v=20260814"></script>
+    <script src="js/graduation-roadmap/troubleshooting.js?v=20260814"></script>
+    <script src="js/graduation-roadmap/init.js?v=20260814"></script>
 </body>
 </html>
