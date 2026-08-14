@@ -1363,6 +1363,9 @@ function mpDeleteReminder(reminderId) {
         if (!roadmapData.monthlyPlanner?.criticalReminders?.[reminderId]) return;
 
         delete roadmapData.monthlyPlanner.criticalReminders[reminderId];
+        // Tombstone so the key-union sync merge can't resurrect it from another device
+        if (!roadmapData.deletedCriticalReminderIds) roadmapData.deletedCriticalReminderIds = {};
+        roadmapData.deletedCriticalReminderIds[reminderId] = new Date().toISOString();
         safeLocalStorageSet(STORAGE_KEY, JSON.stringify(roadmapData));
         saveData();
         mpRenderCriticalReminders();
@@ -1564,6 +1567,9 @@ function d4DeleteEvent(eventId) {
     if (!ev) return;
     showCustomConfirm('Delete "' + (ev.title || 'this event') + '" from the D4 schedule?', function() {
         delete roadmapData.d4Events[eventId];
+        // Tombstone so the key-union sync merge can't resurrect it from another device
+        if (!roadmapData.deletedD4EventIds) roadmapData.deletedD4EventIds = {};
+        roadmapData.deletedD4EventIds[eventId] = new Date().toISOString();
         safeLocalStorageSet(STORAGE_KEY, JSON.stringify(roadmapData));
         saveData();
         d4RenderScheduleCard();

@@ -307,6 +307,14 @@ function reconstructState(source, options) {
                     if (remoteBH.length > localBH.length) {
                         merged[id].briefHistory = remoteBH;
                     }
+                    // archived: newest archivedAt toggle wins (factory default
+                    // archived:false would otherwise block cross-device propagation)
+                    var _locArcAt = (local[id] || {}).archivedAt || '';
+                    var _remArcAt = remote[id].archivedAt || '';
+                    if (_remArcAt && _remArcAt > _locArcAt) {
+                        merged[id].archived = remote[id].archived ?? false;
+                        merged[id].archivedAt = _remArcAt;
+                    }
                 }
             });
             return merged;
@@ -445,6 +453,20 @@ function reconstructState(source, options) {
         result.d4Events = { ...(f.d4Events || {}), ...(s.d4Events || {}) };
     } else {
         result.d4Events = s.d4Events ?? f.d4Events ?? {};
+    }
+
+    // Tombstones for d4Events + criticalReminders — union from both sides so
+    // deletions survive the key-union merges above (same pattern as clinicalData
+    // deleted*Ids). Purge skipped for source-wins (restore takes source wholesale).
+    result.deletedD4EventIds = { ...(s.deletedD4EventIds || {}), ...(f.deletedD4EventIds || {}) };
+    result.deletedCriticalReminderIds = { ...(s.deletedCriticalReminderIds || {}), ...(f.deletedCriticalReminderIds || {}) };
+    if (!isSourceWins) {
+        Object.keys(result.d4Events || {}).forEach(function(id) {
+            if (result.deletedD4EventIds[id]) delete result.d4Events[id];
+        });
+        Object.keys(result.monthlyPlanner?.criticalReminders || {}).forEach(function(id) {
+            if (result.deletedCriticalReminderIds[id]) delete result.monthlyPlanner.criticalReminders[id];
+        });
     }
 
     // --- Graduation Prep ---
@@ -591,6 +613,14 @@ function mergeRemoteCollectionsIntoLocal(data) {
         ...(roadmapData.clinicalData?.deletedPatientRecordIds || {}),
         ...(data.clinicalData?.deletedPatientRecordIds || {})
     };
+    var deletedD4Evs = {
+        ...(roadmapData.deletedD4EventIds || {}),
+        ...(data.deletedD4EventIds || {})
+    };
+    var deletedCrems = {
+        ...(roadmapData.deletedCriticalReminderIds || {}),
+        ...(data.deletedCriticalReminderIds || {})
+    };
 
     // Helper: add remote entries that don't exist locally (local wins for conflicts)
     // Optional 3rd param: set of deleted IDs to skip (prevents resurrection of deleted records)
@@ -641,6 +671,14 @@ function mergeRemoteCollectionsIntoLocal(data) {
                 if (!local.priorityNotes && remote.priorityNotes) local.priorityNotes = remote.priorityNotes;
                 if (local.highValue === undefined && remote.highValue !== undefined) local.highValue = remote.highValue;
                 if (local.archived === undefined && remote.archived !== undefined) local.archived = remote.archived;
+                // archived: newest archivedAt toggle wins (factory default
+                // archived:false would otherwise block cross-device propagation)
+                var _locArcAt = local.archivedAt || '';
+                var _remArcAt = remote.archivedAt || '';
+                if (_remArcAt && _remArcAt > _locArcAt) {
+                    local.archived = remote.archived ?? false;
+                    local.archivedAt = _remArcAt;
+                }
                 if (!local.allergies && remote.allergies) local.allergies = remote.allergies;
                 if (!local.txCompletedByMe && remote.txCompletedByMe) local.txCompletedByMe = remote.txCompletedByMe;
                 if (!local.recallHistory && remote.recallHistory) local.recallHistory = remote.recallHistory;
@@ -684,7 +722,13 @@ function mergeRemoteCollectionsIntoLocal(data) {
         addMissing(roadmapData.monthlyPlanner.overriddenStatic, data.monthlyPlanner.overriddenStatic);
         if (data.monthlyPlanner.criticalReminders) {
             if (!roadmapData.monthlyPlanner.criticalReminders) roadmapData.monthlyPlanner.criticalReminders = {};
-            addMissing(roadmapData.monthlyPlanner.criticalReminders, data.monthlyPlanner.criticalReminders);
+            addMissing(roadmapData.monthlyPlanner.criticalReminders, data.monthlyPlanner.criticalReminders, deletedCrems);
+        }
+        // Purge reminders tombstoned on another device (deletes win over key-union)
+        if (roadmapData.monthlyPlanner.criticalReminders) {
+            Object.keys(roadmapData.monthlyPlanner.criticalReminders).forEach(function(id) {
+                if (deletedCrems[id]) delete roadmapData.monthlyPlanner.criticalReminders[id];
+            });
         }
         if (data.monthlyPlanner.currentWeekSchedule) {
             if (!roadmapData.monthlyPlanner.currentWeekSchedule) roadmapData.monthlyPlanner.currentWeekSchedule = {};
@@ -695,8 +739,16 @@ function mergeRemoteCollectionsIntoLocal(data) {
     // D4 events (rotations, didactics, mock sims, INBDE, ADEX)
     if (data.d4Events) {
         if (!roadmapData.d4Events) roadmapData.d4Events = {};
-        addMissing(roadmapData.d4Events, data.d4Events);
+        addMissing(roadmapData.d4Events, data.d4Events, deletedD4Evs);
     }
+    // Purge events tombstoned on another device + persist merged tombstones
+    if (roadmapData.d4Events) {
+        Object.keys(roadmapData.d4Events).forEach(function(id) {
+            if (deletedD4Evs[id]) delete roadmapData.d4Events[id];
+        });
+    }
+    roadmapData.deletedD4EventIds = deletedD4Evs;
+    roadmapData.deletedCriticalReminderIds = deletedCrems;
 
     // Top-level collections
     if (!roadmapData.customDeadlines) roadmapData.customDeadlines = {};

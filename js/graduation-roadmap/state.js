@@ -120,6 +120,10 @@ let roadmapData = {
     //   title, startDate|null, endDate|null, time|null, location, notes,
     //   tbd: bool, createdAt, lastEdited }
     d4Events: {},  // Object with ID keys for Firebase safety
+    // Tombstones for deleted d4Events / criticalReminders — deletions must
+    // survive the cross-device key-union merges (same pattern as clinicalData deleted*Ids)
+    deletedD4EventIds: {},
+    deletedCriticalReminderIds: {},
     // Graduation prep tracking
     graduationPrep: {
         externship: { startDate: null, endDate: null, patients: {}, logistics: '', notes: '' },
@@ -217,6 +221,8 @@ function getDefaultRoadmapData() {
         },
         exams: {},
         d4Events: {},
+        deletedD4EventIds: {},
+        deletedCriticalReminderIds: {},
         graduationPrep: {
             externship: { startDate: null, endDate: null, patients: {}, logistics: '', notes: '' },
             cdcaAdex: { sessions: {}, notes: '' },
@@ -323,7 +329,7 @@ function isEmptyState(data) {
         (gradPrep.inbde?.notes || '') !== '' ||
         (gradPrep.jobSearch?.notes || '') !== ''
     );
-    var hasDeletedRecords = getCount(data.clinicalData?.deletedAppointmentIds) > 0 || getCount(data.clinicalData?.deletedProcedureIds) > 0 || getCount(data.clinicalData?.deletedPatientRecordIds) > 0;
+    var hasDeletedRecords = getCount(data.clinicalData?.deletedAppointmentIds) > 0 || getCount(data.clinicalData?.deletedProcedureIds) > 0 || getCount(data.clinicalData?.deletedPatientRecordIds) > 0 || getCount(data.deletedD4EventIds) > 0 || getCount(data.deletedCriticalReminderIds) > 0;
     // d4Events: migration-seeded INBDE/ADEX placeholders (seeded:true, no date) are
     // auto-generated and must NOT count as real data (Guard C). Any user-saved or
     // dated event counts.

@@ -1110,6 +1110,22 @@ function migrateToCompetencyV2() {
     var comp = roadmapData.clinicalData?.competencies;
     if (!comp || typeof comp !== 'object') return;
 
+    // Idempotence guard: lastVerified only exists on V2-era data (this migration
+    // and every manual edit set it; the old model and DEFAULT_COMPETENCIES never do).
+    // Restore/import paths clear the localStorage flag so PRE-V2 backups re-migrate,
+    // but re-running the wipe+seed on already-V2 data would reset live counts to the
+    // frozen April-2026 seed — so detect V2 data and no-op.
+    var alreadyV2 = getValues(comp).some(function(cat) {
+        return getValues(cat.sections).some(function(sec) {
+            return getValues(sec.items).some(function(item) { return item && item.lastVerified; });
+        });
+    });
+    if (alreadyV2) {
+        localStorage.setItem('competencyV2Migrated', '1');
+        console.log('[COMP-V2] Data already V2 (lastVerified present) — skipping wipe/seed');
+        return;
+    }
+
     // Seed counts from verified manual audit (2026-04-01 ground truth)
     var SEED_COUNTS = {
         // OPERATIVE (completed items)
@@ -1238,8 +1254,8 @@ function calculateCategoryStats(cat) {
     getValues(cat.sections).forEach(sec => {
         getValues(sec.items).forEach(item => {
             const status = getItemStatus(item);
-            totalUnits += item.required;
-            completedUnits += Math.min(item.completed, item.required);
+            totalUnits += item.required ?? 0;
+            completedUnits += Math.min(item.completed ?? 0, item.required ?? 0);
 
             if (status === 'completed') completed++;
             else if (status === 'in_progress') inProgress++;
@@ -2504,6 +2520,9 @@ function cv2UndoLastChange() {
 
 // Replace a single requirement row in place (falls back to full render)
 function cv2UpdateItemRow(catKey, itemId) {
+    // A search/filter changes which rows are VISIBLE — an in-place swap can't
+    // hide a row that no longer matches the active chip, so re-render fully.
+    if (compSearchQuery || cv2ActiveFilter !== 'all') { renderCompetencies(); return; }
     var safeKey = (catKey || '').replace(/['"\\]/g, '');
     var safeItemId = (itemId || '').replace(/['"\\]/g, '');
     var row = document.getElementById('cv2row-' + safeKey + '-' + safeItemId);
@@ -2517,6 +2536,10 @@ function cv2UpdateItemRow(catKey, itemId) {
         });
     }
     if (!item) { renderCompetencies(); return; }
+    // Done-boundary crossings also change the carryover alert card and
+    // What's Next panel, which only a full render rebuilds.
+    var isDone = (item.completed ?? 0) >= (item.required ?? 1);
+    if (row.classList.contains('cv2-row-done') !== isDone) { renderCompetencies(); return; }
     var wrapper = document.createElement('div');
     wrapper.innerHTML = cv2BuildItemRow(catKey, item);
     if (wrapper.firstChild) row.replaceWith(wrapper.firstChild);

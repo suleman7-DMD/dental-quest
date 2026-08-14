@@ -14,7 +14,7 @@ function createPatientRecord(overrides) {
         lastVisit: '', nextVisit: '', nextVisitManual: false,
         lastFMX: '', lastBW: '', lastCBCT: '', lastPANO: '',
         phone: '', notes: '',
-        recallHistory: '', activeStatus: 'Active', archived: false,
+        recallHistory: '', activeStatus: 'Active', archived: false, archivedAt: null,
         reliability: 'yellow', lastUpdated: new Date().toISOString()
     };
     if (overrides) {
@@ -1152,9 +1152,12 @@ function deletePatientRecord(id) {
             // If we just deleted the active patient, select the first remaining one
             if (activePatientId === id) {
                 activePatientId = null;
-                var remaining = Object.keys(getPatientRecords());
+                var remainingRecs = getPatientRecords();
+                var remaining = Object.keys(remainingRecs);
+                // Prefer an active (non-archived) record so deleting doesn't land on the archive
+                var firstActive = remaining.filter(function(rid) { return !remainingRecs[rid].archived; })[0];
                 if (remaining.length > 0) {
-                    selectPatient(remaining[0]);
+                    selectPatient(firstActive || remaining[0]);
                 } else {
                     renderPatientsSidebar();
                     var view = document.getElementById('patientRecordView');
@@ -1183,6 +1186,9 @@ function setPatientArchived(patientId, archived) {
     if (!rec) { showToast('Patient not found', 'error'); return; }
     clinicalDataDirty = true;
     rec.archived = !!archived;
+    // archivedAt: newest toggle wins in sync merges — without it, another
+    // device's factory-default archived:false would block propagation forever
+    rec.archivedAt = new Date().toISOString();
     rec.lastUpdated = new Date().toISOString();
     safeLocalStorageSet(STORAGE_KEY, JSON.stringify(roadmapData));
     saveData();
@@ -1208,7 +1214,7 @@ function archiveAllPatients() {
         function() {
             clinicalDataDirty = true;
             var now = new Date().toISOString();
-            live.forEach(function(id) { records[id].archived = true; records[id].lastUpdated = now; });
+            live.forEach(function(id) { records[id].archived = true; records[id].archivedAt = now; records[id].lastUpdated = now; });
             safeLocalStorageSet(STORAGE_KEY, JSON.stringify(roadmapData));
             saveData();
             showToast(live.length + ' patients archived');
@@ -2070,7 +2076,15 @@ function previewPatientImport() {
     var importBtn = document.getElementById('patientImportBtn');
     if (!textarea || !preview) return;
 
-    var parsed = parsePatientImportText(textarea.value);
+    var parsed;
+    try {
+        parsed = parsePatientImportText(textarea.value);
+    } catch (err) {
+        console.error('[IMPORT] Parse failed:', err);
+        preview.innerHTML = '<div style="color:#dc2626; padding:12px; background:#fef2f2; border-radius:8px;">⚠️ Could not parse this text: ' + escapeHtml(err.message || String(err)) + '<br>Check the block format and try again.</div>';
+        if (importBtn) importBtn.disabled = true;
+        return;
+    }
     var hasContent = false;
     var html = '';
 
@@ -2239,7 +2253,14 @@ function previewPatientImport() {
 function confirmUnifiedImport() {
     // Re-parse current textarea to avoid stale cache if user edited after preview
     var textarea = document.getElementById('patientImportText');
-    var parsed = textarea ? parsePatientImportText(textarea.value) : window._patientImportParsed;
+    var parsed;
+    try {
+        parsed = textarea ? parsePatientImportText(textarea.value) : window._patientImportParsed;
+    } catch (err) {
+        console.error('[IMPORT] Parse failed:', err);
+        showToast('Import failed: could not parse text — nothing was changed', 'error');
+        return;
+    }
     if (!parsed) return;
 
     var records = getPatientRecords();
@@ -3540,8 +3561,12 @@ function renderMiniReview() {
         return (allPatients[a].name || '').localeCompare(allPatients[b].name || '');
     });
 
-    var redCount = allIds.length - ids.length;
-    var html = '<div class="mr-header"><h2>Mini Review</h2><span class="mr-count">' + ids.length + ' of ' + allIds.length + ' patients' + (redCount > 0 ? ' (' + redCount + ' red hidden)' : '') + '</span></div>';
+    var archivedCount = allIds.filter(function(id) { return allPatients[id].archived; }).length;
+    var redCount = allIds.length - ids.length - archivedCount;
+    var hiddenParts = [];
+    if (redCount > 0) hiddenParts.push(redCount + ' red hidden');
+    if (archivedCount > 0) hiddenParts.push(archivedCount + ' archived');
+    var html = '<div class="mr-header"><h2>Mini Review</h2><span class="mr-count">' + ids.length + ' of ' + allIds.length + ' patients' + (hiddenParts.length ? ' (' + hiddenParts.join(', ') + ')' : '') + '</span></div>';
     html += '<div class="mr-grid">';
 
     if (ids.length === 0) {
