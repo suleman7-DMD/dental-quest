@@ -1,12 +1,16 @@
 # GROUND TRUTH: DMD 2027 GRADUATION REQUIREMENTS
 ## Suleman Shaikh — Single Source of Truth
-### Last Updated: 2026-04-05
+### Last Updated: 2026-08-14
 
 > **THIS FILE IS THE ONLY REQUIREMENTS REFERENCE.**
 > It replaces PR_PART_1_SULEMAN_SHAIKH.pdf and GRADUATION_REQUIREMENTS.pdf.
-> Both the Claude webchat project and the D3 Graduation Roadmap app
+> Both the Claude webchat project and the Graduation Roadmap app
 > must use this file as their canonical source for requirement IDs,
-> counts, deadlines, and completion status.
+> required counts, rules, and deadlines.
+>
+> **LIVE completion counts are MANUAL-ONLY** and live in the app's
+> Competencies tab — the app is authoritative for counts. The
+> "Completed" columns below are a snapshot (last audited 2026-04-05).
 
 ---
 
@@ -14,24 +18,25 @@
 
 - **Requirement ID** = the exact string used in webchat exports and app parsing
 - **Required** = how many you need
-- **Completed** = how many are done (updated periodically)
-- **D3 Deadline** = hard deadline by end of D3 (May 2026), or null if by end of D4
+- **Completed** = snapshot of progress (last audited 2026-04-05). Live counts: the app's Competencies tab (manual-only).
+- **D3 Deadline** = was the hard deadline by end of D3 (May 2026), or null if by end of D4. **The D3 deadline has PASSED** — any D3-deadline item still incomplete is D3 CARRYOVER (top priority in D4).
 - **Status Tags**: DONE = fully complete. IP = in progress. PENDING = not started.
 
 ---
 
-## D3/D4 SPLIT MODEL
+## D3 CARRYOVER MODEL (replaces the D3/D4 tab split — Aug 2026)
 
-Each category has a `yearTarget` property: `'d3'`, `'d4'`, or `'both'`.
+The app's separate D3/D4 year tabs were removed in the August 2026
+D4 overhaul. The Competencies tab now renders ONE unified list of all
+requirements with filter chips (All / Left / Done / Summatives / D3 carryover).
 
-- **`d3` categories**: All items appear exclusively in the D3 tab.
-- **`d4` categories**: All items appear exclusively in the D4 tab.
-- **`both` categories**: Items with a `d3Deadline` appear in the D3 tab; items without appear in the D4 tab.
-- **`d4Carryover: true`**: Items marked with this flag appear in BOTH tabs (started in D3, completed in D4).
+- Any item with a `d3Deadline` that is still incomplete gets a **"D3 carryover"** badge and appears in the D3 Carryover alert panel — these were due by May 2026 and are top priority in D4.
+- `yearTarget` (`'d3'` / `'d4'` / `'both'`) and `d4Carryover` remain in the data model for provenance but no longer drive separate tabs.
+- Competency counts are **MANUAL-ONLY**: imports never change them (REQUIREMENTS_STATUS / Format D was removed from the app 2026-08-13). Suleman adjusts counts with the +/- buttons in the Competencies tab.
 
 ---
 
-## THE 3 MILESTONES (Non-Negotiable, by May 2026)
+## THE 3 MILESTONES (D3-year floors — deadline May 2026, HISTORICAL)
 
 From Sam Gaston — hard minimums based on historical lowest-10 students.
 
@@ -44,6 +49,8 @@ From Sam Gaston — hard minimums based on historical lowest-10 students.
 **Consequences:**
 - Fail ALL 3 → Academic Probation
 - Fail 1 or 2 → Warning letter to Promotions Committee
+
+**D4 note:** the May 2026 deadline has passed. The SPS dashboard still reports ATTENDED / TOTAL_COMPLETED, and the app keeps using the latest SPS snapshot as the floor for its Mission Control counters — keep capturing dashboard updates.
 
 ---
 
@@ -477,9 +484,9 @@ These are formally D4 requirements but formatives can/should be started in D3.
 
 ---
 
-## CATEGORY 13: EXTERNSHIP (Summer 2026 — post-D3)
+## CATEGORY 13: EXTERNSHIP (Summer 2026 — post-D3, rotation COMPLETED)
 
-Rotation: Group 1, May 18 – July 24, 2026.
+Rotation: Group 1, May 18 – July 24, 2026 — **COMPLETED**. Deliverables below may still be outstanding.
 
 | Requirement ID | Description | Required | Completed | D3 Deadline |
 |---|---|---|---|---|
@@ -489,9 +496,9 @@ Rotation: Group 1, May 18 – July 24, 2026.
 
 ---
 
-## MASTER CHECKLIST: HARD D3 DEADLINES (by May 2026)
+## MASTER CHECKLIST: HARD D3 DEADLINES (by May 2026) — DEADLINE PASSED
 
-Everything that MUST be done specifically by end of D3:
+Everything that had to be done by end of D3. **The May 2026 deadline has passed** — every item below still marked IP/PENDING is now D3 CARRYOVER and must be cleared ASAP in D4. The Status column is the April 2026 audit; verify current status in the app's Competencies tab.
 
 | # | Requirement | Requirement ID | Deadline | Status |
 |---|---|---|---|---|
@@ -578,3 +585,4 @@ Everything that MUST be done specifically by end of D3:
 | 2026-04-01 | Initial ground truth document created. Replaces PR_PART_1_SULEMAN_SHAIKH.pdf and GRADUATION_REQUIREMENTS.pdf. Resolves SRP duplication, adds aggregate trackers, splits GP comm module, adds missing D3 deadline items. |
 | 2026-04-02 | Manual audit corrections: op-multi-5 completed 1→0 (only 4 multisurface summatives done), perio-sum-prophy completed 2→3 (all 3 done), gp-form-analysis completed 1→2 (both formative WAs done), peds-course completed 0→1 (PD 530 finished). Master checklist updated accordingly. |
 | 2026-04-05 | D3/D4 split overhaul: Added yearTarget/d4Carryover model. Deleted perio-3rd-ohi/prophy/reeval duplicates. Split perio-sum-prophy into d3/d4. Added d3Deadlines to perio formatives. Moved Leadership Requirements from D4 GP to D3 GP. Deleted gp-comm-form-txplan, gp-comm-sum-txplan, gp-ohra. Added gp-milestones, perio-dc-rotation. Removed tx-ohra-1/tx-caries-1 (auto-satisfied by perio-sum-dx). Updated perio-sum-reeval-ging required 2→1. Made fixed Other Requirements isSummative. Updated gp-case to isSummative. Added peds-course D3 deadline. Summative milestone now dynamically counted. |
+| 2026-08-14 | D4-era update: D3 deadline (May 2026) marked PASSED — incomplete D3-deadline items reframed as D3 CARRYOVER. D3/D4 tab split replaced by unified competency list with carryover badge/filter/alert (app D4 overhaul, Aug 2026). Competency counts declared MANUAL-ONLY — REQUIREMENTS_STATUS / Format D import removed from app and webchat instructions (2026-08-13). Externship Group 1 rotation marked completed. 3 Milestones reframed as historical D3 floors. App Competencies tab declared authoritative for live counts. |
