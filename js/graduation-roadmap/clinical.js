@@ -2798,6 +2798,7 @@ function resetCompetencies() {
         localStorage.removeItem('competencyD3D4SplitDone_v1');
         localStorage.removeItem('leadingZeroDedupDone_v2');
         localStorage.removeItem('perioNoiseCleanupDone_v1');
+        localStorage.removeItem('d4EventsSeeded_v1');
         expandedCompCategories.clear();
         clinicalDataDirty = true;
         safeLocalStorageSet(STORAGE_KEY, JSON.stringify(roadmapData));

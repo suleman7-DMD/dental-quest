@@ -3302,6 +3302,20 @@
             color: #3b82f6;
         }
 
+        /* D4 event chips (rotations, didactics, mock sims, INBDE, ADEX) in day headers */
+        .mp-d4ev-chip {
+            margin: 2px 1px 0;
+            padding: 1px 4px;
+            border-radius: 4px;
+            font-size: 0.62em;
+            font-weight: 600;
+            color: white;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            cursor: pointer;
+        }
+
         .mp-cal-body {
             /* No max-height - show full calendar without scrolling */
         }
@@ -9262,8 +9276,18 @@
 
             <!-- Right Column: Notes & Reminders -->
             <div class="mp-sidebar">
+                <!-- D4 Schedule: rotations, didactics, mock sims, INBDE, ADEX -->
+                <div class="card">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                        <span style="color: #e2e8f0; font-weight: 600;">🎓 D4 Schedule</span>
+                        <button onclick="d4OpenEventModal(null)" class="mp-add-week-btn">+ Add</button>
+                    </div>
+                    <div style="font-size: 0.72em; color: #64748b; margin-bottom: 8px;">Rotations · Didactics · Mock Sims · INBDE · ADEX. Dated events show as chips on the calendar.</div>
+                    <div id="d4ScheduleList"></div>
+                </div>
+
                 <!-- Mental Notes Notebook -->
-                <div class="card mp-notebook">
+                <div class="card mp-notebook" style="margin-top: 20px;">
                     <div class="mp-notebook-header">
                         <span>📓 Mental Notes</span>
                     </div>

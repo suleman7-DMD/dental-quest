@@ -83,7 +83,8 @@ let roadmapData = {
         overriddenStatic: {},
         completedTasks: {},
         hiddenClinicTasks: {},
-        currentWeekSchedule: {}
+        currentWeekSchedule: {},
+        criticalReminders: {}
     },
     // Clinical workspace data
     clinicalData: {
@@ -114,6 +115,11 @@ let roadmapData = {
     },
     // Exams array for cross-app integration (Body Comp Tracker pulls this)
     exams: {},  // Object with ID keys for Firebase safety
+    // D4 schedule events: rotations, didactics, mock sims, INBDE, ADEX.
+    // Shape: { id, type: 'rotation'|'didactic'|'mocksim'|'inbde'|'adex'|'other',
+    //   title, startDate|null, endDate|null, time|null, location, notes,
+    //   tbd: bool, createdAt, lastEdited }
+    d4Events: {},  // Object with ID keys for Firebase safety
     // Graduation prep tracking
     graduationPrep: {
         externship: { startDate: null, endDate: null, patients: {}, logistics: '', notes: '' },
@@ -180,7 +186,8 @@ function getDefaultRoadmapData() {
             overriddenStatic: {},
             completedTasks: {},
             hiddenClinicTasks: {},
-            currentWeekSchedule: {}
+            currentWeekSchedule: {},
+            criticalReminders: {}
         },
         clinicalData: {
             patients: {},
@@ -209,6 +216,7 @@ function getDefaultRoadmapData() {
             lastUpdated: null
         },
         exams: {},
+        d4Events: {},
         graduationPrep: {
             externship: { startDate: null, endDate: null, patients: {}, logistics: '', notes: '' },
             cdcaAdex: { sessions: {}, notes: '' },
@@ -316,6 +324,16 @@ function isEmptyState(data) {
         (gradPrep.jobSearch?.notes || '') !== ''
     );
     var hasDeletedRecords = getCount(data.clinicalData?.deletedAppointmentIds) > 0 || getCount(data.clinicalData?.deletedProcedureIds) > 0 || getCount(data.clinicalData?.deletedPatientRecordIds) > 0;
+    // d4Events: migration-seeded INBDE/ADEX placeholders (seeded:true, no date) are
+    // auto-generated and must NOT count as real data (Guard C). Any user-saved or
+    // dated event counts.
+    var hasD4Events = getValues(data.d4Events).some(function(ev) {
+        return ev && (!ev.seeded || ev.startDate);
+    });
+    // criticalReminders: same rule — pristine seeds don't count
+    var hasCriticalReminders = getValues(data.monthlyPlanner?.criticalReminders).some(function(r) {
+        return r && !r.seeded;
+    });
 
     // Empty if NONE of these exist
     return !hasDeadlines && !hasTasks && !hasAppointments && !hasBlocks &&
@@ -323,7 +341,8 @@ function isEmptyState(data) {
            !hasExamStudyProgress && !hasGrades && !hasEditedDeadlines &&
            !hasPatientRecords && !hasDashboardSnapshots && !hasCompletedProcedures && !hasCompetencies &&
            !hasMissingNotes && !hasTodoItems && !hasPatientTodoBoard && !hasGeneralTodoBoard && !hasDailyPlannerContent &&
-           !hasGraduationPrep && !hasClinicHeadlines && !hasDeletedRecords;
+           !hasGraduationPrep && !hasClinicHeadlines && !hasDeletedRecords &&
+           !hasD4Events && !hasCriticalReminders;
 }
 
 function hasRealData(data) {

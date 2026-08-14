@@ -3,14 +3,36 @@
 // ==================== MONTHLY PLANNER FUNCTIONS ====================
 
 // Week definitions (Mon-Sun)
-// Base weeks (can be extended dynamically)
-let MP_WEEKS = [
-    { num: 1, start: '2026-01-19', end: '2026-01-25', label: 'WEEK 1: Jan 19-25', color: '#059669' },
-    { num: 2, start: '2026-01-26', end: '2026-02-01', label: 'WEEK 2: Jan 26 - Feb 1', color: '#059669' },
-    { num: 3, start: '2026-02-02', end: '2026-02-08', label: '⚠️ WEEK 3: Feb 2-8', color: '#dc2626', critical: true },
-    { num: 4, start: '2026-02-09', end: '2026-02-15', label: 'WEEK 4: Feb 9-15', color: '#7c3aed' },
-    { num: 5, start: '2026-02-16', end: '2026-02-22', label: '🔴 WEEK 5: Feb 16-22 — PEDS WEEK', color: '#991b1b', critical: true }
-];
+// D4 rebase (Aug 2026): weeks are seeded at runtime — 6 weeks starting Monday of
+// the current week — then extended dynamically by extendWeeksIfNeeded(). The old
+// hardcoded Jan–Feb 2026 D3 weeks are gone.
+let MP_WEEKS = (function() {
+    const weekColors = ['#059669', '#7c3aed', '#0ea5e9', '#8b5cf6', '#06b6d4'];
+    const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const dayOfWeek = today.getDay();
+    const monday = new Date(today);
+    monday.setDate(monday.getDate() + (dayOfWeek === 0 ? -6 : 1 - dayOfWeek));
+    const weeks = [];
+    for (let i = 0; i < 6; i++) {
+        const start = new Date(monday);
+        start.setDate(start.getDate() + i * 7);
+        const end = new Date(start);
+        end.setDate(end.getDate() + 6);
+        const label = start.getMonth() === end.getMonth()
+            ? `WEEK ${i + 1}: ${monthNames[start.getMonth()]} ${start.getDate()}-${end.getDate()}`
+            : `WEEK ${i + 1}: ${monthNames[start.getMonth()]} ${start.getDate()} - ${monthNames[end.getMonth()]} ${end.getDate()}`;
+        weeks.push({
+            num: i + 1,
+            start: formatDateYMD(start),
+            end: formatDateYMD(end),
+            label: label,
+            color: weekColors[start.getMonth() % weekColors.length]
+        });
+    }
+    return weeks;
+})();
 
 // Dynamic week extension - adds weeks beyond Feb 22 as needed
 function extendWeeksIfNeeded() {
@@ -28,6 +50,14 @@ function extendWeeksIfNeeded() {
     if (roadmapData.clinicalData?.appointments) {
         getValues(roadmapData.clinicalData.appointments).forEach(apt => {
             if (apt.date && apt.status !== 'cancelled') allDates.push(apt.date);
+        });
+    }
+
+    // From D4 events (rotations, didactics, mock sims, INBDE, ADEX)
+    if (roadmapData.d4Events) {
+        getValues(roadmapData.d4Events).forEach(ev => {
+            if (ev.startDate) allDates.push(ev.startDate);
+            if (ev.endDate) allDates.push(ev.endDate);
         });
     }
 
@@ -101,45 +131,9 @@ function formatDateYMD(date) {
     return `${y}-${m}-${d}`;
 }
 
-// Static tasks (from original data) - these are read-only base tasks
-const MP_STATIC_TASKS = [
-    // Week 1 tasks (Jan 19-25)
-    { date: '2026-01-20', time: '', item: 'Geriatric Lecture', type: 'other', notes: '4-6pm G341' },
-    { date: '2026-01-21', time: '', item: 'Perio 2 Lecture', type: 'other', notes: '1:00-2:20pm in 670' },
-    { date: '2026-01-22', time: '08:30', item: 'Periodic oral exam (9E)', type: 'clinic', notes: '' },
-    { date: '2026-01-22', time: '23:59', item: 'Quiz 2', type: 'academic', notes: '2.5% - Oral Med' },
-    { date: '2026-01-22', time: '', item: 'Rx #1 due (print, both names)', type: 'academic', notes: '2% - PC2' },
-    { date: '2026-01-22', time: '', item: 'Pain Control 2 Lecture', type: 'other', notes: '3-5pm - Must turn in assignment' },
-    { date: '2026-01-23', time: '', item: 'Oral Med Lecture', type: 'other', notes: '3-5pm - email for seat change' },
-    // Week 2 tasks (Jan 26 - Feb 1)
-    { date: '2026-01-26', time: '08:30', item: 'Composite 2-surf posterior (9F)', type: 'clinic', notes: '' },
-    { date: '2026-01-26', time: '12:30', item: 'Upper + Lower denture try-in (9F)', type: 'clinic', notes: '⚠️ NEEDS PREP' },
-    { date: '2026-01-26', time: '', item: 'Pediatric Dent Lecture', type: 'other', notes: '5:15-6:50pm in 670' },
-    { date: '2026-01-27', time: '', item: 'Geriatric Lecture', type: 'other', notes: '4-6pm in 341' },
-    { date: '2026-01-28', time: '12:30', item: 'Semi-precision replacement (9E)', type: 'clinic', notes: '' },
-    { date: '2026-01-28', time: '', item: 'Perio 2 Lecture', type: 'other', notes: '1:00-2:20pm in 670' },
-    { date: '2026-01-29', time: '', item: 'Take Home Exam 1 (PAIRS)', type: 'academic', notes: '12% - PC2' },
-    { date: '2026-01-29', time: '20:00', item: 'Quiz 2 (1hr, open)', type: 'academic', notes: '20% - Crit Think' },
-    { date: '2026-01-29', time: '', item: 'Acute Dental Pain module + print', type: 'mandatory', notes: 'MANDATORY - PC2' },
-    // Week 3 tasks (Feb 2-8)
-    { date: '2026-02-02', time: '16:00', item: '🔴 PC2 MIDTERM', type: 'exam', notes: '30% - HAVEN\'T STARTED' },
-    { date: '2026-02-02', time: '', item: 'MANDATORY PEDS IPS LECTURE', type: 'mandatory', notes: 'confirm date, auto fail if missed' },
-    { date: '2026-02-03', time: '10:45', item: '💊 Psych apt → meds sent', type: 'life', notes: '' },
-    { date: '2026-02-03', time: '12:30', item: 'Limited oral eval (9J)', type: 'clinic', notes: '' },
-    { date: '2026-02-05', time: '', item: '💊 Insurance covers meds', type: 'life', notes: '' },
-    { date: '2026-02-05', time: '23:59', item: 'Quiz 3', type: 'academic', notes: '2.5% - Oral Med' },
-    { date: '2026-02-05', time: '', item: 'PE of Extremities video', type: 'mandatory', notes: 'Required - PC2' },
-    { date: '2026-02-06', time: '08:30', item: 'Tx Plan Creation (9D)', type: 'clinic', notes: 'Maseli meeting BEFORE this' },
-    { date: '2026-02-06', time: '16:00', item: '🔴 ORTHO FINAL (cumulative)', type: 'exam', notes: '50% - HAVEN\'T STARTED' },
-    { date: '2026-02-06', time: '', item: '💊 Meds pickup', type: 'life', notes: 'post-exam' },
-    // Week 4 tasks (Feb 9-15)
-    { date: '2026-02-09', time: '12:30', item: 'Composite 2-surf posterior (9G)', type: 'clinic', notes: '' },
-    { date: '2026-02-09', time: '', item: 'Practice Management Assignment', type: 'academic', notes: 'TBD - GP9' },
-    { date: '2026-02-11', time: '16:00', item: '🟡 GERIATRICS FINAL', type: 'exam', notes: 'Crammable' },
-    // Week 5 tasks (Feb 16-22)
-    { date: '2026-02-17', time: '', item: 'NO CLASS', type: 'academic', notes: 'Free study day - Oral Med' },
-    { date: '2026-02-18', time: '16:00', item: '🔴🔴🔴 PEDS EXAM 2', type: 'exam', notes: '45%, need 70%, 20 lectures untouched' }
-];
+// Static tasks — RETIRED for D4 (Aug 2026). The old Jan–Feb 2026 D3 task list is gone;
+// kept as an empty array because override/conversion machinery still references it.
+const MP_STATIC_TASKS = [];
 
 // Current editing state
 let mpCurrentTask = null;
@@ -202,6 +196,7 @@ function initMonthlyPlanner() {
 
     mpRenderAllCalendars();
     mpRenderNotes();
+    d4RenderScheduleCard();
     mpUpdateStats();
 }
 
@@ -478,9 +473,17 @@ function mpCreateCalendarGrid(week) {
         let classes = 'mp-cal-day-header';
         if (isPast) classes += ' past';
         if (isToday) classes += ' today';
+        // D4 event chips (rotations, mock sims, INBDE, ADEX) in the day header zone
+        let chipsHtml = '';
+        mpGetD4EventsForDate(day.date).forEach(ev => {
+            const t = D4_EVENT_TYPES[ev.type] || D4_EVENT_TYPES.other;
+            const tip = t.label + ': ' + (ev.title || '') + (ev.location ? ' @ ' + ev.location : '');
+            chipsHtml += `<div class="mp-d4ev-chip" style="background: ${t.color};" title="${escapeHtml(tip)}" onclick="d4OpenEventModal('${ev.id}')">${escapeHtml(ev.title || '')}</div>`;
+        });
         html += `<div class="${classes}">
             <div class="mp-cal-day-name">${day.dayName}</div>
             <div class="mp-cal-day-date">${day.dayNum}</div>
+            ${chipsHtml}
         </div>`;
     });
     html += '</div>';
@@ -1302,6 +1305,209 @@ function mpDeleteNote(noteId) {
         mpRenderNotes();
         showToast('Note deleted');
     }, null, 'Delete Note');
+}
+
+// ==================== D4 SCHEDULE (rotations, didactics, mock sims, INBDE, ADEX) ====================
+
+const D4_EVENT_TYPES = {
+    rotation: { label: 'Rotation', color: '#6366f1' },
+    didactic: { label: 'Didactic', color: '#3b82f6' },
+    mocksim:  { label: 'Mock Sim', color: '#f59e0b' },
+    inbde:    { label: 'INBDE', color: '#8b5cf6' },
+    adex:     { label: 'ADEX', color: '#ef4444' },
+    other:    { label: 'Other', color: '#64748b' }
+};
+
+// One-time seed: TBD INBDE + ADEX placeholders and starter critical reminders.
+// Seeds carry `seeded: true` so isEmptyState() doesn't count them as user data
+// (Guard C). d4SaveEvent()/user reminder adds produce entries WITHOUT the flag.
+function migrateD4EventsSeed() {
+    if (localStorage.getItem('d4EventsSeeded_v1')) return;
+    if (!roadmapData.d4Events) roadmapData.d4Events = {};
+    if (!roadmapData.monthlyPlanner) {
+        roadmapData.monthlyPlanner = { notes: {}, customTasks: {}, overriddenStatic: {}, completedTasks: {} };
+    }
+    if (!roadmapData.monthlyPlanner.criticalReminders) roadmapData.monthlyPlanner.criticalReminders = {};
+    var now = new Date().toISOString();
+    if (getCount(roadmapData.d4Events) === 0) {
+        [['inbde', 'INBDE'], ['adex', 'ADEX Clinical Exam']].forEach(function(pair) {
+            var id = generateId('d4ev');
+            roadmapData.d4Events[id] = {
+                id: id, type: pair[0], title: pair[1],
+                startDate: null, endDate: null, time: null, location: '', notes: '',
+                tbd: true, seeded: true, createdAt: now, lastEdited: now
+            };
+        });
+    }
+    if (getCount(roadmapData.monthlyPlanner.criticalReminders) === 0) {
+        ['🦷 INBDE — date TBD, set it in D4 Schedule',
+         '🦷 ADEX Clinical Exam — date TBD; mock sims precede it'].forEach(function(text) {
+            var id = generateId('crem');
+            roadmapData.monthlyPlanner.criticalReminders[id] = { id: id, text: text, seeded: true, createdAt: now };
+        });
+    }
+    localStorage.setItem('d4EventsSeeded_v1', '1');
+}
+
+function mpFormatShortDate(dateStr) {
+    var monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    var d = parseLocalDate(dateStr);
+    if (isNaN(d)) return dateStr;
+    return monthNames[d.getMonth()] + ' ' + d.getDate() + (d.getFullYear() !== new Date().getFullYear() ? ' ' + d.getFullYear() : '');
+}
+
+function mpGetD4EventsForDate(dateStr) {
+    return getValues(roadmapData.d4Events).filter(ev =>
+        ev && !ev.tbd && ev.startDate && dateStr >= ev.startDate && dateStr <= (ev.endDate || ev.startDate)
+    );
+}
+
+function d4RenderScheduleCard() {
+    var container = document.getElementById('d4ScheduleList');
+    if (!container) return;
+
+    var events = getValues(roadmapData.d4Events);
+    if (events.length === 0) {
+        container.innerHTML = '<div class="mp-no-notes-message" style="display: block;">No D4 events yet. Add rotations, didactics, mock sims, INBDE, ADEX.</div>';
+        return;
+    }
+
+    // TBD events first (they need dates!), then chronological
+    events.sort(function(a, b) {
+        var aTbd = !a.startDate, bTbd = !b.startDate;
+        if (aTbd !== bTbd) return aTbd ? -1 : 1;
+        return String(a.startDate || '').localeCompare(String(b.startDate || ''));
+    });
+
+    var today = getLocalDateString();
+    container.innerHTML = events.map(function(ev) {
+        var t = D4_EVENT_TYPES[ev.type] || D4_EVENT_TYPES.other;
+        var isPast = ev.startDate && (ev.endDate || ev.startDate) < today;
+        var dateHtml;
+        if (!ev.startDate) {
+            dateHtml = '<span style="color: #f59e0b; font-weight: 600;">⚠ TBD — set date</span>';
+        } else {
+            dateHtml = escapeHtml(mpFormatShortDate(ev.startDate));
+            if (ev.endDate && ev.endDate !== ev.startDate) dateHtml += ' → ' + escapeHtml(mpFormatShortDate(ev.endDate));
+            if (ev.time) dateHtml += ' · ' + escapeHtml(ev.time);
+        }
+        return '<div class="d4ev-row" style="display: flex; align-items: center; gap: 8px; padding: 7px 4px; border-bottom: 1px solid rgba(148,163,184,0.12);' + (isPast ? ' opacity: 0.45;' : '') + '">'
+            + '<span style="width: 9px; height: 9px; border-radius: 50%; background: ' + t.color + '; flex-shrink: 0;" title="' + t.label + '"></span>'
+            + '<div style="flex: 1; min-width: 0;">'
+            + '<div style="font-size: 0.86em; color: #e2e8f0; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">' + escapeHtml(ev.title || '') + '</div>'
+            + '<div style="font-size: 0.76em; color: #94a3b8;">' + dateHtml
+            + (ev.location ? ' <span style="color: #64748b;">@ ' + escapeHtml(ev.location) + '</span>' : '') + '</div>'
+            + '</div>'
+            + '<button onclick="d4OpenEventModal(\'' + ev.id + '\')" class="mp-note-action-btn" title="Edit">✏️</button>'
+            + '<button onclick="d4DeleteEvent(\'' + ev.id + '\')" class="mp-note-action-btn delete" title="Delete">🗑️</button>'
+            + '</div>';
+    }).join('');
+}
+
+function d4CloseEventModal() {
+    var overlay = document.getElementById('d4EventModalOverlay');
+    if (overlay) overlay.remove();
+}
+
+function d4OpenEventModal(eventId) {
+    d4CloseEventModal();
+    var ev = eventId ? roadmapData.d4Events?.[eventId] : null;
+    if (eventId && !ev) return;
+
+    var typeOptions = Object.keys(D4_EVENT_TYPES).map(function(key) {
+        var sel = (ev ? ev.type === key : key === 'rotation') ? ' selected' : '';
+        return '<option value="' + key + '"' + sel + '>' + D4_EVENT_TYPES[key].label + '</option>';
+    }).join('');
+
+    var inputStyle = 'width: 100%; padding: 8px 10px; background: #0f172a; border: 1px solid #334155; border-radius: 6px; color: #e2e8f0; font-size: 0.9em; box-sizing: border-box;';
+    var labelStyle = 'display: block; font-size: 0.75em; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.05em; margin: 10px 0 4px;';
+
+    var overlay = document.createElement('div');
+    overlay.id = 'd4EventModalOverlay';
+    overlay.style.cssText = 'position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 10000; display: flex; align-items: center; justify-content: center; padding: 16px;';
+    overlay.innerHTML = '<div style="background: #1e293b; border: 1px solid #334155; border-radius: 12px; padding: 20px; width: 100%; max-width: 440px; max-height: 90vh; overflow-y: auto;">'
+        + '<h3 style="margin: 0 0 4px; color: #f1f5f9; font-size: 1.05em;">' + (ev ? 'Edit D4 Event' : 'Add D4 Event') + '</h3>'
+        + '<div style="font-size: 0.78em; color: #64748b; margin-bottom: 8px;">Rotations, didactics, mock sims, INBDE, ADEX. Leave dates blank for TBD.</div>'
+        + '<label style="' + labelStyle + '">Type</label>'
+        + '<select id="d4evType" style="' + inputStyle + '">' + typeOptions + '</select>'
+        + '<label style="' + labelStyle + '">Title *</label>'
+        + '<input type="text" id="d4evTitle" style="' + inputStyle + '" value="' + escapeHtml(ev?.title || '') + '" placeholder="e.g. Oral Surgery Rotation">'
+        + '<div style="display: flex; gap: 10px;">'
+        + '<div style="flex: 1;"><label style="' + labelStyle + '">Start date</label>'
+        + '<input type="date" id="d4evStart" style="' + inputStyle + '" value="' + (ev?.startDate || '') + '"></div>'
+        + '<div style="flex: 1;"><label style="' + labelStyle + '">End date</label>'
+        + '<input type="date" id="d4evEnd" style="' + inputStyle + '" value="' + (ev?.endDate || '') + '"></div>'
+        + '</div>'
+        + '<div style="display: flex; gap: 10px;">'
+        + '<div style="flex: 1;"><label style="' + labelStyle + '">Time</label>'
+        + '<input type="time" id="d4evTime" style="' + inputStyle + '" value="' + (ev?.time || '') + '"></div>'
+        + '<div style="flex: 1;"><label style="' + labelStyle + '">Location</label>'
+        + '<input type="text" id="d4evLocation" style="' + inputStyle + '" value="' + escapeHtml(ev?.location || '') + '" placeholder="optional"></div>'
+        + '</div>'
+        + '<label style="' + labelStyle + '">Notes</label>'
+        + '<textarea id="d4evNotes" rows="2" style="' + inputStyle + ' resize: vertical;">' + escapeHtml(ev?.notes || '') + '</textarea>'
+        + '<div style="display: flex; gap: 8px; margin-top: 16px;">'
+        + '<button onclick="d4SaveEvent(' + (eventId ? '\'' + eventId + '\'' : 'null') + ')" style="flex: 1; background: #6366f1; color: white; border: none; padding: 10px; border-radius: 8px; cursor: pointer; font-weight: 600;">Save</button>'
+        + '<button onclick="d4CloseEventModal()" style="background: rgba(255,255,255,0.08); color: #94a3b8; border: 1px solid #334155; padding: 10px 16px; border-radius: 8px; cursor: pointer;">Cancel</button>'
+        + '</div>'
+        + '</div>';
+    overlay.addEventListener('click', function(e) { if (e.target === overlay) d4CloseEventModal(); });
+    document.body.appendChild(overlay);
+    document.getElementById('d4evTitle')?.focus();
+}
+
+function d4SaveEvent(eventId) {
+    var title = document.getElementById('d4evTitle')?.value?.trim();
+    if (!title) {
+        showToast('Title is required', 'error');
+        document.getElementById('d4evTitle')?.focus();
+        return;
+    }
+    var type = document.getElementById('d4evType')?.value || 'other';
+    var startDate = document.getElementById('d4evStart')?.value || null;
+    var endDate = document.getElementById('d4evEnd')?.value || null;
+    var time = document.getElementById('d4evTime')?.value || null;
+    var location = document.getElementById('d4evLocation')?.value?.trim() || '';
+    var notes = document.getElementById('d4evNotes')?.value?.trim() || '';
+    if (startDate && endDate && endDate < startDate) endDate = startDate;
+    if (!startDate) endDate = null;
+
+    if (!roadmapData.d4Events) roadmapData.d4Events = {};
+    var now = new Date().toISOString();
+    var id = eventId || generateId('d4ev');
+    var existing = roadmapData.d4Events[id] || {};
+    // Rebuilt without the `seeded` flag: any user save makes this real data (Guard C)
+    roadmapData.d4Events[id] = {
+        id: id, type: type, title: title,
+        startDate: startDate ?? null, endDate: endDate ?? null, time: time ?? null,
+        location: location, notes: notes,
+        tbd: !startDate,
+        createdAt: existing.createdAt || now,
+        lastEdited: now
+    };
+
+    d4CloseEventModal();
+    safeLocalStorageSet(STORAGE_KEY, JSON.stringify(roadmapData));
+    saveData();
+    extendWeeksIfNeeded();
+    d4RenderScheduleCard();
+    mpRenderAllCalendars();
+    if (typeof renderDashboard === 'function') renderDashboard();
+    showToast('D4 event saved');
+}
+
+function d4DeleteEvent(eventId) {
+    var ev = roadmapData.d4Events?.[eventId];
+    if (!ev) return;
+    showCustomConfirm('Delete "' + (ev.title || 'this event') + '" from the D4 schedule?', function() {
+        delete roadmapData.d4Events[eventId];
+        safeLocalStorageSet(STORAGE_KEY, JSON.stringify(roadmapData));
+        saveData();
+        d4RenderScheduleCard();
+        mpRenderAllCalendars();
+        if (typeof renderDashboard === 'function') renderDashboard();
+        showToast('D4 event deleted');
+    }, null, 'Delete D4 Event');
 }
 
 // ==================== CURRENT WEEK SCHEDULE BUILDER ====================

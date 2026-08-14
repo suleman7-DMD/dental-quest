@@ -1752,6 +1752,11 @@ function initUI() {
     if (typeof migrateLeadingZeroDedup === 'function') {
         try { migrateLeadingZeroDedup(); } catch(e) { console.error('[LEADING-ZERO-DEDUP] Error:', e); }
     }
+
+    // One-time D4 events seed (TBD INBDE/ADEX placeholders + starter reminders)
+    if (typeof migrateD4EventsSeed === 'function') {
+        try { migrateD4EventsSeed(); } catch(e) { console.error('[D4-EVENTS-SEED] Error:', e); }
+    }
 }
 
 function init() {

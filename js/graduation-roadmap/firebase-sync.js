@@ -229,7 +229,8 @@ function reconstructState(source, options) {
             overriddenStatic: { ...migrateArrayToObject(f.monthlyPlanner?.overriddenStatic, 'override'), ...migrateArrayToObject(s.monthlyPlanner?.overriddenStatic, 'override') },
             completedTasks: { ...migrateArrayToObject(f.monthlyPlanner?.completedTasks, 'completed'), ...migrateArrayToObject(s.monthlyPlanner?.completedTasks, 'completed') },
             hiddenClinicTasks: { ...(f.monthlyPlanner?.hiddenClinicTasks || {}), ...(s.monthlyPlanner?.hiddenClinicTasks || {}) },
-            currentWeekSchedule: s.monthlyPlanner?.currentWeekSchedule ?? f.monthlyPlanner?.currentWeekSchedule ?? {}
+            currentWeekSchedule: s.monthlyPlanner?.currentWeekSchedule ?? f.monthlyPlanner?.currentWeekSchedule ?? {},
+            criticalReminders: { ...(f.monthlyPlanner?.criticalReminders || {}), ...(s.monthlyPlanner?.criticalReminders || {}) }
         };
     } else {
         result.monthlyPlanner = {
@@ -238,7 +239,8 @@ function reconstructState(source, options) {
             overriddenStatic: migrateArrayToObject(s.monthlyPlanner?.overriddenStatic, 'override'),
             completedTasks: migrateArrayToObject(s.monthlyPlanner?.completedTasks, 'completed'),
             hiddenClinicTasks: s.monthlyPlanner?.hiddenClinicTasks ?? f.monthlyPlanner?.hiddenClinicTasks ?? {},
-            currentWeekSchedule: s.monthlyPlanner?.currentWeekSchedule ?? f.monthlyPlanner?.currentWeekSchedule ?? {}
+            currentWeekSchedule: s.monthlyPlanner?.currentWeekSchedule ?? f.monthlyPlanner?.currentWeekSchedule ?? {},
+            criticalReminders: s.monthlyPlanner?.criticalReminders ?? f.monthlyPlanner?.criticalReminders ?? {}
         };
     }
 
@@ -436,6 +438,13 @@ function reconstructState(source, options) {
         result.exams = { ...migrateArrayToObject(f.exams, 'exam'), ...migrateArrayToObject(s.exams, 'exam') };
     } else {
         result.exams = migrateArrayToObject(s.exams, 'exam');
+    }
+
+    // --- D4 Events (rotations, didactics, mock sims, INBDE, ADEX) ---
+    if (isRemoteWins) {
+        result.d4Events = { ...(f.d4Events || {}), ...(s.d4Events || {}) };
+    } else {
+        result.d4Events = s.d4Events ?? f.d4Events ?? {};
     }
 
     // --- Graduation Prep ---
@@ -672,10 +681,20 @@ function mergeRemoteCollectionsIntoLocal(data) {
         addMissing(roadmapData.monthlyPlanner.completedTasks, data.monthlyPlanner.completedTasks);
         addMissing(roadmapData.monthlyPlanner.hiddenClinicTasks, data.monthlyPlanner.hiddenClinicTasks);
         addMissing(roadmapData.monthlyPlanner.overriddenStatic, data.monthlyPlanner.overriddenStatic);
+        if (data.monthlyPlanner.criticalReminders) {
+            if (!roadmapData.monthlyPlanner.criticalReminders) roadmapData.monthlyPlanner.criticalReminders = {};
+            addMissing(roadmapData.monthlyPlanner.criticalReminders, data.monthlyPlanner.criticalReminders);
+        }
         if (data.monthlyPlanner.currentWeekSchedule) {
             if (!roadmapData.monthlyPlanner.currentWeekSchedule) roadmapData.monthlyPlanner.currentWeekSchedule = {};
             addMissing(roadmapData.monthlyPlanner.currentWeekSchedule, data.monthlyPlanner.currentWeekSchedule);
         }
+    }
+
+    // D4 events (rotations, didactics, mock sims, INBDE, ADEX)
+    if (data.d4Events) {
+        if (!roadmapData.d4Events) roadmapData.d4Events = {};
+        addMissing(roadmapData.d4Events, data.d4Events);
     }
 
     // Top-level collections
@@ -892,6 +911,7 @@ function importBackup(file) {
             localStorage.removeItem('competencyD3D4SplitDone_v1');
             localStorage.removeItem('leadingZeroDedupDone_v2');
             localStorage.removeItem('perioNoiseCleanupDone_v1');
+            localStorage.removeItem('d4EventsSeeded_v1');
 
             migrateInvalidFirebaseKeys(roadmapData);
             clinicalDataDirty = true;
@@ -1907,6 +1927,7 @@ function restoreCheckpoint(index) {
             localStorage.removeItem('competencyD3D4SplitDone_v1');
             localStorage.removeItem('leadingZeroDedupDone_v2');
             localStorage.removeItem('perioNoiseCleanupDone_v1');
+            localStorage.removeItem('d4EventsSeeded_v1');
 
             migrateInvalidFirebaseKeys(roadmapData);
             clinicalDataDirty = true;
@@ -2181,6 +2202,7 @@ function importAndRestoreDirectly() {
                     localStorage.removeItem('competencyD3D4SplitDone_v1');
                     localStorage.removeItem('leadingZeroDedupDone_v2');
                     localStorage.removeItem('perioNoiseCleanupDone_v1');
+                    localStorage.removeItem('d4EventsSeeded_v1');
 
                     migrateInvalidFirebaseKeys(roadmapData);
                     clinicalDataDirty = true;
@@ -2477,6 +2499,11 @@ function validateStateIntegrity(data) {
     if (data.competencyUIState !== undefined && data.competencyUIState !== null && typeof data.competencyUIState !== 'object') {
         console.error('[GUARD-F] competencyUIState is not an object');
         errors.push('competencyUIState is not an object');
+    }
+    // d4Events can be undefined (old data) or object — reject anything else
+    if (data.d4Events !== undefined && data.d4Events !== null && typeof data.d4Events !== 'object') {
+        console.error('[GUARD-F] d4Events is not an object');
+        errors.push('d4Events is not an object');
     }
     return errors;
 }
