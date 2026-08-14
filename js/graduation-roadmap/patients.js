@@ -68,26 +68,6 @@ const DEFAULT_PATIENT_RECORDS = {
         recallHistory: 'Last Recall: 10/22/2025. Frequency: 6-month. Next due: 4/22/2026.',
         activeStatus: 'Active'
     },
-    "pt_079118": {
-        id: "pt_079118", name: "Williams, Kisha", chartNumber: "079118",
-        type: "(56 y/o F) - Severe dental anxiety and high BP",
-        medicalHx: "Congenital heart murmur, COPD, PTSD, Herpes, s/p hysterectomy, s/p appendix/colon/gallbladder removal (2023). Precautions: Consult MD for pre-med, avoid supine position, monitor for anxiety/elevated BP.",
-        medications: "omeprazole, dicyclomine, lovastatin, abilify, nifedipine. Allergies: Sulfur and Risperidone.",
-        dentalHx: "History of orofacial pain and TMD issues. Previously had ortho consult.",
-        txSummaryBU: "History of DC and prophy. Suleman rendered prophy, ortho consult, and alginate impressions for TMD analysis. Recent restoration: #31 OF composite.",
-        poeLast: "Last prophy: 8/21/2025 (by Suleman)",
-        poeNext: "2/21/2026 | 3mrc recall due.",
-        txPlan: "Monitor #31 (potential Class V or Full Crown), 2-surface posterior composite (needs tx plan), TMD consult, and TMD analysis summative with Dr. Maseli.",
-        lastVisit: "10/8/2025 | FMX/BW and #31 OF composite restoration | Suleman Shaikh",
-        nextVisit: "need to find out and update here (Pending 2-surface comp and TMD consult)",
-        lastFMX: "10/8/2025", lastBW: "10/8/2025", lastCBCT: "need to find out and update here", lastPANO: "need to find out and update here (NEEDS PANO for Ortho/TMD)",
-        notes: "Severe dental anxiety; assistant recommended for soothing. 8/21/25 prophy was completed by Suleman but requires Salud entry/billing update. Monitor BP. Alginate impressions taken for Dr. Maseli. Monitor #31 closely for failure or need for crown.",
-        reliability: "green", lastUpdated: null,
-        allergies: 'Sulfur and risperidone',
-        txCompletedByMe: 'Prophy (on 8/21/2025), ortho consult.',
-        recallHistory: 'Last Recall: 8/21/2025 (prophy). Frequency: 3MRC. Next due: 2/21/2026.',
-        activeStatus: 'Inactive'
-    },
     "pt_2467990": {
         id: "pt_2467990", name: "Rosario, Jose", chartNumber: "2467990",
         type: "Active Patient (Type 2 - Full Mouth Extractions Planned)",
@@ -146,26 +126,6 @@ const DEFAULT_PATIENT_RECORDS = {
         allergies: 'Penicillin medications',
         txCompletedByMe: 'T2 DC + prophy. 3 surface posterior composite (#4 OFD).',
         recallHistory: 'Last Recall: 8/18/2025. Frequency: 6-month. Next due: 2/18/2026.',
-        activeStatus: 'Active'
-    },
-    "pt_1875522": {
-        id: "pt_1875522", name: "Hector, Lebron", chartNumber: "1875522",
-        type: "Active",
-        medicalHx: "53 y/o male. Hypertension and Pre-Type II Diabetes.",
-        medications: "amlodipine, lisinopril, metformin, metoprolol, omega 3.",
-        dentalHx: "History of #20F, #29F, #15M, #11F (Cl 5), implant crown #13, peri-implantitis tx #13 (Abx), and lower RPD delivery/adjustments.",
-        txSummaryBU: "Comprehensive tx at BU includes restorations, lower RPD, and implant #13. Suleman is currently managing operative while Shaan is on externship. Last tx was #11F on 10/27/25.",
-        poeLast: "Last full perio chart was 10/16/24; full charting must be completed at 1/5 visit",
-        poeNext: "1/5/2026 | Full Perio Chart + 3mrc Recall + Prophy + POE due.",
-        txPlan: "Pending: 8ML & 10DL composites (potential Cl 5), SRP UL (1-3 teeth) for fair perio prognosis, and Crown #29 (verify with pt).",
-        lastVisit: "10/27/2025 | #11 F Class 5 composite | Shaan",
-        nextVisit: "1/5/2026 | 3MRC Recall, Prophy, POE, Restorative check, X-rays and OHRA and Full Perio Chart | Suleman Shaikh\n\nPt missed 1/5/2026 apt and his previous apt in november 2025 too. No call no show. It says on salud \"pt discharged?\" what is that about? Figure this guy out seems like dead end",
-        lastFMX: "12/2024", lastBW: "12/2024 (NEEDS UPDATED BW: current images are very poor quality)", lastCBCT: "need to find out and update here", lastPANO: "need to find out and update here",
-        notes: "Patient missed 11/20/25. pt missed 1/5/2026 apt. 2 no call no shows. Suleman needs to assess 8ML/10DL and #29 crown preference during POE.",
-        reliability: "red", lastUpdated: null,
-        allergies: '',
-        txCompletedByMe: '',
-        recallHistory: '',
         activeStatus: 'Active'
     },
     "pt_1297657": {
@@ -268,46 +228,6 @@ const DEFAULT_PATIENT_RECORDS = {
         recallHistory: 'Last Recall: 9/17/2025. Frequency: Annual. Next due: 9/17/2026.',
         activeStatus: 'Active'
     },
-    "pt_2569813": {
-        id: "pt_2569813", name: "Koshkarian, Kavitha", chartNumber: "2569813",
-        type: "Active (27 y/o F)",
-        medicalHx: "Healthy.",
-        medications: "None.",
-        dentalHx: "Referred to ortho for skeletal class 3 and posterior open bite on recall 6/3/2025.",
-        txSummaryBU: "Last visit 6/3/2025 for 6mrc/prophy. Tx completed by me: None (have not seen pt yet).",
-        poeLast: "6/3/2025 | 6mrc/prophy",
-        poeNext: "12/3/2025 | Recall due (OVERDUE)",
-        txPlan: "Gingivitis Re-Reval (non post-operative), prophy, 6mrc.",
-        lastVisit: "6/3/2025 | 6mrc/prophy | Previous Student",
-        nextVisit: "need to find out and update here (recall overdue)",
-        lastFMX: "5/8/2025", lastBW: "5/8/2025", lastCBCT: "need to find out and update here", lastPANO: "need to find out and update here",
-        notes: "Patient experiences sensitivity to cold air and water. No significant periodontal findings. Suleman needs to make recall appointment/prophy for pt. Earliest apt requested for recall - no response - never seen pt.",
-        reliability: "red", lastUpdated: null,
-        allergies: 'No allergies',
-        txCompletedByMe: 'None (have not seen pt yet)',
-        recallHistory: 'Last Recall: approx. 6/3/2025. Frequency: 6-month. Next due: 12/3/2025.',
-        activeStatus: 'Active'
-    },
-    "pt_1186199": {
-        id: "pt_1186199", name: "Laplante, Jonathan", chartNumber: "1186199",
-        type: "Active (23 y/o M)",
-        medicalHx: "Sickle Cell Anemia. Precautions: Consult w/ MD prior to major surgical procedures. Avoid long/stressful appointments.",
-        medications: "Hydroxyurea.",
-        dentalHx: "DC, Initial Prophy, #10 Composite, Gingivitis-Re-eval, Bleaching trays. Pt has had orthodontic treatment done at BU.",
-        txSummaryBU: "Tx Completed by me: None. Last visit 1/15/2025 (6-month recall + prophy).",
-        poeLast: "1/15/2025 | Recall + Prophy",
-        poeNext: "7/15/2025 (OVERDUE) | Recall + Prophy",
-        txPlan: "Recall + Prophy (OVERDUE). OS Consult for extraction of #1/16/17/32. Treatment plan composite restorations (#14, #16, #1).",
-        lastVisit: "1/15/2025 | 6-month recall + prophy | Previous Student",
-        nextVisit: "Recall + Prophy, OS Consult. Next Recall Due: 7/15/2025 (OVERDUE).",
-        lastFMX: "5/3/2024 (BW due/FMX due)", lastBW: "5/3/2024 (BW due)", lastCBCT: "need to find out and update here", lastPANO: "need to find out and update here",
-        notes: "Sickle Cell Anemia - Consult w/ MD prior to major surgical procedures. Avoid long/stressful appointments. Assigned to Suleman for recall due 7/15/2025. Pt has not yet scheduled appointment. Last attempt by Suleman 8/19/2025. Front desk attempted 8/20/2025. Suleman must follow up on overdue recall + OS consult and potentially send HTC letter.",
-        reliability: "red", lastUpdated: null,
-        allergies: 'NKDA',
-        txCompletedByMe: 'None',
-        recallHistory: 'Last Recall: 1/15/2025. Frequency: 6-month. Next due: 7/15/2025 (OVERDUE).',
-        activeStatus: 'Active'
-    },
     "pt_0966540": {
         id: "pt_0966540", name: "Soivilien, Sandrine", chartNumber: "0966540",
         type: "Active (33 y/o F)",
@@ -326,80 +246,6 @@ const DEFAULT_PATIENT_RECORDS = {
         allergies: 'Iron Transfusion',
         txCompletedByMe: 'None (Pt has not scheduled apt).',
         recallHistory: 'Last Recall: 05/01/2025. Frequency: 6-month. Next due: 11/01/2025 (OVERDUE).',
-        activeStatus: 'Active'
-    },
-    "pt_2225586": {
-        id: "pt_2225586", name: "Lopes, Alirio", chartNumber: "2225586",
-        type: "Active (94 y/o M)",
-        medicalHx: "Pacemaker, high cholesterol, diabetes, Parkinsons disease, COPD. Precautions: Pacemaker (verify precautions for ultrasonic, electrosurg). COPD (avoid fully supine position).",
-        medications: "Aspirin, Vit D3, Atorvastatin, Finasteride, Tamsulosin, Metformin, Amantadine, Carbidopa-Levodopa, Trelegy Ellipta. Allergies: Nuts.",
-        dentalHx: "OS extractions, interim upper and lower complete denture, denture adjustment.",
-        txSummaryBU: "Tx Completed by me: Upper denture Reline (Hard reline on 8/15/2024).",
-        poeLast: "N/A Overdue",
-        poeNext: "Recall pending scheduling",
-        txPlan: "Recall, Upper interim denture reline.",
-        lastVisit: "8/15/2024 | Hard reline | Suleman",
-        nextVisit: "Upper interim denture reline, recall (pending scheduling).",
-        lastFMX: "Not Due", lastBW: "Not Due", lastCBCT: "need to find out and update here", lastPANO: "need to find out and update here",
-        notes: "Precautions: Pacemaker (verify precautions for ultrasonic, electrosurg). COPD (avoid fully supine position). Per 8/15/2024 note, no definitive dentures are planned. Pt will come in as needed for relines/adjustments. Pt only uses denture for esthetics. Case evaluated by Dr. Escobar and Dr. Suzuki; patient and daughter agreed to no definitive denture process. Assigned to Suleman for recall, OCS, and potential denture adjustments. Pt was scheduled for reline 10/7/2025 but cancelled and did not follow up. Remove pt HTC.",
-        reliability: "red", lastUpdated: null,
-        allergies: 'Nuts',
-        txCompletedByMe: 'Upper denture Reline (Hard reline on 8/15/2024).',
-        recallHistory: 'Last Recall: N/A Overdue.',
-        activeStatus: 'Active'
-    },
-    "pt_23042563": {
-        id: "pt_23042563", name: "Mohamed, Karim", chartNumber: "23042563",
-        type: "Active (37 y/o M)",
-        medicalHx: "Healthy.",
-        medications: "None.",
-        dentalHx: "Carries control #4, #5; RCT #5; crowns #4, #5, #19; composite #30 DOF, #10 palatal pit, #2 MO, #3 MO, #13 MOD, #14 MO, #15 OL; #20 implant planning and surgical placement.",
-        txSummaryBU: "Tx Completed by me: None (pt has not rescheduled apt).",
-        poeLast: "8/1/2024 | Last prophy",
-        poeNext: "12/1/2024 (OVERDUE) | Recall/prophy",
-        txPlan: "Recall/prophy (OVERDUE). Composite 2 surface posterior #14. Premolar RCT #4. Crown lengthening #5.",
-        lastVisit: "1/17/2025 | custom abutment zirconia screw retained try in; screw retained implant crown cemented (#20). #5 delivered on 1/9/2025.",
-        nextVisit: "need to find out and update here (OVERDUE)",
-        lastFMX: "8/1/2024 (DUE)", lastBW: "8/1/2024 (DUE)", lastCBCT: "need to find out and update here", lastPANO: "need to find out and update here",
-        notes: "Suleman made phone call attempt on 8/20/2025 (no answer). Front desk made attempt 8/18/2025 (no answer). Earliest apt requested for recall - no response - never seen pt.",
-        reliability: "red", lastUpdated: null,
-        allergies: 'No known allergies',
-        txCompletedByMe: 'None (pt has not rescheduled apt)',
-        recallHistory: 'Last Recall: 8/01/2024. Frequency: 4MRC. Next due: 12/01/2024 (OVERDUE).',
-        activeStatus: 'Active'
-    },
-    "pt_23048578": {
-        id: "pt_23048578", name: "Penn, Aubrey", chartNumber: "23048578",
-        type: "Active (30 y/o F)",
-        medicalHx: "Type II diabetes, hypertension.",
-        medications: "Lisinopril, metformin.",
-        dentalHx: "Type I DC, prophy, #20MOD, #12DO, #15O, #19O, #30O, recall.",
-        txSummaryBU: "Tx Completed by me: None.",
-        poeLast: "9/16/2024 | Last Recall",
-        poeNext: "Now (OVERDUE +1yr) | 6MRC + prophy",
-        txPlan: "Recall. (Needs 3rd molars extracted, but is seeking private practice oral surgeon).",
-        lastVisit: "9/16/2024 | Recall | Previous Student",
-        nextVisit: "6MRC + prophy. Next Recall Due: Now (OVERDUE +1yr).",
-        lastFMX: "12/2023 (FMX/BW DUE)", lastBW: "12/2023 (FMX/BW DUE)", lastCBCT: "need to find out and update here", lastPANO: "need to find out and update here",
-        notes: "Precautions: Controlled Hypertension and Type II Diabetes. Patient assigned for recalls only. Patient is hard-to-contact. Suleman attempted call 9/25/2025 (no response). Will call again re: intent to return / OS status (can offer OS consult). Earliest apt requested for recall - no response - never seen pt.",
-        reliability: "red", lastUpdated: null,
-        allergies: 'None mentioned',
-        txCompletedByMe: 'None',
-        recallHistory: 'Last Recall: 9/16/2024. Next due: Now (OVERDUE +1yr).',
-        activeStatus: 'Active'
-    },
-    "pt_karima": {
-        id: "pt_karima", name: "Karima M.", chartNumber: "",
-        type: "do this",
-        medicalHx: "", medications: "", dentalHx: "", txSummaryBU: "",
-        poeLast: "", poeNext: "", txPlan: "",
-        lastVisit: "", nextVisit: "",
-        lastFMX: "", lastBW: "", lastCBCT: "", lastPANO: "",
-        notes: "Needs full charting and data entry.",
-        reliability: "yellow", lastUpdated: null,
-        allergies: '',
-        txCompletedByMe: '',
-        recallHistory: '',
         activeStatus: 'Active'
     }
 };
@@ -564,21 +410,6 @@ function migrateToUnifiedPatientStore() {
                 q.patientId = idRemapTable[q.patientId];
             }
         });
-
-        // Remap periodicReviews.pr2 patient-keyed sub-objects
-        var pr2 = roadmapData.periodicReviews?.pr2;
-        if (pr2) {
-            ['removedPatients', 'patientNotes', 'inProgressProcedures'].forEach(function(field) {
-                if (pr2[field] && typeof pr2[field] === 'object') {
-                    var remapped = {};
-                    Object.entries(pr2[field]).forEach(function(entry) {
-                        var key = entry[0], val = entry[1];
-                        remapped[idRemapTable[key] || key] = val;
-                    });
-                    pr2[field] = remapped;
-                }
-            });
-        }
 
         console.log('[CIS-v2] Remapped ' + Object.keys(idRemapTable).length + ' patient IDs across all collections');
     }
@@ -3009,21 +2840,6 @@ function migrateLeadingZeroDedup() {
                     }
                 });
             });
-
-            // Remap periodicReviews.pr2 patient-keyed sub-objects
-            var pr2 = roadmapData.periodicReviews?.pr2;
-            if (pr2) {
-                ['removedPatients', 'patientNotes', 'inProgressProcedures'].forEach(function(field) {
-                    if (pr2[field] && typeof pr2[field] === 'object') {
-                        Object.keys(idRemapTable).forEach(function(oldId) {
-                            if (pr2[field][oldId] !== undefined) {
-                                pr2[field][idRemapTable[oldId]] = pr2[field][oldId];
-                                delete pr2[field][oldId];
-                            }
-                        });
-                    }
-                });
-            }
 
             console.log('[LEADING-ZERO-DEDUP] Remapped ' + Object.keys(idRemapTable).length + ' patient IDs across FK collections');
         }

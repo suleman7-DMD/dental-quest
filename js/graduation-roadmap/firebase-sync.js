@@ -514,30 +514,6 @@ function reconstructState(source, options) {
         result.clinicHeadlines = f.clinicHeadlines || defaults.clinicHeadlines;
     }
 
-    // --- Periodic Reviews (same destructure pattern across all strategies) ---
-    if (s.periodicReviews) {
-        var sPr2 = s.periodicReviews?.pr2 || {};
-        var fPr2 = f.periodicReviews?.pr2 || {};
-        var dPr2 = defaults.periodicReviews?.pr2 || {};
-        result.periodicReviews = {
-            pr2: {
-                reviewDate: sPr2.reviewDate ?? fPr2.reviewDate ?? dPr2.reviewDate ?? null,
-                reviewPeriod: sPr2.reviewPeriod ?? fPr2.reviewPeriod ?? dPr2.reviewPeriod ?? '',
-                dashboardDiscrepancyNotes: sPr2.dashboardDiscrepancyNotes ?? fPr2.dashboardDiscrepancyNotes ?? dPr2.dashboardDiscrepancyNotes ?? '',
-                adminStatsOverrides: { ...(fPr2.adminStatsOverrides || {}), ...(sPr2.adminStatsOverrides || {}) },
-                completedProceduresHtml: sPr2.completedProceduresHtml ?? fPr2.completedProceduresHtml ?? dPr2.completedProceduresHtml ?? '',
-                inProgressProcedures: { ...(fPr2.inProgressProcedures || {}), ...(sPr2.inProgressProcedures || {}) },
-                departmentNotes: { ...(fPr2.departmentNotes || {}), ...(sPr2.departmentNotes || {}) },
-                subjectiveReport: sPr2.subjectiveReport ?? fPr2.subjectiveReport ?? dPr2.subjectiveReport ?? '',
-                patientNotes: { ...(fPr2.patientNotes || {}), ...(sPr2.patientNotes || {}) },
-                removedPatients: { ...(fPr2.removedPatients || {}), ...(sPr2.removedPatients || {}) },
-                lastEdited: sPr2.lastEdited ?? fPr2.lastEdited ?? dPr2.lastEdited ?? null
-            }
-        };
-    } else {
-        result.periodicReviews = f.periodicReviews || defaults.periodicReviews;
-    }
-
     // --- Competency UI State ---
     if (isMerge) {
         if (s.competencyUIState) {
@@ -788,30 +764,6 @@ function mergeRemoteCollectionsIntoLocal(data) {
                 roadmapData.mandatoryItems[key] = data.mandatoryItems[key];
             }
         });
-    }
-
-    // Periodic reviews: merge pr2 sub-fields (remote-only entries added, local wins conflicts)
-    if (data.periodicReviews?.pr2) {
-        if (!roadmapData.periodicReviews) roadmapData.periodicReviews = getDefaultRoadmapData().periodicReviews;
-        if (!roadmapData.periodicReviews.pr2) roadmapData.periodicReviews.pr2 = getDefaultRoadmapData().periodicReviews.pr2;
-        var localPr2 = roadmapData.periodicReviews.pr2;
-        var remotePr2 = data.periodicReviews.pr2;
-        // Scalar fields: local wins (only fill if local is empty/null)
-        if (!localPr2.reviewDate && remotePr2.reviewDate) localPr2.reviewDate = remotePr2.reviewDate;
-        if (!localPr2.subjectiveReport && remotePr2.subjectiveReport) localPr2.subjectiveReport = remotePr2.subjectiveReport;
-        if (!localPr2.completedProceduresHtml && remotePr2.completedProceduresHtml) localPr2.completedProceduresHtml = remotePr2.completedProceduresHtml;
-        if (!localPr2.dashboardDiscrepancyNotes && remotePr2.dashboardDiscrepancyNotes) localPr2.dashboardDiscrepancyNotes = remotePr2.dashboardDiscrepancyNotes;
-        // Object fields: addMissing pattern (local wins for same key)
-        if (!localPr2.adminStatsOverrides) localPr2.adminStatsOverrides = {};
-        addMissing(localPr2.adminStatsOverrides, remotePr2.adminStatsOverrides);
-        if (!localPr2.inProgressProcedures) localPr2.inProgressProcedures = {};
-        addMissing(localPr2.inProgressProcedures, remotePr2.inProgressProcedures);
-        if (!localPr2.departmentNotes) localPr2.departmentNotes = {};
-        addMissing(localPr2.departmentNotes, remotePr2.departmentNotes);
-        if (!localPr2.patientNotes) localPr2.patientNotes = {};
-        addMissing(localPr2.patientNotes, remotePr2.patientNotes);
-        if (!localPr2.removedPatients) localPr2.removedPatients = {};
-        addMissing(localPr2.removedPatients, remotePr2.removedPatients);
     }
 
     // Clinic headlines: field-level merge (defaults always exist, so fill-only never fires)
@@ -2510,11 +2462,6 @@ function validateStateIntegrity(data) {
     if (data.generalTodoBoard !== undefined && (typeof data.generalTodoBoard !== 'object' || data.generalTodoBoard === null)) {
         console.error('[GUARD-F] generalTodoBoard is not an object');
         errors.push('generalTodoBoard is not an object');
-    }
-    // periodicReviews can be undefined (defaults) or object — reject anything else
-    if (data.periodicReviews !== undefined && data.periodicReviews !== null && typeof data.periodicReviews !== 'object') {
-        console.error('[GUARD-F] periodicReviews is not an object');
-        errors.push('periodicReviews is not an object');
     }
     // clinicalData.missingNotes can be undefined (defaults) or object — reject anything else
     if (data.clinicalData?.missingNotes !== undefined && data.clinicalData.missingNotes !== null && typeof data.clinicalData.missingNotes !== 'object') {

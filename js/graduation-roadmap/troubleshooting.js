@@ -344,7 +344,6 @@ function tsCheckFirebase() {
     if (typeof roadmapData.clinicHeadlines !== 'object' || !roadmapData.clinicHeadlines) errs.push('clinicHeadlines');
     if (typeof roadmapData.grades !== 'object' || !roadmapData.grades) errs.push('grades');
     if (roadmapData.todoList !== undefined && (typeof roadmapData.todoList !== 'object' || !roadmapData.todoList)) errs.push('todoList');
-    if (roadmapData.periodicReviews !== undefined && roadmapData.periodicReviews !== null && typeof roadmapData.periodicReviews !== 'object') errs.push('periodicReviews');
     checks.push(tsCheck('Critical structure integrity', errs.length === 0 ? 'pass' : 'fail',
         errs.length === 0 ? 'All 8 critical structures valid.' : errs.length + ' missing: ' + errs.join(', ')));
 

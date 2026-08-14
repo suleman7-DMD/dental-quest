@@ -126,22 +126,6 @@ let roadmapData = {
         appointments: { completed: 0, target: 90 },
         procedures: { completed: 0, target: 116 }
     },
-    // Periodic review data — must match getDefaultRoadmapData()
-    periodicReviews: {
-        pr2: {
-            reviewDate: null,
-            reviewPeriod: '',
-            dashboardDiscrepancyNotes: '',
-            adminStatsOverrides: {},
-            completedProceduresHtml: '',
-            inProgressProcedures: {},
-            departmentNotes: {},
-            subjectiveReport: '',
-            patientNotes: {},
-            removedPatients: {},
-            lastEdited: null
-        }
-    },
     competencyUIState: {
         expandedCategories: [],
         viewMode: 'department'
@@ -234,21 +218,6 @@ function getDefaultRoadmapData() {
         clinicHeadlines: {
             appointments: { completed: 0, target: 90 },
             procedures: { completed: 0, target: 116 }
-        },
-        periodicReviews: {
-            pr2: {
-                reviewDate: null,
-                reviewPeriod: '',
-                dashboardDiscrepancyNotes: '',
-                adminStatsOverrides: {},
-                completedProceduresHtml: '',
-                inProgressProcedures: {},
-                departmentNotes: {},
-                subjectiveReport: '',
-                patientNotes: {},
-                removedPatients: {},
-                lastEdited: null
-            }
         },
         competencyUIState: {
             expandedCategories: [],
@@ -346,18 +315,6 @@ function isEmptyState(data) {
         (gradPrep.inbde?.notes || '') !== '' ||
         (gradPrep.jobSearch?.notes || '') !== ''
     );
-    const hasPeriodicReview = data.periodicReviews?.pr2 && (
-        (data.periodicReviews.pr2.subjectiveReport ?? '') !== '' ||
-        Object.keys(data.periodicReviews.pr2.departmentNotes || {}).length > 0 ||
-        (data.periodicReviews.pr2.completedProceduresHtml ?? '') !== '' ||
-        Object.keys(data.periodicReviews.pr2.adminStatsOverrides || {}).length > 0 ||
-        data.periodicReviews.pr2.reviewDate != null ||
-        Object.keys(data.periodicReviews.pr2.removedPatients || {}).length > 0 ||
-        Object.keys(data.periodicReviews.pr2.inProgressProcedures || {}).length > 0 ||
-        Object.keys(data.periodicReviews.pr2.patientNotes || {}).length > 0 ||
-        (data.periodicReviews.pr2.dashboardDiscrepancyNotes ?? '') !== ''
-    );
-
     var hasDeletedRecords = getCount(data.clinicalData?.deletedAppointmentIds) > 0 || getCount(data.clinicalData?.deletedProcedureIds) > 0 || getCount(data.clinicalData?.deletedPatientRecordIds) > 0;
 
     // Empty if NONE of these exist
@@ -366,7 +323,7 @@ function isEmptyState(data) {
            !hasExamStudyProgress && !hasGrades && !hasEditedDeadlines &&
            !hasPatientRecords && !hasDashboardSnapshots && !hasCompletedProcedures && !hasCompetencies &&
            !hasMissingNotes && !hasTodoItems && !hasPatientTodoBoard && !hasGeneralTodoBoard && !hasDailyPlannerContent &&
-           !hasPeriodicReview && !hasGraduationPrep && !hasClinicHeadlines && !hasDeletedRecords;
+           !hasGraduationPrep && !hasClinicHeadlines && !hasDeletedRecords;
 }
 
 function hasRealData(data) {
@@ -1086,7 +1043,6 @@ function switchTab(tabId, evt) {
     if (resolvedTabId === 'patients' && typeof initPatientsTab === 'function') initPatientsTab();
     if (resolvedTabId === 'patienttodos' && typeof renderPatientTodoTab === 'function') renderPatientTodoTab();
     if (resolvedTabId === 'generaltodo' && typeof renderGeneralTodoTab === 'function') renderGeneralTodoTab();
-    if (resolvedTabId === 'periodicreview' && typeof initPeriodicReview === 'function') initPeriodicReview();
     if (resolvedTabId === 'minireview' && typeof renderMiniReview === 'function') renderMiniReview();
     if (resolvedTabId === 'troubleshooting' && typeof renderTroubleshooting === 'function') renderTroubleshooting();
     // schedule and remember tabs: sub-tabs / static content handle their own init
