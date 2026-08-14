@@ -22,99 +22,11 @@ function rebuildUpcomingDeadlines() {
 }
 
 // ==================== DEADLINES DATA ====================
-// STATIC_DEADLINES: Immutable source of truth for hardcoded deadlines
-// Custom deadlines are stored in roadmapData.customDeadlines
-const STATIC_DEADLINES = [
-    // January
-    { date: '2026-01-15', day: 'Wed', what: 'Quiz 1 due (11:59 PM) ✅ DONE', course: 'Oral Med', weight: '2.5%', type: 'Quiz', month: 'january', done: true },
-    { date: '2026-01-22', day: 'Thu', what: 'Quiz 2 due (11:59 PM)', course: 'Oral Med', weight: '2.5%', type: 'Quiz', month: 'january' },
-    { date: '2026-01-22', day: 'Thu', what: 'Rx #1 due (print, both names, hand in physically)', course: 'Pain Control 2', weight: '2%', type: 'Assignment', month: 'january' },
-    { date: '2026-01-29', day: 'Thu', what: 'Take Home Exam 1 due (PAIRS, late=0, heavily shared!)', course: 'Pain Control 2', weight: '12%', type: 'Take-home', month: 'january' },
-    { date: '2026-01-29', day: 'Thu', what: 'Quiz 2 (evening, 1hr window, open BB ONLY)', course: 'Critical Thinking', weight: '20%', type: 'Quiz', month: 'january' },
-    { date: '2026-01-29', day: 'Thu', what: 'Acute Dental Pain module + print TWO certificates', course: 'Pain Control 2', weight: 'MANDATORY', type: 'Module', month: 'january' },
-
-    // February
-    { date: '2026-02-02', day: 'Mon', what: 'MIDTERM EXAM (4-5:15pm, L1101)', course: 'Pain Control 2', weight: '30%', type: 'EXAM', month: 'february' },
-    { date: '2026-02-05', day: 'Thu', what: 'Quiz 3 due (11:59 PM)', course: 'Oral Med', weight: '2.5%', type: 'Quiz', month: 'february' },
-    { date: '2026-02-05', day: 'Thu', what: 'PE of Extremities video due', course: 'Pain Control 2', weight: 'Required', type: 'Module', month: 'february' },
-    { date: '2026-02-06', day: 'Fri', what: 'FINAL EXAM (cumulative) — USE OLD EXAMS!', course: 'Orthodontics', weight: '50%', type: 'EXAM', month: 'february' },
-    { date: '2026-02-06', day: 'Fri', what: 'Tx Plan Apt (Keisha/Maseli) - mounted models + written analysis', course: 'Clinic', weight: '—', type: 'Clinical', month: 'february' },
-    { date: '2026-02-09', day: 'Mon', what: 'Practice Management Assignment', course: 'Group Practice 9', weight: 'TBD', type: 'Assignment', month: 'february' },
-    { date: '2026-02-11', day: 'Wed', what: 'FINAL EXAM (4-5:20pm, L1101) — Course ends!', course: 'Geriatrics', weight: 'TBD', type: 'EXAM', month: 'february' },
-    { date: '2026-02-13', day: 'Fri', what: '❌ NO CLASS — Passion Project work time (GCal wrong!)', course: 'Oral Med', weight: '—', type: 'No Class', month: 'february' },
-    { date: '2026-02-18', day: 'Wed', what: 'EXAM 2 (cumulative) 🚨 SURVIVAL EXAM — 55 Q from Shikui', course: 'Peds ⚠️', weight: '45%', type: 'EXAM', month: 'february' },
-    { date: '2026-02-19', day: 'Thu', what: 'Quiz 4 due (11:59 PM)', course: 'Oral Med', weight: '2.5%', type: 'Quiz', month: 'february' },
-    { date: '2026-02-19', day: 'Thu', what: 'Medical Consultation due', course: 'Pain Control 2', weight: '2%', type: 'Assignment', month: 'february' },
-    { date: '2026-02-23', day: 'Mon', what: '🚫 SLC BLOCKED — Stroman implant lab (no patients!)', course: 'Perio 2', weight: '—', type: 'Blocked', month: 'february' },
-    { date: '2026-02-26', day: 'Thu', what: 'Quiz 5 due (11:59 PM)', course: 'Oral Med', weight: '2.5%', type: 'Quiz', month: 'february' },
-    { date: '2026-02-26', day: 'Thu', what: 'Rx #2 due', course: 'Pain Control 2', weight: '2%', type: 'Assignment', month: 'february' },
-    { date: '2026-02-27', day: 'Fri', what: 'MIDTERM EXAM (4-5:50pm, L1101) — notecard allowed', course: 'Oral Med', weight: '25%', type: 'EXAM', month: 'february' },
-
-    // March
-    { date: '2026-03-05', day: 'Thu', what: 'Quiz 6 due (11:59 PM)', course: 'Oral Med', weight: '2.5%', type: 'Quiz', month: 'march' },
-    { date: '2026-03-05', day: 'Thu', what: 'Take Home Exam 2 due (PAIRS, late=0)', course: 'Pain Control 2', weight: '12%', type: 'Take-home', month: 'march' },
-    { date: '2026-03-11', day: 'Wed', what: 'FINAL EXAM (MCQ 70% + 2 Essays 30%)', course: 'Perio 2', weight: '45%', type: 'EXAM', month: 'march' },
-    { date: '2026-03-12', day: 'Thu', what: 'Quiz 7 due (11:59 PM)', course: 'Oral Med', weight: '2.5%', type: 'Quiz', month: 'march' },
-    { date: '2026-03-18', day: 'Wed', what: 'Group PowerPoint uploaded (8am)', course: 'Critical Thinking', weight: '12%', type: 'Project', month: 'march' },
-    { date: '2026-03-18', day: 'Wed', what: 'Group Video Recording uploaded (8am)', course: 'Critical Thinking', weight: '9%', type: 'Project', month: 'march' },
-    { date: '2026-03-19', day: 'Thu', what: 'Quiz 8 due (11:59 PM)', course: 'Oral Med', weight: '2.5%', type: 'Quiz', month: 'march' },
-    { date: '2026-03-19', day: 'Thu', what: 'FINAL EXAM (4-5:30pm, L1101)', course: 'Pain Control 2', weight: '40%', type: 'EXAM', month: 'march' },
-    { date: '2026-03-23', day: 'Mon', what: 'Systematic Review due (8am)', course: 'Critical Thinking', weight: '12%', type: 'Project', month: 'march' },
-    { date: '2026-03-27', day: 'Fri', what: '❌ NO CLASS', course: 'Oral Med', weight: '—', type: 'No Class', month: 'march' },
-    // March 16 — Monday
-    { date: '2026-03-16', day: 'Mon', what: '12:45 PM — Assist D1s Bay 9J (6th floor) — alginate impressions', course: 'Clinic', weight: '—', type: 'Clinical', month: 'march' },
-    { date: '2026-03-16', day: 'Mon', what: 'Denture try-in for Suzuki — carve post dam, fill rx form, collect images, email images, get QC, send to lab', course: 'Clinic', weight: '—', type: 'Clinical', month: 'march' },
-    { date: '2026-03-16', day: 'Mon', what: 'Figure out Perio 2 implant lab session for Wed Mar 18 — need AM vs PM by tonight', course: 'Admin', weight: '—', type: 'Assignment', month: 'march' },
-    { date: '2026-03-16', day: 'Mon', what: 'Pull up Annette Woods chart (Pt Sat Mar 21 8:30am) — figure out LOE, review tx plan, fill progress notes', course: 'Clinic', weight: '—', type: 'Clinical', month: 'march' },
-    { date: '2026-03-16', day: 'Mon', what: 'Ortho pliers — confirm you have them for tomorrow wire bending lab', course: 'Admin', weight: '—', type: 'Assignment', month: 'march' },
-    { date: '2026-03-16', day: 'Mon', what: 'All free time → Pain Control Final prep (exam Thu Mar 19)', course: 'Pain Control 2', weight: '—', type: 'Study', month: 'march' },
-    // March 17 — Tuesday
-    { date: '2026-03-17', day: 'Tue', what: '12:30–3:30 PM — Carlos prophy appointment', course: 'Clinic', weight: '—', type: 'Clinical', month: 'march' },
-    { date: '2026-03-17', day: 'Tue', what: '4:00–6:20 PM — SLC Wire Bending Lab (GRADED) — fabricate 2 space maintainers. Bring ortho pliers.', course: 'Orthodontics', weight: 'Graded', type: 'Lab', month: 'march' },
-    { date: '2026-03-17', day: 'Tue', what: 'By Wed: figure out Nabibi next patient appt — check chart, next tx step, submit SPS if needed', course: 'Clinic', weight: '—', type: 'Clinical', month: 'march' },
-    { date: '2026-03-17', day: 'Tue', what: 'Free time → Pain Control Final prep', course: 'Pain Control 2', weight: '—', type: 'Study', month: 'march' },
-    // March 18 — Wednesday
-    { date: '2026-03-18', day: 'Wed', what: '8:00–10:00 AM — Fixed Sims', course: 'Fixed Pros', weight: '—', type: 'Lab', month: 'march' },
-    { date: '2026-03-18', day: 'Wed', what: '10:00 AM–7:00 PM — Perio 2 Implant Placement Lab (confirm your session AM vs PM)', course: 'Perio 2', weight: '—', type: 'Lab', month: 'march' },
-    { date: '2026-03-18', day: 'Wed', what: 'Free time → Pain Control Final prep', course: 'Pain Control 2', weight: '—', type: 'Study', month: 'march' },
-    // March 19 — Thursday
-    { date: '2026-03-19', day: 'Thu', what: '8:30–11:30 AM — Moe composite redo (patient appointment)', course: 'Clinic', weight: '—', type: 'Clinical', month: 'march' },
-    // March 20 — Friday
-    { date: '2026-03-20', day: 'Fri', what: 'Oral Medicine Quiz due by 1:00 PM — DO NOT FORGET', course: 'Oral Med', weight: '2.5%', type: 'Quiz', month: 'march' },
-    { date: '2026-03-20', day: 'Fri', what: 'Adderall Rx for externship — Can prescriber do telehealth to FL? FL-licensed provider? Pharmacy transfer?', course: 'Life Admin', weight: '—', type: 'Assignment', month: 'march' },
-    { date: '2026-03-20', day: 'Fri', what: 'Renew license plate (due May 15) — check IL SOS website, may be doable online', course: 'Life Admin', weight: '—', type: 'Assignment', month: 'march' },
-    { date: '2026-03-20', day: 'Fri', what: 'Renew drivers license (due May 15) — check IL online renewal or if you need in-person trip', course: 'Life Admin', weight: '—', type: 'Assignment', month: 'march' },
-    { date: '2026-03-20', day: 'Fri', what: 'NPI assignment — requires processing time per Reboucas. Start now, do not wait until Mar 30', course: 'Peds', weight: 'MANDATORY', type: 'Assignment', month: 'march' },
-    // March 21 — Saturday
-    { date: '2026-03-21', day: 'Sat', what: '8:30–11:30 AM — Annette Woods (LOE) — review chart, progress notes ready, know tx plan', course: 'Clinic', weight: '—', type: 'Clinical', month: 'march' },
-    { date: '2026-03-21', day: 'Sat', what: '12:30–3:30 PM — Tawana recall — full mouth probing, perio charting, prophylaxis', course: 'Clinic', weight: '—', type: 'Clinical', month: 'march' },
-    // March 23 — Monday
-    { date: '2026-03-23', day: 'Mon', what: 'Critical Thinking group PowerPoint — coordinate with Dimpy, Saif, Jiji on division of labor', course: 'Critical Thinking', weight: '—', type: 'Project', month: 'march' },
-    // March 25 — Wednesday
-    { date: '2026-03-25', day: 'Wed', what: '11:30 AM–12:15 PM — MANDATORY Group Practice Meeting (G170) — Dr. Maseli. Email in advance if cannot attend.', course: 'Group Practice', weight: 'MANDATORY', type: 'Mandatory', month: 'march' },
-    // March 30 — Monday (Peds study reminder)
-    { date: '2026-03-30', day: 'Mon', what: 'Pediatric Dentistry Exam — start studying after Pain Control is done', course: 'Peds', weight: '—', type: 'Study', month: 'march' },
-
-    { date: '2026-03-30', day: 'Mon', what: 'EXAM 3 + Attendance component', course: 'Peds', weight: '7.5%', type: 'EXAM', month: 'march' },
-    { date: '2026-03-30', day: 'Mon', what: 'NPI Exercise due (Google Form on BB)', course: 'Peds ⚠️', weight: 'MANDATORY', type: 'Assignment', month: 'march' },
-
-    // April
-    { date: '2026-04-01', day: 'Wed', what: 'Live Presentation (1-3:20pm, 670 Aud)', course: 'Critical Thinking', weight: 'Part of 60%', type: 'Presentation', month: 'april' },
-    { date: '2026-04-02', day: 'Thu', what: 'Quiz 9 due (11:59 PM)', course: 'Oral Med', weight: '2.5%', type: 'Quiz', month: 'april' },
-    // April 6 — Monday
-    { date: '2026-04-06', day: 'Mon', what: '11:30 AM–12:30 PM — MANDATORY Externship Rotation 1 Orientation (Zoom)', course: 'Externship', weight: 'MANDATORY', type: 'Mandatory', month: 'april' },
-    { date: '2026-04-06', day: 'Mon', what: '⚠️ CONFLICT: Oral Rad rotation all day — email Oral Rad director AND Amy Wapshare about Zoom overlap ASAP', course: 'Admin', weight: '—', type: 'Assignment', month: 'april' },
-    { date: '2026-04-10', day: 'Fri', what: '❌ NO CLASS', course: 'Oral Med', weight: '—', type: 'No Class', month: 'april' },
-    // April 13 — Monday
-    { date: '2026-04-13', day: 'Mon', what: 'Critical Thinking presentation — PPT on THUMB DRIVE (no laptops/cloud). If called & nobody presents = 0 = FAIL', course: 'Critical Thinking', weight: 'Part of 60%', type: 'Presentation', month: 'april' },
-    { date: '2026-04-14', day: 'Tue', what: 'Live Presentation (1-3:20pm, 670 Aud)', course: 'Critical Thinking', weight: 'Part of 60%', type: 'Presentation', month: 'april' },
-    // April 15 — Wednesday
-    { date: '2026-04-15', day: 'Wed', what: 'Critical Thinking presentation — PPT on THUMB DRIVE (no laptops/cloud). If called & nobody presents = 0 = FAIL', course: 'Critical Thinking', weight: 'Part of 60%', type: 'Presentation', month: 'april' },
-    { date: '2026-04-16', day: 'Thu', what: 'Quiz 10 due (11:59 PM)', course: 'Oral Med', weight: '2.5%', type: 'Quiz', month: 'april' },
-    { date: '2026-04-16', day: 'Thu', what: 'Live Presentation (1-2:50pm, 670 Aud)', course: 'Critical Thinking', weight: 'Part of 60%', type: 'Presentation', month: 'april' },
-    { date: '2026-04-17', day: 'Fri', what: 'FINAL EXAM (4-5:50pm, L1101) — notecard allowed', course: 'Oral Med', weight: '25%', type: 'EXAM', month: 'april' },
-    { date: '2026-04-17', day: 'Fri', what: 'Passion Project due (4pm) — needs DATED JOURNAL LOG', course: 'Oral Med', weight: '12.5%', type: 'Project', month: 'april' }
-];
+// D3 Spring-2026 static deadlines retired 2026-08-13. Deadlines are now fully
+// data-driven (roadmapData.customDeadlines + edited/completed overlays).
+// Array retained (empty) because init.js seeds the working 'deadlines' array
+// from it and overlays customDeadlines on top.
+const STATIC_DEADLINES = [];
 
 // Working deadlines array - reset from STATIC_DEADLINES at start of each initUI() call
 // to prevent duplicate custom deadlines from accumulating
@@ -124,178 +36,191 @@ let deadlines = [];
 // #examCountdownTable in the Academics tab were deleted with the tab).
 
 function renderDeadlines() {
-    const months = ['january', 'february', 'march', 'april'];
+    const container = document.getElementById('deadlinesMonthsContainer');
+    if (!container) return;
 
-    // First, sort ALL deadlines by date to ensure correct ordering
+    // Sort ALL deadlines by date to ensure correct ordering
     deadlines.sort((a, b) => parseLocalDate(a.date) - parseLocalDate(b.date));
 
     // Determine today for archive split (using local date, no UTC issues)
     const today = new Date();
     today.setHours(0, 0, 0, 0);
 
-    // Collect past+completed deadlines for the archive across all months
+    // Split into active vs past-completed (archive)
     const pastCompleted = [];
-
-    months.forEach(month => {
-        const tbody = document.getElementById(month + 'Body');
-        if (!tbody) return;
-
-        // Filter for this month - already sorted from above
-        const monthDeadlines = deadlines.filter(d => d.month === month);
-
-        // Separate active vs past-completed for this month
-        const activeMonthDeadlines = [];
-        monthDeadlines.forEach(d => {
-            const isDone = d.done ?? false;
-            const [y, mo, day] = (d.date || '').split('-').map(Number);
-            if (y) {
-                const dDate = new Date(y, mo - 1, day);
-                if (dDate < today && isDone) {
-                    // Past and completed — send to archive
-                    pastCompleted.push(d);
-                    return;
-                }
+    const active = [];
+    deadlines.forEach(d => {
+        const isDone = d.done ?? false;
+        const [y, mo, day] = (d.date || '').split('-').map(Number);
+        if (y) {
+            const dDate = new Date(y, mo - 1, day);
+            if (dDate < today && isDone) {
+                pastCompleted.push(d);
+                return;
             }
-            // Active: future, or past-but-not-done (overdue!), or no valid date
-            activeMonthDeadlines.push(d);
+        }
+        // Active: future, or past-but-not-done (overdue!), or no valid date
+        active.push(d);
+    });
+
+    // Row builder (shared by all month groups)
+    function buildDeadlineRow(d) {
+        const days = getCountdown(d.date);
+        const isPassed = days < 0;
+        const deadlineId = getDeadlineId(d);
+        const isDone = d.done ?? false;
+        const grade = d.grade !== undefined ? d.grade : null;
+
+        // Row styling based on done status
+        const rowStyle = isDone ? 'opacity: 0.6; text-decoration: line-through;' : '';
+        const rowClass = isPassed ? 'passed' : '';
+
+        return '<tr class="' + rowClass + '" data-deadline-id="' + deadlineId + '" style="' + rowStyle + '">'
+            + '<td>'
+            + '<button class="deadline-checkbox-btn" onclick="toggleDeadlineDoneById(\'' + deadlineId + '\')"'
+            + ' style="background: ' + (isDone ? '#059669' : 'rgba(255,255,255,0.1)') + ';'
+            + ' border: 2px solid ' + (isDone ? '#059669' : '#4b5563') + ';'
+            + ' color: ' + (isDone ? 'white' : '#94a3b8') + ';'
+            + ' width: 32px; height: 32px;'
+            + ' border-radius: 6px; cursor: pointer;'
+            + ' font-size: 1.1em; display: flex;'
+            + ' align-items: center; justify-content: center;"'
+            + ' title="' + (isDone ? 'Mark incomplete' : 'Mark complete') + '">'
+            + (isDone ? '✓' : '○')
+            + '</button>'
+            + '</td>'
+            + '<td>'
+            + '<input type="date" class="deadline-date-picker"'
+            + ' value="' + d.date + '"'
+            + ' data-deadline-id="' + deadlineId + '"'
+            + ' onchange="handleDateChange(this)">'
+            + '</td>'
+            + '<td>' + escapeHtml(d.day ?? '') + '</td>'
+            + '<td>' + (isDone && grade !== null ? '<span style="background: #059669; color: white; padding: 2px 8px; border-radius: 4px; font-size: 0.85em;">' + grade + '%</span>' : getCountdownBadge(days, d.tbd)) + '</td>'
+            + '<td class="deadline-what-cell">'
+            + '<input type="text" class="deadline-edit-input"'
+            + ' value="' + escapeHtml(d.what) + '"'
+            + ' data-deadline-id="' + deadlineId + '"'
+            + ' data-field="what"'
+            + ' data-original="' + escapeHtml(d.what) + '"'
+            + ' onblur="handleTextEdit(this)"'
+            + ' onkeydown="if(event.key===\'Enter\'){this.blur();}"'
+            + ' style="background: rgba(255,255,255,0.1); border: 1px dashed #4b5563; padding: 4px 8px; border-radius: 4px; color: #e2e8f0; width: 100%;">'
+            + '</td>'
+            + '<td>'
+            + '<input type="text" class="deadline-edit-input"'
+            + ' value="' + escapeHtml(d.course) + '"'
+            + ' data-deadline-id="' + deadlineId + '"'
+            + ' data-field="course"'
+            + ' data-original="' + escapeHtml(d.course) + '"'
+            + ' onblur="handleTextEdit(this)"'
+            + ' onkeydown="if(event.key===\'Enter\'){this.blur();}"'
+            + ' style="background: rgba(255,255,255,0.1); border: 1px dashed #4b5563; padding: 4px 8px; border-radius: 4px; color: #e2e8f0; width: 120px;">'
+            + '</td>'
+            + '<td>'
+            + '<input type="text" class="deadline-edit-input"'
+            + ' value="' + escapeHtml(d.weight) + '"'
+            + ' data-deadline-id="' + deadlineId + '"'
+            + ' data-field="weight"'
+            + ' data-original="' + escapeHtml(d.weight) + '"'
+            + ' onblur="handleTextEdit(this)"'
+            + ' onkeydown="if(event.key===\'Enter\'){this.blur();}"'
+            + ' style="background: rgba(255,255,255,0.1); border: 1px dashed #4b5563; padding: 4px 8px; border-radius: 4px; color: #e2e8f0; width: 60px;">'
+            + '</td>'
+            + '<td>' + escapeHtml(d.type ?? '') + '</td>'
+            + '<td>'
+            + '<button onclick="deleteDeadlineById(\'' + deadlineId + '\')"'
+            + ' style="background: rgba(220, 38, 38, 0.2); border: 1px solid #dc2626; color: #f87171; padding: 4px 8px; border-radius: 4px; cursor: pointer; font-size: 0.8em;"'
+            + ' title="Delete this deadline">🗑️</button>'
+            + '</td>'
+            + '</tr>';
+    }
+
+    // Group active deadlines by calendar month (YYYY-MM). Entries without a
+    // parseable date (e.g. TBD) go into an "Unscheduled" bucket up top.
+    const byMonth = {};
+    const unscheduled = [];
+    active.forEach(d => {
+        const key = (d.date || '').slice(0, 7);
+        if (/^\d{4}-\d{2}$/.test(key)) {
+            (byMonth[key] = byMonth[key] || []).push(d);
+        } else {
+            unscheduled.push(d);
+        }
+    });
+
+    // Current month always renders, even when empty
+    const currentKey = getLocalDateString(new Date()).slice(0, 7);
+    if (!byMonth[currentKey]) byMonth[currentKey] = [];
+
+    const monthKeys = Object.keys(byMonth).sort();
+    const MONTH_NAMES = ['JANUARY', 'FEBRUARY', 'MARCH', 'APRIL', 'MAY', 'JUNE',
+        'JULY', 'AUGUST', 'SEPTEMBER', 'OCTOBER', 'NOVEMBER', 'DECEMBER'];
+    const monthLabel = key => {
+        const [y, m] = key.split('-').map(Number);
+        return '📅 ' + (MONTH_NAMES[m - 1] || '?') + ' ' + y;
+    };
+
+    const theadHtml = '<thead><tr>'
+        + '<th style="width: 42px;"></th>'
+        + '<th>Date</th>'
+        + '<th>Day</th>'
+        + '<th>Countdown</th>'
+        + '<th class="deadline-what-cell">What</th>'
+        + '<th>Course</th>'
+        + '<th>% of Grade</th>'
+        + '<th>Type</th>'
+        + '<th style="width: 50px;"></th>'
+        + '</tr></thead>';
+    const monthTable = rows =>
+        '<div class="table-container"><table>' + theadHtml
+        + '<tbody>' + rows.map(buildDeadlineRow).join('') + '</tbody>'
+        + '</table></div>';
+
+    let html = '';
+    if (unscheduled.length) {
+        html += '<div class="month-header">🗓️ UNSCHEDULED / TBD</div>' + monthTable(unscheduled);
+    }
+    monthKeys.forEach(key => {
+        html += '<div class="month-header">' + monthLabel(key) + '</div>';
+        if (byMonth[key].length) {
+            html += monthTable(byMonth[key]);
+        } else {
+            html += '<div class="note" style="margin-bottom: 15px; color: #9ca3af;">No deadlines this month — use <strong>+ Add Deadline</strong> above.</div>';
+        }
+    });
+
+    // Archive of past completed deadlines (collapsible; preserve open state)
+    if (pastCompleted.length > 0) {
+        const archiveContent = document.getElementById('past-deadlines-archive-content');
+        const wasOpen = archiveContent ? archiveContent.style.display !== 'none' : false;
+
+        let pastRows = '';
+        pastCompleted.forEach(d => {
+            const grade = d.grade !== undefined && d.grade !== null ? d.grade : null;
+            const gradeInfo = grade !== null ? (' — Grade: ' + escapeHtml(String(grade)) + '%') : '';
+            pastRows += '<div style="padding: 6px 12px; border-bottom: 1px solid #1e293b; font-size: 13px; color: #9ca3af; display: flex; flex-wrap: wrap; gap: 4px; align-items: baseline;">'
+                + '<span style="color: #6b7280; min-width: 90px;">' + escapeHtml(d.date || '') + '</span>'
+                + '<span style="color: #60a5fa; min-width: 100px;">' + escapeHtml(d.course || '') + '</span>'
+                + '<span style="flex: 1;">' + escapeHtml(d.what || '') + '</span>'
+                + '<span style="color: #10b981;">' + gradeInfo + '</span>'
+                + '</div>';
         });
 
-        tbody.innerHTML = activeMonthDeadlines.map(function(d, idx) {
-            const days = getCountdown(d.date);
-            const isPassed = days < 0;
-            const deadlineId = getDeadlineId(d);
-            const isCustom = d.custom ?? false;
-            const isDone = d.done ?? false;
-            const grade = d.grade !== undefined ? d.grade : null;
-
-            // Row styling based on done status
-            const rowStyle = isDone ? 'opacity: 0.6; text-decoration: line-through;' : '';
-            const rowClass = isPassed ? 'passed' : '';
-
-            return '<tr class="' + rowClass + '" data-deadline-id="' + deadlineId + '" style="' + rowStyle + '">'
-                + '<td>'
-                + '<button class="deadline-checkbox-btn" onclick="toggleDeadlineDoneById(\'' + deadlineId + '\')"'
-                + ' style="background: ' + (isDone ? '#059669' : 'rgba(255,255,255,0.1)') + ';'
-                + ' border: 2px solid ' + (isDone ? '#059669' : '#4b5563') + ';'
-                + ' color: ' + (isDone ? 'white' : '#94a3b8') + ';'
-                + ' width: 32px; height: 32px;'
-                + ' border-radius: 6px; cursor: pointer;'
-                + ' font-size: 1.1em; display: flex;'
-                + ' align-items: center; justify-content: center;"'
-                + ' title="' + (isDone ? 'Mark incomplete' : 'Mark complete') + '">'
-                + (isDone ? '\u2713' : '\u25CB')
-                + '</button>'
-                + '</td>'
-                + '<td>'
-                + '<input type="date" class="deadline-date-picker"'
-                + ' value="' + d.date + '"'
-                + ' data-deadline-id="' + deadlineId + '"'
-                + ' onchange="handleDateChange(this)">'
-                + '</td>'
-                + '<td>' + d.day + '</td>'
-                + '<td>' + (isDone && grade !== null ? '<span style="background: #059669; color: white; padding: 2px 8px; border-radius: 4px; font-size: 0.85em;">' + grade + '%</span>' : getCountdownBadge(days, d.tbd)) + '</td>'
-                + '<td class="deadline-what-cell">'
-                + '<input type="text" class="deadline-edit-input"'
-                + ' value="' + escapeHtml(d.what) + '"'
-                + ' data-deadline-id="' + deadlineId + '"'
-                + ' data-field="what"'
-                + ' data-original="' + escapeHtml(d.what) + '"'
-                + ' onblur="handleTextEdit(this)"'
-                + ' onkeydown="if(event.key===\'Enter\'){this.blur();}"'
-                + ' style="background: rgba(255,255,255,0.1); border: 1px dashed #4b5563; padding: 4px 8px; border-radius: 4px; color: #e2e8f0; width: 100%;">'
-                + '</td>'
-                + '<td>'
-                + '<input type="text" class="deadline-edit-input"'
-                + ' value="' + escapeHtml(d.course) + '"'
-                + ' data-deadline-id="' + deadlineId + '"'
-                + ' data-field="course"'
-                + ' data-original="' + escapeHtml(d.course) + '"'
-                + ' onblur="handleTextEdit(this)"'
-                + ' onkeydown="if(event.key===\'Enter\'){this.blur();}"'
-                + ' style="background: rgba(255,255,255,0.1); border: 1px dashed #4b5563; padding: 4px 8px; border-radius: 4px; color: #e2e8f0; width: 120px;">'
-                + '</td>'
-                + '<td>'
-                + '<input type="text" class="deadline-edit-input"'
-                + ' value="' + escapeHtml(d.weight) + '"'
-                + ' data-deadline-id="' + deadlineId + '"'
-                + ' data-field="weight"'
-                + ' data-original="' + escapeHtml(d.weight) + '"'
-                + ' onblur="handleTextEdit(this)"'
-                + ' onkeydown="if(event.key===\'Enter\'){this.blur();}"'
-                + ' style="background: rgba(255,255,255,0.1); border: 1px dashed #4b5563; padding: 4px 8px; border-radius: 4px; color: #e2e8f0; width: 60px;">'
-                + '</td>'
-                + '<td>' + d.type + '</td>'
-                + '<td>'
-                + '<button onclick="deleteDeadlineById(\'' + deadlineId + '\')"'
-                + ' style="background: rgba(220, 38, 38, 0.2); border: 1px solid #dc2626; color: #f87171; padding: 4px 8px; border-radius: 4px; cursor: pointer; font-size: 0.8em;"'
-                + ' title="Delete this deadline">\uD83D\uDDD1\uFE0F</button>'
-                + '</td>'
-                + '</tr>';
-        }).join('');
-
-        // Hide entire month section if no active deadlines remain
-        const monthTable = document.getElementById(month + 'Table');
-        if (monthTable) {
-            const section = monthTable.closest('.table-container');
-            const header = section ? section.previousElementSibling : null;
-            if (activeMonthDeadlines.length === 0) {
-                if (section) section.style.display = 'none';
-                if (header && header.classList.contains('month-header')) header.style.display = 'none';
-            } else {
-                if (section) section.style.display = '';
-                if (header && header.classList.contains('month-header')) header.style.display = '';
-            }
-        }
-    });
-
-    // Build archive section for past completed deadlines
-    var archiveEl = document.getElementById('past-deadlines-archive-section');
-    if (pastCompleted.length === 0) {
-        // No past completed deadlines — remove archive if it exists
-        if (archiveEl) archiveEl.remove();
-        return;
-    }
-
-    // Build past deadlines list items
-    var pastRows = '';
-    pastCompleted.forEach(function(d) {
-        var grade = d.grade !== undefined && d.grade !== null ? d.grade : null;
-        var gradeInfo = grade !== null ? (' \u2014 Grade: ' + escapeHtml(String(grade)) + '%') : '';
-        pastRows += '<div style="padding: 6px 12px; border-bottom: 1px solid #1e293b; font-size: 13px; color: #9ca3af; display: flex; flex-wrap: wrap; gap: 4px; align-items: baseline;">'
-            + '<span style="color: #6b7280; min-width: 90px;">' + escapeHtml(d.date || '') + '</span>'
-            + '<span style="color: #60a5fa; min-width: 100px;">' + escapeHtml(d.course || '') + '</span>'
-            + '<span style="flex: 1;">' + escapeHtml(d.what || '') + '</span>'
-            + '<span style="color: #10b981;">' + gradeInfo + '</span>'
+        html += '<div id="past-deadlines-archive-section">'
+            + '<div style="margin-top: 24px; border-top: 1px solid #374151; padding-top: 16px;">'
+            + '<button onclick="var arc=document.getElementById(\'past-deadlines-archive-content\'); arc.style.display = arc.style.display===\'none\' ? \'block\' : \'none\'; this.querySelector(\'.archive-arrow\').textContent = arc.style.display===\'none\' ? \'▸\' : \'▾\';"'
+            + ' style="background: #1e293b; border: 1px solid #374151; color: #9ca3af; padding: 8px 16px; border-radius: 8px; cursor: pointer; font-size: 14px; width: 100%; text-align: left;">'
+            + '<span class="archive-arrow">' + (wasOpen ? '▾' : '▸') + '</span> 📦 Past Deadlines (' + pastCompleted.length + ' completed)'
+            + '</button>'
+            + '<div id="past-deadlines-archive-content" style="display: ' + (wasOpen ? 'block' : 'none') + '; margin-top: 12px;">'
+            + '<div style="opacity: 0.7;">' + pastRows + '</div>'
+            + '</div>'
+            + '</div>'
             + '</div>';
-    });
-
-    // Create archive container if it doesn't exist yet
-    if (!archiveEl) {
-        archiveEl = document.createElement('div');
-        archiveEl.id = 'past-deadlines-archive-section';
-        // Insert at end of the deadlines card (after last month table)
-        var aprilTable = document.getElementById('aprilTable');
-        if (aprilTable) {
-            var card = aprilTable.closest('.card');
-            if (card) {
-                card.appendChild(archiveEl);
-            }
-        }
     }
 
-    // Preserve open/closed state across re-renders
-    var archiveContent = document.getElementById('past-deadlines-archive-content');
-    var wasOpen = archiveContent ? archiveContent.style.display !== 'none' : false;
-
-    archiveEl.innerHTML = '<div style="margin-top: 24px; border-top: 1px solid #374151; padding-top: 16px;">'
-        + '<button onclick="var arc=document.getElementById(\'past-deadlines-archive-content\'); arc.style.display = arc.style.display===\'none\' ? \'block\' : \'none\'; this.querySelector(\'.archive-arrow\').textContent = arc.style.display===\'none\' ? \'\u25B8\' : \'\u25BE\';"'
-        + ' style="background: #1e293b; border: 1px solid #374151; color: #9ca3af; padding: 8px 16px; border-radius: 8px; cursor: pointer; font-size: 14px; width: 100%; text-align: left;">'
-        + '<span class="archive-arrow">' + (wasOpen ? '\u25BE' : '\u25B8') + '</span> \uD83D\uDCE6 Past Deadlines (' + pastCompleted.length + ' completed)'
-        + '</button>'
-        + '<div id="past-deadlines-archive-content" style="display: ' + (wasOpen ? 'block' : 'none') + '; margin-top: 12px;">'
-        + '<div style="opacity: 0.7;">' + pastRows + '</div>'
-        + '</div>'
-        + '</div>';
+    container.innerHTML = html;
 }
 
 // Handle date picker changes
