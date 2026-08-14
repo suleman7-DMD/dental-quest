@@ -197,6 +197,7 @@ function initMonthlyPlanner() {
     mpRenderAllCalendars();
     mpRenderNotes();
     d4RenderScheduleCard();
+    mpRenderCriticalReminders();
     mpUpdateStats();
 }
 
@@ -1305,6 +1306,68 @@ function mpDeleteNote(noteId) {
         mpRenderNotes();
         showToast('Note deleted');
     }, null, 'Delete Note');
+}
+
+// ==================== CRITICAL REMINDERS (editable, persisted) ====================
+
+function mpRenderCriticalReminders() {
+    var container = document.getElementById('mpCriticalRemindersList');
+    if (!container) return;
+
+    var reminders = getValues(roadmapData.monthlyPlanner?.criticalReminders);
+    if (reminders.length === 0) {
+        container.innerHTML = '<li style="color: #94a3b8; font-size: 0.9em;">No reminders. Add one below.</li>';
+        return;
+    }
+
+    // Oldest first — reminders keep the order they were added
+    reminders.sort(function(a, b) {
+        return String(a.createdAt || '').localeCompare(String(b.createdAt || ''));
+    });
+
+    container.innerHTML = reminders.map(function(r) {
+        return '<li style="display: flex; align-items: flex-start; gap: 8px; padding: 4px 0;">'
+            + '<span style="color: #f87171; flex-shrink: 0;">•</span>'
+            + '<span style="flex: 1; min-width: 0; word-break: break-word;">' + escapeHtml(r.text || '') + '</span>'
+            + '<button onclick="mpDeleteReminder(\'' + r.id + '\')" class="mp-note-action-btn delete" title="Delete" style="flex-shrink: 0;">🗑️</button>'
+            + '</li>';
+    }).join('');
+}
+
+function mpAddReminder() {
+    var input = document.getElementById('mpNewReminder');
+    var text = input?.value?.trim();
+    if (!text) {
+        input?.focus();
+        return;
+    }
+
+    if (!roadmapData.monthlyPlanner) {
+        roadmapData.monthlyPlanner = { notes: {}, customTasks: {}, overriddenStatic: {}, completedTasks: {} };
+    }
+    if (!roadmapData.monthlyPlanner.criticalReminders) roadmapData.monthlyPlanner.criticalReminders = {};
+
+    var id = generateId('crem');
+    // No `seeded` flag: user-added reminders are real data (Guard C)
+    roadmapData.monthlyPlanner.criticalReminders[id] = { id: id, text: text, createdAt: new Date().toISOString() };
+    input.value = '';
+
+    safeLocalStorageSet(STORAGE_KEY, JSON.stringify(roadmapData));
+    saveData();
+    mpRenderCriticalReminders();
+    showToast('Reminder added!');
+}
+
+function mpDeleteReminder(reminderId) {
+    showCustomConfirm('Delete this reminder?', function() {
+        if (!roadmapData.monthlyPlanner?.criticalReminders?.[reminderId]) return;
+
+        delete roadmapData.monthlyPlanner.criticalReminders[reminderId];
+        safeLocalStorageSet(STORAGE_KEY, JSON.stringify(roadmapData));
+        saveData();
+        mpRenderCriticalReminders();
+        showToast('Reminder deleted');
+    }, null, 'Delete Reminder');
 }
 
 // ==================== D4 SCHEDULE (rotations, didactics, mock sims, INBDE, ADEX) ====================
