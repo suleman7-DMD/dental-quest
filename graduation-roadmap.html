@@ -9294,6 +9294,205 @@
             .pr-table th, .pr-table td { padding: 6px 8px; }
         }
 
+        /* ===== Mission Control — Master To-Do Panel ===== */
+        .mcmt-panel {
+            background: linear-gradient(160deg, rgba(30,41,59,0.92), rgba(15,23,42,0.96));
+            border: 1px solid rgba(148,163,184,0.22);
+            border-radius: 16px;
+            padding: 18px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.25);
+        }
+        .mcmt-panel.mcmt-split {
+            display: flex;
+            flex-direction: column;
+            min-height: 420px;
+        }
+        .mcmt-panel.mcmt-split .mcmt-scroll {
+            flex: 1;
+            min-height: 0;
+            overflow-y: auto;
+            padding-right: 4px;
+            -webkit-overflow-scrolling: touch;
+        }
+        .mcmt-head {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 8px;
+            flex-wrap: wrap;
+            margin-bottom: 12px;
+        }
+        .mcmt-title { color: #f1f5f9; margin: 0; font-size: 1.15em; letter-spacing: 0.01em; }
+        .mcmt-source-chip {
+            font-size: 0.72em;
+            font-weight: 600;
+            padding: 3px 10px;
+            border-radius: 999px;
+            border: 1px solid;
+            white-space: nowrap;
+        }
+        .mcmt-tabs {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 6px;
+            background: rgba(15,23,42,0.55);
+            border: 1px solid rgba(100,116,139,0.25);
+            border-radius: 12px;
+            padding: 4px;
+            margin-bottom: 10px;
+        }
+        .mcmt-tab {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            min-height: 44px;              /* iOS touch target */
+            border: 1px solid transparent;
+            border-radius: 9px;
+            background: transparent;
+            color: #94a3b8;
+            font-weight: 600;
+            font-size: 0.85em;
+            cursor: pointer;
+            padding: 6px 8px;
+            transition: background 0.15s, color 0.15s, border-color 0.15s;
+        }
+        .mcmt-tab:hover { color: #e2e8f0; }
+        .mcmt-tab-count {
+            background: #475569;
+            color: #fff;
+            font-weight: 700;
+            font-size: 0.8em;
+            padding: 1px 7px;
+            border-radius: 999px;
+            min-width: 20px;
+            text-align: center;
+            box-sizing: border-box;
+        }
+        .mcmt-tab-count.empty { opacity: 0.55; }
+        .mcmt-note {
+            color: #94a3b8;
+            font-size: 0.75em;
+            line-height: 1.4;
+            background: rgba(100,116,139,0.1);
+            border-left: 3px solid rgba(148,163,184,0.35);
+            border-radius: 6px;
+            padding: 6px 10px;
+            margin-bottom: 12px;
+        }
+        .mcmt-add-row { display: flex; gap: 6px; margin-bottom: 12px; }
+        .mcmt-add-input {
+            flex: 1;
+            min-width: 0;
+            background: rgba(15,23,42,0.6);
+            border: 1px solid rgba(100,116,139,0.25);
+            border-radius: 10px;
+            padding: 10px 12px;
+            color: #e2e8f0;
+            font-size: 16px;               /* prevents iOS zoom-on-focus */
+            outline: none;
+        }
+        .mcmt-add-input:focus { border-color: rgba(148,163,184,0.5); }
+        .mcmt-add-btn {
+            border: none;
+            border-radius: 10px;
+            color: #fff;
+            font-weight: 700;
+            font-size: 0.85em;
+            padding: 10px 16px;
+            min-height: 44px;
+            cursor: pointer;
+            white-space: nowrap;
+        }
+        .mcmt-empty { font-size: 0.85em; padding: 14px 0; text-align: center; }
+        .mcmt-row {
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+            padding: 9px 10px;
+            background: rgba(15,23,42,0.5);
+            border: 1px solid rgba(100,116,139,0.15);
+            border-radius: 10px;
+            margin-bottom: 6px;
+            font-size: 0.85em;
+        }
+        .mcmt-check { margin-top: 6px; cursor: pointer; width: 20px; height: 20px; flex: none; }
+        .mcmt-check-sm { cursor: pointer; width: 16px; height: 16px; flex: none; }
+        .mcmt-row-main { flex: 1; min-width: 0; }
+        .mcmt-row > .mcmt-edit-input { flex: 1; min-width: 0; }
+        .mcmt-edit-input {
+            width: 100%;
+            box-sizing: border-box;
+            background: transparent;
+            border: 1px solid transparent;
+            border-radius: 6px;
+            color: #e2e8f0;
+            font-weight: 500;
+            font-size: 16px;               /* prevents iOS zoom-on-focus */
+            padding: 4px 6px;
+            outline: none;
+        }
+        .mcmt-edit-input:hover { border-color: rgba(100,116,139,0.35); }
+        .mcmt-edit-input:focus { border-color: rgba(148,163,184,0.6); background: rgba(15,23,42,0.8); }
+        .mcmt-row-meta { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 3px; align-items: center; padding: 0 6px; }
+        .mcmt-src-badge { color: #fff; padding: 1px 7px; border-radius: 5px; font-size: 0.72em; font-weight: 600; }
+        .mcmt-meta-dim { color: #64748b; font-size: 0.78em; }
+        .mcmt-meta-dim2 { color: #94a3b8; font-size: 0.78em; }
+        .mcmt-del-btn {
+            background: none;
+            border: none;
+            color: #64748b;
+            cursor: pointer;
+            font-size: 1.2em;
+            line-height: 1;
+            padding: 6px;
+            min-width: 32px;
+            min-height: 32px;
+            flex: none;
+        }
+        .mcmt-del-btn:hover { color: #f87171; }
+        .mcmt-done-details { margin-top: 10px; }
+        .mcmt-done-details summary { color: #64748b; font-size: 0.8em; cursor: pointer; user-select: none; }
+        .mcmt-done-list { margin-top: 6px; }
+        .mcmt-done-row {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 5px 8px;
+            font-size: 0.8em;
+            color: #64748b;
+            text-decoration: line-through;
+        }
+        .mcmt-clear-btn {
+            margin-top: 6px;
+            padding: 6px 12px;
+            font-size: 0.75em;
+            background: rgba(100,116,139,0.15);
+            color: #94a3b8;
+            border: 1px solid rgba(100,116,139,0.2);
+            border-radius: 6px;
+            cursor: pointer;
+            min-height: 32px;
+        }
+        .mcmt-readonly-banner {
+            color: #fbbf24;
+            font-size: 0.75em;
+            background: rgba(245,158,11,0.08);
+            border: 1px dashed rgba(245,158,11,0.35);
+            border-radius: 8px;
+            padding: 6px 10px;
+            margin-bottom: 10px;
+        }
+        .mcmt-footnote { text-align: right; margin-top: 10px; font-size: 0.78em; }
+        .mcmt-footnote a { color: #93c5fd; text-decoration: underline; cursor: pointer; }
+
+        @media (max-width: 640px) {
+            .mcmt-panel { padding: 14px; border-radius: 14px; }
+            .mcmt-tab { flex-direction: column; gap: 2px; font-size: 0.78em; min-height: 56px; padding: 5px 4px; }
+            .mcmt-note { font-size: 0.72em; }
+            .mcmt-add-btn { padding: 10px 12px; }
+        }
+
     </style>
 </head>
 <body>
@@ -11151,7 +11350,7 @@ NOTES: ...
     <!-- Toast Notification -->
     <div class="toast" id="toast">Saved!</div>
 
-    <script src="js/graduation-roadmap/state.js?v=20260815"></script>
+    <script src="js/graduation-roadmap/state.js?v=20260815c"></script>
     <script src="js/graduation-roadmap/firebase-sync.js?v=20260815"></script>
     <script src="js/graduation-roadmap/deadlines.js?v=20260815"></script>
     <script src="js/graduation-roadmap/clinical.js?v=20260815"></script>
@@ -11162,6 +11361,6 @@ NOTES: ...
     <script src="js/graduation-roadmap/daily-planner.js?v=20260815"></script>
     <script src="js/graduation-roadmap/monthly-planner.js?v=20260815"></script>
     <script src="js/graduation-roadmap/troubleshooting.js?v=20260815"></script>
-    <script src="js/graduation-roadmap/init.js?v=20260815b"></script>
+    <script src="js/graduation-roadmap/init.js?v=20260815c"></script>
 </body>
 </html>

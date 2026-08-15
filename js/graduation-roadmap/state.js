@@ -1942,6 +1942,19 @@ function toggleTodoStatus(todoId) {
     if (typeof rerenderTodoListSection === 'function') rerenderTodoListSection(); else renderDashboard();
 }
 
+function updateTodoDescription(todoId, text) {
+    var items = roadmapData.todoList?.items;
+    if (!items || !items[todoId]) return false;
+    var next = (text || '').trim();
+    if (!next) return false;
+    if (items[todoId].description === next) return true;
+    items[todoId].description = next;
+    roadmapData.todoList.lastUpdated = new Date().toISOString();
+    safeLocalStorageSet(STORAGE_KEY, JSON.stringify(roadmapData));
+    saveData();
+    return true;
+}
+
 function clearCompletedTodos() {
     var items = roadmapData.todoList?.items;
     if (!items) return;
