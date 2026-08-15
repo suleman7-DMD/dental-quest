@@ -609,11 +609,12 @@ function dpSyncAppointmentsToTimeline() {
             // Already synced — check if user edited it
             if (existingBlocks[blockId].userEdited) return;
 
-            // Update with latest appointment data (time/procedure changes)
+            // Update with latest appointment data (time/procedure/status changes)
             var patient = patients[apt.patientId] || {};
             existingBlocks[blockId].startTime = apt.time;
             existingBlocks[blockId].duration = apt.duration || 180;
             existingBlocks[blockId].task = (patient.name || 'Patient') + ' - ' + (apt.procedures || 'Clinic Apt');
+            existingBlocks[blockId].completed = apt.status === 'completed';
             changed = true;
             return;
         }

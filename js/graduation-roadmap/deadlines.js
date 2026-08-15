@@ -4,7 +4,9 @@
 // Lightweight rebuild of roadmapData.upcomingDeadlines for Stim Calc visibility.
 // Called after every deadline mutation (add, edit date, toggle done, delete).
 function rebuildUpcomingDeadlines() {
-    if (!deadlines || !deadlines.length) return;
+    // When the last deadline is removed, clear the cross-app object too —
+    // otherwise Stim Calc keeps reading stale entries forever
+    if (!deadlines || !deadlines.length) { roadmapData.upcomingDeadlines = {}; return; }
     try {
         var todayStr = getLocalDateString(new Date());
         var upcomingObj = {};
@@ -594,6 +596,20 @@ function toggleDeadlineDone(index) {
                 clinicalDataDirty = true;
                 apt.status = 'scheduled';
                 delete apt.completedAt;
+                // Uncomplete cascade: remove procedures recorded at completion
+                // (with tombstones so merge doesn't resurrect them), then recalc lastVisit
+                if (roadmapData.clinicalData.completedProcedures) {
+                    if (!roadmapData.clinicalData.deletedProcedureIds) roadmapData.clinicalData.deletedProcedureIds = {};
+                    getValues(roadmapData.clinicalData.completedProcedures)
+                        .filter(p => p && p.appointmentId === deadline.clinicalAptId)
+                        .forEach(p => {
+                            roadmapData.clinicalData.deletedProcedureIds[p.id] = new Date().toISOString();
+                            delete roadmapData.clinicalData.completedProcedures[p.id];
+                        });
+                }
+                if (apt.patientId && typeof recalculatePatientLastVisit === 'function') {
+                    recalculatePatientLastVisit(apt.patientId);
+                }
                 // Also unmark the planner task
                 if (typeof unmarkPlannerTaskDone === 'function') {
                     unmarkPlannerTaskDone(deadline.clinicalAptId);
@@ -618,6 +634,7 @@ function toggleDeadlineDone(index) {
         clinicalDataDirty = true;
         if (typeof syncClinicalToMonthlyPlanner === 'function') syncClinicalToMonthlyPlanner();
         if (typeof buildCurrentWeekSchedule === 'function') buildCurrentWeekSchedule();
+        if (typeof dpSyncAppointmentsToTimeline === 'function') dpSyncAppointmentsToTimeline();
 
         showToast('Marked incomplete');
     } else {
@@ -668,7 +685,7 @@ function showGradeInputModal(index, deadline) {
             <div class="js-modal-content" style="background: #1e293b; padding: 25px; border-radius: 12px; width: 90%; max-width: 400px; border: 1px solid #334155;">
                 <h3 style="color: #10b981; margin-bottom: 15px;">✓ Mark Complete</h3>
                 <p style="color: #e2e8f0; margin-bottom: 5px;"><strong>${escapeHtml(deadline.what)}</strong></p>
-                <p style="color: #b0bcc8; margin-bottom: 20px;">${deadline.course} | ${deadline.weight}</p>
+                <p style="color: #b0bcc8; margin-bottom: 20px;">${escapeHtml(deadline.course ?? '')} | ${escapeHtml(String(deadline.weight ?? '—'))}</p>
 
                 <div style="margin-bottom: 20px;">
                     <label style="color: #b0bcc8; display: block; margin-bottom: 8px;">What grade did you get? (Leave blank if N/A)</label>
@@ -774,7 +791,12 @@ function submitDeadlineGrade(index) {
             // Update patient lastVisit (use patientRecords, not deprecated patients store)
             const patient = roadmapData.clinicalData?.patientRecords?.[apt.patientId];
             if (patient) {
-                patient.lastVisit = apt.date;
+                // Forward-only: completing an OLD appointment must not rewind a newer lastVisit
+                const existingLV = (patient.lastVisit || '').split('|')[0].trim();
+                const existingIsISO = /^\d{4}-\d{2}-\d{2}$/.test(existingLV);
+                if (!existingIsISO || existingLV <= (apt.date || '')) {
+                    patient.lastVisit = apt.date;
+                }
                 patient.lastUpdated = new Date().toISOString();
             }
 
@@ -805,14 +827,16 @@ function submitDeadlineGrade(index) {
     clinicalDataDirty = true;
     if (typeof syncClinicalToMonthlyPlanner === 'function') syncClinicalToMonthlyPlanner();
     if (typeof buildCurrentWeekSchedule === 'function') buildCurrentWeekSchedule();
+    if (typeof dpSyncAppointmentsToTimeline === 'function') dpSyncAppointmentsToTimeline();
 
     showToast(grade !== null ? `✓ Completed with ${grade}%` : '✓ Completed');
 }
 
 // Sync deadline completion to grades tab
 function syncDeadlineToGrades(deadline, isComplete, grade = null) {
-    const course = deadline.course.toLowerCase();
-    const what = deadline.what.toLowerCase();
+    const course = (deadline.course || '').toLowerCase();
+    const what = (deadline.what || '').toLowerCase();
+    if (!roadmapData.grades) roadmapData.grades = {};
 
     // Oral Med quizzes
     if (course.includes('oral med')) {
@@ -828,6 +852,7 @@ function syncDeadlineToGrades(deadline, isComplete, grade = null) {
         }
         // Midterm
         if (what.includes('midterm')) {
+            if (!roadmapData.grades.oralmed) roadmapData.grades.oralmed = {};
             if (isComplete && grade !== null) {
                 roadmapData.grades.oralmed.midterm = grade;
             } else {
@@ -836,6 +861,7 @@ function syncDeadlineToGrades(deadline, isComplete, grade = null) {
         }
         // Final
         if (what.includes('final') && !what.includes('passion')) {
+            if (!roadmapData.grades.oralmed) roadmapData.grades.oralmed = {};
             if (isComplete && grade !== null) {
                 roadmapData.grades.oralmed.final = grade;
             } else {

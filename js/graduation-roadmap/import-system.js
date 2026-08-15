@@ -388,10 +388,12 @@ function dedupAppointments() {
             if (a.createdAt && b.createdAt) return a.createdAt.localeCompare(b.createdAt);
             return (a.id || '').localeCompare(b.id || '');
         });
-        // Keep first, delete rest
+        // Keep first, delete rest — tombstone each so cloud merge can't resurrect
         for (let i = 1; i < group.length; i++) {
             const dupeId = group[i].id;
             if (dupeId && appointments[dupeId]) {
+                if (!roadmapData.clinicalData.deletedAppointmentIds) roadmapData.clinicalData.deletedAppointmentIds = {};
+                roadmapData.clinicalData.deletedAppointmentIds[dupeId] = new Date().toISOString();
                 delete appointments[dupeId];
                 removedAptIds.add(dupeId);
                 removed++;

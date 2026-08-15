@@ -124,6 +124,9 @@ let roadmapData = {
     // survive the cross-device key-union merges (same pattern as clinicalData deleted*Ids)
     deletedD4EventIds: {},
     deletedCriticalReminderIds: {},
+    // Tombstones for deleted planner custom tasks / notes (same pattern)
+    deletedPlannerTaskIds: {},
+    deletedPlannerNoteIds: {},
     // Graduation prep tracking
     graduationPrep: {
         externship: { startDate: null, endDate: null, patients: {}, logistics: '', notes: '' },
@@ -223,6 +226,8 @@ function getDefaultRoadmapData() {
         d4Events: {},
         deletedD4EventIds: {},
         deletedCriticalReminderIds: {},
+        deletedPlannerTaskIds: {},
+        deletedPlannerNoteIds: {},
         graduationPrep: {
             externship: { startDate: null, endDate: null, patients: {}, logistics: '', notes: '' },
             cdcaAdex: { sessions: {}, notes: '' },
@@ -329,7 +334,7 @@ function isEmptyState(data) {
         (gradPrep.inbde?.notes || '') !== '' ||
         (gradPrep.jobSearch?.notes || '') !== ''
     );
-    var hasDeletedRecords = getCount(data.clinicalData?.deletedAppointmentIds) > 0 || getCount(data.clinicalData?.deletedProcedureIds) > 0 || getCount(data.clinicalData?.deletedPatientRecordIds) > 0 || getCount(data.deletedD4EventIds) > 0 || getCount(data.deletedCriticalReminderIds) > 0;
+    var hasDeletedRecords = getCount(data.clinicalData?.deletedAppointmentIds) > 0 || getCount(data.clinicalData?.deletedProcedureIds) > 0 || getCount(data.clinicalData?.deletedPatientRecordIds) > 0 || getCount(data.deletedD4EventIds) > 0 || getCount(data.deletedCriticalReminderIds) > 0 || getCount(data.deletedPlannerTaskIds) > 0 || getCount(data.deletedPlannerNoteIds) > 0;
     // d4Events: migration-seeded INBDE/ADEX placeholders (seeded:true, no date) are
     // auto-generated and must NOT count as real data (Guard C). Any user-saved or
     // dated event counts.
@@ -808,7 +813,7 @@ function mergeCompetencies(localComp, cloudComp) {
                     }
                 });
                 if (Object.keys(filteredItems).length > 0) {
-                    localSections[secKey] = { title: cloudSections[secKey].title, items: filteredItems };
+                    localSections[secKey] = { id: cloudSections[secKey].id || secKey, title: cloudSections[secKey].title, items: filteredItems };
                 }
                 return;
             }
@@ -993,12 +998,14 @@ function getCountdown(dateStr) {
     today.setHours(0, 0, 0, 0);
     const target = parseLocalDate(dateStr);
     if (!target || isNaN(target.getTime())) return null;
-    const diff = Math.ceil((target - today) / (1000 * 60 * 60 * 24));
+    // Math.round, not ceil — both dates are local midnight, but a DST boundary
+    // between them makes the raw diff X days ± 1 hour (ceil overcounts fall-back)
+    const diff = Math.round((target - today) / (1000 * 60 * 60 * 24));
     return diff;
 }
 
 function getCountdownBadge(days, isTbd = false) {
-    if (isTbd) {
+    if (isTbd || days == null) {
         return `<span class="find-date">⚠️ FIND DATE</span>`;
     }
     if (days < 0) {
@@ -1143,8 +1150,10 @@ function escapeHtml(str) {
 }
 
 // ==================== TOAST & MODALS ====================
+var _toastHideTimer = null;
 function showToast(message, type, options) {
     const toast = document.getElementById('toast');
+    if (!toast) return;
     if (options && options.html) {
         toast.innerHTML = message;
     } else {
@@ -1154,8 +1163,11 @@ function showToast(message, type, options) {
     if (type === 'error') toast.classList.add('toast-error');
     else if (type === 'warning') toast.classList.add('toast-warning');
     toast.classList.add('show');
-    var duration = (options && options.duration) || (type === 'error' ? 4000 : 2000);
-    setTimeout(() => toast.classList.remove('show'), duration);
+    var duration = (options && options.duration != null) ? options.duration : (type === 'error' ? 4000 : 2000);
+    // Single shared #toast element — clear the previous hide timer so an earlier
+    // short toast can't cut a later long one (e.g. the 5s Undo window) short
+    if (_toastHideTimer) clearTimeout(_toastHideTimer);
+    _toastHideTimer = setTimeout(() => { toast.classList.remove('show'); _toastHideTimer = null; }, duration);
 }
 
 // Custom Alert Modal (replaces blocking alert())
@@ -1518,29 +1530,17 @@ function navigateToEntity(type, id) {
                 if (btn) switchClinicalSubtab('procedures', btn);
             }, 100);
             break;
-        case 'competency':
-            switchTab('competencies');
-            setTimeout(function() {
-                var result = findCompetencyItem(id);
-                if (result) {
-                    var body = document.getElementById('compBody-' + result.catKey);
-                    if (body && !body.classList.contains('expanded')) {
-                        toggleCompCategory(result.catKey);
-                    }
-                    // Scroll to the specific item after category expansion
-                    setTimeout(function() {
-                        var safeId = id.replace(/['"\\]/g, '');
-                        var itemEl = document.querySelector('[data-item-id="' + safeId + '"]');
-                        if (itemEl) {
-                            itemEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                            itemEl.style.transition = 'background 0.3s';
-                            itemEl.style.background = 'rgba(251, 191, 36, 0.15)';
-                            setTimeout(function() { itemEl.style.background = ''; }, 2000);
-                        }
-                    }, 300);
-                }
-            }, 100);
+        case 'competency': {
+            // CV2 contract: delegate to navigateToCompetencyItem (expands via
+            // expandedCompCategories + full render; rows are id="cv2row-{cat}-{item}")
+            var compResult = findCompetencyItem(id);
+            if (compResult) {
+                navigateToCompetencyItem(compResult.catKey, id);
+            } else {
+                switchTab('competencies');
+            }
             break;
+        }
         case 'deadline':
             switchTab('deadlines');
             if (id) {
@@ -1563,15 +1563,18 @@ function navigateToEntity(type, id) {
 function navigateToCompetencyItem(catKey, itemId) {
     switchTab('competencies');
     setTimeout(function() {
-        // Expand the category if not already expanded
-        var body = document.getElementById('compBody-' + catKey);
-        if (body && !body.classList.contains('expanded')) {
-            toggleCompCategory(catKey);
+        // CV2 bodies build lazily on expand — expand via state + full render
+        // (DOM-driven expand can't work: collapsed bodies are empty)
+        if (typeof expandedCompCategories !== 'undefined' && !expandedCompCategories.has(catKey)) {
+            expandedCompCategories.add(catKey);
+            if (typeof persistExpandedState === 'function') persistExpandedState();
         }
-        // Scroll to the specific item after expansion animation
+        if (typeof renderCompetencies === 'function') renderCompetencies();
+        // Scroll to the row once the render has landed
         setTimeout(function() {
-            var safeId = typeof CSS !== 'undefined' && CSS.escape ? CSS.escape(itemId) : itemId.replace(/["\\]/g, '\\$&');
-            var itemEl = document.querySelector('[data-item-id="' + safeId + '"]');
+            var safeKey = (catKey || '').replace(/['"\\]/g, '');
+            var safeItemId = (itemId || '').replace(/['"\\]/g, '');
+            var itemEl = document.getElementById('cv2row-' + safeKey + '-' + safeItemId);
             if (itemEl) {
                 itemEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
                 // Brief highlight flash
@@ -1579,7 +1582,7 @@ function navigateToCompetencyItem(catKey, itemId) {
                 itemEl.style.backgroundColor = 'rgba(59, 130, 246, 0.2)';
                 setTimeout(function() { itemEl.style.backgroundColor = ''; }, 2000);
             }
-        }, 300);
+        }, 150);
     }, 150);
 }
 
@@ -1619,7 +1622,11 @@ function recalculatePatientLastVisit(patientId) {
     var patient = roadmapData.clinicalData.patientRecords[patientId];
     if (!patient) return;
     if (apts.length === 0) {
-        patient.lastVisit = '';
+        // Only clear programmatic (bare YYYY-MM-DD) values — pipe-delimited imported
+        // history ("06/12/26 | Crown | Dr. X") didn't come from appointments, keep it
+        if (/^\d{4}-\d{2}-\d{2}$/.test((patient.lastVisit || '').trim())) {
+            patient.lastVisit = '';
+        }
     } else {
         apts.sort(function(a, b) { return (b.date || '').localeCompare(a.date || ''); });
         patient.lastVisit = apts[0].date;

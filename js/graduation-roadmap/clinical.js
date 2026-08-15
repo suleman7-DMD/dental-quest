@@ -29,7 +29,7 @@ function updateClinicalStats() {
     const procedures = getValues(roadmapData.clinicalData?.completedProcedures);
 
     // Count active patients
-    const activePatients = getValues(patients).filter(p => (p.activeStatus || 'Active') !== 'Inactive').length;
+    const activePatients = getValues(patients).filter(p => !p.archived && (p.activeStatus || 'Active') !== 'Inactive').length;
     document.getElementById('clinicalStatPatients').textContent = activePatients;
 
     // Count this week's appointments
@@ -107,7 +107,7 @@ function renderActiveRoster() {
                 var mdyParts = lastVisitDateStr.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
                 if (mdyParts) lastDate = new Date(parseInt(mdyParts[3]), parseInt(mdyParts[1]) - 1, parseInt(mdyParts[2]));
             }
-            if (lastDate && !isNaN(lastDate.getTime()) && lastDate >= thirtyDaysAgo) { recent.push(item); return; }
+            if (lastDate && !isNaN(lastDate.getTime()) && lastDate >= thirtyDaysAgo) { item._lastVisitTs = lastDate.getTime(); recent.push(item); return; }
         }
     });
 
@@ -117,7 +117,8 @@ function renderActiveRoster() {
     };
     thisWeek.sort(sortByNextApt);
     thisMonth.sort(sortByNextApt);
-    recent.sort(function(a, b) { return (b.patient.lastVisit || '').localeCompare(a.patient.lastVisit || ''); });
+    // Sort by parsed timestamp — raw string compare misorders mixed MM/DD/YYYY and YYYY-MM-DD values
+    recent.sort(function(a, b) { return (b._lastVisitTs || 0) - (a._lastVisitTs || 0); });
 
     function renderGroup(title, items) {
         if (items.length === 0) return '';
@@ -837,7 +838,7 @@ function migrateCompetencyD3D4Split() {
         }
         // Create new section
         var newKey = 'sec_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5);
-        sections[newKey] = { title: sectionTitle, items: {} };
+        sections[newKey] = { id: newKey, title: sectionTitle, items: {} };
         comp[catKey].sections = sections;
         return sections[newKey].items;
     }
@@ -851,7 +852,7 @@ function migrateCompetencyD3D4Split() {
             if (sections[secKeys[s]].title === sectionTitle) return sections[secKeys[s]];
         }
         var newKey = 'sec_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5);
-        sections[newKey] = { title: sectionTitle, items: {} };
+        sections[newKey] = { id: newKey, title: sectionTitle, items: {} };
         comp[catKey].sections = sections;
         return sections[newKey];
     }
@@ -1656,7 +1657,7 @@ function renderCategoryPace(catKey, stats) {
     // Calculate weeks until graduation (May 2027)
     var today = new Date();
     today.setHours(0, 0, 0, 0);
-    var gradDate = new Date(2027, 4, 12); // May 12, 2027
+    var gradDate = new Date(2027, 4, 15); // May 15, 2027 — graduation window opens (matches radar/state.js)
     var weeksLeft = Math.max(1, Math.floor((gradDate - today) / (7 * 86400000)));
     var unitsPerWeek = (remaining / weeksLeft).toFixed(1);
 
@@ -2223,7 +2224,7 @@ function cv2BuildCarryoverAlert(competencies) {
         var safeItemId = (d.item.id || '').replace(/['"\\]/g, '');
         var txt = d.item.text || d.item.id || '';
         if (txt.length > 48) txt = txt.substring(0, 48) + '...';
-        html += '<div class="cv2-carryover-item" onclick="event.stopPropagation();cv2ShowItemDetail(\'' + safeCatKey + '\',\'' + safeItemId + '\')">'
+        html += '<div class="cv2-carryover-item" data-co-item="' + safeItemId + '" onclick="event.stopPropagation();cv2ShowItemDetail(\'' + safeCatKey + '\',\'' + safeItemId + '\')">'
             + '<span class="cv2-carryover-cat">' + escapeHtml(d.catName) + '</span>'
             + '<span class="cv2-carryover-name">' + escapeHtml(txt) + '</span>'
             + '<span class="cv2-carryover-due">was due ' + escapeHtml(d.item.d3Deadline || '') + '</span>'
@@ -2499,7 +2500,10 @@ function cv2UndoLastChange() {
                 var item = sec.items[change.itemId];
                 item.completed = change.prevCompleted ?? 0;
                 item.status = change.prevStatus ?? 'pending';
-                item.lastVerified = change.prevLastVerified ?? null;
+                // Stamp TODAY, not prevLastVerified — mergeCompetencies picks the most
+                // recent lastVerified, so restoring the older stamp would let a
+                // cross-device merge resurrect the change that was just undone
+                item.lastVerified = getLocalDateString(new Date());
                 restored = true;
             }
         });
@@ -2543,6 +2547,13 @@ function cv2UpdateItemRow(catKey, itemId) {
     var wrapper = document.createElement('div');
     wrapper.innerHTML = cv2BuildItemRow(catKey, item);
     if (wrapper.firstChild) row.replaceWith(wrapper.firstChild);
+    // Keep the D3-carryover card's count chip in sync — the card is only rebuilt
+    // on full render, and this fast path deliberately avoids one (a full render
+    // would collapse the user's expanded card)
+    if (item.d3Deadline) {
+        var coProgress = document.querySelector('.cv2-carryover-item[data-co-item="' + safeItemId + '"] .cv2-carryover-progress');
+        if (coProgress) coProgress.textContent = (item.completed ?? 0) + '/' + (item.required ?? 1);
+    }
 }
 
 // Refresh the header stats block in place (falls back to full render)
@@ -2601,7 +2612,9 @@ function adjustCompItem(catKey, itemId, delta) {
                 prevLastVerified: item.lastVerified ?? null
             };
 
-            const newCompleted = Math.max(0, Math.min(item.required, item.completed + delta));
+            // Number()||0 — a missing/undefined completed would make this NaN,
+            // which poisons the count display until a reload
+            const newCompleted = Math.max(0, Math.min(item.required ?? 1, (Number(item.completed) || 0) + delta));
             item.completed = newCompleted;
 
             // V2: Set lastVerified on manual edit
@@ -2679,6 +2692,17 @@ function resetCompetencies() {
         roadmapData.clinicalData.competencies = migrateCompetencies(
             JSON.parse(JSON.stringify(DEFAULT_COMPETENCIES))
         );
+        // Stamp every item lastVerified=TODAY: (a) marks the data as V2 so the
+        // cleared competencyV2Migrated flag can't trigger a re-seed of frozen
+        // April-2026 counts on next init, (b) wins the mergeCompetencies
+        // newest-lastVerified race so another device can't resurrect pre-reset counts
+        var resetStamp = getLocalDateString(new Date());
+        Object.keys(roadmapData.clinicalData.competencies).forEach(function(ck) {
+            getValues(roadmapData.clinicalData.competencies[ck].sections).forEach(function(sec) {
+                if (!sec || !sec.items) return;
+                getValues(sec.items).forEach(function(it) { if (it) it.lastVerified = resetStamp; });
+            });
+        });
         // Clear migration flags so migrations re-run on next init
         localStorage.removeItem('competencyV2Migrated');
         localStorage.removeItem('unifiedPatientStoreDone_v1');
@@ -2832,8 +2856,10 @@ function saveCompItem() {
         showToast(`Added: ${name}`);
     } else {
         // Edit existing item (using object-based storage)
+        let editFound = false;
         for (const sec of getValues(cat.sections)) {
             if (sec.items && sec.items[compItemModalState.itemId]) {
+                editFound = true;
                 const item = sec.items[compItemModalState.itemId];
                 item.text = name;
                 item.required = required;
@@ -2852,6 +2878,12 @@ function saveCompItem() {
 
                 break;
             }
+        }
+        if (!editFound) {
+            // Item vanished mid-edit (deleted here or on another device) — don't report success
+            showToast('Item no longer exists — nothing saved', 'error');
+            closeCompItemModal();
+            return;
         }
         showToast(`Updated: ${name}`);
     }

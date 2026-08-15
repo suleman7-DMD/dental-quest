@@ -844,7 +844,9 @@ function renderDashboard() {
     const sem1End = new Date(2026, 11, 21);    // Dec 21, 2026 — D4 Sem 1 ends
     const sem2Start = new Date(2027, 0, 4);    // Jan 4, 2027 — D4 Sem 2 starts
     const graduation = new Date(2027, 4, 15);  // May 15, 2027 — graduation window opens (May 15–20)
-    const daysTo = function(target) { return Math.max(0, Math.ceil((target - today) / (1000 * 60 * 60 * 24))); };
+    // Math.round, not ceil — a DST boundary between today and target makes the raw
+    // diff X days ± 1 hour, and ceil overcounts across the Nov fall-back
+    const daysTo = function(target) { return Math.max(0, Math.round((target - today) / (1000 * 60 * 60 * 24))); };
     var useTopRailSplit = dashboardUseSplitTopRail();
     var topRailHeight = dashboardTopRailMaxHeight();
 
@@ -1122,7 +1124,7 @@ function renderDashboard() {
         var kd = parseLocalDate(dateStr);
         return kd ? kd.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : '';
     };
-    var tbdSetDateLine = '<div style="font-size:0.65em; margin-top:4px;"><a onclick="switchTab(\'schedule\', event)" style="color:#93c5fd; cursor:pointer; text-decoration:underline;">set date →</a></div>';
+    var tbdSetDateLine = '<div style="font-size:0.65em; margin-top:4px;"><a onclick="switchTab(\'schedule\', event); if (typeof switchScheduleSubTab === \'function\') switchScheduleSubTab(\'monthly\');" style="color:#93c5fd; cursor:pointer; text-decoration:underline;">set date →</a></div>';
 
     // Static semester tiles — auto-retire once past
     if (sem1End >= today) {
@@ -1162,8 +1164,17 @@ function renderDashboard() {
             .filter(function(ev) { return ev && ev.type === type && !ev.tbd && ev.startDate && (ev.endDate || ev.startDate) >= kdTodayStr; })
             .sort(function(a, b) { return a.startDate < b.startDate ? -1 : 1; })[0] || null;
     };
-    kdBoardTile(d4EventList.find(function(ev) { return ev && ev.type === 'inbde'; }), 'INBDE', '139,92,246', '#a78bfa');
-    kdBoardTile(d4EventList.find(function(ev) { return ev && ev.type === 'adex'; }), 'ADEX Clinical Exam', '239,68,68', '#f87171');
+    // Prefer the NEXT upcoming dated event of the type (find() returned whatever was
+    // first by insertion order — wrong once a retake or second sitting exists);
+    // fall back to any event of the type so a TBD entry still gets a TBD tile
+    var kdNextOrAny = function(type) {
+        return kdNextOfType(type)
+            || d4EventList.filter(function(ev) { return ev && ev.type === type; })
+                .sort(function(a, b) { return ((a.startDate || '9999')) < ((b.startDate || '9999')) ? -1 : 1; })[0]
+            || null;
+    };
+    kdBoardTile(kdNextOrAny('inbde'), 'INBDE', '139,92,246', '#a78bfa');
+    kdBoardTile(kdNextOrAny('adex'), 'ADEX Clinical Exam', '239,68,68', '#f87171');
     var kdNextRotation = kdNextOfType('rotation');
     if (kdNextRotation) kdBoardTile(kdNextRotation, 'Next Rotation', '99,102,241', '#818cf8');
     var kdNextMockSim = kdNextOfType('mocksim');
@@ -1221,7 +1232,7 @@ function renderMissingNotesSection() {
         // Sort by date oldest first (most overdue at top)
         pending.sort(function(a, b) { return (a.date || '').localeCompare(b.date || ''); });
         pending.forEach(function(note) {
-            var safeId = note.id.replace(/'/g, "\\'");
+            var safeId = note.id.replace(/['"\\]/g, '');
             html += '<div style="display:flex; align-items:flex-start; gap:10px; padding:8px 10px; background:rgba(15,23,42,0.5); border:1px solid rgba(100,116,139,0.15); border-radius:8px; margin-bottom:6px; font-size:0.85em;">';
             html += '<input type="checkbox" onclick="toggleMissingNoteStatus(\'' + safeId + '\')" style="margin-top:3px; cursor:pointer; width:18px; height:18px; accent-color:' + barColor + ';">';
             html += '<div style="flex:1; min-width:0;">';
@@ -1255,7 +1266,7 @@ function renderMissingNotesSection() {
         html += '<div style="margin-top:6px;">';
         completed.sort(function(a, b) { return (b.completedAt || '').localeCompare(a.completedAt || ''); });
         completed.forEach(function(note) {
-            var safeId = note.id.replace(/'/g, "\\'");
+            var safeId = note.id.replace(/['"\\]/g, '');
             html += '<div style="display:flex; align-items:center; gap:8px; padding:4px 8px; font-size:0.8em; color:#64748b; text-decoration:line-through;">';
             html += '<input type="checkbox" checked onclick="toggleMissingNoteStatus(\'' + safeId + '\')" style="cursor:pointer; width:16px; height:16px; accent-color:#10b981;">';
             html += '<span>' + escapeHtml(note.patientName) + ' — ' + escapeHtml(note.date) + '</span>';
@@ -1314,7 +1325,7 @@ function renderTodoListSection(options) {
         // Sort newest first
         pending.sort(function(a, b) { return (b.addedAt || b.dateAdded || '').localeCompare(a.addedAt || a.dateAdded || ''); });
         pending.forEach(function(item) {
-            var safeId = item.id.replace(/'/g, "\\'");
+            var safeId = item.id.replace(/['"\\]/g, '');
             var badgeColor = getTodoSourceBadgeColor(item.source);
             html += '<div style="display:flex; align-items:flex-start; gap:10px; padding:8px 10px; background:rgba(15,23,42,0.5); border:1px solid rgba(100,116,139,0.15); border-radius:8px; margin-bottom:6px; font-size:0.85em;">';
             html += '<input type="checkbox" onclick="toggleTodoStatus(\'' + safeId + '\')" style="margin-top:3px; cursor:pointer; width:18px; height:18px; accent-color:#7c3aed;">';
@@ -1337,7 +1348,7 @@ function renderTodoListSection(options) {
         html += '<div style="margin-top:6px;">';
         completed.sort(function(a, b) { return (b.completedAt || '').localeCompare(a.completedAt || ''); });
         completed.forEach(function(item) {
-            var safeId = item.id.replace(/'/g, "\\'");
+            var safeId = item.id.replace(/['"\\]/g, '');
             html += '<div style="display:flex; align-items:center; gap:8px; padding:4px 8px; font-size:0.8em; color:#64748b; text-decoration:line-through;">';
             html += '<input type="checkbox" checked onclick="toggleTodoStatus(\'' + safeId + '\')" style="cursor:pointer; width:16px; height:16px; accent-color:#7c3aed;">';
             html += '<span>' + escapeHtml(item.description) + '</span>';

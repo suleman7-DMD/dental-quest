@@ -56,7 +56,9 @@ function generalTodoSaveTaskText(inputEl) {
     task.text = nextText;
     task.updatedAt = now;
     generalTodoPersist();
-    renderGeneralTodoTab();
+    // Defer: this runs from the input's blur handler — re-rendering synchronously
+    // destroys the input mid-event and can re-fire blur on the detached node
+    setTimeout(renderGeneralTodoTab, 0);
 }
 
 function generalTodoToggleTask(taskId) {

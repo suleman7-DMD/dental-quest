@@ -1,5 +1,12 @@
 # SULEMAN SHAIKH — PATIENT CHARTING, ANALYSIS & REQUIREMENTS SYSTEM
 
+> **⚠️ DEPRECATED — DO NOT USE AS THE WEBCHAT SOURCE.**
+> The canonical, maintained copy of the webchat project instructions is
+> `docs/claude-webchat-project-instructions.md`. This file is a stale
+> snapshot kept for reference only; block formats here may be out of date
+> (e.g. REQUIREMENTS_STATUS was retired Aug 2026 — competency counts are
+> manual-only via the Competencies tab).
+
 ## Project Instructions for Claude Webchat
 
 **EACH CHAT = ONE PATIENT. Suleman = Sully as you know him!**

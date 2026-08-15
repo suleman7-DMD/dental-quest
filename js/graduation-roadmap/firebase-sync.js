@@ -451,6 +451,12 @@ function reconstructState(source, options) {
     // --- D4 Events (rotations, didactics, mock sims, INBDE, ADEX) ---
     if (isRemoteWins) {
         result.d4Events = { ...(f.d4Events || {}), ...(s.d4Events || {}) };
+        // Per-event newer-wins: keep the fallback copy when it was edited more recently
+        Object.keys(f.d4Events || {}).forEach(function(id) {
+            var fe = f.d4Events[id];
+            var se = (s.d4Events || {})[id];
+            if (fe && se && (fe.lastEdited || '') > (se.lastEdited || '')) result.d4Events[id] = fe;
+        });
     } else {
         result.d4Events = s.d4Events ?? f.d4Events ?? {};
     }
@@ -460,12 +466,20 @@ function reconstructState(source, options) {
     // deleted*Ids). Purge skipped for source-wins (restore takes source wholesale).
     result.deletedD4EventIds = { ...(s.deletedD4EventIds || {}), ...(f.deletedD4EventIds || {}) };
     result.deletedCriticalReminderIds = { ...(s.deletedCriticalReminderIds || {}), ...(f.deletedCriticalReminderIds || {}) };
+    result.deletedPlannerTaskIds = { ...(s.deletedPlannerTaskIds || {}), ...(f.deletedPlannerTaskIds || {}) };
+    result.deletedPlannerNoteIds = { ...(s.deletedPlannerNoteIds || {}), ...(f.deletedPlannerNoteIds || {}) };
     if (!isSourceWins) {
         Object.keys(result.d4Events || {}).forEach(function(id) {
             if (result.deletedD4EventIds[id]) delete result.d4Events[id];
         });
         Object.keys(result.monthlyPlanner?.criticalReminders || {}).forEach(function(id) {
             if (result.deletedCriticalReminderIds[id]) delete result.monthlyPlanner.criticalReminders[id];
+        });
+        Object.keys(result.monthlyPlanner?.customTasks || {}).forEach(function(id) {
+            if (result.deletedPlannerTaskIds[id]) delete result.monthlyPlanner.customTasks[id];
+        });
+        Object.keys(result.monthlyPlanner?.notes || {}).forEach(function(id) {
+            if (result.deletedPlannerNoteIds[id]) delete result.monthlyPlanner.notes[id];
         });
     }
 
@@ -621,6 +635,14 @@ function mergeRemoteCollectionsIntoLocal(data) {
         ...(roadmapData.deletedCriticalReminderIds || {}),
         ...(data.deletedCriticalReminderIds || {})
     };
+    var deletedPlanTasks = {
+        ...(roadmapData.deletedPlannerTaskIds || {}),
+        ...(data.deletedPlannerTaskIds || {})
+    };
+    var deletedPlanNotes = {
+        ...(roadmapData.deletedPlannerNoteIds || {}),
+        ...(data.deletedPlannerNoteIds || {})
+    };
 
     // Helper: add remote entries that don't exist locally (local wins for conflicts)
     // Optional 3rd param: set of deleted IDs to skip (prevents resurrection of deleted records)
@@ -715,8 +737,8 @@ function mergeRemoteCollectionsIntoLocal(data) {
         if (!roadmapData.monthlyPlanner.completedTasks) roadmapData.monthlyPlanner.completedTasks = {};
         if (!roadmapData.monthlyPlanner.hiddenClinicTasks) roadmapData.monthlyPlanner.hiddenClinicTasks = {};
         if (!roadmapData.monthlyPlanner.overriddenStatic) roadmapData.monthlyPlanner.overriddenStatic = {};
-        addMissing(roadmapData.monthlyPlanner.notes, data.monthlyPlanner.notes);
-        addMissing(roadmapData.monthlyPlanner.customTasks, data.monthlyPlanner.customTasks);
+        addMissing(roadmapData.monthlyPlanner.notes, data.monthlyPlanner.notes, deletedPlanNotes);
+        addMissing(roadmapData.monthlyPlanner.customTasks, data.monthlyPlanner.customTasks, deletedPlanTasks);
         addMissing(roadmapData.monthlyPlanner.completedTasks, data.monthlyPlanner.completedTasks);
         addMissing(roadmapData.monthlyPlanner.hiddenClinicTasks, data.monthlyPlanner.hiddenClinicTasks);
         addMissing(roadmapData.monthlyPlanner.overriddenStatic, data.monthlyPlanner.overriddenStatic);
@@ -724,22 +746,44 @@ function mergeRemoteCollectionsIntoLocal(data) {
             if (!roadmapData.monthlyPlanner.criticalReminders) roadmapData.monthlyPlanner.criticalReminders = {};
             addMissing(roadmapData.monthlyPlanner.criticalReminders, data.monthlyPlanner.criticalReminders, deletedCrems);
         }
-        // Purge reminders tombstoned on another device (deletes win over key-union)
-        if (roadmapData.monthlyPlanner.criticalReminders) {
-            Object.keys(roadmapData.monthlyPlanner.criticalReminders).forEach(function(id) {
-                if (deletedCrems[id]) delete roadmapData.monthlyPlanner.criticalReminders[id];
-            });
-        }
         if (data.monthlyPlanner.currentWeekSchedule) {
             if (!roadmapData.monthlyPlanner.currentWeekSchedule) roadmapData.monthlyPlanner.currentWeekSchedule = {};
             addMissing(roadmapData.monthlyPlanner.currentWeekSchedule, data.monthlyPlanner.currentWeekSchedule);
         }
     }
 
+    // Purge reminders tombstoned on another device (deletes win over key-union).
+    // Runs OUTSIDE the data.monthlyPlanner guard: remote tombstones must apply
+    // even when the remote payload carries no monthlyPlanner object.
+    if (roadmapData.monthlyPlanner?.criticalReminders) {
+        Object.keys(roadmapData.monthlyPlanner.criticalReminders).forEach(function(id) {
+            if (deletedCrems[id]) delete roadmapData.monthlyPlanner.criticalReminders[id];
+        });
+    }
+    // Same for planner custom tasks and notes tombstoned on another device
+    if (roadmapData.monthlyPlanner?.customTasks) {
+        Object.keys(roadmapData.monthlyPlanner.customTasks).forEach(function(id) {
+            if (deletedPlanTasks[id]) delete roadmapData.monthlyPlanner.customTasks[id];
+        });
+    }
+    if (roadmapData.monthlyPlanner?.notes) {
+        Object.keys(roadmapData.monthlyPlanner.notes).forEach(function(id) {
+            if (deletedPlanNotes[id]) delete roadmapData.monthlyPlanner.notes[id];
+        });
+    }
+
     // D4 events (rotations, didactics, mock sims, INBDE, ADEX)
     if (data.d4Events) {
         if (!roadmapData.d4Events) roadmapData.d4Events = {};
         addMissing(roadmapData.d4Events, data.d4Events, deletedD4Evs);
+        // Per-event newer-wins: an event edited more recently on another device
+        // should update the local copy (addMissing only fills missing keys)
+        Object.keys(data.d4Events).forEach(function(id) {
+            var loc = roadmapData.d4Events[id];
+            var rem = data.d4Events[id];
+            if (!loc || !rem || deletedD4Evs[id]) return;
+            if ((rem.lastEdited || '') > (loc.lastEdited || '')) roadmapData.d4Events[id] = rem;
+        });
     }
     // Purge events tombstoned on another device + persist merged tombstones
     if (roadmapData.d4Events) {
@@ -749,6 +793,8 @@ function mergeRemoteCollectionsIntoLocal(data) {
     }
     roadmapData.deletedD4EventIds = deletedD4Evs;
     roadmapData.deletedCriticalReminderIds = deletedCrems;
+    roadmapData.deletedPlannerTaskIds = deletedPlanTasks;
+    roadmapData.deletedPlannerNoteIds = deletedPlanNotes;
 
     // Top-level collections
     if (!roadmapData.customDeadlines) roadmapData.customDeadlines = {};
@@ -761,6 +807,42 @@ function mergeRemoteCollectionsIntoLocal(data) {
     addMissing(roadmapData.editedDeadlines, data.editedDeadlines);
     addMissing(roadmapData.deletedDeadlines, data.deletedDeadlines);
     addMissing(roadmapData.examStudyProgress, data.examStudyProgress);
+
+    // Purge custom deadlines deleted on another device. Tombstones are keyed by
+    // random deleted_* ids, so match on content (date|what|course). Skip entries
+    // RE-CREATED after the tombstone — the deadline id embeds its creation time.
+    (function() {
+        var deletedDlSigs = {};
+        getValues(roadmapData.deletedDeadlines).forEach(function(t) {
+            if (!t || !t.what) return;
+            var sig = (t.date || '') + '|' + (t.what || '') + '|' + (t.course || '');
+            if (!deletedDlSigs[sig] || (t.deletedAt || '') > deletedDlSigs[sig]) {
+                deletedDlSigs[sig] = t.deletedAt || '';
+            }
+        });
+        Object.keys(roadmapData.customDeadlines).forEach(function(id) {
+            var d = roadmapData.customDeadlines[id];
+            if (!d) return;
+            var delAt = deletedDlSigs[(d.date || '') + '|' + (d.what || '') + '|' + (d.course || '')];
+            if (delAt === undefined) return;
+            var createdTs = parseInt(String(id).split('_')[1], 10);
+            if (!isNaN(createdTs) && new Date(delAt).getTime() < createdTs) return;
+            delete roadmapData.customDeadlines[id];
+        });
+    })();
+
+    // Daily planner: fill from remote when local planner is untouched, or merge
+    // remote-only blocks when both sides are planning the SAME day (local wins conflicts)
+    if (data.dailyPlanner) {
+        var localDP = roadmapData.dailyPlanner;
+        if (!localDP || (!localDP.date && getCount(localDP.blocks) === 0)) {
+            roadmapData.dailyPlanner = migrateDailyPlannerBlocks(data.dailyPlanner);
+        } else if ((data.dailyPlanner.date || null) === (localDP.date || null)) {
+            roadmapData.dailyPlanner = migrateDailyPlannerBlocks(localDP);
+            var remoteDP = migrateDailyPlannerBlocks(data.dailyPlanner);
+            addMissing(roadmapData.dailyPlanner.blocks, remoteDP.blocks);
+        }
+    }
 
     // Todo list
     if (data.todoList?.items) {
@@ -1750,6 +1832,10 @@ function forceCloudSync() {
                         saveData();
                         showToast('✅ Kept local data, pushed to cloud', '📱');
                     } else if (choice === 'remote') {
+                        if (isEmptyState(remoteData)) {
+                            showToast('Cloud data looks empty — aborted to protect local data', 'error');
+                            return;
+                        }
                         applyRemoteData(remoteData);
                         showToast('✅ Synced from cloud');
                     } else if (choice === 'merge') {
@@ -1770,6 +1856,12 @@ function forceCloudSync() {
                 return;
             }
 
+            // Guard: an empty/poisoned cloud node must never overwrite local data
+            if (isEmptyState(remoteData)) {
+                showToast('Cloud data looks empty — sync aborted to protect local data', 'error');
+                updateSyncStatus('connected', 'Cloud empty');
+                return;
+            }
             applyRemoteData(remoteData);
             localChangesSinceLastSync = false;
             lastSyncTimestamp = Date.now();
@@ -1806,6 +1898,14 @@ function getCheckpointKey() {
         try { localStorage.setItem(newKey, localStorage.getItem(oldKey)); } catch(e) {}
     }
     return newKey;
+}
+
+// Cloud checkpoints MUST live OUTSIDE userPath: saveData() writes the whole
+// userPath node with .set(), which wipes any /checkpoints subtree on every
+// debounced save. A sibling node survives app-data writes.
+function getCloudCheckpointBase() {
+    if (!userPath) return null;
+    return userPath.replace(/\/graduationRoadmap$/, '') + '/graduationRoadmapCheckpoints';
 }
 
 function getDataCountForCheckpoint(data) {
@@ -1856,7 +1956,7 @@ function createCheckpoint(customName = null) {
 
     // Save to Firebase only (no localStorage — saves ~1MB+ per checkpoint)
     if (firebaseSyncEnabled && database && userPath) {
-        const cloudCheckpointPath = userPath + '/checkpoints/' + checkpoint.id;
+        const cloudCheckpointPath = getCloudCheckpointBase() + '/' + checkpoint.id;
         const cleanCheckpoint = JSON.parse(JSON.stringify(checkpoint));
         if (cleanCheckpoint.data) {
             delete cleanCheckpoint.data._dataLoaded;
@@ -1879,12 +1979,20 @@ async function showCheckpointManager() {
     let checkpoints = [];
     if (firebaseSyncEnabled && database && userPath) {
         try {
-            const snapshot = await database.ref(userPath + '/checkpoints').once('value');
+            const snapshot = await database.ref(getCloudCheckpointBase()).once('value');
             const cloudCheckpoints = snapshot.val();
             if (cloudCheckpoints) {
                 checkpoints = getValues(cloudCheckpoints).filter(c => c && c.id);
-                checkpoints.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
             }
+            // Legacy location (inside userPath — wiped by saves, but merge any survivors)
+            const legacySnap = await database.ref(userPath + '/checkpoints').once('value');
+            const legacyCps = legacySnap.val();
+            if (legacyCps) {
+                const seenIds = new Set(checkpoints.map(c => c.id));
+                getValues(legacyCps).filter(c => c && c.id && !seenIds.has(c.id))
+                    .forEach(c => checkpoints.push(c));
+            }
+            checkpoints.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
         } catch (err) {
             console.error('Failed to load cloud checkpoints:', err);
         }
@@ -1921,7 +2029,7 @@ async function showCheckpointManager() {
                                 <div class="checkpoint-info">
                                     <strong>${escapeHtmlForCheckpoint(cp.name)}</strong>
                                     <span class="checkpoint-date">${new Date(cp.date).toLocaleString()}</span>
-                                    <span class="checkpoint-data">${cp.dataCount}</span>
+                                    <span class="checkpoint-data">${escapeHtmlForCheckpoint(cp.dataCount || '')}</span>
                                 </div>
                                 <div class="checkpoint-actions">
                                     <button class="restore-btn" onclick="restoreCheckpoint(${i})">Restore</button>
@@ -1964,7 +2072,7 @@ function restoreCheckpoint(index) {
     }
 
     showCustomConfirm(
-        `Restore checkpoint?\n\nName: ${escapeHtml(checkpoint.name)}\nDate: ${new Date(checkpoint.date).toLocaleString()}\nData: ${checkpoint.dataCount}\n\nThis will OVERWRITE your current data.\nA backup of current data will be created first.`,
+        `Restore checkpoint?\n\nName: ${checkpoint.name}\nDate: ${new Date(checkpoint.date).toLocaleString()}\nData: ${checkpoint.dataCount}\n\nThis will OVERWRITE your current data.\nA backup of current data will be created first.`,
         function() {
             // Backup current state first
             createCheckpoint(`Pre-restore backup (${new Date().toLocaleString()})`);
@@ -2010,8 +2118,10 @@ function deleteCheckpoint(index) {
 
             // Delete from Firebase
             if (checkpoint && checkpoint.id && firebaseSyncEnabled && database && userPath) {
-                database.ref(userPath + '/checkpoints/' + checkpoint.id).remove()
+                database.ref(getCloudCheckpointBase() + '/' + checkpoint.id).remove()
                     .catch(err => console.error('Failed to delete cloud checkpoint:', err));
+                // Also clear from legacy in-userPath location
+                database.ref(userPath + '/checkpoints/' + checkpoint.id).remove().catch(() => {});
             }
 
             // Refresh modal
@@ -2034,7 +2144,9 @@ function exportCheckpoint(index) {
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `d3-roadmap-checkpoint-${checkpoint.name.replace(/[^a-z0-9]/gi, '-')}-${new Date(checkpoint.date).toISOString().split('T')[0]}.json`;
+    const cpDate = new Date(checkpoint.date);
+    const cpDateStr = isNaN(cpDate) ? 'unknown-date' : cpDate.toISOString().split('T')[0];
+    a.download = `d3-roadmap-checkpoint-${(checkpoint.name || 'checkpoint').replace(/[^a-z0-9]/gi, '-')}-${cpDateStr}.json`;
     a.click();
     URL.revokeObjectURL(url);
 
@@ -2192,7 +2304,7 @@ function importCheckpoint() {
                         if (cp && cp.id) {
                             var cleanCp = JSON.parse(JSON.stringify(cp));
                             if (cleanCp.data) delete cleanCp.data._dataLoaded;
-                            database.ref(userPath + '/checkpoints/' + cp.id).set(cleanCp)
+                            database.ref(getCloudCheckpointBase() + '/' + cp.id).set(cleanCp)
                                 .catch(function(err) { console.error('Failed to save imported checkpoint:', err); });
                         }
                     });
@@ -2241,7 +2353,7 @@ function importAndRestoreDirectly() {
             const dataCount = getDataCountForCheckpoint(data);
 
             showCustomConfirm(
-                `Restore data from "${escapeHtml(file.name)}"?\n\nData found: ${dataCount}\n\nThis will OVERWRITE your current data.\nA backup will be created first.`,
+                `Restore data from "${file.name}"?\n\nData found: ${dataCount}\n\nThis will OVERWRITE your current data.\nA backup will be created first.`,
                 function() {
                     createCheckpoint('Auto-backup before direct restore');
 
@@ -2331,6 +2443,10 @@ function forceUploadToCloud() {
 
                     await database.ref(userPath).set(cleanData);
                     safeLocalStorageSet(STORAGE_KEY, JSON.stringify(roadmapData));
+                    // Cloud now matches local — clear conflict tracking so the next
+                    // forceCloudSync doesn't show a bogus conflict modal
+                    localChangesSinceLastSync = false;
+                    lastSyncTimestamp = Date.now();
                     updateSyncStatus('connected', 'Force uploaded');
                     showToast('Force upload complete!');
                 } catch (err) {

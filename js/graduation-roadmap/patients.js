@@ -501,7 +501,12 @@ function renderPatientsSidebar() {
     // Read search from JS-rendered input, static HTML input, or dataset fallback
     var existingSearch = container.querySelector('.pt-sidebar-search');
     var staticSearch = document.getElementById('ptSidebarSearch');
-    var searchTerm = (existingSearch ? existingSearch.value : (staticSearch ? staticSearch.value : (container.dataset.searchTerm || ''))).toLowerCase();
+    var rawSearchTerm = existingSearch ? existingSearch.value : (staticSearch ? staticSearch.value : (container.dataset.searchTerm || ''));
+    var searchTerm = rawSearchTerm.toLowerCase();
+    // Capture focus + cursor BEFORE innerHTML replacement destroys the input
+    var prevActive = document.activeElement;
+    var searchHadFocus = !!prevActive && (prevActive === existingSearch || prevActive === staticSearch);
+    var searchCursor = searchHadFocus && typeof prevActive.selectionStart === 'number' ? prevActive.selectionStart : null;
 
     // Build filtered items
     var allItems = [];
@@ -601,7 +606,7 @@ function renderPatientsSidebar() {
     // Render sidebar — escapeHtml() used on all user-provided values above
     container.innerHTML = '<div class="pts-sidebar-controls">'
         +   '<input type="text" class="pt-sidebar-search" placeholder="Search patients..." '
-        +     'value="' + escapeHtml(searchTerm) + '" oninput="renderPatientsSidebar()" '
+        +     'value="' + escapeHtml(rawSearchTerm) + '" oninput="renderPatientsSidebar()" '
         +     'autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">'
         +   '<div class="pts-sidebar-btns">'
         +     '<button onclick="openUnifiedImportModal()" class="pts-btn-import">Import</button>'
@@ -610,12 +615,14 @@ function renderPatientsSidebar() {
         + '</div>'
         + '<div class="pts-sidebar-list">' + listHtml + '</div>';
 
-    // Restore cursor focus to search if user was typing
-    if (searchTerm) {
+    // Restore focus + cursor position if the user was typing in the search box
+    // (even when the box was just cleared to empty — losing focus mid-typing is jarring)
+    if (searchHadFocus) {
         var newInput = container.querySelector('.pt-sidebar-search');
         if (newInput) {
             newInput.focus();
-            newInput.setSelectionRange(newInput.value.length, newInput.value.length);
+            var cursorPos = searchCursor != null ? Math.min(searchCursor, newInput.value.length) : newInput.value.length;
+            newInput.setSelectionRange(cursorPos, cursorPos);
         }
     }
 }
@@ -656,7 +663,8 @@ function renderClinicalBrief(patient, patientId) {
         var rendered;
         if (key === 'flaggedConcerns') {
             rendered = escapeHtml(decodeEntities(val));
-            rendered = rendered.replace(/\((\d+)\)\s*/g, function(match, num, offset) {
+            // 1-2 digit markers only — parenthesized years like "(2019)" are clinical text, not list markers
+            rendered = rendered.replace(/\((\d{1,2})\)\s*/g, function(match, num, offset) {
                 return (offset > 0 ? '</li>' : '') + '<li>';
             });
             if (rendered.indexOf('<li>') !== -1) {
@@ -989,9 +997,9 @@ function renderPatientRecord(patientId) {
         +   (Object.keys(reqCategories).length > 0 ? '<div class="ptr-summary-req-badges">' + Object.keys(reqCategories).map(function(cat) { return '<span class="ptr-summary-req-badge">' + escapeHtml(cat) + '</span>'; }).join('') + '</div>' : '')
         + '</div>'
         + '<div class="ptr-summary-right">'
-        +   '<div class="ptr-summary-kv"><div class="ptr-summary-kv-label">Last Visit</div><div class="ptr-summary-kv-value">' + escapeHtml(lastVisitShort) + '</div></div>'
-        +   '<div class="ptr-summary-kv"><div class="ptr-summary-kv-label">Next Visit</div><div class="ptr-summary-kv-value"' + (needsScheduling ? ' style="color:#b45309;"' : '') + '>' + escapeHtml(nextVisitShort) + '</div></div>'
-        +   '<div class="ptr-summary-kv"><div class="ptr-summary-kv-label">Next POE</div><div class="ptr-summary-kv-value">' + escapeHtml(nextPoeShort) + '</div></div>'
+        +   '<div class="ptr-summary-kv"><div class="ptr-summary-kv-label">Last Visit</div><div class="ptr-summary-kv-value">' + escapeHtml(decodeEntities(lastVisitShort)) + '</div></div>'
+        +   '<div class="ptr-summary-kv"><div class="ptr-summary-kv-label">Next Visit</div><div class="ptr-summary-kv-value"' + (needsScheduling ? ' style="color:#b45309;"' : '') + '>' + escapeHtml(decodeEntities(nextVisitShort)) + '</div></div>'
+        +   '<div class="ptr-summary-kv"><div class="ptr-summary-kv-label">Next POE</div><div class="ptr-summary-kv-value">' + escapeHtml(decodeEntities(nextPoeShort)) + '</div></div>'
         + '</div>'
         + '</div>';
 
@@ -1462,7 +1470,7 @@ function renderCountdownRadar() {
 
     var today = new Date();
     today.setHours(0, 0, 0, 0);
-    var target = new Date(2026, 4, 15);
+    var target = new Date(2027, 4, 15); // May 15, 2027 — graduation window opens (May 15–20)
     var daysRemaining = Math.max(0, Math.ceil((target - today) / (1000 * 60 * 60 * 24)));
 
     var competencies = typeof getCompetenciesData === 'function' ? getCompetenciesData() : null;
@@ -1611,6 +1619,7 @@ function parsePatientImportText(text) {
         else if (firstLine.indexOf('MISSING_NOTES') !== -1) header = 'MISSING_NOTES';
         else if (firstLine.indexOf('TODO_LIST') !== -1) header = 'TODO_LIST';
         else if (firstLine.indexOf('CLINICAL_BRIEF') !== -1) header = 'CLINICAL_BRIEF';
+        else if (firstLine.indexOf('REQUIREMENTS_STATUS') !== -1) header = 'REQUIREMENTS_STATUS'; // retired Aug 2026 — counted so preview/confirm can warn instead of silently dropping
         else if (firstLine.indexOf('APPOINTMENTS') !== -1 && firstLine.indexOf('ATTENDED') === -1) header = 'APPOINTMENTS';
 
         // If this block is ONLY a header (no meaningful body content), save as pending for next block
@@ -1647,10 +1656,10 @@ function parsePatientImportText(text) {
                 if (!result.missingNotes) {
                     result.missingNotes = parsedNotes;
                 } else {
-                    // Merge: concat + dedup by ID
+                    // Merge: concat + dedup by ID (parseMissingNotesBlock returns { totalMissing, notes: [] })
                     var existingIds = {};
-                    result.missingNotes.forEach(function(n) { if (n.id) existingIds[n.id] = true; });
-                    parsedNotes.forEach(function(n) { if (!existingIds[n.id]) result.missingNotes.push(n); });
+                    (result.missingNotes.notes || []).forEach(function(n) { if (n.id) existingIds[n.id] = true; });
+                    (parsedNotes.notes || []).forEach(function(n) { if (!existingIds[n.id]) result.missingNotes.notes.push(n); });
                 }
             }
         } else if (effectiveHeader === 'TODO_LIST') {
@@ -1659,15 +1668,19 @@ function parsePatientImportText(text) {
                 if (!result.todoList) {
                     result.todoList = parsedTodo;
                 } else {
-                    // Merge: concat + dedup by ID
+                    // Merge: concat + dedup by ID (parseTodoListBlock returns { dateExported, totalItems, items: [] })
                     var existingTodoIds = {};
-                    result.todoList.forEach(function(t) { if (t.id) existingTodoIds[t.id] = true; });
-                    parsedTodo.forEach(function(t) { if (!existingTodoIds[t.id]) result.todoList.push(t); });
+                    (result.todoList.items || []).forEach(function(t) { if (t.id) existingTodoIds[t.id] = true; });
+                    (parsedTodo.items || []).forEach(function(t) { if (!existingTodoIds[t.id]) result.todoList.items.push(t); });
                 }
             }
         } else if (effectiveHeader === 'CLINICAL_BRIEF') {
             var parsedBrief = parseClinicalBrief(bodyText);
             if (parsedBrief && parsedBrief.chartNumber) result.clinicalBriefs.push(parsedBrief);
+        } else if (effectiveHeader === 'REQUIREMENTS_STATUS') {
+            // Retired format (Aug 2026): competency counts are manual-only. Count it so the
+            // preview/confirm UI can warn the user instead of silently discarding the block.
+            result.retiredStatusBlocks = (result.retiredStatusBlocks || 0) + 1;
         } else if (effectiveHeader === 'APPOINTMENTS') {
             // APPOINTMENTS header detected — subsequent blocks will be appointment blocks
             // This block itself might be empty (just the header), handled by pendingHeader above
@@ -1810,7 +1823,9 @@ function parsePatientUpdate(text) {
 }
 
 function parseRequirementsMatch(text) {
-    var result = { canFulfill: [], completedToday: [], chartNumber: '', name: '', highValue: false, priorityNotes: '' };
+    // highValue starts null (= "line absent") so an abbreviated block without a HIGH_VALUE
+    // line preserves the patient's existing flag instead of silently resetting it to false
+    var result = { canFulfill: [], completedToday: [], chartNumber: '', name: '', highValue: null, priorityNotes: '' };
     var lines = text.split('\n');
     var inSection = null; // 'canFulfill', 'completedToday', or 'priorityNotes'
 
@@ -2235,8 +2250,20 @@ function previewPatientImport() {
         });
     }
 
+    // Retired Format D warning — shown alongside whatever else parsed (does NOT enable import by itself)
+    if (parsed.retiredStatusBlocks) {
+        html += '<div style="padding:10px; margin-bottom:6px; background:#451a03; border-radius:6px; border-left:3px solid #f59e0b;">'
+            + '<div style="color:#fbbf24; font-weight:600; font-size:0.9em;">⚠️ REQUIREMENTS_STATUS (' + parsed.retiredStatusBlocks + ') — RETIRED FORMAT, WILL BE IGNORED</div>'
+            + '<div style="color:#fcd34d; font-size:0.8em; margin-top:2px;">Competency counts are manual-only now — update them in the Competencies tab. Other blocks in this paste import normally.</div>'
+            + '</div>';
+    }
+
     if (!hasContent) {
-        html = '<div style="color:#f87171; padding:16px; text-align:center;">No parseable content found. Make sure the text uses the correct format with --- delimiters.</div>';
+        if (parsed.retiredStatusBlocks) {
+            html += '<div style="color:#f87171; padding:12px; text-align:center;">Nothing importable in this paste — REQUIREMENTS_STATUS is retired.</div>';
+        } else {
+            html = '<div style="color:#f87171; padding:16px; text-align:center;">No parseable content found. Make sure the text uses the correct format with --- delimiters.</div>';
+        }
     }
 
     preview.innerHTML = html;
@@ -2263,6 +2290,10 @@ function confirmUnifiedImport() {
     }
     if (!parsed) return;
 
+    // Ensure the record store is ATTACHED to roadmapData before mutating — getPatientRecords()
+    // returns a detached `|| {}` literal when patientRecords is missing (pre-load fresh device),
+    // and every write into it would be silently lost at save time.
+    if (!roadmapData.clinicalData.patientRecords) roadmapData.clinicalData.patientRecords = {};
     var records = getPatientRecords();
     var created = 0;
     var updated = 0;
@@ -2351,7 +2382,7 @@ function confirmUnifiedImport() {
             // CIS v2 fix: Always store metadata, even when canFulfill is empty
             records[id].importedRequirements = rm.canFulfill || [];
             if (rm.priorityNotes) records[id].priorityNotes = rm.priorityNotes;
-            if (rm.highValue !== undefined) records[id].highValue = rm.highValue;
+            if (rm.highValue != null) records[id].highValue = rm.highValue;
         } else {
             reqMatchSkipped++;
             console.warn('[IMPORT] REQUIREMENTS_MATCH skipped — no patient found for chart: ' + (rm.chartNumber || '?') + ', name: ' + (rm.name || '?'));
@@ -2506,7 +2537,8 @@ function confirmUnifiedImport() {
         }
         var existingNotes = roadmapData.clinicalData.missingNotes;
         parsed.missingNotes.notes.forEach(function(note) {
-            var id = note.id;
+            // Strip quote/backslash chars — these ids land in onclick="...('id')" strings later
+            var id = note.id ? String(note.id).replace(/['"\\]/g, '') : '';
             if (!id) return;
             // Dedup: if exists and pending, skip. If exists and completed, leave completed.
             if (existingNotes[id]) return;
@@ -2537,7 +2569,8 @@ function confirmUnifiedImport() {
         }
         var existingTodos = roadmapData.todoList.items;
         parsed.todoList.items.forEach(function(item) {
-            var id = item.id;
+            // Strip quote/backslash chars — these ids land in onclick="...('id')" strings later
+            var id = item.id ? String(item.id).replace(/['"\\]/g, '') : '';
             if (!id) return;
             // Dedup: if exists and pending, skip. If exists and completed, leave completed.
             if (existingTodos[id]) return;
@@ -2651,7 +2684,8 @@ function confirmUnifiedImport() {
     if (skipped > 0) msg += skipped + ' item(s) skipped (no matching patient). ';
     if (totalRemoved > 0) msg += totalRemoved + ' obsolete requirement ID(s) skipped. ';
     if (allUnmatched.length > 0) msg += allUnmatched.length + ' unrecognized ID(s): ' + allUnmatched.join(', ') + '. ';
-    var hasWarnings = skipped > 0 || totalRemoved > 0 || allUnmatched.length > 0;
+    if (parsed.retiredStatusBlocks) msg += parsed.retiredStatusBlocks + ' REQUIREMENTS_STATUS block(s) IGNORED (retired format — counts are manual-only). ';
+    var hasWarnings = skipped > 0 || totalRemoved > 0 || allUnmatched.length > 0 || !!parsed.retiredStatusBlocks;
     showToast(msg || 'Import complete', hasWarnings ? 'warning' : undefined);
 
     // Post-import integrity check (console-only)
@@ -2909,41 +2943,34 @@ function applyRequirementCheckoffs(items, importContext) {
                 var itemList = getValues(sec.items);
                 for (var i = 0; i < itemList.length; i++) {
                     if ((itemList[i].id || '').toLowerCase() === (resolvedId || '').toLowerCase()) {
-                        // Locate the matched item in actual storage (handle object-based storage)
-                        if (typeof sec.items === 'object' && !Array.isArray(sec.items)) {
-                            for (var key in sec.items) {
-                                if (sec.items[key] && (sec.items[key].id || '').toLowerCase() === (resolvedId || '').toLowerCase()) {
-                                    // COMPLETED_TODAY (isDelta): create procedure record but do NOT touch competency counts
-                                    if (item.isDelta && typeof recordProcedure === 'function') {
-                                        var procDate = ctx.date || item.date || getLocalDateString();
-                                        var patientName = ctx.patientName || item.patientName || '';
-                                        var patientId = ctx.patientId || item.patientId || null;
+                        // COMPLETED_TODAY (isDelta): create procedure record but do NOT touch competency counts.
+                        // Works for both array- and object-shaped sec.items — the matched item itself
+                        // (itemList[i]) has everything we need; no storage-key lookup required.
+                        if (item.isDelta && typeof recordProcedure === 'function') {
+                            var procDate = ctx.date || item.date || getLocalDateString();
+                            var patientName = ctx.patientName || item.patientName || '';
+                            var patientId = ctx.patientId || item.patientId || null;
 
-                                        // Dedup: check if procedure already recorded for same req+date+patient
-                                        var procs = getValues(roadmapData.clinicalData?.completedProcedures);
-                                        var reqIdLower = (resolvedId || '').toLowerCase();
-                                        // V2: dedup by procedure description + date + patient, since competencyItemIds is empty
-                                        var procDesc = item.note || sec.items[key].text || 'Imported procedure';
-                                        var isDupe = procs.some(function(p) {
-                                            return p.procedure === procDesc
-                                                && p.date === procDate
-                                                && (p.patientId === patientId || p.patientName === patientName);
-                                        });
+                            // Dedup: check if procedure already recorded for same req+date+patient
+                            var procs = getValues(roadmapData.clinicalData?.completedProcedures);
+                            // V2: dedup by procedure description + date + patient, since competencyItemIds is empty
+                            var procDesc = item.note || itemList[i].text || 'Imported procedure';
+                            var isDupe = procs.some(function(p) {
+                                return p.procedure === procDesc
+                                    && p.date === procDate
+                                    && (p.patientId === patientId || p.patientName === patientName);
+                            });
 
-                                        if (!isDupe && (patientName || item.note)) {
-                                            recordProcedure({
-                                                patientId: patientId,
-                                                patientName: patientName,
-                                                date: procDate,
-                                                procedureType: catKey,
-                                                procedure: item.note || sec.items[key].text || 'Imported procedure',
-                                                competencyItemIds: [],
-                                                notes: 'Imported via requirement checkoff'
-                                            });
-                                        }
-                                    }
-                                    break;
-                                }
+                            if (!isDupe && (patientName || item.note)) {
+                                recordProcedure({
+                                    patientId: patientId,
+                                    patientName: patientName,
+                                    date: procDate,
+                                    procedureType: catKey,
+                                    procedure: procDesc,
+                                    competencyItemIds: [],
+                                    notes: 'Imported via requirement checkoff'
+                                });
                             }
                         }
                         return;
@@ -3628,12 +3655,12 @@ function renderMiniReview() {
         html += '<div class="mr-visits">';
         html += '<div class="mr-visit-box"><div class="mr-visit-label">Last Visit</div>';
         if (lastVisitDate) {
-            html += '<div class="mr-visit-value">' + escapeHtml(lastVisitDate) + '</div>';
+            html += '<div class="mr-visit-value">' + escapeHtml(decodeEntities(lastVisitDate)) + '</div>';
             if (lastVisitProc) {
-                html += '<div class="mr-visit-detail">' + escapeHtml(lastVisitProc) + '</div>';
+                html += '<div class="mr-visit-detail">' + escapeHtml(decodeEntities(lastVisitProc)) + '</div>';
             }
             if (lastVisitProvider) {
-                html += '<div class="mr-visit-provider">' + escapeHtml(lastVisitProvider) + '</div>';
+                html += '<div class="mr-visit-provider">' + escapeHtml(decodeEntities(lastVisitProvider)) + '</div>';
             }
         } else {
             html += '<div class="mr-visit-value mr-none">None recorded</div>';
@@ -3641,9 +3668,9 @@ function renderMiniReview() {
         html += '</div>';
         html += '<div class="mr-visit-box"><div class="mr-visit-label">Next Visit</div>';
         if (nextVisitDate) {
-            html += '<div class="mr-visit-value">' + escapeHtml(nextVisitDate) + '</div>';
+            html += '<div class="mr-visit-value">' + escapeHtml(decodeEntities(nextVisitDate)) + '</div>';
             if (nextVisitProc) {
-                html += '<div class="mr-visit-detail">' + escapeHtml(nextVisitProc) + '</div>';
+                html += '<div class="mr-visit-detail">' + escapeHtml(decodeEntities(nextVisitProc)) + '</div>';
             }
         } else {
             html += '<div class="mr-visit-value mr-none">Not scheduled</div>';

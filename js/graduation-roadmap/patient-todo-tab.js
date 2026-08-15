@@ -144,7 +144,9 @@ function patientTodoSaveTaskText(inputEl) {
     task.updatedAt = now;
     entry.lastUpdated = now;
     patientTodoPersist();
-    renderPatientTodoTab();
+    // Defer: this runs from the input's blur handler — re-rendering synchronously
+    // destroys the input mid-event and can re-fire blur on the detached node
+    setTimeout(renderPatientTodoTab, 0);
 }
 
 function patientTodoToggleTask(patientId, taskId) {

@@ -454,8 +454,9 @@ function mpCreateCalendarGrid(week) {
     });
 
     // Smart hour range: show 1 hour before first task to 1 hour after last task
-    // But always show at least 6am-9pm if no tasks
-    const rangeStart = timedTasks.length > 0 ? Math.max(6, minHour - 1) : 6;
+    // But always show at least 6am-9pm if no tasks. No 6am floor — pre-6AM
+    // tasks must still land inside the rendered hour rows.
+    const rangeStart = timedTasks.length > 0 ? Math.max(0, minHour - 1) : 6;
     const rangeEnd = timedTasks.length > 0 ? Math.min(23, maxHour + 1) : 21;
 
     // Pixel heights for Google Calendar-style layout (responsive)
@@ -1092,8 +1093,10 @@ function _mpDeleteCurrentTaskConfirmed() {
         }
         showToast('Clinic task hidden from planner');
     } else {
-        // Delete regular custom task
+        // Delete regular custom task — tombstone first so cloud merge can't resurrect it
         if (roadmapData.monthlyPlanner?.customTasks?.[mpCurrentTask.id]) {
+            if (!roadmapData.deletedPlannerTaskIds) roadmapData.deletedPlannerTaskIds = {};
+            roadmapData.deletedPlannerTaskIds[mpCurrentTask.id] = new Date().toISOString();
             delete roadmapData.monthlyPlanner.customTasks[mpCurrentTask.id];
             showToast('Task deleted');
         }
@@ -1300,6 +1303,9 @@ function mpDeleteNote(noteId) {
     showCustomConfirm('Delete this note?', function() {
         if (!roadmapData.monthlyPlanner?.notes?.[noteId]) return;
 
+        // Tombstone before delete so cloud merge can't resurrect the note
+        if (!roadmapData.deletedPlannerNoteIds) roadmapData.deletedPlannerNoteIds = {};
+        roadmapData.deletedPlannerNoteIds[noteId] = new Date().toISOString();
         delete roadmapData.monthlyPlanner.notes[noteId];
         safeLocalStorageSet(STORAGE_KEY, JSON.stringify(roadmapData));
         saveData();
@@ -1395,30 +1401,44 @@ function migrateD4EventsSeed() {
     }
     if (!roadmapData.monthlyPlanner.criticalReminders) roadmapData.monthlyPlanner.criticalReminders = {};
     var now = new Date().toISOString();
+    var seededAny = false;
+    // Deterministic ids: two devices seeding independently produce the SAME keys,
+    // so cross-device merge can't duplicate the placeholders. Tombstone checks keep
+    // deliberately-deleted seeds dead after restore paths clear the seed flag.
     if (getCount(roadmapData.d4Events) === 0) {
-        [['inbde', 'INBDE'], ['adex', 'ADEX Clinical Exam']].forEach(function(pair) {
-            var id = generateId('d4ev');
-            roadmapData.d4Events[id] = {
-                id: id, type: pair[0], title: pair[1],
+        [['d4ev_seed_inbde', 'inbde', 'INBDE'], ['d4ev_seed_adex', 'adex', 'ADEX Clinical Exam']].forEach(function(t) {
+            if (roadmapData.deletedD4EventIds && roadmapData.deletedD4EventIds[t[0]]) return;
+            roadmapData.d4Events[t[0]] = {
+                id: t[0], type: t[1], title: t[2],
                 startDate: null, endDate: null, time: null, location: '', notes: '',
                 tbd: true, seeded: true, createdAt: now, lastEdited: now
             };
+            seededAny = true;
         });
     }
     if (getCount(roadmapData.monthlyPlanner.criticalReminders) === 0) {
-        ['🦷 INBDE — date TBD, set it in D4 Schedule',
-         '🦷 ADEX Clinical Exam — date TBD; mock sims precede it'].forEach(function(text) {
-            var id = generateId('crem');
-            roadmapData.monthlyPlanner.criticalReminders[id] = { id: id, text: text, seeded: true, createdAt: now };
+        [['crem_seed_inbde', '🦷 INBDE — date TBD, set it in D4 Schedule'],
+         ['crem_seed_adex', '🦷 ADEX Clinical Exam — date TBD; mock sims precede it']].forEach(function(t) {
+            if (roadmapData.deletedCriticalReminderIds && roadmapData.deletedCriticalReminderIds[t[0]]) return;
+            roadmapData.monthlyPlanner.criticalReminders[t[0]] = { id: t[0], text: t[1], seeded: true, createdAt: now };
+            seededAny = true;
         });
     }
     localStorage.setItem('d4EventsSeeded_v1', '1');
+    if (seededAny) {
+        safeLocalStorageSet(STORAGE_KEY, JSON.stringify(roadmapData));
+        // Seed runs after initUI's renders — refresh the surfaces that show it
+        if (typeof d4RenderScheduleCard === 'function') { try { d4RenderScheduleCard(); } catch(e) {} }
+        if (typeof mpRenderAllCalendars === 'function') { try { mpRenderAllCalendars(); } catch(e) {} }
+        if (typeof renderDashboard === 'function') { try { renderDashboard(); } catch(e) {} }
+    }
 }
 
 function mpFormatShortDate(dateStr) {
     var monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    // parseLocalDate(null) returns null and isNaN(null) is false — guard both
     var d = parseLocalDate(dateStr);
-    if (isNaN(d)) return dateStr;
+    if (!d || isNaN(d)) return dateStr || '';
     return monthNames[d.getMonth()] + ' ' + d.getDate() + (d.getFullYear() !== new Date().getFullYear() ? ' ' + d.getFullYear() : '');
 }
 
@@ -1786,9 +1806,16 @@ document.addEventListener('keydown', function(e) {
             mpCloseTaskModal();
             return;
         }
+        // lectureImportModal is STATIC HTML (always in the DOM) — hide it, never
+        // remove() it, or the import feature dies until reload
+        const lectureModal = document.getElementById('lectureImportModal');
+        if (lectureModal && lectureModal.style.display === 'flex') {
+            lectureModal.style.display = 'none';
+            return;
+        }
         // Dynamic modals (created at runtime)
         const dynamicModals = ['addDeadlineModal', 'gradeInputModal', 'addPatientModal',
-            'addAppointmentModal', 'lectureImportModal', 'confirmModal',
+            'addAppointmentModal', 'confirmModal',
             'addCompItemModal', 'editCompItemModal'];
         for (const modalId of dynamicModals) {
             const modal = document.getElementById(modalId);
@@ -1806,7 +1833,7 @@ document.addEventListener('keydown', function(e) {
 
     // 'N' key to focus note input when on Monthly tab
     if (e.key === 'n' || e.key === 'N') {
-        const monthlyTab = document.getElementById('monthlyPlannerTab');
+        const monthlyTab = document.getElementById('tab-monthlyplanner');
         if (monthlyTab && monthlyTab.style.display !== 'none') {
             const noteInput = document.getElementById('mpNewNote');
             if (noteInput) {
