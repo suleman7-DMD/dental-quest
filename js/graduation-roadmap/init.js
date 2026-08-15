@@ -1057,13 +1057,9 @@ function renderDashboard() {
     // === ROW 2: ACTION ITEMS — Missing Notes + To-Do List ===
     html += '<div id="dashMissingNotesContainer">' + renderMissingNotesSection() + '</div>';
 
-    // === ROW 3: Do Today Widget ===
-    html += '<div class="mission-card" style="background:rgba(30,41,59,0.8); border:1px solid rgba(245,158,11,0.3); border-radius:14px; padding:16px; margin-bottom:16px;">';
-    html += '<div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:12px;">';
-    html += '<h3 style="color:#fbbf24; margin:0; font-size:1.1em;">⚡ Do Today</h3>';
-    html += '<span id="doTodayCount" class="empty" style="background:#f59e0b; color:#000; font-weight:700; padding:2px 8px; border-radius:10px; font-size:0.85em;">0</span>';
-    html += '</div>';
-    html += '<div id="doTodayTasksList"></div>';
+    // === ROW 3: To-Do Widget (switchable: index.html synced vs roadmap manual) ===
+    html += '<div class="mission-card" id="mcTodoCard" style="background:rgba(30,41,59,0.8); border:1px solid rgba(245,158,11,0.3); border-radius:14px; padding:16px; margin-bottom:16px;">';
+    html += renderMcTodoCardInner();
     html += '</div>';
 
     // === ROW 3: Deadline Windows ===
@@ -1415,6 +1411,133 @@ function dashboardAddTodo() {
     var newInput = document.getElementById('todoQuickAdd');
     if (newInput) newInput.focus();
     showToast('Added: ' + text, 'info');
+}
+
+// ==================== MISSION CONTROL TO-DO VIEW SWITCHER ====================
+// One card, two views: 'synced' = index.html "Do Today" tasks via the realtime
+// cross-app listener; 'manual' = the roadmap-only General To-Do board (same
+// data as the To-Do List landing tab). View pref is UI-only — plain
+// localStorage key, never part of roadmapData/Firebase state.
+var mcTodoView = (function() {
+    try { return localStorage.getItem('dentalQuestMcTodoView') === 'manual' ? 'manual' : 'synced'; } catch (e) { return 'synced'; }
+})();
+
+function renderMcTodoCardInner() {
+    var isSynced = mcTodoView !== 'manual';
+    var pillOn = 'background:#f59e0b; color:#000; font-weight:700;';
+    var pillOff = 'background:transparent; color:#94a3b8; font-weight:600;';
+    var html = '';
+    html += '<div style="display:flex; align-items:center; justify-content:space-between; gap:8px; margin-bottom:12px; flex-wrap:wrap;">';
+    html += '<h3 style="color:#fbbf24; margin:0; font-size:1.1em;">' + (isSynced ? '⚡ Do Today' : '📝 Roadmap To-Do') + '</h3>';
+    html += '<div style="display:flex; align-items:center; gap:8px;">';
+    html += '<div style="display:flex; background:rgba(15,23,42,0.6); border:1px solid rgba(100,116,139,0.25); border-radius:8px; overflow:hidden;">';
+    html += '<button onclick="mcSwitchTodoView(\'synced\')" style="border:none; cursor:pointer; padding:4px 10px; font-size:0.78em; ' + (isSynced ? pillOn : pillOff) + '">⚡ Synced</button>';
+    html += '<button onclick="mcSwitchTodoView(\'manual\')" style="border:none; cursor:pointer; padding:4px 10px; font-size:0.78em; ' + (!isSynced ? pillOn : pillOff) + '">📝 Roadmap</button>';
+    html += '</div>';
+    if (isSynced) {
+        html += '<span id="doTodayCount" class="empty" style="background:#f59e0b; color:#000; font-weight:700; padding:2px 8px; border-radius:10px; font-size:0.85em;">0</span>';
+    } else {
+        var mcOpenCount = generalTodoGetVisibleTasks(getGeneralTodoBoard()).filter(function(t) { return !t.done; }).length;
+        html += '<span style="background:#f59e0b; color:#000; font-weight:700; padding:2px 8px; border-radius:10px; font-size:0.85em;' + (mcOpenCount === 0 ? ' opacity:0.5;' : '') + '">' + mcOpenCount + '</span>';
+    }
+    html += '</div>';
+    html += '</div>';
+    if (isSynced) {
+        html += '<div id="doTodayTasksList"></div>';
+        html += '<div style="color:#64748b; font-size:0.72em; margin-top:8px; text-align:right;">Live-synced with Dental Quest "Do Today" tasks</div>';
+    } else {
+        html += renderMcManualTodoList();
+        html += '<div style="color:#64748b; font-size:0.72em; margin-top:8px; text-align:right;">Roadmap-only list — same data as the To-Do List tab</div>';
+    }
+    return html;
+}
+
+function renderMcManualTodoList() {
+    var tasks = generalTodoGetVisibleTasks(getGeneralTodoBoard());
+    var open = tasks.filter(function(t) { return !t.done; });
+    var done = tasks.filter(function(t) { return t.done; });
+    var html = '';
+    html += '<div style="display:flex; gap:6px; margin-bottom:10px;">';
+    html += '<input id="mcManualTodoInput" type="text" placeholder="Add a roadmap task..." '
+        + 'onkeydown="if(event.key===\'Enter\'){event.preventDefault();mcManualTodoAdd();}" '
+        + 'style="flex:1; background:rgba(15,23,42,0.6); border:1px solid rgba(100,116,139,0.2); border-radius:8px; padding:8px 12px; color:#e2e8f0; font-size:0.85em; outline:none;">';
+    html += '<button onclick="mcManualTodoAdd()" style="background:#f59e0b; color:#000; border:none; border-radius:8px; padding:8px 14px; font-size:0.85em; cursor:pointer; font-weight:700; white-space:nowrap;">+ Add</button>';
+    html += '</div>';
+    if (open.length === 0) {
+        html += '<div style="color:#94a3b8; font-size:0.85em; padding:8px 0; text-align:center;">No open roadmap tasks. Add one above.</div>';
+    } else {
+        open.forEach(function(task) {
+            var safeId = String(task.id || '').replace(/['"\\]/g, '');
+            html += '<div style="display:flex; align-items:flex-start; gap:10px; padding:8px 10px; background:rgba(15,23,42,0.5); border:1px solid rgba(100,116,139,0.15); border-radius:8px; margin-bottom:6px; font-size:0.85em;">';
+            html += '<input type="checkbox" onclick="mcManualTodoToggle(\'' + safeId + '\')" style="margin-top:2px; cursor:pointer; width:18px; height:18px; accent-color:#f59e0b;">';
+            html += '<div style="flex:1; min-width:0; color:#e2e8f0; font-weight:500; overflow-wrap:anywhere;">' + escapeHtml(task.text || '') + '</div>';
+            html += '<button onclick="mcManualTodoDelete(\'' + safeId + '\')" title="Delete task" style="background:none; border:none; color:#64748b; cursor:pointer; font-size:1.1em; line-height:1; padding:0 2px;">&times;</button>';
+            html += '</div>';
+        });
+    }
+    if (done.length > 0) {
+        html += '<details style="margin-top:10px;">';
+        html += '<summary style="color:#64748b; font-size:0.8em; cursor:pointer; user-select:none;">Completed (' + done.length + ')</summary>';
+        html += '<div style="margin-top:6px;">';
+        done.forEach(function(task) {
+            var safeId = String(task.id || '').replace(/['"\\]/g, '');
+            html += '<div style="display:flex; align-items:center; gap:8px; padding:4px 8px; font-size:0.8em; color:#64748b; text-decoration:line-through;">';
+            html += '<input type="checkbox" checked onclick="mcManualTodoToggle(\'' + safeId + '\')" style="cursor:pointer; width:16px; height:16px; accent-color:#f59e0b;">';
+            html += '<span>' + escapeHtml(task.text || '') + '</span>';
+            html += '</div>';
+        });
+        html += '</div>';
+        html += '</details>';
+    }
+    return html;
+}
+
+function mcSwitchTodoView(view) {
+    mcTodoView = view === 'manual' ? 'manual' : 'synced';
+    try { localStorage.setItem('dentalQuestMcTodoView', mcTodoView); } catch (e) {}
+    rerenderMcTodoCard();
+}
+
+function rerenderMcTodoCard() {
+    var card = document.getElementById('mcTodoCard');
+    if (!card) return;
+    // NOTE: innerHTML is safe here — both views build HTML from escapeHtml()-sanitized data
+    card.innerHTML = renderMcTodoCardInner();
+    if (mcTodoView !== 'manual') renderDoTodayTasks();
+}
+
+function mcManualTodoToggle(taskId) {
+    generalTodoToggleTask(taskId);
+    rerenderMcTodoCard();
+}
+
+function mcManualTodoDelete(taskId) {
+    generalTodoDeleteTask(taskId);
+    rerenderMcTodoCard();
+}
+
+function mcManualTodoAdd() {
+    var input = document.getElementById('mcManualTodoInput');
+    if (!input) return;
+    var text = input.value.trim();
+    if (!text) { input.focus(); return; }
+    var board = getGeneralTodoBoard();
+    var taskId = generateId('gtodo');
+    var now = new Date().toISOString();
+    board.tasks[taskId] = {
+        id: taskId,
+        text: text,
+        done: false,
+        createdAt: now,
+        updatedAt: now,
+        completedAt: null,
+        deletedAt: null
+    };
+    generalTodoPersist();
+    renderGeneralTodoTab();
+    rerenderMcTodoCard();
+    var newInput = document.getElementById('mcManualTodoInput');
+    if (newInput) newInput.focus();
 }
 
 // ==================== HEADLINE COUNTER HELPERS ====================
