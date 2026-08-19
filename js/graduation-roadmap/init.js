@@ -737,20 +737,9 @@ function renderDashboard() {
         }
     };
 
-    const aptPct = clinicHeadlines.appointments.target > 0
-        ? Math.min(100, Math.round((clinicHeadlines.appointments.completed / clinicHeadlines.appointments.target) * 100))
-        : 0;
-    const procPct = clinicHeadlines.procedures.target > 0
-        ? Math.min(100, Math.round((clinicHeadlines.procedures.completed / clinicHeadlines.procedures.target) * 100))
-        : 0;
-
     // Graduation readiness
     var readiness = calculateGraduationReadiness();
     var gaps = getCompetencyGaps();
-
-    // Pace projections
-    var aptPace = calculatePaceProjection(smartApts.total, clinicHeadlines.appointments.target);
-    var procPace = calculatePaceProjection(smartProcs.total, clinicHeadlines.procedures.target);
 
     // Build competency category progress grid
     const competencies = getCompetenciesData();
@@ -895,77 +884,6 @@ function renderDashboard() {
     html += '<div style="display:grid; grid-template-columns:repeat(auto-fill, minmax(150px, 1fr)); gap:8px; margin-bottom:12px;">';
     html += categoryProgressHTML;
     html += '</div>';
-
-    // SECONDARY: clinic volume counters — supporting metrics, no semester framing
-    html += '<div style="font-size:0.9em; color:#93c5fd; font-weight:600; margin:4px 0 10px;">🏥 Clinic Volume</div>';
-    html += '<div style="display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-bottom:16px;">';
-
-    // Appointments counter — smart aggregation from all sources
-    html += '<div style="background:rgba(59,130,246,0.1); border:1px solid rgba(59,130,246,0.2); border-radius:10px; padding:14px;">';
-    html += '<div style="font-size:0.85em; color:#93c5fd; margin-bottom:8px; font-weight:600;">Appointments</div>';
-    html += '<div style="display:flex; align-items:center; gap:6px; margin-bottom:8px;">';
-    html += '<span style="font-size:1.4em; font-weight:700; color:#e2e8f0;">' + clinicHeadlines.appointments.completed + '</span>';
-    html += '<span style="color:#64748b; font-size:1.1em;">/</span>';
-    html += '<input type="number" id="headline-apt-target" value="' + clinicHeadlines.appointments.target + '" min="0" '
-        + 'onchange="updateHeadlineTarget(\'appointments\', this.value)" '
-        + 'style="width:50px; background:rgba(30,41,59,0.8); border:1px solid rgba(100,116,139,0.4); border-radius:6px; color:#e2e8f0; padding:4px 6px; text-align:center; font-size:1.1em;">';
-    html += '</div>';
-    html += '<div style="background:rgba(100,116,139,0.3); border-radius:4px; height:6px; overflow:hidden;">';
-    html += '<div style="background:#3b82f6; height:100%; width:' + aptPct + '%; transition:width 0.3s;"></div>';
-    html += '</div>';
-    // Source breakdown
-    var aptBreakdown = [];
-    if (smartApts.snapshotIsFloor) {
-        aptBreakdown.push(smartApts.fromSnapshot + ' per SPS dashboard');
-    } else {
-        if (smartApts.fromAppointments > 0) aptBreakdown.push(smartApts.fromAppointments + ' completed');
-        if (smartApts.fromPlannerSync > 0) aptBreakdown.push(smartApts.fromPlannerSync + ' via planner');
-        if (smartApts.fromPatientVisits > 0) aptBreakdown.push(smartApts.fromPatientVisits + ' patient visits');
-        if (smartApts.fromSnapshot > 0) aptBreakdown.push('SPS: ' + smartApts.fromSnapshot);
-    }
-    html += '<div style="font-size:0.65em; color:#64748b; margin-top:4px;">' + (aptBreakdown.length > 0 ? aptBreakdown.join(' + ') : 'No data yet') + '</div>';
-    // Pace projection — yellow if projected past Sem 1 end, red if past graduation
-    if (aptPace) {
-        var aptPaceColor = aptPace.daysToTarget === 0 ? '#10b981' : aptPace.pastGraduation ? '#dc2626' : aptPace.behindSchedule ? '#f87171' : '#93c5fd';
-        var aptPaceText = aptPace.daysToTarget === 0 ? 'Target met!' : aptPace.ratePerWeek + '/wk pace — target by ' + aptPace.projectedDate;
-        if (aptPace.behindSchedule && aptPace.daysToTarget > 0) aptPaceText += ' ⚠️';
-        html += '<div style="font-size:0.65em; color:' + aptPaceColor + '; margin-top:2px;">' + aptPaceText + '</div>';
-    }
-    html += '</div>';
-
-    // Procedures counter — smart aggregation from all sources
-    html += '<div style="background:rgba(16,185,129,0.1); border:1px solid rgba(16,185,129,0.2); border-radius:10px; padding:14px;">';
-    html += '<div style="font-size:0.85em; color:#6ee7b7; margin-bottom:8px; font-weight:600;">Procedures</div>';
-    html += '<div style="display:flex; align-items:center; gap:6px; margin-bottom:8px;">';
-    html += '<span style="font-size:1.4em; font-weight:700; color:#e2e8f0;">' + clinicHeadlines.procedures.completed + '</span>';
-    html += '<span style="color:#64748b; font-size:1.1em;">/</span>';
-    html += '<input type="number" id="headline-proc-target" value="' + clinicHeadlines.procedures.target + '" min="0" '
-        + 'onchange="updateHeadlineTarget(\'procedures\', this.value)" '
-        + 'style="width:50px; background:rgba(30,41,59,0.8); border:1px solid rgba(100,116,139,0.4); border-radius:6px; color:#e2e8f0; padding:4px 6px; text-align:center; font-size:1.1em;">';
-    html += '</div>';
-    html += '<div style="background:rgba(100,116,139,0.3); border-radius:4px; height:6px; overflow:hidden;">';
-    html += '<div style="background:#10b981; height:100%; width:' + procPct + '%; transition:width 0.3s;"></div>';
-    html += '</div>';
-    // Source breakdown
-    var procBreakdown = [];
-    if (smartProcs.snapshotIsAuthoritative) {
-        procBreakdown.push(smartProcs.fromSnapshot + ' per SPS dashboard');
-    } else {
-        if (smartProcs.fromProcedureRecords > 0) procBreakdown.push(smartProcs.fromProcedureRecords + ' recorded');
-        if (smartProcs.fromCompetencyManual > 0) procBreakdown.push(smartProcs.fromCompetencyManual + ' from competencies');
-        if (smartProcs.fromSnapshot > 0) procBreakdown.push('SPS: ' + smartProcs.fromSnapshot);
-    }
-    html += '<div style="font-size:0.65em; color:#64748b; margin-top:4px;">' + (procBreakdown.length > 0 ? procBreakdown.join(' + ') : 'No data yet') + '</div>';
-    // Pace projection — red if behind schedule
-    if (procPace) {
-        var procPaceColor = procPace.daysToTarget === 0 ? '#10b981' : procPace.pastGraduation ? '#dc2626' : procPace.behindSchedule ? '#f87171' : '#6ee7b7';
-        var procPaceText = procPace.daysToTarget === 0 ? 'Target met!' : procPace.ratePerWeek + '/wk pace — target by ' + procPace.projectedDate;
-        if (procPace.behindSchedule && procPace.daysToTarget > 0) procPaceText += ' ⚠️';
-        html += '<div style="font-size:0.65em; color:' + procPaceColor + '; margin-top:2px;">' + procPaceText + '</div>';
-    }
-    html += '</div>';
-
-    html += '</div>'; // end headline counters grid
 
     // Quick action buttons
     html += '<div style="display:flex; flex-wrap:wrap; gap:8px; justify-content:center; margin-bottom:12px;">';
