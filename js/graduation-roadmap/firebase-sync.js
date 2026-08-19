@@ -268,10 +268,11 @@ function reconstructState(source, options) {
     // Source-wins: source first — restore/import operation takes precedence.
     // In the V2 manual-count model, mergeCompetencies resolves item counts via
     // lastVerified timestamps (or Math.max when neither side is verified).
+    var _delComps = { ...(s.clinicalData?.deletedCompItemIds || {}), ...(f.clinicalData?.deletedCompItemIds || {}) };
     if (isSourceWins) {
-        cd.competencies = mergeCompetencies(s.clinicalData?.competencies, f.clinicalData?.competencies);
+        cd.competencies = mergeCompetencies(s.clinicalData?.competencies, f.clinicalData?.competencies, _delComps);
     } else {
-        cd.competencies = mergeCompetencies(f.clinicalData?.competencies, s.clinicalData?.competencies);
+        cd.competencies = mergeCompetencies(f.clinicalData?.competencies, s.clinicalData?.competencies, _delComps);
     }
 
     // patientRecords: strategy-specific merge
@@ -356,6 +357,17 @@ function reconstructState(source, options) {
         Object.keys(cd.appointments || {}).forEach(function(id) { if (_delApts[id]) delete cd.appointments[id]; });
         Object.keys(cd.completedProcedures || {}).forEach(function(id) { if (_delProcs[id]) delete cd.completedProcedures[id]; });
         Object.keys(cd.patientRecords || {}).forEach(function(id) { if (_delPRs[id]) delete cd.patientRecords[id]; });
+        // Competency items are nested (category → sections → items)
+        if (Object.keys(_delComps).length > 0) {
+            getValues(cd.competencies).forEach(function(cat) {
+                getValues(cat.sections).forEach(function(sec) {
+                    var items = sec.items || {};
+                    Object.keys(items).forEach(function(k) {
+                        if (items[k] && items[k].id && _delComps[items[k].id]) delete items[k];
+                    });
+                });
+            });
+        }
     }
 
     // dashboardSnapshots: always dedup-merge via mergeDashboardSnapshots
@@ -375,6 +387,7 @@ function reconstructState(source, options) {
     cd.deletedAppointmentIds = { ...(s.clinicalData?.deletedAppointmentIds || {}), ...(f.clinicalData?.deletedAppointmentIds || {}) };
     cd.deletedProcedureIds = { ...(s.clinicalData?.deletedProcedureIds || {}), ...(f.clinicalData?.deletedProcedureIds || {}) };
     cd.deletedPatientRecordIds = { ...(s.clinicalData?.deletedPatientRecordIds || {}), ...(f.clinicalData?.deletedPatientRecordIds || {}) };
+    cd.deletedCompItemIds = _delComps;
 
     result.clinicalData = cd;
 
@@ -637,6 +650,10 @@ function mergeRemoteCollectionsIntoLocal(data) {
         ...(roadmapData.clinicalData?.deletedPatientRecordIds || {}),
         ...(data.clinicalData?.deletedPatientRecordIds || {})
     };
+    var deletedComps = {
+        ...(roadmapData.clinicalData?.deletedCompItemIds || {}),
+        ...(data.clinicalData?.deletedCompItemIds || {})
+    };
     var deletedD4Evs = {
         ...(roadmapData.deletedD4EventIds || {}),
         ...(data.deletedD4EventIds || {})
@@ -734,9 +751,11 @@ function mergeRemoteCollectionsIntoLocal(data) {
         if (!roadmapData.clinicalData.deletedAppointmentIds) roadmapData.clinicalData.deletedAppointmentIds = {};
         if (!roadmapData.clinicalData.deletedProcedureIds) roadmapData.clinicalData.deletedProcedureIds = {};
         if (!roadmapData.clinicalData.deletedPatientRecordIds) roadmapData.clinicalData.deletedPatientRecordIds = {};
+        if (!roadmapData.clinicalData.deletedCompItemIds) roadmapData.clinicalData.deletedCompItemIds = {};
         addMissing(roadmapData.clinicalData.deletedAppointmentIds, data.clinicalData?.deletedAppointmentIds);
         addMissing(roadmapData.clinicalData.deletedProcedureIds, data.clinicalData?.deletedProcedureIds);
         addMissing(roadmapData.clinicalData.deletedPatientRecordIds, data.clinicalData?.deletedPatientRecordIds);
+        addMissing(roadmapData.clinicalData.deletedCompItemIds, data.clinicalData?.deletedCompItemIds);
         // dashboardSnapshots: merge arrays
         if (data.clinicalData.dashboardSnapshots) {
             roadmapData.clinicalData.dashboardSnapshots = mergeDashboardSnapshots(
@@ -746,7 +765,7 @@ function mergeRemoteCollectionsIntoLocal(data) {
         // competencies: V2-aware item-level merge with local-first structure and timestamp-based counts
         if (data.clinicalData.competencies) {
             roadmapData.clinicalData.competencies = mergeCompetencies(
-                roadmapData.clinicalData.competencies, data.clinicalData.competencies
+                roadmapData.clinicalData.competencies, data.clinicalData.competencies, deletedComps
             );
         }
     }
@@ -776,11 +795,24 @@ function mergeRemoteCollectionsIntoLocal(data) {
             if (deletedPRs[id]) delete roadmapData.clinicalData.patients[id];
         });
     }
+    // Purge competency items tombstoned on another device (deletes win over key-union).
+    // Runs even when the payload carries no clinicalData — remote tombstones still apply.
+    if (Object.keys(deletedComps).length > 0 && roadmapData.clinicalData?.competencies) {
+        getValues(roadmapData.clinicalData.competencies).forEach(function(cat) {
+            getValues(cat.sections).forEach(function(sec) {
+                var items = sec.items || {};
+                Object.keys(items).forEach(function(k) {
+                    if (items[k] && items[k].id && deletedComps[items[k].id]) delete items[k];
+                });
+            });
+        });
+    }
     // Persist the unioned clinical tombstones (mirrors deletedD4EventIds below)
     if (roadmapData.clinicalData) {
         roadmapData.clinicalData.deletedAppointmentIds = deletedApts;
         roadmapData.clinicalData.deletedProcedureIds = deletedProcs;
         roadmapData.clinicalData.deletedPatientRecordIds = deletedPRs;
+        roadmapData.clinicalData.deletedCompItemIds = deletedComps;
     }
 
     // Monthly planner collections
@@ -2717,6 +2749,11 @@ function validateStateIntegrity(data) {
     if (data.clinicalData?.competencies !== undefined && data.clinicalData.competencies !== null && typeof data.clinicalData.competencies !== 'object') {
         console.error('[GUARD-F] clinicalData.competencies is not an object');
         errors.push('clinicalData.competencies is not an object');
+    }
+    // deletedCompItemIds tombstone map must be object if present
+    if (data.clinicalData?.deletedCompItemIds !== undefined && data.clinicalData.deletedCompItemIds !== null && typeof data.clinicalData.deletedCompItemIds !== 'object') {
+        console.error('[GUARD-F] clinicalData.deletedCompItemIds is not an object');
+        errors.push('clinicalData.deletedCompItemIds is not an object');
     }
     // competencyUIState must be object if present
     if (data.competencyUIState !== undefined && data.competencyUIState !== null && typeof data.competencyUIState !== 'object') {
