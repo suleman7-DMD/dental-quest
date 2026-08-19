@@ -7,7 +7,7 @@
 // Single source of truth for new patient record shape. All creation sites use this.
 function createPatientRecord(overrides) {
     var record = {
-        id: '', name: '', chartNumber: '', type: '',
+        id: '', name: '', chartNumber: '', type: '', dob: '',
         medicalHx: '', medications: '', allergies: '',
         dentalHx: '', txSummaryBU: '', txCompletedByMe: '',
         poeLast: '', poeNext: '', txPlan: '',
@@ -436,8 +436,16 @@ function getPatientRecords() {
         if (!roadmapData.clinicalData.patientRecords) roadmapData.clinicalData.patientRecords = {};
         return roadmapData.clinicalData.patientRecords;
     }
+    // Tombstoned patients must NEVER be re-injected from DEFAULT_PATIENT_RECORDS —
+    // a user-deleted default patient would otherwise resurrect on the next render.
+    var prTombstones = roadmapData.clinicalData.deletedPatientRecordIds || {};
     if (!roadmapData.clinicalData.patientRecords || Object.keys(roadmapData.clinicalData.patientRecords).length === 0) {
-        roadmapData.clinicalData.patientRecords = JSON.parse(JSON.stringify(DEFAULT_PATIENT_RECORDS));
+        var seeded = {};
+        Object.keys(DEFAULT_PATIENT_RECORDS).forEach(function(id) {
+            if (prTombstones[id]) return;
+            seeded[id] = JSON.parse(JSON.stringify(DEFAULT_PATIENT_RECORDS[id]));
+        });
+        roadmapData.clinicalData.patientRecords = seeded;
         // Don't save to localStorage from a read/render path — next CRUD operation persists
     } else {
         // Merge: fill in any missing default patients without overwriting existing ones
@@ -452,8 +460,9 @@ function getPatientRecords() {
             if (c) existingNormCharts[c] = eid;
         });
         Object.keys(defaults).forEach(function(id) {
-            // Skip if exact ID exists OR if a record with same normalized chart already exists
+            // Skip if exact ID exists, deleted (tombstoned), OR same normalized chart already exists
             if (existing[id]) return;
+            if (prTombstones[id]) return;
             var defChart = normalizeChartNumber(defaults[id]?.chartNumber);
             if (defChart && existingNormCharts[defChart]) return;
             existing[id] = JSON.parse(JSON.stringify(defaults[id]));
@@ -890,7 +899,7 @@ function getEffectiveLastVisit(patient, patientId) {
 // Single-line patient fields: Enter commits (blur) instead of inserting a newline,
 // and savePatientField() collapses accidental newlines/trailing whitespace on save.
 var PT_SINGLE_LINE_FIELDS = {
-    phone: 1, activeStatus: 1, poeLast: 1, poeNext: 1, lastVisit: 1, nextVisit: 1,
+    phone: 1, dob: 1, activeStatus: 1, poeLast: 1, poeNext: 1, lastVisit: 1, nextVisit: 1,
     lastFMX: 1, lastBW: 1, lastCBCT: 1, lastPANO: 1
 };
 
@@ -1045,6 +1054,7 @@ function renderPatientRecord(patientId) {
         +   '<div class="ptr-summary-name">' + escapeHtml(patient.name || 'Unnamed') + '</div>'
         +   '<div class="ptr-summary-meta">'
         +     '<span>#' + escapeHtml(patient.chartNumber || 'N/A') + '</span>'
+        +     (patient.dob ? '<span>\u00b7</span><span>DOB ' + escapeHtml(patient.dob) + '</span>' : '')
         +     (patient.type ? '<span>\u00b7</span><span>' + escapeHtml(patient.type) + '</span>' : '')
         +     (patient.phone ? '<span>\u00b7</span><span>\u260E ' + (function() { var parts = patient.phone.split('|'); var primary = escapeHtml(parts[0].trim()); return parts.length > 1 ? primary + ' +' + (parts.length - 1) + ' more' : primary; })() + '</span>' : '')
         +   '</div>'
@@ -1089,7 +1099,8 @@ function renderPatientRecord(patientId) {
     } else {
         contentHtml = ''
             + section('info', 'Patient Information', '\uD83C\uDFE5',
-                fld('phone', 'Phone', '#6366f1')
+                fld('dob', 'Date of Birth', '#8b5cf6')
+                + fld('phone', 'Phone', '#6366f1')
                 + fld('medicalHx', 'Medical History', '#ef4444')
                 + fld('medications', 'Medications & Allergies', '#f87171')
                 + fld('allergies', 'Allergies', '#dc2626'))
@@ -1786,6 +1797,7 @@ function parsePatientRecord(text) {
     var record = {};
     var fieldMap = {
         'NAME': 'name', 'CHART': 'chartNumber', 'TYPE': 'type',
+        'DOB': 'dob',
         'MEDICAL_HX': 'medicalHx', 'MEDICATIONS': 'medications',
         'ALLERGIES': 'allergies',
         'DENTAL_HX': 'dentalHx', 'TX_SUMMARY_BU': 'txSummaryBU',
@@ -1834,6 +1846,7 @@ function parsePatientUpdate(text) {
     var update = { _notesAppend: false, _medicalHxAppend: false };
     var fieldMap = {
         'NAME': 'name', 'CHART': 'chartNumber', 'TYPE': 'type',
+        'DOB': 'dob',
         'MEDICAL_HX': 'medicalHx', 'MEDICATIONS': 'medications',
         'ALLERGIES': 'allergies',
         'DENTAL_HX': 'dentalHx', 'TX_SUMMARY_BU': 'txSummaryBU',

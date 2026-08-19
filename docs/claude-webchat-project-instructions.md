@@ -519,6 +519,7 @@ FORMATTING RULES:
   ---
   NAME: LastName, FirstName
   CHART: [chart number]
+  DOB: [MM/DD/YYYY birth date, if known]
   TYPE: [Active / status note / age y/o sex if known]
   PHONE: [primary number | secondary number if available]
   MEDICAL_HX: [conditions, precautions, ASA, age/sex/vitals]

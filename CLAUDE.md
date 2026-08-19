@@ -120,6 +120,8 @@ const date = new Date(year, month - 1, day);
 - **`applyRequirementCheckoffs` (V3, Aug 2026)**: COMPLETED_TODAY (`isDelta`) creates procedure records but NEVER touches competency counts/notes. The REQUIREMENTS_STATUS absolute-count path was deleted — NO import path modifies competency counts anymore. Dedup: COMPLETED_TODAY matches on procedure+date+patient.
 - **Invalid competency IDs**: `total-procedures` and `clinical-summatives` are synthetic — silently ignored.
 - **`PHONE:` field**: In PATIENT_RECORD/UPDATE. Stored as `patient.phone` (pipe-delimited). Display: primary + "+N more". Propagated to profile, mini review, PR roster/writeups, competency popup, sidebar, Active Roster.
+- **`DOB:` field (Aug 2026)**: In PATIENT_RECORD/UPDATE. Stored as `patient.dob` (MM/DD/YYYY free text). Shown in profile summary meta row + editable single-line "Date of Birth" field in Patient Information section.
+- **Default-injection respects tombstones (Aug 2026)**: `getPatientRecords()` skips `deletedPatientRecordIds` in BOTH default-injection branches (empty-store seed + gap-fill loop) — deleted DEFAULT_PATIENT_RECORDS patients must never resurrect on render.
 - **`MEDICAL_HX_APPEND:`**: PATIENT_UPDATE only. Appends to `medicalHx` with `\n\n` (sets `_medicalHxAppend` flag).
 - **`PATIENT_UPDATE` auto-creates**: Unknown chart numbers auto-create skeleton via `createPatientRecord()`.
 - **`createPatientRecord(overrides)`**: Single factory for all 4 creation sites. New patient fields only need adding here.
