@@ -3907,49 +3907,52 @@
         }
 
         /* ═══════════════════════════════════════════════
-           COMPETENCIES V2 — Warm Atlas Console Design
-           Canvas island inside dark shell (like Mini Review)
+           COMPETENCIES V2 — Mission Control Console Design
+           Dark slate/violet, matching the app shell
            ═══════════════════════════════════════════════ */
 
         :root {
-            /* Canvas — warm parchment tones matching index.html */
-            --cv2-canvas: #FAF8F5;
-            --cv2-surface: #FFFFFF;
-            --cv2-surface-alt: #F5F2ED;
-            --cv2-surface-inset: #EFECE6;
-            --cv2-border: rgba(0, 0, 0, 0.08);
-            --cv2-border-subtle: rgba(0, 0, 0, 0.05);
-            --cv2-border-strong: rgba(0, 0, 0, 0.12);
+            /* Canvas — Mission Control slate/graphite (dark) */
+            --cv2-canvas: #0f172a;
+            --cv2-surface: #1e293b;
+            --cv2-surface-alt: #263449;
+            --cv2-surface-inset: #0f1a2e;
+            --cv2-surface-raised: #26344a;
+            --cv2-border: rgba(148, 163, 184, 0.16);
+            --cv2-border-subtle: rgba(148, 163, 184, 0.08);
+            --cv2-border-strong: rgba(148, 163, 184, 0.28);
 
-            /* Text — warm ink, not cold blue-gray */
-            --cv2-ink: #2C2825;
-            --cv2-ink-soft: #6B635B;
-            --cv2-muted: #9C948B;
-            --cv2-dim: #C4BCB3;
+            /* Text — cool slate on dark */
+            --cv2-ink: #e2e8f0;
+            --cv2-ink-soft: #cbd5e1;
+            --cv2-muted: #94a3b8;
+            --cv2-dim: #64748b;
 
-            /* Semantic status colors — muted, warm-shifted */
-            --cv2-done: #5E8A5E;
-            --cv2-done-bg: #E4EDE4;
-            --cv2-done-fg: #3D6B3D;
-            --cv2-wip: #C4923A;
-            --cv2-wip-bg: #FBF3E4;
-            --cv2-wip-fg: #8A6520;
-            --cv2-critical: #B85C5C;
-            --cv2-critical-bg: #F5E6E6;
-            --cv2-critical-fg: #8A3D3D;
-            --cv2-locked: #C4BCB3;
-            --cv2-accent: #6B7C5E;
-            --cv2-accent-light: #E8EDE4;
+            /* Semantic status colors — bright on dark */
+            --cv2-done: #10b981;
+            --cv2-done-bg: rgba(16, 185, 129, 0.14);
+            --cv2-done-fg: #34d399;
+            --cv2-wip: #f59e0b;
+            --cv2-wip-bg: rgba(245, 158, 11, 0.14);
+            --cv2-wip-fg: #fbbf24;
+            --cv2-critical: #ef4444;
+            --cv2-critical-bg: rgba(239, 68, 68, 0.13);
+            --cv2-critical-fg: #f87171;
+            --cv2-locked: #64748b;
+            --cv2-accent: #a78bfa;
+            --cv2-accent-solid: #7c3aed;
+            --cv2-accent-light: rgba(124, 58, 237, 0.18);
 
             /* Typography */
             --cv2-font: 'Inter', -apple-system, system-ui, sans-serif;
             --cv2-font-heading: 'Source Serif 4', 'Georgia', serif;
             --cv2-mono: 'SF Mono', 'Consolas', 'Monaco', monospace;
+            --cv2-font-mono: 'SF Mono', 'Consolas', 'Monaco', monospace;
 
-            /* Shadows — warm-tinted */
-            --cv2-shadow-sm: 0 1px 2px rgba(44, 40, 37, 0.05);
-            --cv2-shadow-md: 0 2px 8px rgba(44, 40, 37, 0.07), 0 1px 2px rgba(44, 40, 37, 0.04);
-            --cv2-shadow-lg: 0 4px 16px rgba(44, 40, 37, 0.09), 0 2px 4px rgba(44, 40, 37, 0.05);
+            /* Shadows — deep on dark */
+            --cv2-shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
+            --cv2-shadow-md: 0 2px 8px rgba(0, 0, 0, 0.35), 0 1px 2px rgba(0, 0, 0, 0.25);
+            --cv2-shadow-lg: 0 4px 16px rgba(0, 0, 0, 0.45), 0 2px 4px rgba(0, 0, 0, 0.3);
 
             /* Spacing */
             --cv2-gap: 12px;
@@ -4159,7 +4162,7 @@
         .cv2-readiness-bar {
             flex: 1;
             height: 8px;
-            background: rgba(44, 40, 37, 0.08);
+            background: var(--cv2-surface-inset);
             border-radius: 4px;
             overflow: hidden;
         }
@@ -4180,7 +4183,7 @@
         /* ── D3 Deadline Alert Bar ── */
         .cv2-d3-alert {
             background: var(--cv2-critical-bg);
-            border: 1px solid rgba(184, 92, 92, 0.2);
+            border: 1px solid rgba(239, 68, 68, 0.2);
             border-left: 3px solid var(--cv2-critical);
             border-radius: var(--cv2-radius-sm);
             padding: 10px 14px;
@@ -4190,7 +4193,7 @@
         }
 
         .cv2-d3-alert:hover {
-            background: #F0D9D9;
+            background: rgba(239, 68, 68, 0.2);
         }
 
         .cv2-d3-alert-header {
@@ -4228,7 +4231,7 @@
             display: none;
             margin-top: 10px;
             padding-top: 10px;
-            border-top: 1px solid rgba(184, 92, 92, 0.15);
+            border-top: 1px solid rgba(239, 68, 68, 0.15);
         }
 
         .cv2-d3-alert.expanded .cv2-d3-items,
@@ -4242,7 +4245,7 @@
             gap: 8px;
             padding: 5px 0;
             font-size: 0.8125rem;
-            border-bottom: 1px solid rgba(184, 92, 92, 0.08);
+            border-bottom: 1px solid rgba(239, 68, 68, 0.08);
         }
 
         .cv2-d3-item:last-child { border-bottom: none; }
@@ -4306,7 +4309,7 @@
 
         .cv2-search:focus {
             border-color: var(--cv2-accent);
-            box-shadow: 0 0 0 3px rgba(107, 124, 94, 0.15);
+            box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.35);
         }
 
         .cv2-search::placeholder {
@@ -4501,7 +4504,7 @@
         }
 
         .cv2-counter-btn:active {
-            background: var(--cv2-accent);
+            background: var(--cv2-accent-solid);
             color: white;
             transform: scale(0.95);
         }
@@ -4539,7 +4542,7 @@
             background: var(--cv2-surface);
             color: var(--cv2-ink);
             outline: none;
-            box-shadow: 0 0 0 3px rgba(107, 124, 94, 0.15);
+            box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.35);
         }
 
         /* ── Status Indicator ── */
@@ -4641,7 +4644,7 @@
 
         .cv2-note-editor:focus {
             border-color: var(--cv2-accent);
-            box-shadow: 0 0 0 3px rgba(107, 124, 94, 0.15);
+            box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.35);
         }
 
         /* ── Category Actions & Notes ── */
@@ -4715,7 +4718,7 @@
 
         .cv2-cat-notes-textarea:focus {
             border-color: var(--cv2-accent);
-            box-shadow: 0 0 0 3px rgba(107, 124, 94, 0.15);
+            box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.35);
         }
 
         /* ── Quick Record & Delete Buttons ── */
@@ -4966,7 +4969,7 @@
             font-family: var(--cv2-font);
             font-size: 0.875rem;
             font-weight: 600;
-            box-shadow: 0 8px 32px rgba(44, 40, 37, 0.2);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
             z-index: 10100;
             display: flex;
             align-items: center;
@@ -4993,7 +4996,7 @@
             left: 0;
             right: 0;
             bottom: 0;
-            background: rgba(0, 0, 0, 0.3);
+            background: rgba(0, 0, 0, 0.6);
             display: flex;
             align-items: center;
             justify-content: center;
@@ -5078,7 +5081,7 @@
         .comp-modal-field input:focus,
         .comp-modal-field textarea:focus {
             border-color: var(--cv2-accent);
-            box-shadow: 0 0 0 3px rgba(107, 124, 94, 0.15);
+            box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.35);
         }
 
         .comp-modal-footer {
@@ -5107,13 +5110,13 @@
         }
 
         .comp-modal-btn.primary {
-            background: var(--cv2-accent);
-            border-color: var(--cv2-accent);
+            background: var(--cv2-accent-solid);
+            border-color: var(--cv2-accent-solid);
             color: white;
         }
 
         .comp-modal-btn.primary:hover {
-            background: #5A6A4F;
+            background: #6d28d9;
         }
 
         .comp-modal-btn.danger {
@@ -5283,13 +5286,13 @@
         .cv2-pill-left {
             background: var(--cv2-wip-bg);
             color: var(--cv2-wip-fg);
-            border: 1px solid rgba(196, 146, 58, 0.25);
+            border: 1px solid rgba(245, 158, 11, 0.3);
         }
 
         .cv2-pill-sum {
             background: var(--cv2-accent-light);
             color: var(--cv2-accent);
-            border: 1px solid rgba(107, 124, 94, 0.25);
+            border: 1px solid rgba(124, 58, 237, 0.3);
         }
 
         /* ── Toolbar (search + filter chips) ── */
@@ -5331,8 +5334,8 @@
         }
 
         .cv2-filter-chip.active {
-            background: var(--cv2-accent);
-            border-color: var(--cv2-accent);
+            background: var(--cv2-accent-solid);
+            border-color: var(--cv2-accent-solid);
             color: #fff;
         }
 
@@ -5370,7 +5373,7 @@
         .cv2-req-row.cv2-row-done .cv2-req-name {
             color: var(--cv2-muted);
             text-decoration: line-through;
-            text-decoration-color: rgba(94, 138, 94, 0.5);
+            text-decoration-color: rgba(16, 185, 129, 0.5);
         }
 
         /* ── Summative badge ── */
@@ -5385,20 +5388,20 @@
             letter-spacing: 0.04em;
             background: var(--cv2-accent-light);
             color: var(--cv2-accent);
-            border: 1px solid rgba(107, 124, 94, 0.3);
+            border: 1px solid rgba(124, 58, 237, 0.35);
         }
 
         /* Bare carryover badge on rows (modifier classes retired) */
         .cv2-carryover-badge {
             background: var(--cv2-critical-bg);
             color: var(--cv2-critical-fg);
-            border: 1px solid rgba(184, 92, 92, 0.3);
+            border: 1px solid rgba(239, 68, 68, 0.3);
         }
 
         /* ── D3 Carryover alert card ── */
         .cv2-carryover-card {
             background: var(--cv2-critical-bg);
-            border: 1px solid rgba(184, 92, 92, 0.3);
+            border: 1px solid rgba(239, 68, 68, 0.3);
             border-radius: var(--cv2-radius);
             margin-bottom: 12px;
             cursor: pointer;
@@ -5436,7 +5439,7 @@
 
         .cv2-carryover-list {
             display: none;
-            border-top: 1px solid rgba(184, 92, 92, 0.2);
+            border-top: 1px solid rgba(239, 68, 68, 0.2);
         }
 
         .cv2-carryover-card.expanded .cv2-carryover-list {
@@ -5449,7 +5452,7 @@
             gap: 10px;
             padding: 8px 14px;
             font-size: 0.78rem;
-            border-bottom: 1px solid rgba(184, 92, 92, 0.12);
+            border-bottom: 1px solid rgba(239, 68, 68, 0.12);
             background: var(--cv2-surface);
         }
 
@@ -5521,13 +5524,13 @@
 
         .cv2-year-d3 {
             background: rgba(88, 166, 255, 0.12);
-            color: #3D6FA8;
+            color: #7cb3ff;
             border: 1px solid rgba(88, 166, 255, 0.3);
         }
 
         .cv2-year-d4 {
             background: rgba(240, 136, 62, 0.12);
-            color: #A8642E;
+            color: #f0a868;
             border: 1px solid rgba(240, 136, 62, 0.3);
         }
 
