@@ -1191,6 +1191,25 @@ function syncSchemaFields() {
             (sec.items || []).forEach(function(item) { defaults[item.id] = item; });
         });
     });
+
+    // Purge tombstoned competency items on EVERY init — this is the backstop that
+    // defeats all resurrection vectors (cloud merge, migrations, re-seed) because it
+    // runs after them. Keyed on item.id (the id merges/tombstones both match on).
+    var _compTombs = roadmapData.clinicalData.deletedCompItemIds || {};
+    if (Object.keys(_compTombs).length > 0) {
+        getValues(comp).forEach(function(cat) {
+            getValues(cat.sections).forEach(function(sec) {
+                var items = sec.items || {};
+                Object.keys(items).forEach(function(k) {
+                    if (items[k] && items[k].id && _compTombs[items[k].id]) {
+                        console.log('[SCHEMA-SYNC] Purging tombstoned competency item: ' + items[k].id);
+                        delete items[k];
+                    }
+                });
+            });
+        });
+    }
+
     // Remove saved categories not in DEFAULT_COMPETENCIES (e.g., stale srp from cloud merge)
     Object.keys(comp).forEach(function(catKey) {
         if (!DEFAULT_COMPETENCIES[catKey]) {
@@ -1328,6 +1347,7 @@ var cv2ActiveFilter = 'all';
 
 // Undo snapshot for the last manual competency change (set by setCompItemStatus/adjustCompItem)
 var cv2LastChange = null;
+var cv2LastDelete = null; // snapshot for one-step undo of a requirement deletion
 
 // ==================== CIS v2: COMPETENCY TAB RENDERING HELPERS ====================
 // Tasks 4.3-4.18: Milestone dashboard, D3 deadlines, search/filter, evidence cards,
@@ -2093,10 +2113,8 @@ function cv2BuildItemRow(catKey, item) {
         html += '<span class="cv2-quick-record" onclick="openCompQuickRecord(\'' + safeItemId + '\'); event.stopPropagation();" title="Quick record">+</span>';
     }
 
-    // Custom item delete
-    if (item.custom === true) {
-        html += '<span class="cv2-delete-btn" onclick="deleteCompItem(\'' + safeKey + '\',\'' + safeItemId + '\'); event.stopPropagation();" title="Delete">\u2716</span>';
-    }
+    // Delete \u2014 any requirement can be removed (school requirements change); undoable
+    html += '<span class="cv2-delete-btn" onclick="deleteCompItem(\'' + safeKey + '\',\'' + safeItemId + '\'); event.stopPropagation();" title="Remove requirement">\u2716</span>';
 
     html += '</div>'; // close cv2-req-row
     return html;
@@ -2124,7 +2142,9 @@ function cv2BuildHeader(competencies) {
         });
     });
 
-    var pct = itemsTotal > 0 ? Math.round((itemsDone / itemsTotal) * 100) : 0;
+    // Graduation % is unit-weighted (partial credit) — identical to Mission Control's
+    // calculateOverallStats().overallPercent so the two views never disagree.
+    var pct = calculateOverallStats(competencies).overallPercent;
     var itemsLeft = itemsTotal - itemsDone;
     var barColor = pct >= 80 ? 'var(--cv2-done)' : pct >= 40 ? 'var(--cv2-wip)' : 'var(--cv2-critical)';
     var scoreColor = pct >= 80 ? 'done' : pct >= 40 ? 'wip' : 'critical';
@@ -2703,6 +2723,8 @@ function resetCompetencies() {
         localStorage.removeItem('leadingZeroDedupDone_v2');
         localStorage.removeItem('perioNoiseCleanupDone_v1');
         localStorage.removeItem('d4EventsSeeded_v1');
+        // Full clean slate: deleted requirements reappear after a hard reset
+        roadmapData.clinicalData.deletedCompItemIds = {};
         expandedCompCategories.clear();
         clinicalDataDirty = true;
         safeLocalStorageSet(STORAGE_KEY, JSON.stringify(roadmapData));
@@ -2842,6 +2864,10 @@ function saveCompItem() {
             rules: null
         };
 
+        // Defensive: a fresh custom id can't collide, but if an id is ever reused,
+        // clear any stale tombstone so the new item isn't purged on next init.
+        if (roadmapData.clinicalData.deletedCompItemIds) delete roadmapData.clinicalData.deletedCompItemIds[newItemId];
+
         // Use object assignment instead of push
         section.items[newItemId] = newItem;
         showToast(`Added: ${name}`);
@@ -2891,40 +2917,69 @@ function deleteCompItem(catKey, itemId) {
     const cat = competencies[catKey];
     if (!cat) return;
 
-    // Find the item (using object-based storage)
-    let itemText = '';
+    // Find the item + its section (object-based storage). Snapshot for undo.
+    let snapshot = null;
     let foundSectionId = null;
     for (const [secId, sec] of Object.entries(cat.sections)) {
         if (sec.items && sec.items[itemId]) {
-            const item = sec.items[itemId];
-            if (!item.custom) {
-                showToast('Cannot delete default requirements', 'error');
-                return;
-            }
-            itemText = item.text;
+            snapshot = JSON.parse(JSON.stringify(sec.items[itemId]));
             foundSectionId = secId;
             break;
         }
     }
 
-    if (!foundSectionId) {
+    if (!foundSectionId || !snapshot) {
         showToast('Item not found', 'error');
         return;
     }
 
-    showCustomConfirm('Delete "' + itemText + '"? This cannot be undone.', function() {
-        // Re-lookup to ensure data is still valid after async confirm
+    const itemText = snapshot.text || snapshot.id || 'requirement';
+    showCustomConfirm('Remove "' + itemText + '"? It disappears from all progress and syncs to your other devices. You can undo right after.', function() {
+        // Re-lookup after async confirm
         const comp = getCompetenciesData();
         const c = comp[catKey];
-        if (c && c.sections[foundSectionId] && c.sections[foundSectionId].items[itemId]) {
-            delete c.sections[foundSectionId].items[itemId];
-            clinicalDataDirty = true;
-            safeLocalStorageSet(STORAGE_KEY, JSON.stringify(roadmapData));
-            saveData();
-            renderCompetencies();
-            showToast(`Deleted: ${itemText}`);
-        }
-    }, null, 'Delete Item');
+        if (!(c && c.sections[foundSectionId] && c.sections[foundSectionId].items[itemId])) return;
+
+        // Tombstone BEFORE deleting so cross-device merges can't resurrect it
+        if (!roadmapData.clinicalData.deletedCompItemIds) roadmapData.clinicalData.deletedCompItemIds = {};
+        roadmapData.clinicalData.deletedCompItemIds[itemId] = new Date().toISOString();
+
+        delete c.sections[foundSectionId].items[itemId];
+        clinicalDataDirty = true;
+        safeLocalStorageSet(STORAGE_KEY, JSON.stringify(roadmapData));
+        saveData();
+        renderCompetencies();
+        if (typeof renderDashboard === 'function') renderDashboard();
+
+        // Stash for one-step undo
+        cv2LastDelete = { catKey: catKey, sectionId: foundSectionId, itemId: itemId, item: snapshot };
+        showToast('Removed "' + escapeHtml(itemText) + '" <button class="cv2-undo-btn" onclick="cv2UndoDeleteItem()">Undo</button>', null, { html: true, duration: 5000 });
+    }, null, 'Remove Requirement');
+}
+
+// One-step undo for a requirement deletion — clears the tombstone and re-inserts the item
+function cv2UndoDeleteItem() {
+    if (!cv2LastDelete) { showToast('Nothing to undo'); return; }
+    const d = cv2LastDelete;
+    cv2LastDelete = null;
+
+    const comp = getCompetenciesData();
+    const cat = comp[d.catKey];
+    const sec = cat && cat.sections ? cat.sections[d.sectionId] : null;
+    if (!cat || !sec) { showToast('Category no longer exists — cannot undo', 'error'); return; }
+
+    if (!sec.items || Array.isArray(sec.items)) sec.items = migrateArrayToObject(sec.items, 'item');
+    sec.items[d.itemId] = d.item;
+
+    // Clear the tombstone so the restored item is not re-purged on next init/merge
+    if (roadmapData.clinicalData.deletedCompItemIds) delete roadmapData.clinicalData.deletedCompItemIds[d.itemId];
+
+    clinicalDataDirty = true;
+    safeLocalStorageSet(STORAGE_KEY, JSON.stringify(roadmapData));
+    saveData();
+    renderCompetencies();
+    if (typeof renderDashboard === 'function') renderDashboard();
+    showToast('Requirement restored');
 }
 
 // ==================== PROCEDURE RECORDING SYSTEM ====================
