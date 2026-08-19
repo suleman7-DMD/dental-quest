@@ -281,7 +281,8 @@ function handleDateChange(inputEl) {
         type: deadline.type,
         tbd: deadline.tbd,
         done: deadline.done ?? false,
-        grade: deadline.grade ?? null
+        grade: deadline.grade ?? null,
+        updatedAt: new Date().toISOString()
     };
 
     // CRITICAL FIX: Also update customDeadlines if this is a custom deadline
@@ -292,6 +293,7 @@ function handleDateChange(inputEl) {
         roadmapData.customDeadlines[deadline.id].date = deadline.date;
         roadmapData.customDeadlines[deadline.id].day = deadline.day;
         roadmapData.customDeadlines[deadline.id].month = deadline.month;
+        roadmapData.customDeadlines[deadline.id].updatedAt = new Date().toISOString();
     }
 
     // Save immediately
@@ -357,7 +359,8 @@ function handleTextEdit(inputEl) {
         type: deadline.type,
         tbd: deadline.tbd,
         done: deadline.done ?? false,
-        grade: deadline.grade ?? null
+        grade: deadline.grade ?? null,
+        updatedAt: new Date().toISOString()
     };
 
     // CRITICAL FIX: Also update customDeadlines if this is a custom deadline
@@ -366,6 +369,7 @@ function handleTextEdit(inputEl) {
     // name/course/weight changes are lost on reload.
     if (deadline.custom && deadline.id && roadmapData.customDeadlines && roadmapData.customDeadlines[deadline.id]) {
         roadmapData.customDeadlines[deadline.id][field] = value;
+        roadmapData.customDeadlines[deadline.id].updatedAt = new Date().toISOString();
     }
 
     // Save immediately
@@ -509,7 +513,8 @@ function submitNewDeadline() {
         weight: weight,
         type: type,
         month: month,
-        custom: true // Mark as custom so we know it can be deleted
+        custom: true, // Mark as custom so we know it can be deleted
+        createdAt: new Date().toISOString()
     };
 
     deadlines.push(newDeadline);
@@ -558,8 +563,12 @@ function toggleDeadlineDone(index) {
         deadline.done = false;
         deadline.grade = null;
 
-        // Remove from completedDeadlines using original stable ID
+        // Remove from completedDeadlines using original stable ID.
+        // Tombstone first: un-completion is a key-deletion — without it the entry
+        // resurrects from the other device's copy during key-union merges.
         if (roadmapData.completedDeadlines) {
+            if (!roadmapData.deletedCompletedDeadlineIds) roadmapData.deletedCompletedDeadlineIds = {};
+            roadmapData.deletedCompletedDeadlineIds[sanitizeFirebaseKey(deadlineId)] = new Date().toISOString();
             delete roadmapData.completedDeadlines[deadlineId];
             // Also try to clean up any old index-based entries
             delete roadmapData.completedDeadlines[index];
@@ -569,6 +578,7 @@ function toggleDeadlineDone(index) {
         if (deadline.custom && deadline.id && roadmapData.customDeadlines[deadline.id]) {
             roadmapData.customDeadlines[deadline.id].done = false;
             roadmapData.customDeadlines[deadline.id].grade = null;
+            roadmapData.customDeadlines[deadline.id].updatedAt = new Date().toISOString();
         }
 
         // Store explicit "not done" override so static done:true doesn't win on reload
@@ -583,7 +593,8 @@ function toggleDeadlineDone(index) {
             weight: deadline.weight,
             type: deadline.type,
             done: false,
-            grade: null
+            grade: null,
+            updatedAt: new Date().toISOString()
         };
 
         // Update grades if this was synced
@@ -596,6 +607,7 @@ function toggleDeadlineDone(index) {
                 clinicalDataDirty = true;
                 apt.status = 'scheduled';
                 delete apt.completedAt;
+                apt.lastUpdated = new Date().toISOString();
                 // Uncomplete cascade: remove procedures recorded at completion
                 // (with tombstones so merge doesn't resurrect them), then recalc lastVisit
                 if (roadmapData.clinicalData.completedProcedures) {
@@ -766,6 +778,7 @@ function submitDeadlineGrade(index) {
     if (deadline.custom && deadline.id && roadmapData.customDeadlines[deadline.id]) {
         roadmapData.customDeadlines[deadline.id].done = true;
         roadmapData.customDeadlines[deadline.id].grade = grade;
+        roadmapData.customDeadlines[deadline.id].updatedAt = new Date().toISOString();
     }
 
     // FIX: Also update editedDeadlines so completion persists through initUI restore
@@ -775,6 +788,7 @@ function submitDeadlineGrade(index) {
     if (roadmapData.editedDeadlines[deadlineId]) {
         roadmapData.editedDeadlines[deadlineId].done = true;
         roadmapData.editedDeadlines[deadlineId].grade = grade;
+        roadmapData.editedDeadlines[deadlineId].updatedAt = new Date().toISOString();
     }
 
     // Sync to grades tab
@@ -787,6 +801,7 @@ function submitDeadlineGrade(index) {
             clinicalDataDirty = true;
             apt.status = 'completed';
             apt.completedAt = new Date().toISOString();
+            apt.lastUpdated = new Date().toISOString();
 
             // Update patient lastVisit (use patientRecords, not deprecated patients store)
             const patient = roadmapData.clinicalData?.patientRecords?.[apt.patientId];
@@ -1024,9 +1039,11 @@ function deleteDeadline(index) {
                 }
             }
 
-            // Also remove from completedDeadlines
+            // Also remove from completedDeadlines (tombstone so merge can't resurrect it)
             if (roadmapData.completedDeadlines) {
                 if (roadmapData.completedDeadlines[stableId]) {
+                    if (!roadmapData.deletedCompletedDeadlineIds) roadmapData.deletedCompletedDeadlineIds = {};
+                    roadmapData.deletedCompletedDeadlineIds[sanitizeFirebaseKey(stableId)] = new Date().toISOString();
                     delete roadmapData.completedDeadlines[stableId];
                 }
             }
@@ -1094,7 +1111,8 @@ function autoSuggestClinicalDeadlines() {
             weight: gap.paceNeeded || '—',
             type: 'Clinical',
             custom: true,
-            clinicalSuggested: true
+            clinicalSuggested: true,
+            createdAt: new Date().toISOString()
         };
         created++;
     });

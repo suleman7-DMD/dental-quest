@@ -42,6 +42,17 @@ let localUpdateTimer = null;
 let realtimeSyncRef = null;
 let lastRemoteUpdate = 0;
 
+// Set by reconstructState (remote-wins) when a per-record overlay kept a LOCAL copy
+// stamped strictly newer than the remote one. mergeRemoteState schedules a deferred
+// push so the preserved-local union reaches the cloud — after that push both sides
+// carry equal stamps, strict-> comparisons go false, and no ping-pong occurs.
+let mergePreservedNewerLocal = false;
+let mergePreservedPushTimer = null;
+
+// One-shot re-fetch when realtime events are dropped during the isLocalUpdate /
+// keep-local grace windows (a genuine newer save from another device could hide there)
+let realtimeRecheckTimer = null;
+
 // Force sync debounce
 let lastForceSync = 0;
 
@@ -158,6 +169,43 @@ function mergeDashboardSnapshots(localSnaps, remoteSnaps) {
 // @param {string} options.strategy - 'remote-wins' | 'stored-wins' | 'source-wins'
 // @param {Object} options.fallback - What to use when source is missing a field
 // @returns {Object} A new roadmapData object
+// Per-record conflict stamp for newer-wins overlays. Checks fields in order and
+// returns the first truthy value as an ISO string (ms-epoch numbers are converted).
+// Records with no stamp return '' — strict > comparisons then keep current behavior.
+function getRecordStamp(rec, fields) {
+    if (!rec || typeof rec !== 'object') return '';
+    for (var i = 0; i < fields.length; i++) {
+        var v = rec[fields[i]];
+        if (v) {
+            if (typeof v === 'number') { try { return new Date(v).toISOString(); } catch (e) { return ''; } }
+            return String(v);
+        }
+    }
+    return '';
+}
+// Stamp precedence per collection (every user-edit CRUD path writes the first field)
+const STAMP_TODO = ['updatedAt', 'completedAt', 'addedAt'];
+const STAMP_APPT = ['lastUpdated', 'completedAt', 'createdAt'];
+const STAMP_TASK = ['updatedAt', 'createdAt'];
+const STAMP_NOTE = ['updatedAt', 'completedAt', 'addedAt'];
+const STAMP_COMPLETED_DL = ['completedAt'];
+
+// Remote-wins key-union overlay: merged starts as { ...local, ...remote } (remote wins
+// raw key conflicts). For ids present on BOTH sides, the copy with the strictly newer
+// per-record stamp wins. When the LOCAL copy is kept because it is strictly newer,
+// mergePreservedNewerLocal is set so mergeRemoteState pushes the union back up.
+function overlayKeepNewerLocal(merged, localObj, remoteObj, stampFields) {
+    Object.keys(localObj || {}).forEach(function(id) {
+        var loc = (localObj || {})[id];
+        var rem = (remoteObj || {})[id];
+        if (!loc || !rem || !merged[id]) return;
+        if (getRecordStamp(loc, stampFields) > getRecordStamp(rem, stampFields)) {
+            merged[id] = loc;
+            mergePreservedNewerLocal = true;
+        }
+    });
+}
+
 function reconstructState(source, options) {
     var s = source || {};
     var f = options.fallback || {};
@@ -205,6 +253,13 @@ function reconstructState(source, options) {
         result.editedDeadlines = { ...(f.editedDeadlines || {}), ...(s.editedDeadlines || {}) };
         result.completedDeadlines = { ...(f.completedDeadlines || {}), ...(s.completedDeadlines || {}) };
         result.examStudyProgress = { ...(f.examStudyProgress || {}), ...(s.examStudyProgress || {}) };
+        if (isRemoteWins) {
+            // Per-entry newer-wins: a local entry stamped strictly newer than the
+            // remote copy survives the remote-wins spread (edits stamp updatedAt,
+            // completions stamp completedAt)
+            overlayKeepNewerLocal(result.editedDeadlines, f.editedDeadlines, s.editedDeadlines, STAMP_TASK);
+            overlayKeepNewerLocal(result.completedDeadlines, f.completedDeadlines, s.completedDeadlines, STAMP_COMPLETED_DL);
+        }
     } else {
         result.editedDeadlines = s.editedDeadlines || {};
         result.completedDeadlines = s.completedDeadlines || {};
@@ -214,7 +269,10 @@ function reconstructState(source, options) {
     // --- Migrated objects (customDeadlines, deletedDeadlines) ---
     // remote-wins: spread fallback + source; stored-wins & source-wins: source only
     if (isRemoteWins) {
-        result.customDeadlines = { ...migrateArrayToObject(f.customDeadlines, 'deadline'), ...migrateArrayToObject(s.customDeadlines, 'deadline') };
+        var _fCustDls = migrateArrayToObject(f.customDeadlines, 'deadline');
+        var _sCustDls = migrateArrayToObject(s.customDeadlines, 'deadline');
+        result.customDeadlines = { ..._fCustDls, ..._sCustDls };
+        overlayKeepNewerLocal(result.customDeadlines, _fCustDls, _sCustDls, STAMP_TASK);
         result.deletedDeadlines = { ...migrateArrayToObject(f.deletedDeadlines, 'deleted'), ...migrateArrayToObject(s.deletedDeadlines, 'deleted') };
     } else {
         result.customDeadlines = migrateArrayToObject(s.customDeadlines, 'deadline');
@@ -223,15 +281,20 @@ function reconstructState(source, options) {
 
     // --- Monthly Planner ---
     if (isRemoteWins) {
+        var _fPTasks = migrateArrayToObject(f.monthlyPlanner?.customTasks, 'ctask');
+        var _sPTasks = migrateArrayToObject(s.monthlyPlanner?.customTasks, 'ctask');
         result.monthlyPlanner = {
             notes: { ...migrateArrayToObject(f.monthlyPlanner?.notes, 'note'), ...migrateArrayToObject(s.monthlyPlanner?.notes, 'note') },
-            customTasks: { ...migrateArrayToObject(f.monthlyPlanner?.customTasks, 'ctask'), ...migrateArrayToObject(s.monthlyPlanner?.customTasks, 'ctask') },
+            customTasks: { ..._fPTasks, ..._sPTasks },
             overriddenStatic: { ...migrateArrayToObject(f.monthlyPlanner?.overriddenStatic, 'override'), ...migrateArrayToObject(s.monthlyPlanner?.overriddenStatic, 'override') },
             completedTasks: { ...migrateArrayToObject(f.monthlyPlanner?.completedTasks, 'completed'), ...migrateArrayToObject(s.monthlyPlanner?.completedTasks, 'completed') },
             hiddenClinicTasks: { ...(f.monthlyPlanner?.hiddenClinicTasks || {}), ...(s.monthlyPlanner?.hiddenClinicTasks || {}) },
             currentWeekSchedule: s.monthlyPlanner?.currentWeekSchedule ?? f.monthlyPlanner?.currentWeekSchedule ?? {},
             criticalReminders: { ...(f.monthlyPlanner?.criticalReminders || {}), ...(s.monthlyPlanner?.criticalReminders || {}) }
         };
+        // Per-task newer-wins: mpSaveTask stamps updatedAt on edits, so a local task
+        // edited more recently survives the remote-wins spread
+        overlayKeepNewerLocal(result.monthlyPlanner.customTasks, _fPTasks, _sPTasks, STAMP_TASK);
     } else {
         result.monthlyPlanner = {
             notes: migrateArrayToObject(s.monthlyPlanner?.notes, 'note'),
@@ -256,7 +319,12 @@ function reconstructState(source, options) {
 
     // appointments & completedProcedures
     if (isRemoteWins) {
-        cd.appointments = { ...migrateArrayToObject(f.clinicalData?.appointments, 'appt'), ...migrateArrayToObject(s.clinicalData?.appointments, 'appt') };
+        var _fApts = migrateArrayToObject(f.clinicalData?.appointments, 'appt');
+        var _sApts = migrateArrayToObject(s.clinicalData?.appointments, 'appt');
+        cd.appointments = { ..._fApts, ..._sApts };
+        // Per-appointment newer-wins: completion toggles / edits / imports stamp
+        // lastUpdated, so a local appointment touched more recently survives
+        overlayKeepNewerLocal(cd.appointments, _fApts, _sApts, STAMP_APPT);
         cd.completedProcedures = { ...migrateArrayToObject(f.clinicalData?.completedProcedures, 'proc'), ...migrateArrayToObject(s.clinicalData?.completedProcedures, 'proc') };
     } else {
         cd.appointments = migrateArrayToObject(s.clinicalData?.appointments, 'appt');
@@ -376,6 +444,9 @@ function reconstructState(source, options) {
     // missingNotes
     if (isMerge) {
         cd.missingNotes = { ...(f.clinicalData?.missingNotes || {}), ...(s.clinicalData?.missingNotes || {}) };
+        // Per-note newer-wins: status toggles stamp updatedAt, so a local note
+        // toggled more recently survives the remote-wins spread
+        if (isRemoteWins) overlayKeepNewerLocal(cd.missingNotes, f.clinicalData?.missingNotes, s.clinicalData?.missingNotes, STAMP_NOTE);
     } else {
         cd.missingNotes = s.clinicalData?.missingNotes ?? f.clinicalData?.missingNotes ?? {};
     }
@@ -393,13 +464,26 @@ function reconstructState(source, options) {
 
     // --- Todo List ---
     // Spread order determines conflict winner:
-    //   remote-wins: {...source, ...fallback} — fallback (local) wins, because local
-    //     edits should not be overwritten by stale remote data during live sync
+    //   remote-wins: key-union with per-item stamp compare — base spread keeps LOCAL
+    //     for conflicts (legacy unstamped items behave as before); a remote item
+    //     stamped strictly newer (updatedAt/completedAt/addedAt) overwrites. This is
+    //     what propagates check-offs and edits made on another device — the old
+    //     unconditional local-wins spread silently discarded them.
     //   stored-wins: {...fallback, ...source} — source (stored) wins, because localStorage
     //     IS the authoritative local state being loaded at boot
     if (isRemoteWins) {
+        var _todoItems = { ...(s.todoList?.items || {}), ...(f.todoList?.items || {}) };
+        Object.keys(s.todoList?.items || {}).forEach(function(id) {
+            var rem = s.todoList.items[id];
+            var loc = (f.todoList?.items || {})[id];
+            if (!rem || !loc) return;
+            var rs = getRecordStamp(rem, STAMP_TODO);
+            var ls = getRecordStamp(loc, STAMP_TODO);
+            if (rs > ls) _todoItems[id] = rem;
+            else if (ls > rs) mergePreservedNewerLocal = true;
+        });
         result.todoList = {
-            items: { ...(s.todoList?.items || {}), ...(f.todoList?.items || {}) },
+            items: _todoItems,
             _nextSeq: Math.max(s.todoList?._nextSeq ?? 1, f.todoList?._nextSeq ?? 1),
             lastUpdated: (f.todoList?.lastUpdated && s.todoList?.lastUpdated)
                 ? (f.todoList.lastUpdated > s.todoList.lastUpdated ? f.todoList.lastUpdated : s.todoList.lastUpdated)
@@ -491,6 +575,9 @@ function reconstructState(source, options) {
     result.deletedCriticalReminderIds = { ...(s.deletedCriticalReminderIds || {}), ...(f.deletedCriticalReminderIds || {}) };
     result.deletedPlannerTaskIds = { ...(s.deletedPlannerTaskIds || {}), ...(f.deletedPlannerTaskIds || {}) };
     result.deletedPlannerNoteIds = { ...(s.deletedPlannerNoteIds || {}), ...(f.deletedPlannerNoteIds || {}) };
+    result.deletedTodoIds = { ...(s.deletedTodoIds || {}), ...(f.deletedTodoIds || {}) };
+    result.deletedCompletedDeadlineIds = { ...(s.deletedCompletedDeadlineIds || {}), ...(f.deletedCompletedDeadlineIds || {}) };
+    result.deletedPlannerCompletionIds = { ...(s.deletedPlannerCompletionIds || {}), ...(f.deletedPlannerCompletionIds || {}) };
     if (!isSourceWins) {
         Object.keys(result.d4Events || {}).forEach(function(id) {
             if (result.deletedD4EventIds[id]) delete result.d4Events[id];
@@ -504,6 +591,48 @@ function reconstructState(source, options) {
         Object.keys(result.monthlyPlanner?.notes || {}).forEach(function(id) {
             if (result.deletedPlannerNoteIds[id]) delete result.monthlyPlanner.notes[id];
         });
+        // Todo items: purge only when the tombstone is strictly newer than the item's
+        // own stamp — an item edited/re-completed after the deletion survives
+        Object.keys(result.todoList?.items || {}).forEach(function(id) {
+            var ts = result.deletedTodoIds[id];
+            if (ts && ts > getRecordStamp(result.todoList.items[id], STAMP_TODO)) delete result.todoList.items[id];
+        });
+        // Completed-deadline records un-checked/deleted on another device (tombstones
+        // key by sanitized deadline id; re-completion stamped later survives)
+        Object.keys(result.completedDeadlines || {}).forEach(function(id) {
+            var ts = result.deletedCompletedDeadlineIds[sanitizeFirebaseKey(String(id))];
+            if (ts && ts > getRecordStamp(result.completedDeadlines[id], STAMP_COMPLETED_DL)) delete result.completedDeadlines[id];
+        });
+        // Planner completion entries: {id, value: taskId, completedAt(ms)} — tombstones
+        // key by the sanitized TASK id, so match on entry.value (legacy plain-string
+        // entries carry no stamp → tombstone wins)
+        Object.keys(result.monthlyPlanner?.completedTasks || {}).forEach(function(k) {
+            var entry = result.monthlyPlanner.completedTasks[k];
+            var taskId = sanitizeFirebaseKey(String((entry && entry.value) || entry || ''));
+            var ts = result.deletedPlannerCompletionIds[taskId];
+            if (ts && ts > getRecordStamp(entry, ['completedAt'])) delete result.monthlyPlanner.completedTasks[k];
+        });
+        // Custom deadlines deleted on another device: content-signature purge (same
+        // rule as mergeRemoteCollectionsIntoLocal — reconstructState previously had
+        // no purge, so remote-wins merges resurrected deleted deadlines). Entries
+        // RE-CREATED after the tombstone survive (deadline id embeds creation time).
+        (function() {
+            var _dlSigs = {};
+            getValues(result.deletedDeadlines).forEach(function(t) {
+                if (!t || !t.what) return;
+                var sig = (t.date || '') + '|' + (t.what || '') + '|' + (t.course || '');
+                if (!_dlSigs[sig] || (t.deletedAt || '') > _dlSigs[sig]) _dlSigs[sig] = t.deletedAt || '';
+            });
+            Object.keys(result.customDeadlines || {}).forEach(function(id) {
+                var d = result.customDeadlines[id];
+                if (!d) return;
+                var delAt = _dlSigs[(d.date || '') + '|' + (d.what || '') + '|' + (d.course || '')];
+                if (delAt === undefined) return;
+                var createdTs = parseInt(String(id).split('_')[1], 10);
+                if (!isNaN(createdTs) && new Date(delAt).getTime() < createdTs) return;
+                delete result.customDeadlines[id];
+            });
+        })();
     }
 
     // --- Graduation Prep ---
@@ -670,6 +799,18 @@ function mergeRemoteCollectionsIntoLocal(data) {
         ...(roadmapData.deletedPlannerNoteIds || {}),
         ...(data.deletedPlannerNoteIds || {})
     };
+    var deletedTodos = {
+        ...(roadmapData.deletedTodoIds || {}),
+        ...(data.deletedTodoIds || {})
+    };
+    var deletedCompDls = {
+        ...(roadmapData.deletedCompletedDeadlineIds || {}),
+        ...(data.deletedCompletedDeadlineIds || {})
+    };
+    var deletedPlanComps = {
+        ...(roadmapData.deletedPlannerCompletionIds || {}),
+        ...(data.deletedPlannerCompletionIds || {})
+    };
 
     // Helper: add remote entries that don't exist locally (local wins for conflicts)
     // Optional 3rd param: set of deleted IDs to skip (prevents resurrection of deleted records)
@@ -694,6 +835,17 @@ function mergeRemoteCollectionsIntoLocal(data) {
         if (!roadmapData.clinicalData.missingNotes) roadmapData.clinicalData.missingNotes = {};
         addMissing(roadmapData.clinicalData.patients, data.clinicalData.patients, deletedPRs);
         addMissing(roadmapData.clinicalData.appointments, data.clinicalData.appointments, deletedApts);
+        // Per-appointment newer-wins (mirrors reconstructState): local-newer overall
+        // does not mean every appointment is newer locally — completion toggles and
+        // edits stamp lastUpdated, so a remote copy stamped strictly newer wins
+        Object.keys(data.clinicalData.appointments || {}).forEach(function(id) {
+            var loc = roadmapData.clinicalData.appointments[id];
+            var rem = data.clinicalData.appointments[id];
+            if (!loc || !rem || deletedApts[id]) return;
+            if (getRecordStamp(rem, STAMP_APPT) > getRecordStamp(loc, STAMP_APPT)) {
+                roadmapData.clinicalData.appointments[id] = rem;
+            }
+        });
         addMissing(roadmapData.clinicalData.completedProcedures, data.clinicalData.completedProcedures, deletedProcs);
         addMissing(roadmapData.clinicalData.patientRecords, data.clinicalData.patientRecords, deletedPRs);
         // Patient records: field-level merge for existing patients (addMissing only fills new keys)
@@ -747,6 +899,16 @@ function mergeRemoteCollectionsIntoLocal(data) {
             });
         }
         addMissing(roadmapData.clinicalData.missingNotes, data.clinicalData.missingNotes);
+        // Per-note newer-wins: a remote note whose status was toggled more recently
+        // (stamped updatedAt/completedAt) updates the local copy
+        Object.keys(data.clinicalData.missingNotes || {}).forEach(function(id) {
+            var loc = roadmapData.clinicalData.missingNotes[id];
+            var rem = data.clinicalData.missingNotes[id];
+            if (!loc || !rem) return;
+            if (getRecordStamp(rem, STAMP_NOTE) > getRecordStamp(loc, STAMP_NOTE)) {
+                roadmapData.clinicalData.missingNotes[id] = rem;
+            }
+        });
         // Merge deletion tracking from remote (deletions propagate across devices)
         if (!roadmapData.clinicalData.deletedAppointmentIds) roadmapData.clinicalData.deletedAppointmentIds = {};
         if (!roadmapData.clinicalData.deletedProcedureIds) roadmapData.clinicalData.deletedProcedureIds = {};
@@ -825,6 +987,16 @@ function mergeRemoteCollectionsIntoLocal(data) {
         if (!roadmapData.monthlyPlanner.overriddenStatic) roadmapData.monthlyPlanner.overriddenStatic = {};
         addMissing(roadmapData.monthlyPlanner.notes, data.monthlyPlanner.notes, deletedPlanNotes);
         addMissing(roadmapData.monthlyPlanner.customTasks, data.monthlyPlanner.customTasks, deletedPlanTasks);
+        // Per-task newer-wins: a remote task edited more recently (mpSaveTask stamps
+        // updatedAt) updates the local copy
+        Object.keys(data.monthlyPlanner.customTasks || {}).forEach(function(id) {
+            var loc = roadmapData.monthlyPlanner.customTasks[id];
+            var rem = data.monthlyPlanner.customTasks[id];
+            if (!loc || !rem || deletedPlanTasks[id]) return;
+            if (getRecordStamp(rem, STAMP_TASK) > getRecordStamp(loc, STAMP_TASK)) {
+                roadmapData.monthlyPlanner.customTasks[id] = rem;
+            }
+        });
         addMissing(roadmapData.monthlyPlanner.completedTasks, data.monthlyPlanner.completedTasks);
         addMissing(roadmapData.monthlyPlanner.hiddenClinicTasks, data.monthlyPlanner.hiddenClinicTasks);
         addMissing(roadmapData.monthlyPlanner.overriddenStatic, data.monthlyPlanner.overriddenStatic);
@@ -857,6 +1029,17 @@ function mergeRemoteCollectionsIntoLocal(data) {
             if (deletedPlanNotes[id]) delete roadmapData.monthlyPlanner.notes[id];
         });
     }
+    // Planner completion entries un-done on another device: tombstones key by the
+    // sanitized TASK id (entry.value), so match on that — purge when the tombstone
+    // is strictly newer than the entry's completedAt (a re-completion survives)
+    if (roadmapData.monthlyPlanner?.completedTasks) {
+        Object.keys(roadmapData.monthlyPlanner.completedTasks).forEach(function(k) {
+            var entry = roadmapData.monthlyPlanner.completedTasks[k];
+            var taskId = sanitizeFirebaseKey(String((entry && entry.value) || entry || ''));
+            var ts = deletedPlanComps[taskId];
+            if (ts && ts > getRecordStamp(entry, ['completedAt'])) delete roadmapData.monthlyPlanner.completedTasks[k];
+        });
+    }
 
     // D4 events (rotations, didactics, mock sims, INBDE, ADEX)
     if (data.d4Events) {
@@ -881,6 +1064,9 @@ function mergeRemoteCollectionsIntoLocal(data) {
     roadmapData.deletedCriticalReminderIds = deletedCrems;
     roadmapData.deletedPlannerTaskIds = deletedPlanTasks;
     roadmapData.deletedPlannerNoteIds = deletedPlanNotes;
+    roadmapData.deletedTodoIds = deletedTodos;
+    roadmapData.deletedCompletedDeadlineIds = deletedCompDls;
+    roadmapData.deletedPlannerCompletionIds = deletedPlanComps;
 
     // Top-level collections
     if (!roadmapData.customDeadlines) roadmapData.customDeadlines = {};
@@ -893,6 +1079,29 @@ function mergeRemoteCollectionsIntoLocal(data) {
     addMissing(roadmapData.editedDeadlines, data.editedDeadlines);
     addMissing(roadmapData.deletedDeadlines, data.deletedDeadlines);
     addMissing(roadmapData.examStudyProgress, data.examStudyProgress);
+    // Per-entry newer-wins for the deadline stores (mirrors reconstructState):
+    // remote copies stamped strictly newer update the local copy
+    [
+        [roadmapData.customDeadlines, data.customDeadlines, STAMP_TASK],
+        [roadmapData.editedDeadlines, data.editedDeadlines, STAMP_TASK],
+        [roadmapData.completedDeadlines, data.completedDeadlines, STAMP_COMPLETED_DL]
+    ].forEach(function(triple) {
+        var localObj = triple[0], remoteObj = triple[1], fields = triple[2];
+        Object.keys(remoteObj || {}).forEach(function(id) {
+            var loc = localObj[id];
+            var rem = remoteObj[id];
+            if (!loc || !rem) return;
+            if (getRecordStamp(rem, fields) > getRecordStamp(loc, fields)) localObj[id] = rem;
+        });
+    });
+    // Completed-deadline records un-checked/deleted on another device: purge when
+    // the tombstone is strictly newer than the record's completedAt
+    Object.keys(roadmapData.completedDeadlines).forEach(function(id) {
+        var ts = deletedCompDls[sanitizeFirebaseKey(String(id))];
+        if (ts && ts > getRecordStamp(roadmapData.completedDeadlines[id], STAMP_COMPLETED_DL)) {
+            delete roadmapData.completedDeadlines[id];
+        }
+    });
 
     // Purge custom deadlines deleted on another device. Tombstones are keyed by
     // random deleted_* ids, so match on content (date|what|course). Skip entries
@@ -934,8 +1143,30 @@ function mergeRemoteCollectionsIntoLocal(data) {
     if (data.todoList?.items) {
         if (!roadmapData.todoList) roadmapData.todoList = { items: {}, _nextSeq: 1, lastUpdated: null };
         if (!roadmapData.todoList.items) roadmapData.todoList.items = {};
-        addMissing(roadmapData.todoList.items, data.todoList.items);
+        addMissing(roadmapData.todoList.items, data.todoList.items, deletedTodos);
+        // Per-item newer-wins: a remote item checked off / edited more recently
+        // (stamped updatedAt/completedAt) updates the local copy — this is what
+        // propagates check-offs made on another device through the local-newer path
+        Object.keys(data.todoList.items).forEach(function(id) {
+            var loc = roadmapData.todoList.items[id];
+            var rem = data.todoList.items[id];
+            if (!loc || !rem || deletedTodos[id]) return;
+            if (getRecordStamp(rem, STAMP_TODO) > getRecordStamp(loc, STAMP_TODO)) {
+                roadmapData.todoList.items[id] = rem;
+            }
+        });
         roadmapData.todoList._nextSeq = Math.max(roadmapData.todoList._nextSeq || 1, data.todoList._nextSeq || 1);
+    }
+    // Purge todos cleared/deleted on another device (tombstone strictly newer than
+    // the item's own stamp wins; runs outside the data.todoList guard so remote
+    // tombstones apply even when the payload carries no todoList)
+    if (roadmapData.todoList?.items) {
+        Object.keys(roadmapData.todoList.items).forEach(function(id) {
+            var ts = deletedTodos[id];
+            if (ts && ts > getRecordStamp(roadmapData.todoList.items[id], STAMP_TODO)) {
+                delete roadmapData.todoList.items[id];
+            }
+        });
     }
 
     roadmapData.patientTodoBoard = mergePatientTodoBoard(
@@ -1413,12 +1644,29 @@ function promptForPin() {
 function mergeRemoteState(data) {
     if (!data) return;
 
+    mergePreservedNewerLocal = false;
     roadmapData = reconstructState(data, { strategy: 'remote-wins', fallback: roadmapData });
 
     migrateInvalidFirebaseKeys(roadmapData);
 
     // Mark clinical data as dirty so next initMonthlyPlanner() will re-sync
     clinicalDataDirty = true;
+
+    // A per-record overlay kept local copies stamped strictly newer than the cloud's.
+    // Push the merged union back up so other devices converge instead of the newer
+    // local records living only on this device. One deferred, fully-guarded save;
+    // after it lands both sides carry equal stamps (strict > goes false) — no ping-pong.
+    if (mergePreservedNewerLocal) {
+        mergePreservedNewerLocal = false;
+        if (mergePreservedPushTimer) clearTimeout(mergePreservedPushTimer);
+        mergePreservedPushTimer = setTimeout(function() {
+            mergePreservedPushTimer = null;
+            if (hasLoadedFromCloud && !awaitingFirebaseLoad && !isInitialLoad) {
+                console.log('[GRAD-SYNC] Pushing merged union — local records were stamped newer than remote');
+                saveData();
+            }
+        }, 600);
+    }
 }
 
 // ==================== LOAD DATA ====================
@@ -1635,6 +1883,36 @@ function finishFirebaseLoad(data) {
 // - "Keep This Device" grace window echoes
 // - empty/default cloud payloads
 // - remote saves that are not newer than local lastSaved
+// RC6 fix: realtime events that arrive during the isLocalUpdate / keep-local grace
+// windows are dropped — if one of them was a GENUINE newer save from another device,
+// this device stayed stale until the next unrelated event. One deduped re-fetch after
+// the windows close catches that case. Usually the dropped event is this device's own
+// echo, so the recheck compares lastSaved and no-ops.
+function scheduleRealtimeRecheck() {
+    if (realtimeRecheckTimer) return; // already scheduled — dedup
+    realtimeRecheckTimer = setTimeout(function() {
+        realtimeRecheckTimer = null;
+        if (!firebaseSyncEnabled || !database || !userPath || isInitialLoad) return;
+        if (isLocalUpdate || Date.now() - lastKeepLocalTime < KEEP_LOCAL_GRACE_MS) {
+            scheduleRealtimeRecheck(); // windows still open — try again later
+            return;
+        }
+        database.ref(userPath).once('value').then(function(snapshot) {
+            var data = snapshot.val();
+            if (!data || isEmptyState(data)) return;
+            var remoteLastSaved = data.lastSaved || 0;
+            if (remoteLastSaved > (roadmapData.lastSaved || 0) + 1000 && remoteLastSaved > lastRemoteUpdate) {
+                lastRemoteUpdate = remoteLastSaved;
+                mergeRemoteState(data);
+                safeLocalStorageSet(STORAGE_KEY, JSON.stringify(roadmapData));
+                try { initUI(); } catch (e) { console.error('Realtime recheck re-render error:', e); }
+                updateSyncStatus('connected', 'Synced');
+                showToast('📡 Updated from another device');
+            }
+        }).catch(function(err) { console.error('Realtime recheck failed:', err); });
+    }, 12000);
+}
+
 function setupRealtimeSync() {
     if (!firebaseSyncEnabled || !database || !userPath) return;
 
@@ -1649,14 +1927,17 @@ function setupRealtimeSync() {
         const data = snapshot.val();
         if (!data) return;
 
-        // FIX 4: Skip processing if this is a local update
+        // FIX 4: Skip processing if this is a local update — but schedule a one-shot
+        // recheck in case a genuine remote save raced into the 10s window (RC6)
         if (isLocalUpdate) {
+            scheduleRealtimeRecheck();
             return;
         }
 
         // FIX: Skip during "Keep This Device" grace period to prevent
         // cloud echo from overwriting local data before write completes
         if (Date.now() - lastKeepLocalTime < KEEP_LOCAL_GRACE_MS) {
+            scheduleRealtimeRecheck();
             return;
         }
 
@@ -2935,7 +3216,12 @@ document.addEventListener('visibilitychange', function() {
         if (!isInitialLoad && hasLoadedFromCloud && roadmapData._dataLoaded && !isEmptyState(roadmapData)
             && pinValidated && validateStateIntegrity(roadmapData).length === 0) {
             safeLocalStorageSet(STORAGE_KEY, JSON.stringify(roadmapData));
-            if (firebaseSyncEnabled && database && userPath) {
+            // RC4 fix: only push to Firebase when THIS device actually has unsynced
+            // local changes. The old unconditional .set() re-uploaded a stale full
+            // snapshot on every tab-hide — a long-idle tab could overwrite another
+            // device's newer save with hours-old data (the exact cross-device
+            // data-loss pattern). localStorage flush above stays unconditional.
+            if (localChangesSinceLastSync && firebaseSyncEnabled && database && userPath) {
                 // FIX: Set local update flag to prevent realtime listener from re-processing this write
                 setLocalUpdateFlag();
                 // FIXED: Clean data before Firebase write
@@ -2944,15 +3230,22 @@ document.addEventListener('visibilitychange', function() {
                 // CRITICAL FIX: Sanitize keys to prevent Firebase InvalidKey throws
                 cleanData = sanitizeFirebaseData(cleanData);
                 database.ref(userPath).set(cleanData)
+                    .then(() => { localChangesSinceLastSync = false; })
                     .catch(err => console.error('Save on hide failed:', err));
             }
         }
     } else if (document.visibilityState === 'visible') {
         // Tab is visible again - refresh from Firebase
         // GUARD: Only refresh if we've completed initial load
-        // FIX: Skip cloud refresh if local changes are pending (prevents overwriting unsaved work)
+        // RC5 fix: pending local changes no longer dead-end the refresh (the old
+        // !localChangesSinceLastSync gate left a device with a stuck flag — e.g. a
+        // push that never resolved while iOS froze the tab — permanently stale AND
+        // permanently unpushed). We always fetch: if remote is newer we MERGE
+        // (per-record stamps protect unsynced local work) and push the union;
+        // if remote is not newer we retry the pending push so the flag clears.
         // FIX: Skip during "Keep This Device" grace period to prevent stale cloud data overwrite
-        if (firebaseSyncEnabled && database && userPath && !isInitialLoad && !localChangesSinceLastSync && (Date.now() - lastKeepLocalTime >= KEEP_LOCAL_GRACE_MS)) {
+        if (firebaseSyncEnabled && database && userPath && !isInitialLoad && (Date.now() - lastKeepLocalTime >= KEEP_LOCAL_GRACE_MS)) {
+            const hadPendingLocal = localChangesSinceLastSync;
             database.ref(userPath).once('value')
                 .then(snapshot => {
                     if (snapshot.exists()) {
@@ -2969,6 +3262,12 @@ document.addEventListener('visibilitychange', function() {
                             mergeRemoteState(data);
                             initUI();
                             safeLocalStorageSet(STORAGE_KEY, JSON.stringify(roadmapData));
+                            // Local had unsynced work — push the merged union so it
+                            // isn't stranded on this device
+                            if (hadPendingLocal) saveData();
+                        } else if (hadPendingLocal) {
+                            // Remote not newer — retry the pending push that never landed
+                            saveData();
                         }
                     }
                 })

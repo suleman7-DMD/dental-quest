@@ -375,7 +375,8 @@ function saveAppointment() {
         ...existingApt,
         ...formFields,
         status: existingApt.status || 'scheduled',
-        createdAt: existingApt.createdAt || new Date().toISOString()
+        createdAt: existingApt.createdAt || new Date().toISOString(),
+        lastUpdated: new Date().toISOString()
     };
 
     // Create deadline if requested
@@ -397,7 +398,8 @@ function saveAppointment() {
             type: 'Clinical',
             done: false,
             grade: null,
-            clinicalAptId: aptId
+            clinicalAptId: aptId,
+            createdAt: new Date().toISOString()
         };
     }
 
@@ -3071,6 +3073,7 @@ function backfillClinicalData() {
         if (apt.status === 'scheduled' && apt.date && apt.date < todayStr) {
             apt.status = 'completed';
             apt.completedAt = apt.date + 'T17:00:00.000Z';
+            apt.lastUpdated = new Date().toISOString();
             backfillStats.appointmentsCompleted++;
 
             // Update patient lastVisit
@@ -3268,9 +3271,10 @@ function completeAppointment(aptId) {
         return;
     }
 
-    // 1. Set completed status
+    // 1. Set completed status (stamp so merge overlays don't revert this from a stale remote copy)
     apt.status = 'completed';
     apt.completedAt = new Date().toISOString();
+    apt.lastUpdated = new Date().toISOString();
 
     // 2. Update patient lastVisit (unified store) — only move forward, never regress.
     // Compare via visitDateToISO: stored values mix MM/DD/YYYY imports with bare
@@ -3340,6 +3344,7 @@ function markLinkedDeadlineDone(aptId) {
             // Compute stable ID BEFORE mutation (per CLAUDE.md)
             var dlId = dl._originalStableId || getDeadlineId(dl);
             dl.done = true;
+            dl.updatedAt = new Date().toISOString();
 
             if (!roadmapData.completedDeadlines) roadmapData.completedDeadlines = {};
             roadmapData.completedDeadlines[dlId] = {
@@ -3357,9 +3362,14 @@ function unmarkLinkedDeadlineDone(aptId) {
     getValues(roadmapData.customDeadlines).forEach(function(dl) {
         if (dl.clinicalAptId === aptId && dl.done) {
             dl.done = false;
+            dl.updatedAt = new Date().toISOString();
 
             var dlId = dl._originalStableId || getDeadlineId(dl);
             if (roadmapData.completedDeadlines && roadmapData.completedDeadlines[dlId]) {
+                // Tombstone: un-completion is a key-deletion — without it the entry
+                // resurrects from the other device's copy during key-union merges
+                if (!roadmapData.deletedCompletedDeadlineIds) roadmapData.deletedCompletedDeadlineIds = {};
+                roadmapData.deletedCompletedDeadlineIds[sanitizeFirebaseKey(dlId)] = new Date().toISOString();
                 delete roadmapData.completedDeadlines[dlId];
             }
         }
@@ -3391,6 +3401,10 @@ function unmarkPlannerTaskDone(aptId) {
     Object.keys(roadmapData.monthlyPlanner.completedTasks).forEach(function(id) {
         var entry = roadmapData.monthlyPlanner.completedTasks[id];
         if (entry?.value === taskId || entry === taskId) {
+            // Tombstone: un-completion is a key-deletion — without it the entry
+            // resurrects from the other device's copy during key-union merges
+            if (!roadmapData.deletedPlannerCompletionIds) roadmapData.deletedPlannerCompletionIds = {};
+            roadmapData.deletedPlannerCompletionIds[sanitizeFirebaseKey(taskId)] = new Date().toISOString();
             delete roadmapData.monthlyPlanner.completedTasks[id];
         }
     });

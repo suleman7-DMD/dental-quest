@@ -222,6 +222,7 @@ function mpToggleTaskComplete(taskId) {
                 clinicalDataDirty = true; // Must set BEFORE clinical mutation per CLAUDE.md
                 apt.status = 'completed';
                 apt.completedAt = new Date().toISOString();
+                apt.lastUpdated = new Date().toISOString();
 
                 // Update patient lastVisit — only move forward, never regress
                 const patient = roadmapData.clinicalData?.patientRecords?.[apt.patientId];
@@ -246,7 +247,11 @@ function mpToggleTaskComplete(taskId) {
             showToast('Task completed!');
         }
     } else {
-        // Find and remove the completed entry
+        // Find and remove the completed entry.
+        // Tombstone first: un-completion is a key-deletion — without it the entry
+        // resurrects from the other device's copy during key-union merges.
+        if (!roadmapData.deletedPlannerCompletionIds) roadmapData.deletedPlannerCompletionIds = {};
+        roadmapData.deletedPlannerCompletionIds[sanitizeFirebaseKey(taskIdStr)] = new Date().toISOString();
         Object.keys(roadmapData.monthlyPlanner.completedTasks).forEach(id => {
             const entry = roadmapData.monthlyPlanner.completedTasks[id];
             if (entry?.value === taskIdStr || entry === taskIdStr) {
@@ -1023,6 +1028,7 @@ function mpSaveTask() {
             mpCurrentTask.endTime = endTime;
             mpCurrentTask.type = type;
             mpCurrentTask.notes = notes;
+            mpCurrentTask.updatedAt = new Date().toISOString();
             // Mark as user-edited so syncClinicalToMonthlyPlanner won't overwrite
             if (mpCurrentTask.syncedFromClinical || mpCurrentTask.clinicalAppointmentId) {
                 mpCurrentTask.userEdited = true;

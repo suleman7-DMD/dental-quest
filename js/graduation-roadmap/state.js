@@ -127,6 +127,12 @@ let roadmapData = {
     // Tombstones for deleted planner custom tasks / notes (same pattern)
     deletedPlannerTaskIds: {},
     deletedPlannerNoteIds: {},
+    // Tombstones for cleared/deleted todo items, un-completed deadlines, and
+    // un-completed planner tasks — completion toggles OFF are key-deletions and
+    // would otherwise resurrect from the other device's copy during key-union merges
+    deletedTodoIds: {},
+    deletedCompletedDeadlineIds: {},
+    deletedPlannerCompletionIds: {},
     // Graduation prep tracking
     graduationPrep: {
         externship: { startDate: null, endDate: null, patients: {}, logistics: '', notes: '' },
@@ -229,6 +235,9 @@ function getDefaultRoadmapData() {
         deletedCriticalReminderIds: {},
         deletedPlannerTaskIds: {},
         deletedPlannerNoteIds: {},
+        deletedTodoIds: {},
+        deletedCompletedDeadlineIds: {},
+        deletedPlannerCompletionIds: {},
         graduationPrep: {
             externship: { startDate: null, endDate: null, patients: {}, logistics: '', notes: '' },
             cdcaAdex: { sessions: {}, notes: '' },
@@ -335,7 +344,7 @@ function isEmptyState(data) {
         (gradPrep.inbde?.notes || '') !== '' ||
         (gradPrep.jobSearch?.notes || '') !== ''
     );
-    var hasDeletedRecords = getCount(data.clinicalData?.deletedAppointmentIds) > 0 || getCount(data.clinicalData?.deletedProcedureIds) > 0 || getCount(data.clinicalData?.deletedPatientRecordIds) > 0 || getCount(data.clinicalData?.deletedCompItemIds) > 0 || getCount(data.deletedD4EventIds) > 0 || getCount(data.deletedCriticalReminderIds) > 0 || getCount(data.deletedPlannerTaskIds) > 0 || getCount(data.deletedPlannerNoteIds) > 0;
+    var hasDeletedRecords = getCount(data.clinicalData?.deletedAppointmentIds) > 0 || getCount(data.clinicalData?.deletedProcedureIds) > 0 || getCount(data.clinicalData?.deletedPatientRecordIds) > 0 || getCount(data.clinicalData?.deletedCompItemIds) > 0 || getCount(data.deletedD4EventIds) > 0 || getCount(data.deletedCriticalReminderIds) > 0 || getCount(data.deletedPlannerTaskIds) > 0 || getCount(data.deletedPlannerNoteIds) > 0 || getCount(data.deletedTodoIds) > 0 || getCount(data.deletedCompletedDeadlineIds) > 0 || getCount(data.deletedPlannerCompletionIds) > 0;
     // d4Events: migration-seeded INBDE/ADEX placeholders (seeded:true, no date) are
     // auto-generated and must NOT count as real data (Guard C). Any user-saved or
     // dated event counts.
@@ -1692,10 +1701,27 @@ function cascadeDeleteAppointment(aptId, { skipPropagation = false } = {}) {
     delete roadmapData.monthlyPlanner.customTasks['clinic_' + aptId];
     if (typeof unmarkPlannerTaskDone === 'function') unmarkPlannerTaskDone(aptId);
 
-    // 3. Clean linked custom deadlines (clinicalAptId backlink)
+    // 3. Clean linked custom deadlines (clinicalAptId backlink) — tombstone both
+    // stores so cross-device merges can't resurrect the deleted deadline
     Object.keys(roadmapData.customDeadlines || {}).forEach(function(dlId) {
-        if (roadmapData.customDeadlines[dlId].clinicalAptId === aptId) {
-            if (roadmapData.completedDeadlines) delete roadmapData.completedDeadlines[dlId];
+        var dl = roadmapData.customDeadlines[dlId];
+        if (dl.clinicalAptId === aptId) {
+            if (roadmapData.completedDeadlines && roadmapData.completedDeadlines[dlId]) {
+                if (!roadmapData.deletedCompletedDeadlineIds) roadmapData.deletedCompletedDeadlineIds = {};
+                roadmapData.deletedCompletedDeadlineIds[sanitizeFirebaseKey(dlId)] = new Date().toISOString();
+                delete roadmapData.completedDeadlines[dlId];
+            }
+            if (!roadmapData.deletedDeadlines || Array.isArray(roadmapData.deletedDeadlines)) {
+                roadmapData.deletedDeadlines = migrateArrayToObject(roadmapData.deletedDeadlines, 'deleted');
+            }
+            var tombId = generateId('deleted');
+            roadmapData.deletedDeadlines[tombId] = {
+                id: tombId,
+                date: dl.date,
+                what: dl.what,
+                course: dl.course,
+                deletedAt: new Date().toISOString()
+            };
             delete roadmapData.customDeadlines[dlId];
         }
     });
@@ -1748,10 +1774,12 @@ function cascadeDeletePatient(patientId) {
         });
     }
 
-    // 3c. Clean todoList items referencing this patient
+    // 3c. Clean todoList items referencing this patient (tombstone so merge can't resurrect)
     if (roadmapData.todoList?.items) {
+        if (!roadmapData.deletedTodoIds) roadmapData.deletedTodoIds = {};
         Object.keys(roadmapData.todoList.items).forEach(function(itemId) {
             if (roadmapData.todoList.items[itemId]?.patientId === patientId) {
+                roadmapData.deletedTodoIds[itemId] = new Date().toISOString();
                 delete roadmapData.todoList.items[itemId];
             }
         });
@@ -1780,9 +1808,10 @@ function cascadeUncompleteAppointment(aptId) {
     var apt = roadmapData.clinicalData.appointments[aptId];
     if (!apt) return;
 
-    // 1. Reset status
+    // 1. Reset status (stamp so merge overlays don't revert this from a stale remote copy)
     apt.status = 'scheduled';
     delete apt.completedAt;
+    apt.lastUpdated = new Date().toISOString();
 
     // 2. Find + cascade delete all procedures for this appointment
     if (!roadmapData.clinicalData.deletedProcedureIds) roadmapData.clinicalData.deletedProcedureIds = {};
@@ -1852,6 +1881,7 @@ function toggleMissingNoteStatus(noteId) {
         note.status = 'pending';
         note.completedAt = null;
     }
+    note.updatedAt = new Date().toISOString();
     clinicalDataDirty = true;
     safeLocalStorageSet(STORAGE_KEY, JSON.stringify(roadmapData));
     saveData();
@@ -1940,7 +1970,9 @@ function addTodoItem(description, source, sourceDetail) {
     var seq = roadmapData.todoList._nextSeq ?? 1;
     var today = getLocalDateString(new Date());
     var dateCompact = today.replace(/-/g, '');
-    var id = 'todo-' + String(seq).padStart(4, '0') + '-' + dateCompact;
+    // Random suffix: two devices can hold the same _nextSeq — without it their
+    // new items collide on the same id and one is silently lost in the key-union merge
+    var id = 'todo-' + String(seq).padStart(4, '0') + '-' + dateCompact + '-' + Math.random().toString(36).slice(2, 6);
     roadmapData.todoList.items[id] = {
         id: id,
         description: description,
@@ -1948,6 +1980,7 @@ function addTodoItem(description, source, sourceDetail) {
         dateAdded: today,
         sourceDetail: sourceDetail ?? '',
         addedAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
         completedAt: null,
         status: 'pending'
     };
@@ -1969,6 +2002,8 @@ function toggleTodoStatus(todoId) {
         item.status = 'pending';
         item.completedAt = null;
     }
+    // Per-item stamp — merge overlays use it so this toggle wins over stale remote copies
+    item.updatedAt = new Date().toISOString();
     roadmapData.todoList.lastUpdated = new Date().toISOString();
     safeLocalStorageSet(STORAGE_KEY, JSON.stringify(roadmapData));
     saveData();
@@ -1982,6 +2017,7 @@ function updateTodoDescription(todoId, text) {
     if (!next) return false;
     if (items[todoId].description === next) return true;
     items[todoId].description = next;
+    items[todoId].updatedAt = new Date().toISOString();
     roadmapData.todoList.lastUpdated = new Date().toISOString();
     safeLocalStorageSet(STORAGE_KEY, JSON.stringify(roadmapData));
     saveData();
@@ -1991,10 +2027,12 @@ function updateTodoDescription(todoId, text) {
 function clearCompletedTodos() {
     var items = roadmapData.todoList?.items;
     if (!items) return;
+    if (!roadmapData.deletedTodoIds) roadmapData.deletedTodoIds = {};
     var keys = Object.keys(items);
     var cleared = 0;
     for (var i = 0; i < keys.length; i++) {
         if (items[keys[i]].status === 'completed') {
+            roadmapData.deletedTodoIds[keys[i]] = new Date().toISOString();
             delete items[keys[i]];
             cleared++;
         }

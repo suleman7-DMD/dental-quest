@@ -2434,11 +2434,14 @@ function confirmUnifiedImport() {
                 var existingProc = (dupeApt.procedures || '').trim();
                 if (incomingProc && existingProc && existingProc.toLowerCase() !== incomingProc.toLowerCase() && existingProc.indexOf(incomingProc) === -1) {
                     dupeApt.procedures = existingProc + ' + ' + incomingProc;
+                    dupeApt.lastUpdated = new Date().toISOString();
                 } else if (incomingProc && !existingProc) {
                     dupeApt.procedures = incomingProc;
+                    dupeApt.lastUpdated = new Date().toISOString();
                 }
                 if (apt.chair && !dupeApt.chair) {
                     dupeApt.chair = apt.chair;
+                    dupeApt.lastUpdated = new Date().toISOString();
                 }
                 // Update existing auto-created procedure records to match merged appointment text
                 if (dupeApt.procedures) {
@@ -2459,7 +2462,8 @@ function confirmUnifiedImport() {
                 procedures: apt.procedure || '', chair: apt.chair || '',
                 notes: '',
                 status: isPast ? 'completed' : 'scheduled', imported: true,
-                createdAt: new Date().toISOString()
+                createdAt: new Date().toISOString(),
+                lastUpdated: new Date().toISOString()
             };
             if (isPast) {
                 newApt.completedAt = apt.date + 'T17:00:00.000Z';
@@ -2519,6 +2523,7 @@ function confirmUnifiedImport() {
                 session: note.session ?? '',
                 location: note.location ?? '',
                 addedAt: new Date().toISOString(),
+                updatedAt: new Date().toISOString(),
                 completedAt: null,
                 status: 'pending'
             };
@@ -2549,6 +2554,7 @@ function confirmUnifiedImport() {
                 dateAdded: item.dateAdded ?? getLocalDateString(new Date()),
                 sourceDetail: item.sourceDetail ?? '',
                 addedAt: new Date().toISOString(),
+                updatedAt: new Date().toISOString(),
                 completedAt: null,
                 status: 'pending'
             };
