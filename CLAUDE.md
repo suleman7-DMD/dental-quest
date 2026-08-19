@@ -47,7 +47,7 @@ const date = new Date(year, month - 1, day);
 - **`initUI` auto-save guards**: Both `setTimeout(() => saveData(), ...)` in initUI MUST check `hasLoadedFromCloud && !awaitingFirebaseLoad`.
 - **Double `loadData()`**: Causes race conditions. Verify orphan calls before adding.
 - **Failsafe timer**: Must set `hasLoadedFromCloud = true`, `isInitialLoad = false`, `roadmapData._dataLoaded = true`. (Flags set manually, no `markInitialLoadComplete()` function.)
-- **`clinicalDataDirty = true` before ALL clinical CRUD**: 29 functions require this — patient CRUD (save/delete/add/field/reliability), appointment CRUD (save/delete/complete/uncomplete), procedures (record/delete/backfill), competencies (adjust/setStatus/delete/save/notes/saveNote/reset), imports (confirmPatient/confirmClinical), `prSavePatientField`, `toggleMissingNoteStatus`, `clearCompletedMissingNotes`, cross-sync paths (`submitDeadlineGrade`, `toggleDeadlineDone` uncomplete, `mpToggleTaskComplete` fallback, `tsFixRebuildDeadlines`).
+- **`clinicalDataDirty = true` before ALL clinical CRUD**: 29 functions require this — patient CRUD (save/delete/add/field/reliability), appointment CRUD (save/delete/complete/uncomplete), procedures (record/delete/backfill), competencies (adjust/setStatus/delete/save/notes/saveNote/reset), imports (confirmPatient/confirmClinical), `savePatientField`, `toggleMissingNoteStatus`, `clearCompletedMissingNotes`, cross-sync paths (`submitDeadlineGrade`, `toggleDeadlineDone` uncomplete, `mpToggleTaskComplete` fallback, `tsFixRebuildDeadlines`).
 - **Fallback timers = data wipe**: DOMContentLoaded 3s/6s timers must check BOTH `awaitingPinEntry` AND `awaitingFirebaseLoad`. 15s safety valve.
 - **Guard F**: `validateStateIntegrity()` must validate `periodicReviews`, `competencies`, `missingNotes`.
 - **Firebase array→object corruption**: ALL collection access MUST use `getValues()` for reads. Applies to: `appointments`, `completedProcedures`, `patientRecords`, `completedTasks`, `customTasks`, `customDeadlines`, `dashboardSnapshots`, `briefHistory`, `importedRequirements`, competency `sections`/`items`, any stored collection. NEVER use `Object.values()` on Firebase-stored data.
@@ -102,7 +102,7 @@ const date = new Date(year, month - 1, day);
 - **Chart number normalization**: Leading-zero canonical form. `migrateLeadingZeroDedup()` gated by `leadingZeroDedupDone_v1`. FK remapping: `appointments[].patientId`, `completedProcedures[].patientId`, `monthlyPlanner.customTasks[].patientId`.
 - **`getPatientRecords()` is read-only**: Injects defaults into memory but does NOT persist. Persistence via next CRUD `saveData()`.
 - **Patient `archived` flag (Aug 2026)**: Per-record boolean. Filtering happens at RENDER sites (sidebar, roster, mini review, KPIs), NOT inside `getAllPatientRecords()` — CRUD/restore and accessor-bypassing KPIs must still see archived records. Sidebar has an ARCHIVED section + bulk archive. Merge: `archivedAt` newer-wins (see Sync & Merge Rules); gap-fill (`local.archived === undefined`) kept for legacy records. Mini review counts archived and red separately in its header; post-delete selection prefers first NON-archived record.
-- **Skeleton patient records**: `prSavePatientField()` must copy `name` and `chartNumber` from `clinicalData.patients`.
+- **Skeleton patient records**: auto-created records (e.g. `PATIENT_UPDATE` unknown chart) must carry `name` and `chartNumber` via `createPatientRecord(overrides)`. (`prSavePatientField` no longer exists — field edits go through `savePatientField()`.)
 - **PATIENT_UPDATE must validate chart number**: Reject empty (prevents `'pt_'` overwrite).
 
 ### Clinical Import System
@@ -386,7 +386,7 @@ Full audit history: `docs/audit-history.md`
 - Cross-app data flow to body-comp-tracker and stim-calc (read paths)
 - `syncSchemaFields()` re-adds dead `rules` field (~2KB per save)
 - DEFAULT_COMPETENCIES still has `completionEntries: []` on templates (stripped by migration)
-- 17 remaining `Object.values()` on Firebase collections in `patients.js` (10 in FK remap blocks) and `clinical.js` (7 in modal/backfill/deadline fns) — see handoff prompt in session history
+- ~~17 remaining `Object.values()` on Firebase collections~~ — RESOLVED Aug 2026: zero `Object.values()` on Firebase collections in `patients.js`/`clinical.js`
 
 ---
 

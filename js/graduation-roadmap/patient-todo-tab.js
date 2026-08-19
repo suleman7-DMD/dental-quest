@@ -89,7 +89,9 @@ function patientTodoGetLastVisit(patient, patientId) {
 
 function patientTodoGetNextVisit(patient, patientId) {
     var autoNext = (typeof getNextScheduledVisit === 'function') ? getNextScheduledVisit(patient, patientId) : '';
-    var effectiveNext = patient?.nextVisitManual ? (patient?.nextVisit || '') : (autoNext || patient?.nextVisit || '');
+    var effectiveNext = (typeof getEffectiveNextVisit === 'function')
+        ? getEffectiveNextVisit(patient, patientId)
+        : (patient?.nextVisitManual ? (patient?.nextVisit || '') : (autoNext || patient?.nextVisit || ''));
     var raw = patientTodoCleanText(effectiveNext);
     if (!raw) {
         return { date: 'No apt scheduled', detail: '' };

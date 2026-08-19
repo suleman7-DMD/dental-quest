@@ -6911,6 +6911,11 @@
             select {
                 font-size: 16px !important;
             }
+            /* Patient contenteditable fields — same iOS auto-zoom guard */
+            #tab-patients [contenteditable="true"],
+            #tab-patients [contenteditable="plaintext-only"] {
+                font-size: 16px !important;
+            }
 
             /* --- JS-rendered inline style overrides --- */
             /* Modal overlays created by JS */
@@ -8130,7 +8135,15 @@
             .checkpoint-controls button { padding: 2px 6px !important; font-size: 0.65em !important; }
 
             /* Fix 4: Larger touch targets for mobile */
-            #tab-patients .ptr-rel-dot { width: 22px; height: 22px; }
+            /* Reliability dots: 22px visible circle inside a 40px tap target —
+               background-clip keeps the inline background color on the content box only */
+            #tab-patients .ptr-rel-dot {
+                width: 22px;
+                height: 22px;
+                padding: 9px;
+                box-sizing: content-box;
+                background-clip: content-box;
+            }
             #tab-patients .ptr-edit-btn { padding: 8px 14px; font-size: 0.8em; }
             #tab-patients .ptr-action-btn { padding: 8px 12px; font-size: 0.78em; }
             .ptr-priority-card { padding: 12px; }
@@ -11350,12 +11363,12 @@ NOTES: ...
     <!-- Toast Notification -->
     <div class="toast" id="toast">Saved!</div>
 
-    <script src="js/graduation-roadmap/state.js?v=20260815c"></script>
-    <script src="js/graduation-roadmap/firebase-sync.js?v=20260815"></script>
+    <script src="js/graduation-roadmap/state.js?v=20260819"></script>
+    <script src="js/graduation-roadmap/firebase-sync.js?v=20260819"></script>
     <script src="js/graduation-roadmap/deadlines.js?v=20260815"></script>
-    <script src="js/graduation-roadmap/clinical.js?v=20260815"></script>
-    <script src="js/graduation-roadmap/patients.js?v=20260815"></script>
-    <script src="js/graduation-roadmap/patient-todo-tab.js?v=20260815"></script>
+    <script src="js/graduation-roadmap/clinical.js?v=20260819"></script>
+    <script src="js/graduation-roadmap/patients.js?v=20260819"></script>
+    <script src="js/graduation-roadmap/patient-todo-tab.js?v=20260819"></script>
     <script src="js/graduation-roadmap/general-todo-tab.js?v=20260815"></script>
     <script src="js/graduation-roadmap/import-system.js?v=20260815"></script>
     <script src="js/graduation-roadmap/daily-planner.js?v=20260815"></script>

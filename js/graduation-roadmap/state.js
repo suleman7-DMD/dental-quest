@@ -992,6 +992,23 @@ function parseMDYDate(dateStr) {
     return new Date(y, m - 1, d);
 }
 
+// Normalize any stored visit date to YYYY-MM-DD for safe comparison.
+// Handles bare ISO ('2026-08-19'), pipe-delimited imports
+// ('06/12/2026 | Crown | Dr. X'), and MM/DD/YY(YY). Returns '' when no
+// parseable date — mixed formats must never be compared lexicographically.
+function visitDateToISO(raw) {
+    if (!raw) return '';
+    var d = String(raw).split('|')[0].trim();
+    var iso = d.match(/^(\d{4})-(\d{2})-(\d{2})/);
+    if (iso) return iso[1] + '-' + iso[2] + '-' + iso[3];
+    var mdy = d.match(/^(\d{1,2})\/(\d{1,2})\/(\d{2,4})/);
+    if (mdy) {
+        var y = mdy[3].length === 2 ? '20' + mdy[3] : mdy[3];
+        return y + '-' + String(mdy[1]).padStart(2, '0') + '-' + String(mdy[2]).padStart(2, '0');
+    }
+    return '';
+}
+
 function getCountdown(dateStr) {
     if (!dateStr) return null;
     const today = new Date();

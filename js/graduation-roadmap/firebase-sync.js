@@ -287,8 +287,18 @@ function reconstructState(source, options) {
                 if (!merged[id]) {
                     merged[id] = { ...remote[id] };
                 } else {
+                    // Per-record newer-wins: every patient CRUD/import path stamps
+                    // lastUpdated, so a record edited more recently on another device
+                    // overwrites local scalars. Non-empty remote values only — a
+                    // skeleton record stamped newer must not blank out fuller data.
+                    // Fields with dedicated conflict rules below are excluded.
+                    var _prProtected = { clinicalBrief: 1, briefHistory: 1, importedRequirements: 1, archived: 1, archivedAt: 1 };
+                    var _prRemoteNewer = (remote[id].lastUpdated || '') > ((local[id] || {}).lastUpdated || '');
                     Object.keys(remote[id]).forEach(function(key) {
                         if (merged[id][key] === undefined || merged[id][key] === null || merged[id][key] === '') {
+                            merged[id][key] = remote[id][key];
+                        } else if (_prRemoteNewer && !_prProtected[key]
+                            && remote[id][key] !== undefined && remote[id][key] !== null && remote[id][key] !== '') {
                             merged[id][key] = remote[id][key];
                         }
                     });
@@ -675,6 +685,18 @@ function mergeRemoteCollectionsIntoLocal(data) {
                 var local = roadmapData.clinicalData.patientRecords[ptId];
                 var remote = data.clinicalData.patientRecords[ptId];
                 if (!local || !remote) return;
+                // Per-record newer-wins (mirrors reconstructState): local-newer overall
+                // does not mean every record is newer locally — a record edited more
+                // recently on another device updates local scalars. Non-empty values
+                // only; fields with dedicated conflict rules below are excluded.
+                if ((remote.lastUpdated || '') > (local.lastUpdated || '')) {
+                    var _prProtected = { clinicalBrief: 1, briefHistory: 1, importedRequirements: 1, archived: 1, archivedAt: 1 };
+                    Object.keys(remote).forEach(function(key) {
+                        if (_prProtected[key]) return;
+                        var _v = remote[key];
+                        if (_v !== undefined && _v !== null && _v !== '') local[key] = _v;
+                    });
+                }
                 // Clinical briefs: newer dateGenerated wins
                 if (remote.clinicalBrief && remote.clinicalBrief.dateGenerated) {
                     if (!local.clinicalBrief || (remote.clinicalBrief.dateGenerated > (local.clinicalBrief.dateGenerated || ''))) {
@@ -727,6 +749,38 @@ function mergeRemoteCollectionsIntoLocal(data) {
                 roadmapData.clinicalData.competencies, data.clinicalData.competencies
             );
         }
+    }
+
+    // Purge clinical records tombstoned on another device (deletes win over
+    // key-union). addMissing above only blocks RE-ADDING deleted keys — a copy
+    // still present locally must be purged here or the deferred saveData()
+    // resurrects it to the cloud. Runs OUTSIDE the data.clinicalData guard:
+    // remote tombstones must apply even when the payload carries no clinicalData.
+    if (roadmapData.clinicalData?.appointments) {
+        Object.keys(roadmapData.clinicalData.appointments).forEach(function(id) {
+            if (deletedApts[id]) delete roadmapData.clinicalData.appointments[id];
+        });
+    }
+    if (roadmapData.clinicalData?.completedProcedures) {
+        Object.keys(roadmapData.clinicalData.completedProcedures).forEach(function(id) {
+            if (deletedProcs[id]) delete roadmapData.clinicalData.completedProcedures[id];
+        });
+    }
+    if (roadmapData.clinicalData?.patientRecords) {
+        Object.keys(roadmapData.clinicalData.patientRecords).forEach(function(id) {
+            if (deletedPRs[id]) delete roadmapData.clinicalData.patientRecords[id];
+        });
+    }
+    if (roadmapData.clinicalData?.patients) {
+        Object.keys(roadmapData.clinicalData.patients).forEach(function(id) {
+            if (deletedPRs[id]) delete roadmapData.clinicalData.patients[id];
+        });
+    }
+    // Persist the unioned clinical tombstones (mirrors deletedD4EventIds below)
+    if (roadmapData.clinicalData) {
+        roadmapData.clinicalData.deletedAppointmentIds = deletedApts;
+        roadmapData.clinicalData.deletedProcedureIds = deletedProcs;
+        roadmapData.clinicalData.deletedPatientRecordIds = deletedPRs;
     }
 
     // Monthly planner collections
@@ -2825,9 +2879,20 @@ function saveData() {
 // ==================== EVENT LISTENERS ====================
 // These register at parse time but only fire on events (safe for module loading)
 
+// Commit any in-progress contenteditable/input edit by force-blurring it.
+// iOS never fires blur on its own when the app is backgrounded, so without
+// this the flush below snapshots roadmapData WITHOUT the text being typed.
+function commitActiveEdit() {
+    var ae = document.activeElement;
+    if (ae && (ae.isContentEditable || ae.tagName === 'INPUT' || ae.tagName === 'TEXTAREA')) {
+        try { ae.blur(); } catch (e) { /* blur handlers may throw; flush must proceed */ }
+    }
+}
+
 // Handle visibility changes - save when hiding, refresh when showing - WITH GUARDS
 document.addEventListener('visibilitychange', function() {
     if (document.visibilityState === 'hidden') {
+        commitActiveEdit();
         // Tab is being hidden - ensure data is saved immediately
         // GUARD: Full guard suite — must match saveData() guards to prevent saving defaults
         if (!isInitialLoad && hasLoadedFromCloud && roadmapData._dataLoaded && !isEmptyState(roadmapData)
@@ -2877,6 +2942,19 @@ document.addEventListener('visibilitychange', function() {
 
 // Save on page unload to prevent data loss during debounce window - WITH GUARDS
 window.addEventListener('beforeunload', function() {
+    commitActiveEdit();
+    // GUARD: Full guard suite — must match saveData() guards to prevent saving defaults
+    if (!isInitialLoad && hasLoadedFromCloud && roadmapData._dataLoaded && !isEmptyState(roadmapData)
+        && pinValidated && validateStateIntegrity(roadmapData).length === 0) {
+        safeLocalStorageSet(STORAGE_KEY, JSON.stringify(roadmapData));
+    }
+});
+
+// iOS Chrome/Safari fire pagehide (not beforeunload) when a tab is killed or
+// navigated away — same commit + localStorage flush; Firebase catches up on
+// next boot via the local-newer auto-push path.
+window.addEventListener('pagehide', function() {
+    commitActiveEdit();
     // GUARD: Full guard suite — must match saveData() guards to prevent saving defaults
     if (!isInitialLoad && hasLoadedFromCloud && roadmapData._dataLoaded && !isEmptyState(roadmapData)
         && pinValidated && validateStateIntegrity(roadmapData).length === 0) {

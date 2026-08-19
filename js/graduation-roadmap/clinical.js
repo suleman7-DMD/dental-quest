@@ -1427,9 +1427,11 @@ function showPatientCompPreview(patientId, itemId) {
     var lastVisitProc = lastCompleted ? lastCompleted.procedures : (lastVisitParts[1] || '');
     var lastVisitProvider = lastCompleted ? lastCompleted.provider : (lastVisitParts[2] || '');
 
-    // Next visit
+    // Next visit \u2014 canonical accessor (manual \u2192 scheduled \u2192 stored import)
     var autoNext = typeof getNextScheduledVisit === 'function' ? getNextScheduledVisit(pt, patientId) : '';
-    var effectiveNext = pt.nextVisitManual ? (pt.nextVisit || '') : (autoNext || '');
+    var effectiveNext = typeof getEffectiveNextVisit === 'function'
+        ? getEffectiveNextVisit(pt, patientId)
+        : (pt.nextVisitManual ? (pt.nextVisit || '') : (autoNext || pt.nextVisit || ''));
     var nextVisitDate = '';
     var nextVisitProc = '';
     if (effectiveNext) {
@@ -1438,7 +1440,9 @@ function showPatientCompPreview(patientId, itemId) {
             nextVisitDate = effectiveNext.substring(0, dashIdx).trim();
             nextVisitProc = effectiveNext.substring(dashIdx + 1).trim();
         } else {
-            nextVisitDate = effectiveNext.split('|')[0].trim();
+            var nvPipeParts = effectiveNext.split('|').map(function(s) { return s.trim(); });
+            nextVisitDate = nvPipeParts[0];
+            nextVisitProc = nvPipeParts.slice(1).filter(Boolean).join(' | ');
         }
     }
 
@@ -3226,11 +3230,16 @@ function completeAppointment(aptId) {
     apt.status = 'completed';
     apt.completedAt = new Date().toISOString();
 
-    // 2. Update patient lastVisit (unified store) — only move forward, never regress
+    // 2. Update patient lastVisit (unified store) — only move forward, never regress.
+    // Compare via visitDateToISO: stored values mix MM/DD/YYYY imports with bare
+    // ISO, and raw string comparison across the two formats is meaningless.
     var patient = roadmapData.clinicalData.patientRecords?.[apt.patientId];
     if (patient) {
-        var existingVisitDate = (patient.lastVisit || '').split('|')[0].trim();
-        if (!existingVisitDate || existingVisitDate < apt.date) {
+        var existingVisitISO = typeof visitDateToISO === 'function'
+            ? visitDateToISO(patient.lastVisit)
+            : (patient.lastVisit || '').split('|')[0].trim();
+        var newVisitISO = typeof visitDateToISO === 'function' ? visitDateToISO(apt.date) : apt.date;
+        if (!existingVisitISO || (newVisitISO && newVisitISO > existingVisitISO)) {
             patient.lastVisit = apt.date;
         }
         patient.lastUpdated = new Date().toISOString();

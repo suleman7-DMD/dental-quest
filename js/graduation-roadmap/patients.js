@@ -429,9 +429,12 @@ function migrateToUnifiedPatientStore() {
 function getPatientRecords() {
     if (!roadmapData.clinicalData) roadmapData.clinicalData = {};
     // Guard: don't initialize defaults until real data has loaded from cloud
-    // This prevents wiping imported data with defaults during the load race
+    // This prevents wiping imported data with defaults during the load race.
+    // The store must still be ATTACHED to roadmapData — returning a detached `|| {}`
+    // literal would silently discard any CRUD writes made before load completes.
     if (!roadmapData._dataLoaded) {
-        return roadmapData.clinicalData.patientRecords || {};
+        if (!roadmapData.clinicalData.patientRecords) roadmapData.clinicalData.patientRecords = {};
+        return roadmapData.clinicalData.patientRecords;
     }
     if (!roadmapData.clinicalData.patientRecords || Object.keys(roadmapData.clinicalData.patientRecords).length === 0) {
         roadmapData.clinicalData.patientRecords = JSON.parse(JSON.stringify(DEFAULT_PATIENT_RECORDS));
@@ -603,23 +606,30 @@ function renderPatientsSidebar() {
         listHtml = '<div style="padding:20px; text-align:center; color:#64748b; font-size:0.8em;">No patients yet</div>';
     }
 
-    // Render sidebar — escapeHtml() used on all user-provided values above
-    container.innerHTML = '<div class="pts-sidebar-controls">'
-        +   '<input type="text" class="pt-sidebar-search" placeholder="Search patients..." '
-        +     'value="' + escapeHtml(rawSearchTerm) + '" oninput="renderPatientsSidebar()" '
-        +     'autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">'
-        +   '<div class="pts-sidebar-btns">'
-        +     '<button onclick="openUnifiedImportModal()" class="pts-btn-import">Import</button>'
-        +     '<button onclick="addNewPatientRecord()" class="pts-btn-add">+ New</button>'
-        +   '</div>'
-        + '</div>'
-        + '<div class="pts-sidebar-list">' + listHtml + '</div>';
+    // Render sidebar — escapeHtml() used on all user-provided values above.
+    // Controls (incl. search input) build ONCE; only the list re-renders per keystroke,
+    // so the focused input is never destroyed while typing (iOS keyboard stays stable).
+    var listEl = container.querySelector('.pts-sidebar-list');
+    if (!listEl) {
+        container.innerHTML = '<div class="pts-sidebar-controls">'
+            +   '<input type="text" class="pt-sidebar-search" placeholder="Search patients..." '
+            +     'value="' + escapeHtml(rawSearchTerm) + '" oninput="renderPatientsSidebar()" '
+            +     'autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">'
+            +   '<div class="pts-sidebar-btns">'
+            +     '<button onclick="openUnifiedImportModal()" class="pts-btn-import">Import</button>'
+            +     '<button onclick="addNewPatientRecord()" class="pts-btn-add">+ New</button>'
+            +   '</div>'
+            + '</div>'
+            + '<div class="pts-sidebar-list"></div>';
+        listEl = container.querySelector('.pts-sidebar-list');
+    }
+    listEl.innerHTML = listHtml;
 
-    // Restore focus + cursor position if the user was typing in the search box
-    // (even when the box was just cleared to empty — losing focus mid-typing is jarring)
+    // Restore focus + cursor only if the input was just rebuilt (initial build path);
+    // during normal typing the input survives, so this is a no-op.
     if (searchHadFocus) {
         var newInput = container.querySelector('.pt-sidebar-search');
-        if (newInput) {
+        if (newInput && document.activeElement !== newInput) {
             newInput.focus();
             var cursorPos = searchCursor != null ? Math.min(searchCursor, newInput.value.length) : newInput.value.length;
             newInput.setSelectionRange(cursorPos, cursorPos);
@@ -843,6 +853,47 @@ function getNextScheduledVisit(patient, patientId) {
     return formatted;
 }
 
+// ==================== CANONICAL VISIT ACCESSORS ====================
+// Single source of truth for every surface (summary card, record field,
+// roster, mini review, clinical record card, patient to-do).
+
+// Next visit precedence: manual override \u2192 next scheduled appointment \u2192
+// stored/imported nextVisit text. Imports set nextVisit WITHOUT the manual
+// flag, so the stored fallback is what keeps an imported plan visible when
+// no appointment exists yet.
+function getEffectiveNextVisit(patient, patientId) {
+    if (!patient) return '';
+    if (patient.nextVisitManual) return patient.nextVisit || '';
+    return getNextScheduledVisit(patient, patientId) || patient.nextVisit || '';
+}
+
+// Split a visit string into { date, detail } display parts. Auto strings use
+// ' \u2014 ', imported strings are pipe-delimited, free text has neither (whole
+// string becomes date, detail empty).
+function splitVisitParts(text) {
+    var raw = (text || '').trim();
+    if (!raw) return { date: '', detail: '' };
+    var dashIdx = raw.indexOf('\u2014');
+    if (dashIdx !== -1) return { date: raw.substring(0, dashIdx).trim(), detail: raw.substring(dashIdx + 1).trim() };
+    var parts = raw.split('|').map(function(s) { return s.trim(); });
+    return { date: parts[0], detail: parts.slice(1).filter(Boolean).join(' | ') };
+}
+
+// Last visit: completed-appointment truth first, stored/imported pipe-delimited
+// history as fallback. Returns { date, detail } display parts.
+function getEffectiveLastVisit(patient, patientId) {
+    var completed = getLastCompletedVisit(patient, patientId);
+    if (completed) return { date: completed.date, detail: [completed.procedures, completed.provider].filter(Boolean).join(' | ') };
+    return splitVisitParts(patient && patient.lastVisit);
+}
+
+// Single-line patient fields: Enter commits (blur) instead of inserting a newline,
+// and savePatientField() collapses accidental newlines/trailing whitespace on save.
+var PT_SINGLE_LINE_FIELDS = {
+    phone: 1, activeStatus: 1, poeLast: 1, poeNext: 1, lastVisit: 1, nextVisit: 1,
+    lastFMX: 1, lastBW: 1, lastCBCT: 1, lastPANO: 1
+};
+
 function renderPatientRecord(patientId) {
     var container = document.getElementById('patientRecordView');
     if (!container) return;
@@ -864,7 +915,7 @@ function renderPatientRecord(patientId) {
         if (isEdit) {
             return '<div class="ptr-field">'
                 + '<div class="ptr-field-label" style="color:' + accentColor + ';">' + escapeHtml(label) + '</div>'
-                + '<div contenteditable="true" data-patient-id="' + escapeHtml(patientId) + '" data-field="' + escapeHtml(fieldName) + '" onfocus="this.dataset.original=this.innerText;this.dataset.committed=\'false\';" onkeydown="if(event.key===\'Escape\'){this.innerText=this.dataset.original;this.dataset.committed=\'true\';this.blur();}" onblur="savePatientField(this)" '
+                + '<div contenteditable="true" data-patient-id="' + escapeHtml(patientId) + '" data-field="' + escapeHtml(fieldName) + '" ' + (PT_SINGLE_LINE_FIELDS[fieldName] ? 'data-single="1" ' : '') + 'onfocus="this.dataset.original=this.innerText;this.dataset.committed=\'false\';" onkeydown="if(event.key===\'Escape\'){this.innerText=this.dataset.original;this.dataset.committed=\'true\';this.blur();}else if(event.key===\'Enter\'&&this.dataset.single===\'1\'){event.preventDefault();this.blur();}" onblur="savePatientField(this)" autocorrect="off" autocapitalize="off" spellcheck="false" '
                 + 'class="ptr-field-edit" style="border-left-color:' + accentColor + ';">'
                 + escapeHtml(decodeEntities(val))
                 + '</div></div>';
@@ -904,7 +955,7 @@ function renderPatientRecord(patientId) {
                 var warn = val.toLowerCase().indexOf('due') !== -1 || val.toLowerCase().indexOf('need') !== -1 || val.toLowerCase().indexOf('overdue') !== -1;
                 html += '<div class="ptr-imaging-cell">'
                     + '<div class="ptr-imaging-label">' + escapeHtml(x.l) + '</div>'
-                    + '<div contenteditable="true" data-patient-id="' + escapeHtml(patientId) + '" data-field="' + escapeHtml(x.f) + '" onfocus="this.dataset.original=this.innerText;this.dataset.committed=\'false\';" onkeydown="if(event.key===\'Escape\'){this.innerText=this.dataset.original;this.dataset.committed=\'true\';this.blur();}" onblur="savePatientField(this)" '
+                    + '<div contenteditable="true" data-patient-id="' + escapeHtml(patientId) + '" data-field="' + escapeHtml(x.f) + '" data-single="1" onfocus="this.dataset.original=this.innerText;this.dataset.committed=\'false\';" onkeydown="if(event.key===\'Escape\'){this.innerText=this.dataset.original;this.dataset.committed=\'true\';this.blur();}else if(event.key===\'Enter\'&&this.dataset.single===\'1\'){event.preventDefault();this.blur();}" onblur="savePatientField(this)" autocorrect="off" autocapitalize="off" spellcheck="false" '
                     + 'class="ptr-imaging-edit" style="color:' + (warn ? '#b45309' : '#17212b') + ';">'
                     + escapeHtml(val) + '</div></div>';
             });
@@ -970,13 +1021,20 @@ function renderPatientRecord(patientId) {
     // Summary card (light theme) — all user text escaped via escapeHtml()
     var relBadgeClass = { green: 'ptr-summary-badge-active', yellow: 'ptr-summary-badge-yellow', red: 'ptr-summary-badge-red' };
     var relBadgeText = { green: 'Active', yellow: 'Needs Attention', red: 'Unreliable' };
-    var lastVisitShort = patient.lastVisit ? patient.lastVisit.split('|')[0].trim() : 'None';
-    // Auto-compute next visit from appointments unless manually overridden
-    var autoNextVisit = getNextScheduledVisit(patient, patientId);
-    var effectiveNextVisit = patient.nextVisitManual ? (patient.nextVisit || '') : (autoNextVisit || '');
-    var nextVisitShort = effectiveNextVisit ? effectiveNextVisit.split('\u2014')[0].trim() : 'No appointment scheduled';
-    var nextPoeShort = patient.poeNext ? patient.poeNext.split('\u2014')[0].trim() : '\u2014';
+    var lastVisitInfo = getEffectiveLastVisit(patient, patientId);
+    var lastVisitShort = lastVisitInfo.date || 'None';
+    var effectiveNextVisit = getEffectiveNextVisit(patient, patientId);
+    var nextVisitParts = splitVisitParts(effectiveNextVisit);
+    var nextVisitShort = nextVisitParts.date || 'No appointment scheduled';
+    var nextPoeShort = patient.poeNext ? splitVisitParts(patient.poeNext).date : '\u2014';
     var needsScheduling = !effectiveNextVisit;
+    // Purpose sub-line under each date \u2014 the "what is this visit for" a
+    // 30-second review needs; clamped to 2 lines so long imports can't blow
+    // up the card
+    var kvDetail = function(txt) {
+        if (!txt) return '';
+        return '<div class="ptr-summary-kv-detail" style="font-size:0.72em;color:#64748b;margin-top:2px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;">' + escapeHtml(decodeEntities(txt)) + '</div>';
+    };
 
     // Dedup requirement categories for badges
     var reqCategories = {};
@@ -997,8 +1055,8 @@ function renderPatientRecord(patientId) {
         +   (Object.keys(reqCategories).length > 0 ? '<div class="ptr-summary-req-badges">' + Object.keys(reqCategories).map(function(cat) { return '<span class="ptr-summary-req-badge">' + escapeHtml(cat) + '</span>'; }).join('') + '</div>' : '')
         + '</div>'
         + '<div class="ptr-summary-right">'
-        +   '<div class="ptr-summary-kv"><div class="ptr-summary-kv-label">Last Visit</div><div class="ptr-summary-kv-value">' + escapeHtml(decodeEntities(lastVisitShort)) + '</div></div>'
-        +   '<div class="ptr-summary-kv"><div class="ptr-summary-kv-label">Next Visit</div><div class="ptr-summary-kv-value"' + (needsScheduling ? ' style="color:#b45309;"' : '') + '>' + escapeHtml(decodeEntities(nextVisitShort)) + '</div></div>'
+        +   '<div class="ptr-summary-kv"><div class="ptr-summary-kv-label">Last Visit</div><div class="ptr-summary-kv-value">' + escapeHtml(decodeEntities(lastVisitShort)) + '</div>' + kvDetail(lastVisitInfo.detail) + '</div>'
+        +   '<div class="ptr-summary-kv"><div class="ptr-summary-kv-label">Next Visit</div><div class="ptr-summary-kv-value"' + (needsScheduling ? ' style="color:#b45309;"' : '') + '>' + escapeHtml(decodeEntities(nextVisitShort)) + '</div>' + kvDetail(nextVisitParts.detail) + '</div>'
         +   '<div class="ptr-summary-kv"><div class="ptr-summary-kv-label">Next POE</div><div class="ptr-summary-kv-value">' + escapeHtml(decodeEntities(nextPoeShort)) + '</div></div>'
         + '</div>'
         + '</div>';
@@ -1044,18 +1102,19 @@ function renderPatientRecord(patientId) {
             + section('perio', 'Periodontal & Recall', '\u26A0\uFE0F',
                 isEdit
                     ? fld('poeLast', 'Last POE / Prophy', '#f59e0b') + fld('poeNext', 'Next POE / Prophy', '#fbbf24')
-                    : '<div class="ptr-perio-row">'
+                    : (!patient.poeLast && !patient.poeNext ? '' /* both empty \u2014 hide section in read mode */
+                      : '<div class="ptr-perio-row">'
                       + '<div class="ptr-perio-item"><div class="ptr-perio-label">Last POE / Prophy</div><div class="ptr-perio-value">' + escapeHtml(decodeEntities(patient.poeLast || '\u2014')) + '</div></div>'
                       + '<div class="ptr-perio-item"><div class="ptr-perio-label">Next POE / Prophy</div><div class="ptr-perio-value">' + escapeHtml(decodeEntities(patient.poeNext || '\u2014')) + '</div></div>'
-                      + '</div>')
+                      + '</div>'))
             + section('treatment', 'Treatment Plan & Visits', '\uD83D\uDCCB',
                 fld('txPlan', 'Treatment Plan', '#3b82f6')
                 + fld('lastVisit', 'Last Visit', '#60a5fa')
                 + (function() {
                     var nvAccent = '#93c5fd';
                     var nvManual = patient.nextVisitManual;
-                    var nvAuto = autoNextVisit;
-                    var nvVal = nvManual ? (patient.nextVisit || '') : (nvAuto || '');
+                    var nvAuto = nvManual ? '' : (getNextScheduledVisit(patient, patientId) || '');
+                    var nvVal = getEffectiveNextVisit(patient, patientId);
                     var nvDisplay = nvVal || 'No appointment scheduled';
                     var nvIsEmpty = !nvVal;
                     if (isEdit) {
@@ -1063,7 +1122,7 @@ function renderPatientRecord(patientId) {
                             + '<div class="ptr-field-label" style="color:' + nvAccent + ';">Next Visit'
                             + (nvManual ? ' <span style="font-size:0.7em;opacity:0.7;cursor:pointer;margin-left:6px;background:#e2e8f0;padding:1px 6px;border-radius:8px;" onclick="resetNextVisitToAuto(\'' + safePatientId + '\')" title="Clear manual override, revert to schedule">\u21BB auto</span>' : '')
                             + '</div>'
-                            + '<div contenteditable="true" data-patient-id="' + escapeHtml(patientId) + '" data-field="nextVisit" onfocus="this.dataset.original=this.innerText;this.dataset.committed=\'false\';" onkeydown="if(event.key===\'Escape\'){this.innerText=this.dataset.original;this.dataset.committed=\'true\';this.blur();}" onblur="savePatientField(this)" '
+                            + '<div contenteditable="true" data-patient-id="' + escapeHtml(patientId) + '" data-field="nextVisit" data-single="1" onfocus="this.dataset.original=this.innerText;this.dataset.committed=\'false\';" onkeydown="if(event.key===\'Escape\'){this.innerText=this.dataset.original;this.dataset.committed=\'true\';this.blur();}else if(event.key===\'Enter\'&&this.dataset.single===\'1\'){event.preventDefault();this.blur();}" onblur="savePatientField(this)" autocorrect="off" autocapitalize="off" spellcheck="false" '
                             + 'class="ptr-field-edit" style="border-left-color:' + nvAccent + ';' + (nvIsEmpty ? 'color:#b45309;' : '') + '">'
                             + escapeHtml(nvDisplay)
                             + '</div></div>';
@@ -1081,7 +1140,7 @@ function renderPatientRecord(patientId) {
             + section('imaging', 'Imaging', '\uD83D\uDCF7', imgInline())
             + section('notes', 'Notes', '\uD83D\uDCDD',
                 isEdit
-                    ? '<div contenteditable="true" data-patient-id="' + escapeHtml(patientId) + '" data-field="notes" onfocus="this.dataset.original=this.innerText;this.dataset.committed=\'false\';" onkeydown="if(event.key===\'Escape\'){this.innerText=this.dataset.original;this.dataset.committed=\'true\';this.blur();}" onblur="savePatientField(this)" '
+                    ? '<div contenteditable="true" data-patient-id="' + escapeHtml(patientId) + '" data-field="notes" onfocus="this.dataset.original=this.innerText;this.dataset.committed=\'false\';" onkeydown="if(event.key===\'Escape\'){this.innerText=this.dataset.original;this.dataset.committed=\'true\';this.blur();}else if(event.key===\'Enter\'&&this.dataset.single===\'1\'){event.preventDefault();this.blur();}" onblur="savePatientField(this)" autocorrect="off" autocapitalize="off" spellcheck="false" '
                       + 'class="ptr-field-edit ptr-notes-edit" style="border-left-color:#a855f7;">'
                       + escapeHtml(decodeEntities(patient.notes || '')) + '</div>'
                     : '<div class="ptr-field-view ptr-notes-view" style="border-left-color:#a855f740;">' + formatRecordField(patient.notes || '', 'notes') + '</div>');
@@ -1250,7 +1309,14 @@ function savePatientField(element) {
     var records = getAllPatientRecords();
     if (!records[patientId]) return;
 
-    var newValue = element.innerText;
+    // Single-line fields: collapse accidental newlines, trim edges (iOS Enter/paste artifacts).
+    // Multi-line fields: strip trailing whitespace/newlines only.
+    function normalizeFieldText(t) {
+        return PT_SINGLE_LINE_FIELDS[field]
+            ? String(t).replace(/\s*\n+\s*/g, ' ').trim()
+            : String(t).replace(/\s+$/, '');
+    }
+    var newValue = normalizeFieldText(element.innerText);
 
     // Reject empty chart number — prevents phantom 'pt_' record (CLAUDE.md rule)
     if (field === 'chartNumber' && !newValue.trim()) {
@@ -1258,7 +1324,7 @@ function savePatientField(element) {
         element.innerText = element.dataset.original || records[patientId].chartNumber || '';
         return;
     }
-    var originalValue = element.dataset.original || '';
+    var originalValue = normalizeFieldText(element.dataset.original || '');
     if (newValue === originalValue) return;  // No change — skip save
     records[patientId][field] = newValue;
     // When manually editing nextVisit, flag it so auto-compute doesn't overwrite
@@ -1269,11 +1335,13 @@ function savePatientField(element) {
     clinicalDataDirty = true;
     safeLocalStorageSet(STORAGE_KEY, JSON.stringify(roadmapData));
     saveData();
-    // Propagate for fields that affect downstream views (sidebar, roster, dashboard)
+    // Propagate for fields that affect downstream views (sidebar, roster, dashboard).
+    // Rename also resyncs planner/schedule so clinic task names don't go stale.
     var propagated = false;
     if (field === 'name' || field === 'activeStatus' || field === 'lastVisit' || field === 'phone' || field === 'reliability') {
         if (typeof propagateClinicalChanges === 'function') {
-            propagateClinicalChanges({ patients: true, dashboard: true, calendars: false, source: 'savePatientField' });
+            var isRename = field === 'name';
+            propagateClinicalChanges({ patients: true, appointments: isRename, dashboard: true, calendars: isRename, source: 'savePatientField' });
             propagated = true;
         }
     }
@@ -1756,6 +1824,9 @@ function parsePatientRecord(text) {
         }
     });
 
+    // Normalize reliability case ("Green"/"RED" → "green"/"red") so grouping + dot colors match
+    if (record.reliability) record.reliability = record.reliability.toLowerCase().trim();
+
     return record;
 }
 
@@ -1818,6 +1889,9 @@ function parsePatientUpdate(text) {
             update[currentKey] = (update[currentKey] || '') + '\n' + line.trim();
         }
     });
+
+    // Normalize reliability case ("Green"/"RED" → "green"/"red") so grouping + dot colors match
+    if (update.reliability) update.reliability = update.reliability.toLowerCase().trim();
 
     return update;
 }
@@ -1971,13 +2045,31 @@ function parseTodoListBlock(text) {
         } else if (inItems && line.indexOf('|') !== -1) {
             var parts = line.split('|').map(function(p) { return p.trim(); });
             if (parts.length >= 3) {
-                result.items.push({
-                    id: parts[0],
-                    description: parts[1],
-                    source: parts[2] ?? 'MANUAL',
-                    dateAdded: parts[3] ?? '',
-                    sourceDetail: parts[4] ?? ''
-                });
+                // Anchor on the source token instead of blind positions — a pipe inside
+                // the description must not shift source/date/detail into wrong fields
+                var TODO_SOURCES = { MANUAL: 1, EMAIL: 1, SCREENSHOT: 1, CLINIC: 1, SYSTEM: 1 };
+                var srcIdx = -1;
+                for (var pi = 2; pi < parts.length; pi++) {
+                    if (TODO_SOURCES[parts[pi].toUpperCase()]) { srcIdx = pi; break; }
+                }
+                if (srcIdx !== -1) {
+                    result.items.push({
+                        id: parts[0],
+                        description: parts.slice(1, srcIdx).join(' | '),
+                        source: parts[srcIdx].toUpperCase(),
+                        dateAdded: parts[srcIdx + 1] ?? '',
+                        sourceDetail: parts.slice(srcIdx + 2).join(' | ')
+                    });
+                } else {
+                    // No recognizable source token — original positional fallback
+                    result.items.push({
+                        id: parts[0],
+                        description: parts[1],
+                        source: parts[2] ?? 'MANUAL',
+                        dateAdded: parts[3] ?? '',
+                        sourceDetail: parts[4] ?? ''
+                    });
+                }
             }
         }
     });
@@ -2290,6 +2382,16 @@ function confirmUnifiedImport() {
     }
     if (!parsed) return;
 
+    // No-op guard: an empty/unrecognized paste must not toast success or trigger a save
+    var hasAnyBlock = parsed.records.length > 0 || parsed.updates.length > 0
+        || parsed.reqMatches.length > 0 || parsed.appointments.length > 0
+        || parsed.clinicalBriefs.length > 0 || !!parsed.dashboardUpdate
+        || !!parsed.missingNotes || !!parsed.todoList;
+    if (!hasAnyBlock) {
+        showToast('Nothing to import — no recognizable blocks found in paste', 'error');
+        return;
+    }
+
     // Ensure the record store is ATTACHED to roadmapData before mutating — getPatientRecords()
     // returns a detached `|| {}` literal when patientRecords is missing (pre-load fresh device),
     // and every write into it would be silently lost at save time.
@@ -2379,8 +2481,11 @@ function confirmUnifiedImport() {
             });
         }
         if (id && records[id]) {
-            // CIS v2 fix: Always store metadata, even when canFulfill is empty
-            records[id].importedRequirements = rm.canFulfill || [];
+            // Only overwrite pipeline when this paste actually carries CAN_FULFILL rows —
+            // a COMPLETED_TODAY-only delta paste must not wipe stored importedRequirements
+            if (rm.canFulfill && rm.canFulfill.length) {
+                records[id].importedRequirements = rm.canFulfill;
+            }
             if (rm.priorityNotes) records[id].priorityNotes = rm.priorityNotes;
             if (rm.highValue != null) records[id].highValue = rm.highValue;
         } else {
@@ -3482,6 +3587,16 @@ function formatRecordField(text, fieldType) {
     case 'txCompletedByMe':
         return rfSentences(t, true);
 
+    case 'phone': {
+        // Pipe-delimited numbers → primary shown big, extras as "+N more" with full list in title
+        var phones = clean.split('|').map(function(s) { return s.trim(); }).filter(Boolean);
+        if (phones.length === 0) return '';
+        var primary = escapeHtml(phones[0]);
+        if (phones.length === 1) return primary;
+        return primary + ' <span style="font-size:0.8em; color:#64748b; cursor:help;" title="'
+            + escapeHtml(phones.slice(1).join(', ')) + '">+' + (phones.length - 1) + ' more</span>';
+    }
+
     case 'medications': {
         var aIdx = t.indexOf('Allergies:');
         if (aIdx === -1) aIdx = t.indexOf('ALLERGIES:');
@@ -3613,20 +3728,11 @@ function renderMiniReview() {
         var lastVisitProc = lastCompleted ? lastCompleted.procedures : (lastVisitParts[1] || '');
         var lastVisitProvider = lastCompleted ? lastCompleted.provider : (lastVisitParts[2] || '');
 
-        // Next visit (auto from schedule or manual) — keep procedure detail after em-dash
-        var autoNext = getNextScheduledVisit(p, pid);
-        var effectiveNext = p.nextVisitManual ? (p.nextVisit || '') : (autoNext || '');
-        var nextVisitDate = '';
-        var nextVisitProc = '';
-        if (effectiveNext) {
-            var dashIdx = effectiveNext.indexOf('\u2014');
-            if (dashIdx !== -1) {
-                nextVisitDate = effectiveNext.substring(0, dashIdx).trim();
-                nextVisitProc = effectiveNext.substring(dashIdx + 1).trim();
-            } else {
-                nextVisitDate = effectiveNext.split('|')[0].trim();
-            }
-        }
+        // Next visit — canonical accessor (manual override → scheduled appointment → stored import)
+        var effectiveNext = getEffectiveNextVisit(p, pid);
+        var nextParts = splitVisitParts(effectiveNext);
+        var nextVisitDate = nextParts.date;
+        var nextVisitProc = nextParts.detail;
 
         // Tx plan and completed work
         var txPlan = (p.txPlan || '').trim();
