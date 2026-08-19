@@ -392,3 +392,18 @@ Full audit history: `docs/audit-history.md`
 
 ## THINGS NOT TO CHANGE WITHOUT TESTING
 Firebase config, PIN auth, save/sync debounce, grade calculator math, XR pharmacokinetic model, date parsing, sync protection guards, `isEmptyState()`, checkpoint system.
+
+---
+
+## WRITTEN ANALYSIS (WA) WORKFLOW — SEPARATE PROJECT, LIVES OUTSIDE THIS REPO
+
+The user also maintains a **Written Analysis (WA)** clinical-writing workflow (BU Goldman graded summative `gp-sum-analysis`). It is **not part of this app's code** and its files are **not tracked in this repo** (they contain real patient PHI and live in `~/Downloads/`). This pointer exists so a session started in this repo can find it.
+
+- **Trigger:** if the user says anything like *"I was working on the written analysis workflow,"* *"WA workflow,"* *"do a written analysis,"* or *"the webchat WA project"* → read the master router first:
+  `~/Downloads/Written Analysis Workflow/START_HERE.md`
+- **Full context doc (in this repo):** `docs/WRITTEN_ANALYSIS_WORKFLOW.md`.
+- **Two editions, same brain:**
+  - `~/Downloads/Written Analysis Workflow/claude-code-edition/` — local Claude Code workflow. Master manual: `WA_PLAYBOOK.md` (v2.0). ⚠️ **Contains REAL PHI — local only.** Keep `WA_PLAYBOOK.md` a sibling of its `references/` folder (relative-path citations).
+  - `~/Downloads/Written Analysis Workflow/webchat-edition/` — de-identified Claude.ai Project bundle. ✅ **PHI-free — the only uploadable part.** `WA_PLAYBOOK_WEBCHAT.md` is a derived port of the local master; change the local master first, then regenerate the webchat playbook and re-upload it to Project knowledge.
+- **PHI rule:** never upload, publish, or move anything under `claude-code-edition/references/` (completed WAs, chart extracts, radiographs) to any cloud/Project/Artifact. New-WA real records live only in the single Claude.ai chat where attached. The five prior real-patient identifiers are contamination — never let them appear in an exemplar or a new WA.
+- **Provenance:** design spec at `docs/superpowers/specs/2026-08-19-wa-webchat-project-design.md`; webchat Project passed an adversarial blind test; shipped via draft PR #13.
