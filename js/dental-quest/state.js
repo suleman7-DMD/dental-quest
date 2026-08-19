@@ -37,6 +37,9 @@ var userPassword = null; // Simple password for privacy
 var saveDebounceTimer = null; // Debounce timer for Firebase saves
 var pendingSaveData = null; // Store pending save data
 var offlineSyncPending = false; // Flag for pending offline sync
+var deletedTasks = {}; // Tombstones { taskId: deletedAtMs } — lets merges distinguish "deleted here" from "never seen there"
+var lastTaskSnapshot = {}; // Per-task content signatures from last load/merge — powers central updatedAt stamping + tombstone detection
+var lastCloudContactTs = 0; // Last successful data exchange with Firebase (push, pull, or realtime event) — stale-tab guard
 
 // ============================================
 // SYNC PROTECTION — BUG FIX #2: Add _version and _dataLoaded
