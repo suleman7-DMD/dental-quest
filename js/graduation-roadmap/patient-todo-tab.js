@@ -58,7 +58,6 @@ function patientTodoGetVisibleTasks(entry) {
 function patientTodoGetSummary(patient) {
     var candidates = [
         patient?.txPlan,
-        patient?.clinicalBrief?.snapshot,
         patient?.txCompletedByMe,
         patient?.txSummaryBU
     ];

@@ -59,7 +59,6 @@ for dashboard tracking.
   So a single paste can contain:                                                         
     - 1 PATIENT_RECORD block                                                             
     - 1 REQUIREMENTS_MATCH block
-    - 1 CLINICAL_BRIEF block                                                         
     - 3 APPOINTMENT blocks                                                               
     - 1 SPS_DASHBOARD_UPDATE block                                
   ...and the app imports everything atomically.                                          
@@ -506,8 +505,7 @@ FORMATTING RULES:
       hyphen-delimited, no underscores, no spaces)                                       
     - Delimiters: --- must be alone on its own line. Do NOT write                        
       "--- FORMAT A ---" or "--- end ---". Just: ---                                     
-    - Format headers (PATIENT_RECORD, REQUIREMENTS_MATCH,
-      CLINICAL_BRIEF, etc.)                          
+    - Format headers (PATIENT_RECORD, REQUIREMENTS_MATCH, etc.)
       must appear on their own line right before a --- delimiter                         
     - CHART numbers must be consistent across all blocks for the                         
       same patient (this is the unique key for deduplication)                            
@@ -643,85 +641,27 @@ FORMAT C FIELD NOTES:
   standing, tell him to check items off directly in the
   Competencies tab.
   ---
-  --- FORMAT E: CLINICAL BRIEF ---
-  (Auto-generated alongside Format A or B. Structured prose
-  summary of clinical intelligence for quick patient review.
-  This is the "Dr. Maseli readiness check" — the attending's
-  summary that lets Sully understand a patient in 60 seconds.)
-  CLINICAL_BRIEF
+  --- FORMAT E: REMOVED ---
+  FORMAT E (CLINICAL_BRIEF) REMOVED 2026-08-19 — the Clinical
+  Brief module was retired from the app (redundant with the
+  Record tab). NEVER output a CLINICAL_BRIEF block. The app no
+  longer parses it. Fold any clinical intelligence into the
+  Format A/B fields instead (TX_PLAN, NOTES/NOTES_APPEND,
+  PRIORITY_NOTES) and Format C PRIORITY_NOTES.
   ---
-  CHART: [chart number]
-  NAME: [patient name]
-  DATE_GENERATED: [today's date, YYYY-MM-DD]
-  SNAPSHOT: [1-3 sentences. Age, sex, ASA, key diagnosis,
-    current treatment phase, reliability, HIGH VALUE if
-    applicable. The 15-second elevator pitch.]
-  DIAGNOSES_AND_RISKS: [Key clinical findings that matter for
-    THIS patient. Active caries sites, defective restorations,
-    symptomatic teeth, medical considerations. For periodontitis
-    patients: staging/grading with reasoning. For gingivitis
-    patients: NO perio content — skip entirely. Include caries
-    risk level, medical risk, behavioral risk with evidence.]
-  TX_STATUS: [Narrative of treatment arc. Who did what, when,
-    current phase. "Shaan completed crown #31 sequence Jul-Sept
-    2025. Patient being transferred." Not a log — a story.]
-  TX_SEQUENCING: [What's next and WHY in that order. The clinical
-    reasoning behind the sequence. "CLP #30 before post/core —
-    short clinical crown needs lengthening for ferrule." Do NOT
-    include routine prophy/recall/OHI — those are assumed.]
-  FLAGGED_CONCERNS: [Things that would bite you if forgotten.
-    Include unresolved questions here too. Medical hx gaps,
-    monitored teeth, reliability issues, missing signatures,
-    anything time-sensitive or high-stakes.]
-  GRAD_VALUE: [Which graduation requirements this patient can
-    fulfill. ONLY non-routine requirements — no prophy, recall,
-    gingivitis re-eval, OHI. Focus on fixed, operative, endo,
-    dentures, RPDs, oral surgery, perio surgical assists, and
-    SRP/calculus removal (only for periodontitis patients).
-    Flag CRITICAL OPPORTUNITYs where Sully has 0 progress.]
-  NEXT_VISIT_PLAN: [Actionable items for next appointment. Only
-    noteworthy items — not routine prophy/OHI/recall. What
-    procedures, what faculty to arrange, what to watch for,
-    what to bring. Include date if known.]
-  ---
-
-  FORMAT E NOTES:
-    - CHART is required — links the brief to the patient record
-    - All fields are free-text multi-line (same continuation-line
-      logic as TX_PLAN and NOTES in Format A)
-    - DATE_GENERATED is for versioning — newer briefs overwrite
-    - CLINICAL_BRIEF ALWAYS fully overwrites the existing brief,
-      never patches. Every brief is the complete current picture.
-      This is true whether it appears alongside a PATIENT_RECORD
-      (Format A) or a PATIENT_UPDATE (Format B). There is no
-      "CLINICAL_BRIEF_UPDATE" partial format — it's always full.
-    - The perio noise filter applies here too: NO prophy, recall,
-      gingivitis re-eval, OHI content in ANY section unless the
-      patient has diagnosed periodontitis with SRPs indicated
-    - SNAPSHOT should be tight enough to read in 15 seconds
-    - GRAD_VALUE should ONLY list requirements that are specific
-      to this patient — not things every patient can provide
-    - FLAGGED_CONCERNS includes both urgent concerns AND unresolved
-      questions (merged — no separate OPEN_QUESTIONS section).
-      Use numbered format (1), (2), (3) for scannability.
-    - On import: the app finds the patient by CHART number and
-      stores the brief as a nested object on the patient record.
-      Optionally push old brief to briefHistory[] (max 3-5) before
-      overwriting.
   =================================================================
   PART 5: WORKFLOW COMMANDS
   =================================================================
   Suleman may say these at any point:
   "export" or "export for tracker"
     → Output ONLY Format A (PATIENT_RECORD) + Format C
-      (REQUIREMENTS_MATCH) + Format E (CLINICAL_BRIEF).
+      (REQUIREMENTS_MATCH).
       No analysis text. Ready to copy.
   "update export" or "quick update"
     → Output ONLY Format B (PATIENT_UPDATE) + Format C
-      with COMPLETED_TODAY filled in + Format E (CLINICAL_BRIEF
-      regenerated with current state).
+      with COMPLETED_TODAY filled in.
   "re-export" or "rebuild"
-    → Regenerate full Format A + C + E incorporating everything
+    → Regenerate full Format A + C incorporating everything
       discussed so far (corrections, new info, new screenshots).
   "requirements" or "what can this patient help with"
     → Output ONLY Format C (REQUIREMENTS_MATCH) with detailed
@@ -742,10 +682,9 @@ FORMAT C FIELD NOTES:
   PART 6: AUTO-BEHAVIOR
   =================================================================
   - After EVERY full analysis, auto-append Format A + Format C
-    + Format E (CLINICAL_BRIEF) at the bottom (don't wait to
-    be asked)
+    at the bottom (don't wait to be asked)
   - After updates/new screenshots mid-conversation, auto-append
-    Format B + updated Format C + updated Format E
+    Format B + updated Format C
   - If Suleman provides a correction, acknowledge and output
     updated export blocks
   - If critical info is missing (no chart number, no name),
@@ -800,7 +739,6 @@ PART 8: APP IMPORT TECHNICAL REFERENCE
     APPOINTMENTS
     MISSING_NOTES
     TODO_LIST
-    CLINICAL_BRIEF
 
   If the keyword is on its own line with nothing after it, the                           
   parser saves it as the header for the NEXT block. This means
@@ -937,34 +875,12 @@ PART 8: APP IMPORT TECHNICAL REFERENCE
      to "completed" status + procedure records auto-created                              
   5. Monthly planner synced (appointments become clinic tasks)                           
   6. Dashboard snapshot saved (if SPS_DASHBOARD_UPDATE present)
-  7. Clinical Brief saved (if CLINICAL_BRIEF present — overwrites
-     existing brief on the patient record by chart number)
-  8. Everything saved to localStorage + Firebase                                         
-  9. Mission Control re-renders with updated smart counters                              
-  10. Clinical tab re-renders if appointments were imported                              
+  7. Everything saved to localStorage + Firebase                                         
+  8. Mission Control re-renders with updated smart counters                              
+  9. Clinical tab re-renders if appointments were imported                              
                                                                                          
   This is atomic — one paste, one Import click, everything                               
   syncs across all tabs and to the cloud.  
-
-  CLINICAL_BRIEF PARSING:
-  The parser recognizes CLINICAL_BRIEF as a block type. Fields:
-    CHART (required — links to patient record)
-    NAME (informational)
-    DATE_GENERATED (YYYY-MM-DD — for versioning)
-    SNAPSHOT (free-text multi-line)
-    DIAGNOSES_AND_RISKS (free-text multi-line)
-    TX_STATUS (free-text multi-line)
-    TX_SEQUENCING (free-text multi-line)
-    FLAGGED_CONCERNS (free-text multi-line)
-    GRAD_VALUE (free-text multi-line)
-    NEXT_VISIT_PLAN (free-text multi-line)
-  All fields use the same multi-line continuation logic as
-  TX_PLAN and NOTES — any line that doesn't start with a
-  recognized field key is appended to the previous field.
-  On import: find patient by chart number (pt_[chart]),
-  set/overwrite the clinicalBrief object on the record.
-  Newer DATE_GENERATED overwrites older. Optionally keep
-  a briefHistory array (max 3-5 entries) for history.
 
  =================================================================
   PART 9: COMBINED EXPORT EXAMPLES                                                       
@@ -1023,37 +939,6 @@ PART 8: APP IMPORT TECHNICAL REFERENCE
   PRIORITY_NOTES: Schedule summative eval with faculty for                               
     composite #12 if going for op-multi-5 credit. TMD analysis                           
     requires Dr. Maseli — coordinate scheduling.                                         
-  ---                                                                                    
-  CLINICAL_BRIEF
-  ---
-  CHART: 2577113
-  NAME: Krima, Mohamed
-  DATE_GENERATED: 2026-01-10
-  SNAPSHOT: 21M, ASA I, healthy. Active operative patient —
-    3 composites completed, 2 remaining. TMJ deviation with
-    clicking/popping bilateral. Reliable (green). Penicillin
-    allergy.
-  DIAGNOSES_AND_RISKS: Class III malocclusion with severe TMJ
-    deviation left side. Multiple carious teeth treated with
-    composites. No significant medical risks. Low caries risk
-    (young, healthy, compliant). TMD needs specialist referral.
-  TX_STATUS: Suleman completed #4 OFD (10/18/25), #13 DO
-    (11/13/25), #13 MOD (12/19/25). Data collection done
-    8/15/25. 3 of 5 planned composites finished.
-  TX_SEQUENCING: Next: #12 DO composite + TMD analysis with
-    Dr. Maseli (same visit 1/13/26). Then #14 DO at following
-    visit. After composites complete: TMJ specialist referral
-    to Dr. Motro.
-  FLAGGED_CONCERNS: (1) Need faculty signature from Dr. Swati
-    for 12/19 MOD #13. (2) TMJ referral to Dr. Motro still
-    pending. (3) TMD analysis summative must be coordinated
-    with Dr. Maseli schedule.
-  GRAD_VALUE: 2 operative summatives remaining: op-multi-5
-    (#12 DO) and op-multi-6 (#14 DO). TMD analysis = fixed-
-    occlusal-mi or fixed-occlusal-cr (confirm which).
-  NEXT_VISIT_PLAN: 1/13/2026 8:30 AM — DO composite #12 +
-    TMD analysis summative with Dr. Maseli. Arrange faculty
-    for operative summative if targeting op-multi-5 credit.
   ---                                                                                    
   ```                                                                                    
                                                                                          

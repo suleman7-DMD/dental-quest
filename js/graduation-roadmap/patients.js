@@ -255,7 +255,6 @@ const DEFAULT_PATIENT_RECORDS = {
 
 let activePatientId = null;
 var patientEditMode = false;
-var patientViewTab = 'brief'; // 'brief' or 'record'
 var collapsedSections = {};
 var inactiveCollapsed = true; // Red/inactive patients collapsed by default
 var archivedCollapsed = true; // Archived patients collapsed by default
@@ -568,7 +567,6 @@ function renderPatientsSidebar() {
             +   '<span class="pts-row-name">' + escapeHtml(p.name || 'Unnamed') + '</span>'
             +   (chart ? '<span class="pts-row-chart">' + chart + '</span>' : '')
             +   (p.phone ? '<span class="pts-phone-icon" title="' + escapeHtml(phoneTitle) + '">\uD83D\uDCF1</span>' : '')
-            +   (p.clinicalBrief && p.clinicalBrief.snapshot ? '<span class="pts-brief-badge" title="Has clinical brief">\uD83D\uDCCB</span>' : '')
             + '</div>'
             + (p.archived ? '<button onclick="event.stopPropagation(); restorePatient(\'' + safeId + '\')" title="Restore patient" '
                 + 'style="background:none; border:1px solid #d1d5db; color:#6b7280; font-size:0.7em; padding:2px 7px; border-radius:5px; cursor:pointer; flex-shrink:0;">Restore</button>' : '')
@@ -661,84 +659,6 @@ function selectPatient(patientId) {
 function showMobilePatientList() {
     var layout = document.getElementById('patientsMainLayout');
     if (layout) layout.classList.remove('pts-mobile-record-active');
-}
-
-function renderClinicalBrief(patient, patientId) {
-    var brief = patient.clinicalBrief;
-    if (!brief) {
-        return '<div class="ptr-brief-empty">'
-            + '<div style="text-align:center; padding:30px 20px; color:#64748b;">'
-            + '<div style="font-size:1.3em; margin-bottom:8px;">No Clinical Brief</div>'
-            + '<div style="font-size:0.85em;">Re-export this patient from Claude to generate a brief.</div>'
-            + '</div></div>';
-    }
-
-    var isMobile = window.innerWidth <= 768;
-    var safePatientId = escapeHtml(patientId).replace(/'/g, "\\'");
-
-    function briefSection(key, title, icon, alwaysOpen) {
-        var val = brief[key];
-        if (!val) return '';
-        var rendered;
-        if (key === 'flaggedConcerns') {
-            rendered = escapeHtml(decodeEntities(val));
-            // 1-2 digit markers only — parenthesized years like "(2019)" are clinical text, not list markers
-            rendered = rendered.replace(/\((\d{1,2})\)\s*/g, function(match, num, offset) {
-                return (offset > 0 ? '</li>' : '') + '<li>';
-            });
-            if (rendered.indexOf('<li>') !== -1) {
-                // Wrap any orphaned text before the first <li> in its own <li>
-                var firstLiIdx = rendered.indexOf('<li>');
-                var preamble = rendered.substring(0, firstLiIdx).trim();
-                if (preamble) {
-                    rendered = '<li>' + preamble + '</li>' + rendered.substring(firstLiIdx);
-                }
-                rendered = '<ol class="ptr-brief-ol">' + rendered + '</li></ol>';
-            }
-            rendered = rendered.replace(/([.!?])[ \t]*\n/g, '$1\u0001')
-                .replace(/\n\n+/g, '\u0001').replace(/\n/g, ' ').replace(/  +/g, ' ').replace(/\u0001/g, '<br>');
-            rendered = rendered.replace(/#(\d+)/g, '<span class="fc-tooth">#$1</span>');
-            // Condition badges, alert keywords, date highlights
-            rendered = rendered.replace(/\b(ASA\s+I{1,3}V?(?:-I{1,3}V?)?)\b(?![^<]*<\/)/g, '<span class="rf-cond">$1</span>');
-            rendered = rendered.replace(/\b(HTN|COPD|PTSD|GERD|IBS|TMD|CHF|DM|ESRD|OSA|ADHD|CKD|DVT|AFib|HIV|CAD|CVA)\b(?![^<]*<\/)/g, '<span class="rf-cond">$1</span>');
-            rendered = rendered.replace(/\b(\d{1,2}\/\d{1,2}\/\d{2,4})\b(?![^<]*<\/)/g, '<span class="rf-date">$1</span>');
-            rendered = rendered.replace(/\b(STILL NEEDED|NOT YET PRESCRIBED|HIGH VALUE|EXTREMELY HIGH)\b(?![^<]*<\/)/g, '<span class="rf-alert">$1</span>');
-        } else {
-            rendered = formatClinicalDisplay(val);
-        }
-
-        var sectionId = 'brief_' + key;
-        var isCollapsed = !alwaysOpen && isMobile && collapsedSections[sectionId];
-        var toggleJs = !alwaysOpen && isMobile
-            ? ' onclick="collapsedSections[\'' + sectionId + '\']=!collapsedSections[\'' + sectionId + '\']; renderPatientRecord(\'' + safePatientId + '\')"'
-            : '';
-
-        return '<div class="ptr-brief-section">'
-            + '<div class="ptr-brief-section-header"' + toggleJs + '>'
-            +   '<span class="ptr-brief-icon">' + icon + '</span>'
-            +   '<span class="ptr-brief-title">' + escapeHtml(title) + '</span>'
-            +   (!alwaysOpen && isMobile ? '<span class="ptr-brief-arrow">' + (isCollapsed ? '\u25B6' : '\u25BC') + '</span>' : '')
-            + '</div>'
-            + '<div class="ptr-brief-body"' + (isCollapsed ? ' style="display:none;"' : '') + '>' + rendered + '</div>'
-            + '</div>';
-    }
-
-    var dateStr = brief.dateGenerated ? 'Updated: ' + escapeHtml(brief.dateGenerated) : '';
-    var historyCount = Array.isArray(patient.briefHistory) ? patient.briefHistory.length : (patient.briefHistory ? getValues(patient.briefHistory).length : 0);
-
-    return '<div class="ptr-brief-container">'
-        + briefSection('snapshot', 'Snapshot', '\uD83D\uDCCB', true)
-        + briefSection('diagnosesAndRisks', 'Key Diagnoses & Risks', '\uD83D\uDD2C', false)
-        + briefSection('txStatus', 'Treatment Status', '\uD83D\uDCCA', false)
-        + briefSection('txSequencing', 'Treatment Sequencing', '\uD83D\uDCD0', false)
-        + briefSection('flaggedConcerns', 'Flagged Concerns', '\u26A0\uFE0F', false)
-        + briefSection('gradValue', 'Graduation Value', '\uD83C\uDFAF', false)
-        + briefSection('nextVisitPlan', 'Next Visit Plan', '\uD83D\uDCCB', false)
-        + '<div class="ptr-brief-footer">'
-        +   '<span>' + dateStr + '</span>'
-        +   (historyCount > 0 ? '<span class="ptr-brief-history-count">' + historyCount + ' prior version' + (historyCount > 1 ? 's' : '') + '</span>' : '')
-        + '</div>'
-        + '</div>';
 }
 
 // Cross-reference appointments to find a patient's last completed visit details
@@ -1080,24 +1000,7 @@ function renderPatientRecord(patientId) {
             + '</div>';
     }
 
-    // Tab buttons (Brief / Record)
-    var hasBrief = !!(patient.clinicalBrief && patient.clinicalBrief.snapshot);
-    var effectiveTab = hasBrief ? patientViewTab : 'record';
-    var tabHtml = '<div class="ptr-tabs">'
-        + '<button class="ptr-tab' + (effectiveTab === 'brief' ? ' active' : '') + (hasBrief ? '' : ' disabled') + '" '
-        +   'onclick="patientViewTab=\'brief\'; renderPatientRecord(\'' + safePatientId + '\')"'
-        +   (hasBrief ? '' : ' disabled') + '>'
-        +   'Clinical Brief' + (hasBrief ? '' : ' (none)')
-        + '</button>'
-        + '<button class="ptr-tab' + (effectiveTab === 'record' ? ' active' : '') + '" '
-        +   'onclick="patientViewTab=\'record\'; renderPatientRecord(\'' + safePatientId + '\')">Record</button>'
-        + '</div>';
-
-    var contentHtml = '';
-    if (effectiveTab === 'brief') {
-        contentHtml = renderClinicalBrief(patient, patientId);
-    } else {
-        contentHtml = ''
+    var contentHtml = ''
             + section('info', 'Patient Information', '\uD83C\uDFE5',
                 fld('dob', 'Date of Birth', '#8b5cf6')
                 + fld('phone', 'Phone', '#6366f1')
@@ -1155,7 +1058,6 @@ function renderPatientRecord(patientId) {
                       + 'class="ptr-field-edit ptr-notes-edit" style="border-left-color:#a855f7;">'
                       + escapeHtml(decodeEntities(patient.notes || '')) + '</div>'
                     : '<div class="ptr-field-view ptr-notes-view" style="border-left-color:#a855f740;">' + formatRecordField(patient.notes || '', 'notes') + '</div>');
-    }
 
     // Build the record — all user text is escaped via escapeHtml()
     container.innerHTML = ''
@@ -1175,7 +1077,6 @@ function renderPatientRecord(patientId) {
         +     '<button class="ptr-action-btn danger" onclick="deletePatientRecord(\'' + safePatientId + '\')" title="Delete patient">Del</button>'
         +   '</div>'
         + '</div>'
-        + tabHtml
         + reqHtml
         + contentHtml;
 }
@@ -1672,7 +1573,7 @@ function closePatientImportModal() {
 }
 
 function parsePatientImportText(text) {
-    var result = { records: [], updates: [], reqMatches: [], dashboardUpdate: null, appointments: [], missingNotes: null, todoList: null, clinicalBriefs: [] };
+    var result = { records: [], updates: [], reqMatches: [], dashboardUpdate: null, appointments: [], missingNotes: null, todoList: null };
     if (!text || !text.trim()) return result;
 
     // Normalize line endings (iPhone/Windows clipboard may have \r\n or \r)
@@ -1697,7 +1598,6 @@ function parsePatientImportText(text) {
         else if (firstLine.indexOf('SPS_DASHBOARD_UPDATE') !== -1) header = 'SPS_DASHBOARD_UPDATE';
         else if (firstLine.indexOf('MISSING_NOTES') !== -1) header = 'MISSING_NOTES';
         else if (firstLine.indexOf('TODO_LIST') !== -1) header = 'TODO_LIST';
-        else if (firstLine.indexOf('CLINICAL_BRIEF') !== -1) header = 'CLINICAL_BRIEF';
         else if (firstLine.indexOf('REQUIREMENTS_STATUS') !== -1) header = 'REQUIREMENTS_STATUS'; // retired Aug 2026 — counted so preview/confirm can warn instead of silently dropping
         else if (firstLine.indexOf('APPOINTMENTS') !== -1 && firstLine.indexOf('ATTENDED') === -1) header = 'APPOINTMENTS';
 
@@ -1753,9 +1653,6 @@ function parsePatientImportText(text) {
                     (parsedTodo.items || []).forEach(function(t) { if (!existingTodoIds[t.id]) result.todoList.items.push(t); });
                 }
             }
-        } else if (effectiveHeader === 'CLINICAL_BRIEF') {
-            var parsedBrief = parseClinicalBrief(bodyText);
-            if (parsedBrief && parsedBrief.chartNumber) result.clinicalBriefs.push(parsedBrief);
         } else if (effectiveHeader === 'REQUIREMENTS_STATUS') {
             // Retired format (Aug 2026): competency counts are manual-only. Count it so the
             // preview/confirm UI can warn the user instead of silently discarding the block.
@@ -2092,38 +1989,6 @@ function parseTodoListBlock(text) {
     return result;
 }
 
-function parseClinicalBrief(text) {
-    if (!text || !text.trim()) return null;
-    var brief = {};
-    var fieldMap = {
-        'CHART': 'chartNumber', 'NAME': 'name', 'DATE_GENERATED': 'dateGenerated',
-        'SNAPSHOT': 'snapshot', 'DIAGNOSES_AND_RISKS': 'diagnosesAndRisks',
-        'TX_STATUS': 'txStatus', 'TX_SEQUENCING': 'txSequencing',
-        'FLAGGED_CONCERNS': 'flaggedConcerns', 'GRAD_VALUE': 'gradValue',
-        'NEXT_VISIT_PLAN': 'nextVisitPlan'
-    };
-    var lines = text.split('\n');
-    var currentKey = null;
-    lines.forEach(function(line) {
-        var matched = false;
-        var trimmedUpper = line.trimStart().toUpperCase();
-        var fmKeys = Object.keys(fieldMap);
-        for (var ki = 0; ki < fmKeys.length; ki++) {
-            if (trimmedUpper.indexOf(fmKeys[ki] + ':') === 0) {
-                currentKey = fieldMap[fmKeys[ki]];
-                var value = line.substring(line.indexOf(':') + 1).trim();
-                brief[currentKey] = value;
-                matched = true;
-                break;
-            }
-        }
-        if (!matched && currentKey && line.trim()) {
-            brief[currentKey] = (brief[currentKey] || '') + '\n' + line.trim();
-        }
-    });
-    return brief.chartNumber ? brief : null;
-}
-
 // Parse a single appointment block from the unified import format
 // Handles: PATIENT: / CHART: / DATE: / TIME: / PROCEDURE: / CHAIR:
 function parseImportAppointmentBlock(text) {
@@ -2340,21 +2205,6 @@ function previewPatientImport() {
         html += '</div>';
     }
 
-    // Preview clinical briefs
-    if (parsed.clinicalBriefs && parsed.clinicalBriefs.length > 0) {
-        hasContent = true;
-        parsed.clinicalBriefs.forEach(function(brief) {
-            html += '<div style="padding:8px; margin-bottom:6px; background:#052e16; border-radius:6px; border-left:3px solid #14b8a6;">'
-                + '<div style="color:#5eead4; font-weight:600; font-size:0.9em;">CLINICAL BRIEF: ' + escapeHtml(brief.name || 'Chart #' + (brief.chartNumber || '?')) + '</div>'
-                + '<div style="color:#94a3b8; font-size:0.8em; margin-top:4px;">Sections: '
-                + (brief.snapshot ? 'Snapshot ' : '') + (brief.diagnosesAndRisks ? 'Dx/Risks ' : '')
-                + (brief.txStatus ? 'Status ' : '') + (brief.txSequencing ? 'Sequencing ' : '')
-                + (brief.flaggedConcerns ? 'Concerns ' : '') + (brief.gradValue ? 'GradValue ' : '')
-                + (brief.nextVisitPlan ? 'NextVisit' : '') + '</div>'
-                + '</div>';
-        });
-    }
-
     // Retired Format D warning — shown alongside whatever else parsed (does NOT enable import by itself)
     if (parsed.retiredStatusBlocks) {
         html += '<div style="padding:10px; margin-bottom:6px; background:#451a03; border-radius:6px; border-left:3px solid #f59e0b;">'
@@ -2398,7 +2248,7 @@ function confirmUnifiedImport() {
     // No-op guard: an empty/unrecognized paste must not toast success or trigger a save
     var hasAnyBlock = parsed.records.length > 0 || parsed.updates.length > 0
         || parsed.reqMatches.length > 0 || parsed.appointments.length > 0
-        || parsed.clinicalBriefs.length > 0 || !!parsed.dashboardUpdate
+        || !!parsed.dashboardUpdate
         || !!parsed.missingNotes || !!parsed.todoList;
     if (!hasAnyBlock) {
         showToast('Nothing to import — no recognizable blocks found in paste', 'error');
@@ -2715,46 +2565,6 @@ function confirmUnifiedImport() {
         roadmapData.todoList.lastUpdated = new Date().toISOString();
     }
 
-    // Import clinical briefs (overwrite per patient by chart number)
-    var briefsImported = 0;
-    var briefsSkipped = 0;
-    if (parsed.clinicalBriefs && parsed.clinicalBriefs.length > 0) {
-        parsed.clinicalBriefs.forEach(function(brief) {
-            var chartNumber = (brief.chartNumber || '').trim();
-            var id = chartNumber ? findByNormalizedChart(records, chartNumber) : null;
-            if (!id || !records[id]) {
-                var briefNameLower = (brief.name || '').toLowerCase().trim();
-                Object.keys(records).forEach(function(rId) {
-                    if ((records[rId].name || '').toLowerCase().trim() === briefNameLower) id = rId;
-                });
-            }
-            if (id && records[id]) {
-                if (records[id].clinicalBrief && records[id].clinicalBrief.dateGenerated) {
-                    // Firebase can convert arrays to objects — safely convert back
-                    var history = Array.isArray(records[id].briefHistory) ? records[id].briefHistory : (records[id].briefHistory ? getValues(records[id].briefHistory) : []);
-                    history.unshift(JSON.parse(JSON.stringify(records[id].clinicalBrief)));
-                    if (history.length > 3) history = history.slice(0, 3);
-                    records[id].briefHistory = history;
-                }
-                records[id].clinicalBrief = {
-                    dateGenerated: brief.dateGenerated || getLocalDateString(new Date()),
-                    snapshot: brief.snapshot || '',
-                    diagnosesAndRisks: brief.diagnosesAndRisks || '',
-                    txStatus: brief.txStatus || '',
-                    txSequencing: brief.txSequencing || '',
-                    flaggedConcerns: brief.flaggedConcerns || '',
-                    gradValue: brief.gradValue || '',
-                    nextVisitPlan: brief.nextVisitPlan || ''
-                };
-                records[id].lastUpdated = new Date().toISOString();
-                briefsImported++;
-            } else {
-                briefsSkipped++;
-                console.warn('[IMPORT] CLINICAL_BRIEF skipped — no patient found for chart: ' + (brief.chartNumber || '?') + ', name: ' + (brief.name || '?'));
-            }
-        });
-    }
-
     // CRITICAL: Persist to localStorage BEFORE saveData() in case guards block
     clinicalDataDirty = true;
     safeLocalStorageSet(STORAGE_KEY, JSON.stringify(roadmapData));
@@ -2795,8 +2605,7 @@ function confirmUnifiedImport() {
     if (parsed.dashboardUpdate) msg += 'Dashboard snapshot saved. ';
     if (notesImported > 0) msg += notesImported + ' missing note(s) imported. ';
     if (todosImported > 0) msg += todosImported + ' to-do item(s) imported. ';
-    if (briefsImported > 0) msg += briefsImported + ' clinical brief(s) imported. ';
-    var skipped = (reqMatchSkipped || 0) + (briefsSkipped || 0);
+    var skipped = reqMatchSkipped || 0;
     var totalRemoved = compResult ? compResult.removedIdCount : 0;
     var allUnmatched = compResult ? compResult.unmatchedIds : [];
     if (skipped > 0) msg += skipped + ' item(s) skipped (no matching patient). ';
@@ -3577,16 +3386,6 @@ function rfSplitMeds(text) {
     return result;
 }
 
-// Convert <br>-separated HTML into rf-bullet items (used for Clinical Brief sections)
-function briefBulletize(html) {
-    var parts = html.split(/<br\s*\/?>/);
-    if (parts.length <= 1) return '<div class="rf-line">' + html + '</div>';
-    return parts.map(function(part) {
-        var text = part.trim();
-        return text ? '<div class="rf-bullet">' + text + '</div>' : '';
-    }).join('');
-}
-
 // Smart field formatter — dispatches to field-specific visual formatting (read-mode only)
 function formatRecordField(text, fieldType) {
     if (!text) return '';
@@ -3751,12 +3550,6 @@ function renderMiniReview() {
         var txPlan = (p.txPlan || '').trim();
         var txDone = (p.txCompletedByMe || '').trim();
 
-        // Clinical brief snapshot (most concise summary)
-        var briefSnap = '';
-        if (p.clinicalBrief && p.clinicalBrief.snapshot) {
-            briefSnap = p.clinicalBrief.snapshot.trim();
-        }
-
         // High value
         var isHV = p.highValue || false;
         if (!isHV && getValues(p.importedRequirements).length >= 3) isHV = true;
@@ -3797,12 +3590,6 @@ function renderMiniReview() {
         html += '</div>';
         html += '</div>';
 
-        // Brief snapshot (if available)
-        if (briefSnap) {
-            html += '<div class="mr-section-label">Clinical Brief</div>';
-            html += '<div class="mr-brief-snap">' + formatClinicalDisplay(briefSnap) + '</div>';
-        }
-
         // Tx completed
         if (txDone) {
             html += '<div class="mr-section-label">Completed by Me</div>';
@@ -3816,7 +3603,7 @@ function renderMiniReview() {
         }
 
         // If nothing
-        if (!briefSnap && !txDone && !txPlan) {
+        if (!txDone && !txPlan) {
             html += '<div class="mr-text mr-empty">No treatment data recorded yet</div>';
         }
 

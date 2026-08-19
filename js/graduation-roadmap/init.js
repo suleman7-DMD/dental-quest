@@ -474,11 +474,7 @@ function dashboardSnippetsOverlap(a, b) {
 function dashboardGetCurrentPlanSnippet(event) {
     if (!event || !event.patient) return '';
     var patient = event.patient;
-    var brief = patient.clinicalBrief || {};
     var candidates = [
-        brief.txStatus,
-        brief.txSequencing,
-        brief.snapshot,
         patient.txPlan,
         patient.txSummaryBU
     ];
@@ -520,8 +516,7 @@ function dashboardGetNextStepSnippet(event, feed) {
     }
 
     var patient = event.patient;
-    var brief = patient.clinicalBrief || {};
-    var candidate = dashboardFirstSnippet(brief.nextVisitPlan || patient.nextVisit, 130);
+    var candidate = dashboardFirstSnippet(patient.nextVisit, 130);
     if (candidate && !dashboardSnippetsOverlap(candidate, event.description)) return candidate;
 
     return '';
@@ -530,9 +525,8 @@ function dashboardGetNextStepSnippet(event, feed) {
 function dashboardGetConcernSnippet(event) {
     if (!event || !event.patient) return '';
     var patient = event.patient;
-    var brief = patient.clinicalBrief || {};
 
-    var directFlag = dashboardFirstSnippet(brief.flaggedConcerns || patient.priorityNotes, 145);
+    var directFlag = dashboardFirstSnippet(patient.priorityNotes, 145);
     if (directFlag) return directFlag;
 
     var medical = dashboardCleanText(patient.medicalHx);

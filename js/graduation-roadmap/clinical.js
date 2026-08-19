@@ -1570,19 +1570,6 @@ function showPatientCompPreview(patientId, itemId) {
     visits.appendChild(nextBox);
     modal.appendChild(visits);
 
-    // Clinical Brief (uses formatClinicalDisplay — already escapes internally)
-    var briefSnap = (pt.clinicalBrief && pt.clinicalBrief.snapshot) ? pt.clinicalBrief.snapshot.trim() : '';
-    if (briefSnap) {
-        var briefLabel2 = document.createElement('div');
-        briefLabel2.className = 'mr-section-label';
-        briefLabel2.textContent = 'Clinical Brief';
-        modal.appendChild(briefLabel2);
-        var briefDiv = document.createElement('div');
-        briefDiv.className = 'mr-brief-snap';
-        briefDiv.innerHTML = formatClinicalDisplay(briefSnap);
-        modal.appendChild(briefDiv);
-    }
-
     // Treatment Plan (uses formatClinicalDisplay)
     var txPlan = (pt.txPlan || '').trim();
     if (txPlan) {
@@ -1609,7 +1596,7 @@ function showPatientCompPreview(patientId, itemId) {
         modal.appendChild(doneDiv);
     }
 
-    if (!briefSnap && !txPlan && !txDone && !itemId) {
+    if (!txPlan && !txDone && !itemId) {
         var emptyDiv = document.createElement('div');
         emptyDiv.className = 'mr-text mr-empty';
         emptyDiv.textContent = 'No treatment data recorded yet';

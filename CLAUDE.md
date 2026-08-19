@@ -106,9 +106,9 @@ const date = new Date(year, month - 1, day);
 - **PATIENT_UPDATE must validate chart number**: Reject empty (prevents `'pt_'` overwrite).
 
 ### Clinical Import System
-- **8 block types**: PATIENT_RECORD, PATIENT_UPDATE, REQUIREMENTS_MATCH, SPS_DASHBOARD_UPDATE, APPOINTMENTS, MISSING_NOTES, TODO_LIST, CLINICAL_BRIEF — all parseable in one atomic paste. REQUIREMENTS_STATUS removed Aug 2026 (competency counts are manual-only via Competencies tab; pasted REQUIREMENTS_STATUS blocks are simply not parsed).
+- **7 block types**: PATIENT_RECORD, PATIENT_UPDATE, REQUIREMENTS_MATCH, SPS_DASHBOARD_UPDATE, APPOINTMENTS, MISSING_NOTES, TODO_LIST — all parseable in one atomic paste. REQUIREMENTS_STATUS removed Aug 2026 (competency counts are manual-only via Competencies tab). CLINICAL_BRIEF removed Aug 2026 (redundant with Record tab). Unrecognized block headers are simply not parsed.
 - **Import dedup**: By patient NAME + date + time, not just `patientId`.
-- **Clinical Brief**: Full-overwrite. Push old to `briefHistory[]` (max 3). Lives on `patientRecords[id]`.
+- **Clinical Brief RETIRED (Aug 2026)**: All UI/parser/troubleshooting code deleted from patients.js, clinical.js, init.js, patient-todo-tab.js, troubleshooting.js. Stored `clinicalBrief`/`briefHistory` data left DORMANT in Firebase (recoverable); firebase-sync.js merge logic for it deliberately kept (guarded, harmless). Do NOT reintroduce render/parse paths.
 - **Multi-line parser**: Lenient — any non-empty line as field continuation, joins with `'\n'`.
 - **Parse calls are guarded (Aug 2026)**: `previewPatientImport()` and `confirmUnifiedImport()` wrap `parsePatientImportText()` in try/catch — preview shows an inline error + disables the import button; confirm toasts "nothing was changed" and returns BEFORE `clinicalDataDirty = true`. Keep the guard ahead of any state mutation.
 - **Imported requirements**: Stored as `patient.importedRequirements[]`. `computeRequirementMatches()` uses these over keyword fallback.
@@ -158,7 +158,6 @@ const date = new Date(year, month - 1, day);
 - **`persistExpandedState()`**: MUST call `safeLocalStorageSet()`.
 - **`getCompetenciesData()`**: Returns MUTABLE reference — render functions must not mutate through it.
 - **`getDashboardSnapshots()` / `saveDashboardSnapshot()`**: Must use `getValues()` before `.findIndex()`, `.unshift()`, `.slice()`.
-- **`briefHistory` array safety**: Use `getValues()` before `.unshift()` / `.slice()`.
 
 ### D3/D4 Year Data Model (Apr 2026; unified UI Aug 2026)
 - **13 categories** (was 14 — `srp` absorbed into `perio` via migration). Each has `yearTarget: 'd3' | 'd4' | 'both'` — now DISPLAY-ONLY metadata driving the passive year chip (`cv2-year-chip`); it no longer filters rendering.

@@ -13,17 +13,12 @@ var TS_DOMAINS = {
     firebase: { name: 'Firebase Sync Health', icon: '\u2601\uFE0F', weight: 10 }
 };
 
-var TS_CLINICAL_BRIEF_FIELDS = [
-    'snapshot', 'diagnosesAndRisks', 'txStatus', 'txSequencing',
-    'flaggedConcerns', 'gradValue', 'nextVisitPlan', 'dateGenerated'
-];
 var TS_BLOCK_TYPES = [
     'PATIENT_RECORD', 'PATIENT_UPDATE', 'REQUIREMENTS_MATCH',
     'SPS_DASHBOARD_UPDATE', 'APPOINTMENTS',
-    'MISSING_NOTES', 'TODO_LIST', 'CLINICAL_BRIEF'
+    'MISSING_NOTES', 'TODO_LIST'
 ];
 var TS_PR_FIELD_COUNT = 22; // NAME..RELIABILITY (+DOB) in parsePatientRecord fieldMap
-var TS_CB_FIELD_COUNT = 10; // CHART..NEXT_VISIT_PLAN in parseClinicalBrief fieldMap
 var TS_APT_FIELDS = ['PATIENT', 'CHART', 'DATE', 'TIME', 'PROCEDURE', 'CHAIR'];
 var tsExpandedDomains = {};
 
@@ -98,14 +93,11 @@ function runAllIntegrityChecks() {
 
 function tsCheckParser() {
     var checks = [];
-    checks.push(tsCheck('8 block types registered', TS_BLOCK_TYPES.length === 8 ? 'pass' : 'fail',
-        TS_BLOCK_TYPES.length + '/8 block types: ' + TS_BLOCK_TYPES.join(', ')));
+    checks.push(tsCheck('7 block types registered', TS_BLOCK_TYPES.length === 7 ? 'pass' : 'fail',
+        TS_BLOCK_TYPES.length + '/7 block types: ' + TS_BLOCK_TYPES.join(', ')));
     checks.push(tsCheck('PATIENT_RECORD field map (' + TS_PR_FIELD_COUNT + ' fields)',
         TS_PR_FIELD_COUNT >= 20 ? 'pass' : 'warn',
         TS_PR_FIELD_COUNT + ' fields mapped: NAME, CHART, TYPE, DOB, MEDICAL_HX, MEDICATIONS, ALLERGIES, DENTAL_HX, TX_SUMMARY_BU, TX_COMPLETED_BY_ME, POE_LAST/NEXT, TX_PLAN, LAST_VISIT, NEXT_VISIT, imaging, NOTES, RECALL_HISTORY, ACTIVE_STATUS, RELIABILITY.'));
-    checks.push(tsCheck('CLINICAL_BRIEF field map (' + TS_CB_FIELD_COUNT + ' fields)',
-        TS_CB_FIELD_COUNT >= 9 ? 'pass' : 'warn',
-        TS_CB_FIELD_COUNT + ' fields: CHART, NAME, DATE_GENERATED, SNAPSHOT, DIAGNOSES_AND_RISKS, TX_STATUS, TX_SEQUENCING, FLAGGED_CONCERNS, GRAD_VALUE, NEXT_VISIT_PLAN.'));
     checks.push(tsCheck('Known parser quirks', 'warn',
         'PATIENT_UPDATE: UPDATED/SOURCE discarded (metadata). PRIORITY_NOTES: newline separator. TODO_LIST: 5 pipe-delimited fields. MISSING_NOTES: 7 pipe-delimited fields.'));
     checks.push(tsCheck('APPOINTMENTS field map (' + TS_APT_FIELDS.length + ' fields)',
@@ -125,17 +117,10 @@ function tsCheckPatients() {
     checks.push(tsCheck('Patient records loaded', 'pass', ids.length + ' patient record(s) found' +
         (archivedCount > 0 ? ' — ' + archivedCount + ' archived (excluded from renders)' : '') + '.'));
 
-    var missingBrief = [], incompleteBrief = [], noReq = [], schemaIssues = [];
+    var noReq = [], schemaIssues = [];
     for (var i = 0; i < ids.length; i++) {
         var p = records[ids[i]]; if (!p) continue;
         var nm = p.name || ids[i];
-        // Brief check
-        if (!p.clinicalBrief || !p.clinicalBrief.snapshot) { missingBrief.push(nm); }
-        else {
-            var mf = [];
-            for (var f = 0; f < TS_CLINICAL_BRIEF_FIELDS.length; f++) if (!p.clinicalBrief[TS_CLINICAL_BRIEF_FIELDS[f]]) mf.push(TS_CLINICAL_BRIEF_FIELDS[f]);
-            if (mf.length > 0) incompleteBrief.push(nm + ' (missing: ' + mf.join(', ') + ')');
-        }
         // importedRequirements
         var reqs = p.importedRequirements;
         if (!reqs || !Array.isArray(reqs) || reqs.length === 0) noReq.push(nm);
@@ -145,14 +130,6 @@ function tsCheckPatients() {
         if (miss.length > 0) schemaIssues.push((p.name || ids[i]) + ' (' + miss.join(', ') + ')');
     }
 
-    checks.push(tsCheck('Clinical briefs present',
-        missingBrief.length === 0 ? 'pass' : missingBrief.length <= 5 ? 'warn' : 'fail',
-        missingBrief.length === 0 ? 'All ' + ids.length + ' patients have clinical briefs.'
-            : missingBrief.length + ' missing: ' + missingBrief.slice(0, 8).join(', ') + (missingBrief.length > 8 ? '...' : ''),
-        missingBrief.length > 0 ? 'tsFixValidatePatientSchemas' : null));
-    if (incompleteBrief.length > 0)
-        checks.push(tsCheck('Brief field completeness', 'warn',
-            incompleteBrief.length + ' incomplete: ' + incompleteBrief.slice(0, 5).join('; ') + (incompleteBrief.length > 5 ? '...' : '')));
     checks.push(tsCheck('Imported requirements coverage',
         noReq.length === 0 ? 'pass' : noReq.length <= ids.length / 2 ? 'warn' : 'fail',
         noReq.length === 0 ? 'All patients have imported requirements.'
@@ -408,7 +385,6 @@ function tsToggleDomain(domainKey) {
 function tsRenderQuickFixButtons(allChecks) {
     var fixes = {}, labels = {
         'tsFixResyncCompCounts': 'Re-sync Competency Counts',
-        'tsFixValidatePatientSchemas': 'Add Missing Brief Defaults',
         'tsFixDedupSchedule': 'De-duplicate Schedule',
         'tsFixRebuildDeadlines': 'Rebuild Deadlines',
         'tsFixRebuildWeekSchedule': 'Rebuild Week Schedule'
@@ -451,35 +427,6 @@ function tsFixResyncCompCounts() {
     if (fixCount > 0) { clinicalDataDirty = true; safeLocalStorageSet(STORAGE_KEY, JSON.stringify(roadmapData)); saveData(); }
     showToast(fixCount > 0 ? 'Fixed ' + fixCount + ' item(s) (clamped counts + derived status)' : 'All counts valid', 'warning');
     if (fixCount > 0 && typeof renderDashboard === 'function') renderDashboard();
-    renderTroubleshooting();
-}
-
-function tsFixValidatePatientSchemas() {
-    var recs = {}; try { recs = getAllPatientRecords(); } catch (e) { return; }
-    var fixCount = 0;
-    Object.keys(recs).forEach(function(id) {
-        var p = recs[id]; if (!p) return;
-        var needsFix = false;
-        if (!p.clinicalBrief) { p.clinicalBrief = {}; needsFix = true; }
-        for (var f = 0; f < TS_CLINICAL_BRIEF_FIELDS.length; f++) {
-            if (p.clinicalBrief[TS_CLINICAL_BRIEF_FIELDS[f]] === undefined) {
-                p.clinicalBrief[TS_CLINICAL_BRIEF_FIELDS[f]] = '';
-                needsFix = true;
-            }
-        }
-        if (needsFix) {
-            fixCount++;
-            // Write to canonical store, not merged view
-            if (!roadmapData.clinicalData.patientRecords[id]) {
-                roadmapData.clinicalData.patientRecords[id] = {};
-            }
-            Object.keys(p).forEach(function(key) {
-                roadmapData.clinicalData.patientRecords[id][key] = p[key];
-            });
-        }
-    });
-    if (fixCount > 0) { clinicalDataDirty = true; safeLocalStorageSet(STORAGE_KEY, JSON.stringify(roadmapData)); saveData(); }
-    showToast(fixCount > 0 ? 'Added brief defaults to ' + fixCount + ' patient(s)' : 'All patients have clinicalBrief', 'warning');
     renderTroubleshooting();
 }
 
