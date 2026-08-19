@@ -207,7 +207,8 @@ function getDefaultRoadmapData() {
             autoLinkReviewQueue: [],
             deletedAppointmentIds: {},
             deletedProcedureIds: {},
-            deletedPatientRecordIds: {}
+            deletedPatientRecordIds: {},
+            deletedCompItemIds: {}
         },
         todoList: {
             items: {},
@@ -334,7 +335,7 @@ function isEmptyState(data) {
         (gradPrep.inbde?.notes || '') !== '' ||
         (gradPrep.jobSearch?.notes || '') !== ''
     );
-    var hasDeletedRecords = getCount(data.clinicalData?.deletedAppointmentIds) > 0 || getCount(data.clinicalData?.deletedProcedureIds) > 0 || getCount(data.clinicalData?.deletedPatientRecordIds) > 0 || getCount(data.deletedD4EventIds) > 0 || getCount(data.deletedCriticalReminderIds) > 0 || getCount(data.deletedPlannerTaskIds) > 0 || getCount(data.deletedPlannerNoteIds) > 0;
+    var hasDeletedRecords = getCount(data.clinicalData?.deletedAppointmentIds) > 0 || getCount(data.clinicalData?.deletedProcedureIds) > 0 || getCount(data.clinicalData?.deletedPatientRecordIds) > 0 || getCount(data.clinicalData?.deletedCompItemIds) > 0 || getCount(data.deletedD4EventIds) > 0 || getCount(data.deletedCriticalReminderIds) > 0 || getCount(data.deletedPlannerTaskIds) > 0 || getCount(data.deletedPlannerNoteIds) > 0;
     // d4Events: migration-seeded INBDE/ADEX placeholders (seeded:true, no date) are
     // auto-generated and must NOT count as real data (Guard C). Any user-saved or
     // dated event counts.
@@ -762,7 +763,8 @@ function migrateCompetencies(competencies) {
 // - newer lastVerified wins
 // - if neither side is verified, take Math.max(completed)
 // Notes stay fill-only so existing local notes are not blown away by empty remote values.
-function mergeCompetencies(localComp, cloudComp) {
+function mergeCompetencies(localComp, cloudComp, deletedIds) {
+    var _tomb = deletedIds || {};
     var local = migrateCompetencies(localComp);
     var cloud = migrateCompetencies(cloudComp);
     if (!local && !cloud) return null;
@@ -783,7 +785,18 @@ function mergeCompetencies(localComp, cloudComp) {
     });
 
     Object.keys(cloud).forEach(function(catKey) {
-        if (!result[catKey]) { result[catKey] = cloud[catKey]; return; }
+        if (!result[catKey]) {
+            // Adopt the cloud category but strip any tombstoned items first
+            var _adopt = cloud[catKey];
+            getValues(_adopt.sections).forEach(function(sec) {
+                var its = sec.items || {};
+                Object.keys(its).forEach(function(ik) {
+                    if (its[ik] && its[ik].id && _tomb[its[ik].id]) delete its[ik];
+                });
+            });
+            result[catKey] = _adopt;
+            return;
+        }
         var localCat = result[catKey];
         var cloudCat = cloud[catKey];
         if (cloudCat.notes && !localCat.notes) localCat.notes = cloudCat.notes;
@@ -807,7 +820,7 @@ function mergeCompetencies(localComp, cloudComp) {
                 var filteredItems = {};
                 Object.keys(cloudSecItems).forEach(function(ik) {
                     var ci = cloudSecItems[ik];
-                    if (ci && ci.id && !allLocalItemIds[ci.id]) {
+                    if (ci && ci.id && !allLocalItemIds[ci.id] && !_tomb[ci.id]) {
                         filteredItems[ik] = ci;
                         allLocalItemIds[ci.id] = true;
                     }
@@ -824,7 +837,10 @@ function mergeCompetencies(localComp, cloudComp) {
                 if (!ci) return;
                 // Skip if this item ID already exists in ANY local section (cross-section dedup)
                 if (ci.id && allLocalItemIds[ci.id] && !localItems[itemId]) return;
-                if (!localItems[itemId]) { localItems[itemId] = ci; allLocalItemIds[ci.id || itemId] = true; return; }
+                if (!localItems[itemId]) {
+                    if (ci.id && _tomb[ci.id]) return; // tombstoned — do not resurrect
+                    localItems[itemId] = ci; allLocalItemIds[ci.id || itemId] = true; return;
+                }
                 var li = localItems[itemId];
                 // V2: Timestamp-based merge — most recent lastVerified wins
                 if (li.lastVerified && ci.lastVerified) {
