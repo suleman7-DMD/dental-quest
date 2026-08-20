@@ -2257,64 +2257,6 @@
             width: auto;
         }
 
-        /* Workout Planner */
-        .workout-zone-marker {
-            position: absolute;
-            top: 0;
-            bottom: 0;
-            width: 3px;
-            background: var(--fg-primary);
-            box-shadow: 0 0 8px rgba(44, 40, 37, 0.3);
-            z-index: 10;
-        }
-
-        .workout-zone-label {
-            position: absolute;
-            top: -20px;
-            transform: translateX(-50%);
-            font-size: 0.7em;
-            color: var(--fg-primary);
-            white-space: nowrap;
-        }
-
-        .workout-result-optimal {
-            background: var(--success-light);
-            border-left-color: var(--success);
-        }
-
-        .workout-result-caution {
-            background: var(--warning-light);
-            border-left-color: var(--warning);
-        }
-
-        .workout-result-danger {
-            background: var(--destructive-light);
-            border-left-color: var(--destructive);
-        }
-
-        .workout-impact-item {
-            display: flex;
-            justify-content: space-between;
-            padding: 6px 0;
-            border-bottom: 1px solid var(--border-subtle);
-        }
-
-        .workout-impact-item:last-child {
-            border-bottom: none;
-        }
-
-        .workout-impact-positive {
-            color: var(--success);
-        }
-
-        .workout-impact-negative {
-            color: var(--destructive);
-        }
-
-        .workout-impact-neutral {
-            color: var(--fg-tertiary);
-        }
-
         /* Graph Tooltip */
         .graph-tooltip {
             position: absolute;
@@ -4101,29 +4043,6 @@
             border-left: 3px solid;
         }
 
-        /* Nicotine quick buttons */
-        .nic-quick-btns {
-            display: flex;
-            gap: 8px;
-            margin-bottom: 10px;
-        }
-
-        .nic-quick-btns button {
-            flex: 1;
-            padding: 10px;
-            border-radius: 8px;
-            border: 1px solid var(--border-default);
-            background: var(--canvas-subtle);
-            color: var(--fg-secondary);
-            cursor: pointer;
-            font-size: 0.88em;
-            transition: all 0.15s;
-        }
-
-        .nic-quick-btns button:hover {
-            background: var(--canvas-inset);
-        }
-
         /* Circadian timeline compact */
         .circadian-compact {
             display: flex;
@@ -4555,14 +4474,10 @@
                                 <button class="sc-modifier-chip" id="workoutChip" onclick="toggleModifierChip('workout')">
                                     <span class="chip-icon">&#127947;</span> Worked out today<span class="sc-chip-effect" id="workoutEffect"></span>
                                 </button>
-                                <button class="sc-modifier-chip" id="saunaChip" onclick="toggleModifierChip('sauna')">
-                                    <span class="chip-icon">&#9832;</span> Sauna
-                                </button>
                             </div>
                             <!-- Hidden checkboxes for backward compat with toggleModifier/restoreModifierUI -->
                             <input type="checkbox" id="vitCToggle" style="display:none;">
                             <input type="checkbox" id="workoutToggle" style="display:none;">
-                            <input type="checkbox" id="saunaToggle" style="display:none;">
                             <span id="vitCBadge" class="modifier-badge" style="display:none;"></span>
                             <div class="modifier-time" id="vitCTimeRow" style="display:none; margin-top:8px;">
                                 <input type="time" id="vitaminCTime" value="17:00" onchange="recalculate(); saveState();">
@@ -4576,9 +4491,6 @@
                                 <label style="display:flex; align-items:center; gap:6px; font-size:0.85em; color:var(--fg-secondary); cursor:pointer;">
                                     <input type="checkbox" id="workoutIntense" onchange="state.modifiers.workout.intense = this.checked; recalculate(); saveState();"> intense session
                                 </label>
-                            </div>
-                            <div class="modifier-time" id="saunaTimeRow" style="display:none; margin-top:8px;">
-                                <input type="time" id="saunaTime" value="18:00" onchange="updateModifierTimeInputs(); recalculate();">
                             </div>
                         </div>
                         </div><!-- /sc-dash-col--side -->
@@ -4611,56 +4523,11 @@
                 <!-- ==================== MODIFIERS PAGE ==================== -->
                 <div class="sc-page" id="scPageModifiers">
                     <div class="sc-card">
-                        <div class="sc-card-title">Nicotine Tracking</div>
-                        <div class="nic-quick-btns">
-                            <button id="logVapeBtn" onclick="logNicotine('vape')">Log Vape Hit</button>
-                            <button id="logPouchBtn" onclick="logNicotine('pouch')">Log Zyn/Pouch</button>
-                        </div>
-                        <div id="nicotineStatus" style="display:none; padding:10px; background:var(--canvas-subtle); border:1px solid var(--border-subtle); border-radius:8px; margin-bottom:8px;">
-                            <div style="display:flex; justify-content:space-between; font-size:0.85em;">
-                                <span id="lastNicotineDisplay" style="color:var(--fg-secondary);"></span>
-                                <span id="nicotineTypeDisplay" style="font-weight:600;"></span>
-                            </div>
-                            <div id="nicotineClearDisplay" style="font-size:0.8em; color:var(--fg-tertiary); margin-top:4px;"></div>
-                            <div style="display:flex; gap:6px; margin-top:6px;">
-                                <input type="time" id="nicotineTimeInput" style="flex:1; padding:5px; border-radius:6px; border:1px solid var(--control-border); background:var(--control-bg); color:var(--fg-primary); font-size:0.85em;" onchange="state.nicotine.active = true; state.nicotine.lastHitTime = this.value; updateNicotineDisplay(); recalculate(); saveState();">
-                                <button onclick="clearNicotine()" style="padding:5px 10px; background:var(--destructive-light); border:1px solid var(--destructive); border-radius:6px; color:var(--destructive); cursor:pointer; font-size:0.82em;">Clear</button>
-                            </div>
-                        </div>
-                        <div id="nicotineWarning" style="display:none;"></div>
-                        <div id="nicotineRecommendation" style="display:none;"></div>
-                        <div id="rlsEmergencyProtocol" style="display:none;"></div>
-                    </div>
-                    <div class="sc-card">
-                        <div class="sc-card-title">Workout Planner</div>
-                        <div class="input-row">
-                            <div class="input-group"><label>Time</label><input type="time" id="workoutTime" onchange="updateWorkoutPlan()"></div>
-                            <div class="input-group"><label>Type</label><select id="workoutType" onchange="updateWorkoutPlan()"><option value="lifting">Heavy Lifting</option><option value="zone2">Zone 2 Cardio</option><option value="hiit">HIIT</option><option value="walk">Walk / Yoga</option></select></div>
-                        </div>
-                        <div class="input-row">
-                            <div class="input-group"><label>Duration</label><select id="workoutDuration" onchange="updateWorkoutPlan()"><option value="20">20 min</option><option value="30">30 min</option><option value="45" selected>45 min</option><option value="60">60 min</option><option value="75">75 min</option><option value="90">90 min</option></select></div>
-                            <div class="input-group"><label>Intensity</label><select id="workoutIntensity" onchange="updateWorkoutPlan()"><option value="low">Low</option><option value="medium" selected>Medium</option><option value="redline">Redline</option></select></div>
-                        </div>
-                        <label style="display:flex; align-items:center; gap:8px; font-size:0.85em; color:var(--fg-primary); margin:6px 0 10px;"><input type="checkbox" id="workoutFasted" onchange="updateWorkoutPlan()"> Fasted Training</label>
-                        <div id="workoutResult" style="display:none;"></div>
-                        <div id="workoutResultHeader" style="display:none;"></div>
-                        <div id="workoutResultText" style="display:none;"></div>
-                        <div id="workoutResultDetails" style="display:none;"></div>
-                        <div id="coldShowerOption" style="display:none; margin-top:8px;"><label style="display:flex; align-items:center; gap:8px; font-size:0.85em; color:var(--fg-primary);"><input type="checkbox" id="coldShowerToggle" onchange="updateWorkoutPlan()"> Cold Shower After (cuts cooldown to 45min)</label></div>
-                        <div style="display:flex; gap:8px; margin-top:10px;" id="workoutButtons">
-                            <button id="applyWorkoutBtn" onclick="applyWorkoutPlan()" style="display:none; flex:1; padding:8px; border-radius:8px; border:1px solid var(--success); background:var(--success-light); color:var(--success); cursor:pointer; font-size:0.85em; font-weight:600;">Apply to Prediction</button>
-                            <button id="resetWorkoutBtn" onclick="resetWorkoutPlan()" style="display:none; padding:8px 14px; border-radius:8px; border:1px solid var(--destructive); background:var(--destructive-light); color:var(--destructive); cursor:pointer; font-size:0.85em;">Reset</button>
-                        </div>
-                    </div>
-                    <div class="sc-card">
                         <div class="sc-card-title">What-If Scenarios</div>
                         <div class="scenario-compact-grid">
                             <div class="scenario-compact" onclick="simulateScenario('coffee')" style="background: var(--warning-light); border: 1px solid var(--border-default);"><div class="scenario-icon">Coffee</div><div class="scenario-time" id="scenarioCoffeeSleep">--</div><div class="scenario-delta" id="scenarioCoffeeDelta">Coffee</div></div>
                             <div class="scenario-compact" onclick="simulateScenario('espresso')" style="background: var(--destructive-light); border: 1px solid var(--border-default);"><div class="scenario-icon">Espresso</div><div class="scenario-time" id="scenarioEspressoSleep">--</div><div class="scenario-delta" id="scenarioEspressoDelta">Espresso</div></div>
                             <div class="scenario-compact" onclick="simulateScenario('vitc')" style="background: var(--success-light); border: 1px solid var(--border-default);"><div class="scenario-icon">VitC</div><div class="scenario-time" id="scenarioVitCSleep">--</div><div class="scenario-delta" id="scenarioVitCDelta">Vitamin C</div></div>
-                            <div class="scenario-compact" onclick="simulateScenario('sauna')" style="background: var(--info-light); border: 1px solid var(--border-default);"><div class="scenario-icon">Sauna</div><div class="scenario-time" id="scenarioSaunaSleep">--</div><div class="scenario-delta" id="scenarioSaunaDelta">Sauna</div></div>
-                            <div class="scenario-compact" onclick="simulateScenario('vape')" style="background: var(--destructive-light); border: 1px solid var(--border-default);"><div class="scenario-icon">Vape</div><div class="scenario-time" id="scenarioVapeSleep">--</div><div class="scenario-delta" id="scenarioVapeDelta">Vape</div></div>
-                            <div class="scenario-compact" onclick="simulateScenario('zyn')" style="background: var(--success-light); border: 1px solid var(--border-default);"><div class="scenario-icon">Zyn</div><div class="scenario-time" id="scenarioZynSleep">--</div><div class="scenario-delta" id="scenarioZynDelta">Zyn</div></div>
                         </div>
                     </div>
                     <div class="sc-card">
@@ -4911,8 +4778,6 @@
         <div class="accordion-section" data-section="meds"><div class="accordion-header"><span class="accordion-summary" id="medsAccordionSummary">No meds logged</span><span class="accordion-arrow"></span></div><div class="accordion-body"></div></div>
         <div class="accordion-section" data-section="caffeine"><div class="accordion-header"><span class="accordion-summary" id="caffeineAccordionSummary">No caffeine</span><span class="accordion-arrow"></span></div><div class="accordion-body"></div></div>
         <div class="accordion-section" data-section="modifiers"><div class="accordion-header"><span class="accordion-summary" id="modifiersAccordionSummary">None active</span><span class="accordion-arrow"></span></div><div class="accordion-body"></div></div>
-        <div class="accordion-section" data-section="nicotine"><div class="accordion-header"><span class="accordion-summary" id="nicotineAccordionSummary">Not tracked</span><span class="accordion-arrow"></span></div><div class="accordion-body"></div></div>
-        <div class="accordion-section" data-section="workout"><div class="accordion-header"><span class="accordion-summary" id="workoutAccordionSummary">Not planned</span><span class="accordion-arrow"></span></div><div class="accordion-body"></div></div>
         <div class="accordion-section" data-section="circadian"><div class="accordion-header"><span class="accordion-summary" id="circadianAccordionSummary">--</span><span class="accordion-arrow"></span></div><div class="accordion-body"></div></div>
         <div class="accordion-section" data-section="sleepIntel"><div class="accordion-header"><span id="sleepIntelSummary" class="accordion-summary"></span><span class="accordion-arrow"></span></div><div class="accordion-body"></div></div>
         <div class="accordion-section" data-section="recs"><div class="accordion-header"><span class="accordion-arrow"></span></div><div class="accordion-body"></div></div>

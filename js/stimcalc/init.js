@@ -78,17 +78,6 @@ function syncStateFromDOM() {
         // Update VitC status badge
         updateVitCBadge();
     }
-    if (state.modifiers.sauna && state.modifiers.sauna.active) {
-        const saunaTimeEl = document.getElementById('saunaTime');
-        if (saunaTimeEl) {
-            const newTime = saunaTimeEl.value || state.modifiers.sauna.time;
-            // FIX: If time changed, update the date to today (user is setting new sauna time)
-            if (newTime !== state.modifiers.sauna.time) {
-                state.modifiers.sauna.date = getLocalDateString();
-            }
-            state.modifiers.sauna.time = newTime;
-        }
-    }
 }
 
 /**
@@ -388,10 +377,8 @@ function updateUI(vm) {
 
     // --- Delegate to other UI update functions ---
     updateFeelingsTimeline();
-    updateNicotineDisplay();
     updateScenarios();
     renderGhostLoad();
-    updateWorkoutPlan();
     drawGraph();
     updateAccordionSummaries();
     updateHeroProgressBar();
@@ -565,15 +552,6 @@ function updateRecommendations(sleepTime, sleepHours, blockingFactors) {
             icon: '\ud83c\udf4a',
             title: 'Consider Vitamin C Flush',
             text: 'Taking 1000mg Vitamin C at 5-6pm gives ~10% faster clearance (more with the high-dose protocol — see Settings), potentially moving sleep earlier.'
-        });
-    }
-
-    if (sleepHours < 7 && !state.modifiers.sauna.active) {
-        recommendations.push({
-            type: 'warning',
-            icon: '\ud83e\uddd6',
-            title: 'Sauna Could Help',
-            text: '15+ minutes in the sauna triggers parasympathetic rebound, potentially allowing sleep 30 min earlier.'
         });
     }
 
@@ -852,7 +830,6 @@ function init() {
     const vitcHDEl = document.getElementById('vitcHighDose');
     if (vitcHDEl) vitcHDEl.checked = !!state.settings.vitcHighDose;
     safeSetValue('vitaminCTime', state.modifiers.vitaminC.time || '17:00');
-    safeSetValue('saunaTime', state.modifiers.sauna.time || '18:00');
 
     // Render existing entries
     renderMedEntries();
@@ -864,14 +841,6 @@ function init() {
 
     // Update All-Nighter Mode UI
     updateAllNighterUI();
-
-    // Initialize workout planner
-    initWorkoutPlanner();
-
-    // Restore workout plan UI if previously applied
-    if (state.workoutPlan && state.workoutPlan.applied) {
-        restoreWorkoutPlanUI();
-    }
 
     // Initial calculation
     recalculate();
@@ -950,7 +919,7 @@ function restoreAccordionStates() {
     var openSections = JSON.parse(localStorage.getItem('stimCalcAccordions') || '{}');
     var defaults = {
         sleep: true, meds: false, caffeine: false, modifiers: false,
-        nicotine: false, workout: false, circadian: false,
+        circadian: false,
         sleepIntel: true,
         recs: false, forecast: false, settings: false
     };
@@ -1006,35 +975,9 @@ function updateAccordionSummaries() {
     if (modSummary) {
         var active = [];
         if (state.modifiers.vitaminC && state.modifiers.vitaminC.active) active.push('VitC');
-        if (state.modifiers.heavyLift && state.modifiers.heavyLift.active) active.push('Lifting');
-        if (state.modifiers.sauna && state.modifiers.sauna.active) active.push('Sauna');
         if (state.allNighterMode) active.push('All-Nighter');
         modSummary.textContent = active.length > 0 ? active.join(', ') : 'None active';
         modSummary.style.color = active.length > 0 ? '#5E8A5E' : '#9C948B';
-    }
-
-    // Nicotine summary
-    var nicSummary = document.getElementById('nicotineAccordionSummary');
-    if (nicSummary) {
-        if (state.nicotine && state.nicotine.active) {
-            nicSummary.textContent = state.nicotine.type === 'vape' ? 'Vape hit logged' : 'Pouch logged';
-            nicSummary.style.color = '#C97070';
-        } else {
-            nicSummary.textContent = 'Not tracked';
-            nicSummary.style.color = '#9C948B';
-        }
-    }
-
-    // Workout summary
-    var workoutSummary = document.getElementById('workoutAccordionSummary');
-    if (workoutSummary) {
-        if (state.workoutPlan && state.workoutPlan.applied) {
-            workoutSummary.textContent = 'Applied (' + (state.workoutPlan.type || 'workout') + ')';
-            workoutSummary.style.color = '#5E8A5E';
-        } else {
-            workoutSummary.textContent = 'Not planned';
-            workoutSummary.style.color = '#9C948B';
-        }
     }
 
     // Circadian summary
@@ -1063,11 +1006,7 @@ function updateAccordionSummaries() {
         meds: getCount(state.medications) > 0,
         caffeine: getCount(state.caffeine) > 0,
         modifiers: (state.modifiers.vitaminC && state.modifiers.vitaminC.active) ||
-                   (state.modifiers.heavyLift && state.modifiers.heavyLift.active) ||
-                   (state.modifiers.sauna && state.modifiers.sauna.active) ||
-                   state.allNighterMode,
-        nicotine: state.nicotine && state.nicotine.active,
-        workout: state.workoutPlan && state.workoutPlan.applied
+                   state.allNighterMode
     };
     Object.keys(sections).forEach(function(key) {
         var el = document.querySelector('.accordion-section[data-section="' + key + '"]');
@@ -1337,11 +1276,8 @@ function updateSidebarBadges() {
         var activeCount = 0;
         if (state && state.modifiers) {
             if (state.modifiers.vitaminC && state.modifiers.vitaminC.active) activeCount++;
-            if (state.modifiers.sauna && state.modifiers.sauna.active) activeCount++;
-            if (state.modifiers.heavyLift && state.modifiers.heavyLift.active) activeCount++;
+            if (state.modifiers.workout && state.modifiers.workout.active) activeCount++;
         }
-        if (state && state.nicotine && state.nicotine.active) activeCount++;
-        if (state && state.workoutPlan && state.workoutPlan.applied) activeCount++;
         modBadge.textContent = activeCount > 0 ? activeCount : '';
         modBadge.style.display = activeCount > 0 ? 'flex' : 'none';
     }

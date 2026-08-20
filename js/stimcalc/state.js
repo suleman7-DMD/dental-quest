@@ -46,7 +46,6 @@ function getDefaultState() {
         modifiers: {
             vitaminC: { active: false, time: '17:00', date: null },
             heavyLift: { active: false },
-            sauna: { active: false, time: '18:00', date: null },
             workout: { active: false, endTime: '18:00', intense: false, date: null }
         },
         nicotine: {
@@ -369,7 +368,6 @@ function snapshotPredictionInputs() {
         totalAmpDose: getValues(state.medications).reduce((s, m) => s + m.dose, 0),
         totalCaffDose: getValues(state.caffeine).reduce((s, c) => s + c.amount, 0),
         hasWorkout: !!(state.workoutPlan && state.workoutPlan.applied),
-        hasSauna: !!(state.modifiers && state.modifiers.sauna && state.modifiers.sauna.active),
         hasVitC: !!(state.modifiers && state.modifiers.vitaminC && state.modifiers.vitaminC.active),
         allNighterMode: !!state.allNighterMode
     };

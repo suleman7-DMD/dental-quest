@@ -1,362 +1,7 @@
 // ============================================
 // UI SECTIONS (Phase 4)
-// Nicotine, Modifiers, All-Nighter, Workout, What-If, Forecast
+// Modifiers, All-Nighter, Workout, What-If, Forecast
 // ============================================
-
-// ============================================
-// NICOTINE TRACKING
-// ============================================
-
-// Nicotine pharmacokinetics constants
-// Based on cardiovascular response research, not elimination half-life
-// Key insight: nicotine is FRONT-LOADED (first 10-30 min most activating)
-// Half-life ~2 hours, but subjective effects don't follow linear decay
-// Sleep impact is probabilistic, not a hard blocker
-var NICOTINE_CONSTANTS = {
-    vape: {
-        // Inhaled nicotine - rapid spike
-        onsetMinutes: 0.5,       // Seconds to feel it
-        peakMinutes: 5,          // Peak plasma in 1-5 min
-        highImpactEnd: 30,       // HIGH arousal zone ends
-        moderateImpactEnd: 60,   // MODERATE zone ends
-        minimalImpactEnd: 120,   // Meaningful effects mostly gone
-        description: '💨 Vape',
-        shortDesc: 'Vape'
-    },
-    pouch: {
-        // Buccal absorption - slower, flatter curve
-        onsetMinutes: 5,         // Takes 5-15 min to feel
-        peakMinutes: 30,         // Peak at 30-45 min
-        highImpactEnd: 45,       // HIGH zone ends
-        moderateImpactEnd: 75,   // MODERATE zone ends
-        minimalImpactEnd: 120,   // Minimal by 2 hours
-        description: '🫧 Zyn/Pouch',
-        shortDesc: 'Zyn'
-    }
-};
-
-function logNicotine(type) {
-    const now = new Date();
-    const timeStr = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
-
-    state.nicotine.active = true;
-    state.nicotine.type = type;
-    state.nicotine.lastHitTime = timeStr;
-
-    updateNicotineDisplay();
-    recalculate();
-    saveState();
-
-    showToast(`${type === 'vape' ? '💨 Vape' : '🫧 Pouch'} logged at ${minutesToTime(timeToMinutes(timeStr))}`);
-}
-
-function clearNicotine() {
-    state.nicotine.active = false;
-    state.nicotine.lastHitTime = null;
-    state.nicotine.type = 'vape';
-
-    updateNicotineDisplay();
-    recalculate();
-    saveState();
-}
-
-function updateNicotineTime() {
-    const timeInput = document.getElementById('nicotineTimeInput');
-    if (timeInput && timeInput.value) {
-        state.nicotine.active = true;
-        state.nicotine.lastHitTime = timeInput.value;
-        updateNicotineDisplay();
-        recalculate();
-        saveState();
-    }
-}
-
-function updateNicotineDisplay() {
-    const statusEl = document.getElementById('nicotineStatus');
-    const warningEl = document.getElementById('nicotineWarning');
-    const recommendEl = document.getElementById('nicotineRecommendation');
-    const lastDisplayEl = document.getElementById('lastNicotineDisplay');
-    const typeDisplayEl = document.getElementById('nicotineTypeDisplay');
-    const clearDisplayEl = document.getElementById('nicotineClearDisplay');
-    const timeInputEl = document.getElementById('nicotineTimeInput');
-    const vapeBtn = document.getElementById('logVapeBtn');
-    const pouchBtn = document.getElementById('logPouchBtn');
-
-    if (!statusEl) return;
-
-    if (state.nicotine.active && state.nicotine.lastHitTime) {
-        statusEl.style.display = 'block';
-
-        const typeInfo = NICOTINE_CONSTANTS[state.nicotine.type] || NICOTINE_CONSTANTS.vape;
-        const lastHitMins = timeToMinutes(state.nicotine.lastHitTime);
-        const now = getCurrentMinutes();
-
-        // Calculate elapsed time and impact level
-        let elapsed = now - lastHitMins;
-        if (elapsed < 0) elapsed += 24 * 60;
-
-        let impactLevel = 'MINIMAL';
-        let timeUntilNext = 0;
-        let nextPhase = '';
-
-        if (elapsed < typeInfo.highImpactEnd) {
-            impactLevel = 'HIGH';
-            timeUntilNext = typeInfo.highImpactEnd - elapsed;
-            nextPhase = 'moderate';
-        } else if (elapsed < typeInfo.moderateImpactEnd) {
-            impactLevel = 'MODERATE';
-            timeUntilNext = typeInfo.moderateImpactEnd - elapsed;
-            nextPhase = 'low';
-        } else if (elapsed < typeInfo.minimalImpactEnd) {
-            impactLevel = 'LOW';
-            timeUntilNext = typeInfo.minimalImpactEnd - elapsed;
-            nextPhase = 'minimal';
-        }
-
-        if (lastDisplayEl) lastDisplayEl.textContent = minutesToTime(lastHitMins);
-        if (typeDisplayEl) typeDisplayEl.textContent = typeInfo.description;
-
-        // Show impact level instead of exact clear time
-        if (clearDisplayEl) {
-            const levelColors = { 'HIGH': '#B85C5C', 'MODERATE': '#C4923A', 'LOW': '#5E8A5E', 'MINIMAL': '#5E8A5E' };
-            clearDisplayEl.style.color = levelColors[impactLevel];
-
-            if (impactLevel === 'MINIMAL') {
-                clearDisplayEl.textContent = '✓ Minimal';
-            } else {
-                clearDisplayEl.textContent = `${impactLevel} (~${Math.round(timeUntilNext)}m)`;
-            }
-        }
-        if (timeInputEl) timeInputEl.value = state.nicotine.lastHitTime;
-
-        // Update button styles
-        if (vapeBtn && pouchBtn) {
-            if (state.nicotine.type === 'vape') {
-                vapeBtn.style.background = '#B85C5C';
-                pouchBtn.style.background = '#F5F2ED';
-            } else {
-                vapeBtn.style.background = '#F5F2ED';
-                pouchBtn.style.background = '#5E8A5E';
-            }
-        }
-
-        // Update warnings
-        updateNicotineWarnings();
-    } else {
-        statusEl.style.display = 'none';
-        if (warningEl) warningEl.style.display = 'none';
-        if (recommendEl) recommendEl.style.display = 'none';
-
-        // Reset buttons
-        if (vapeBtn) vapeBtn.style.background = '#F5F2ED';
-        if (pouchBtn) pouchBtn.style.background = '#F5F2ED';
-    }
-
-    checkRLSRisk();
-}
-
-function updateNicotineWarnings() {
-    const warningEl = document.getElementById('nicotineWarning');
-    const recommendEl = document.getElementById('nicotineRecommendation');
-    if (!warningEl) return;
-
-    const now = getCurrentMinutes();
-    const hour = Math.floor(now / 60);
-    const isLateEvening = (hour >= 21) || (hour < 3);
-
-    if (!state.nicotine.active || !state.nicotine.lastHitTime) {
-        warningEl.style.display = 'none';
-        if (recommendEl) recommendEl.style.display = 'none';
-        return;
-    }
-
-    const typeInfo = NICOTINE_CONSTANTS[state.nicotine.type] || NICOTINE_CONSTANTS.vape;
-    const lastHitMins = timeToMinutes(state.nicotine.lastHitTime);
-    let elapsed = now - lastHitMins;
-    if (elapsed < 0) elapsed += 24 * 60;
-
-    // Determine impact level
-    let impactLevel = 'MINIMAL';
-    let timeUntilNext = 0;
-
-    if (elapsed < typeInfo.highImpactEnd) {
-        impactLevel = 'HIGH';
-        timeUntilNext = typeInfo.highImpactEnd - elapsed;
-    } else if (elapsed < typeInfo.moderateImpactEnd) {
-        impactLevel = 'MODERATE';
-        timeUntilNext = typeInfo.moderateImpactEnd - elapsed;
-    } else if (elapsed < typeInfo.minimalImpactEnd) {
-        impactLevel = 'LOW';
-        timeUntilNext = typeInfo.minimalImpactEnd - elapsed;
-    }
-
-    // Build visual bar
-    const bars = {
-        'HIGH': '<span style="color: #B85C5C;">████████</span><span style="color: #C4BCB3;">░░</span>',
-        'MODERATE': '<span style="color: #C4923A;">█████</span><span style="color: #C4BCB3;">░░░░░</span>',
-        'LOW': '<span style="color: #5E8A5E;">██</span><span style="color: #C4BCB3;">░░░░░░░░</span>',
-        'MINIMAL': '<span style="color: #C4BCB3;">░░░░░░░░░░</span>'
-    };
-
-    warningEl.style.display = 'block';
-
-    if (impactLevel === 'MINIMAL') {
-        warningEl.style.background = 'rgba(94, 138, 94, 0.12)';
-        warningEl.style.border = '1px solid rgba(94, 138, 94, 0.3)';
-        warningEl.innerHTML = `
-            <div style="font-weight: 600; color: #5E8A5E; margin-bottom: 8px;">
-                ✅ Nicotine Impact: Minimal
-            </div>
-            <div style="font-family: monospace; font-size: 1.1em; margin-bottom: 8px; letter-spacing: 1px;">
-                ${bars[impactLevel]}
-            </div>
-            <div style="color: #9C948B; font-size: 0.85em;">
-                2+ hours since last hit. Effects largely cleared.
-            </div>
-        `;
-        if (recommendEl) recommendEl.style.display = 'none';
-    } else if (impactLevel === 'LOW') {
-        warningEl.style.background = 'rgba(94, 138, 94, 0.1)';
-        warningEl.style.border = '1px solid rgba(94, 138, 94, 0.3)';
-        warningEl.innerHTML = `
-            <div style="font-weight: 600; color: #5E8A5E; margin-bottom: 8px;">
-                🚬 Nicotine Impact: Low
-            </div>
-            <div style="font-family: monospace; font-size: 1.1em; margin-bottom: 8px; letter-spacing: 1px;">
-                ${bars[impactLevel]}
-            </div>
-            <div style="color: #2C2825; font-size: 0.9em;">
-                ~${Math.round(timeUntilNext)} min until minimal. Sleep usually possible, quality may be slightly reduced.
-            </div>
-        `;
-        if (recommendEl) recommendEl.style.display = 'none';
-    } else if (impactLevel === 'MODERATE') {
-        warningEl.style.background = 'rgba(196, 146, 58, 0.12)';
-        warningEl.style.border = '1px solid rgba(196, 146, 58, 0.4)';
-        warningEl.innerHTML = `
-            <div style="font-weight: 600; color: #C4923A; margin-bottom: 8px;">
-                🚬 Nicotine Impact: Moderate
-            </div>
-            <div style="font-family: monospace; font-size: 1.1em; margin-bottom: 8px; letter-spacing: 1px;">
-                ${bars[impactLevel]}
-            </div>
-            <div style="color: #2C2825; font-size: 0.9em; margin-bottom: 6px;">
-                ~${Math.round(timeUntilNext)} min until low impact. Arousal may delay sleep 15-45 min.
-            </div>
-            <div style="color: #9C948B; font-size: 0.85em;">
-                Chronic users often sleep fine but may notice lighter sleep.
-            </div>
-        `;
-        if (recommendEl && isLateEvening) {
-            recommendEl.style.display = 'block';
-            recommendEl.innerHTML = getRelaxationProtocol();
-        } else if (recommendEl) {
-            recommendEl.style.display = 'none';
-        }
-    } else {
-        // HIGH impact
-        warningEl.style.background = 'rgba(184, 92, 92, 0.12)';
-        warningEl.style.border = '1px solid rgba(184, 92, 92, 0.4)';
-        warningEl.innerHTML = `
-            <div style="font-weight: 600; color: #C97070; margin-bottom: 8px;">
-                🚬 Nicotine Impact: High
-            </div>
-            <div style="font-family: monospace; font-size: 1.1em; margin-bottom: 8px; letter-spacing: 1px;">
-                ${bars[impactLevel]}
-            </div>
-            <div style="color: #2C2825; font-size: 0.9em; margin-bottom: 6px;">
-                ~${Math.round(timeUntilNext)} min until moderate. Peak alertness window - sleep onset difficult.
-            </div>
-            <div style="color: #9C948B; font-size: 0.85em;">
-                ${state.nicotine.type === 'vape' ? 'Vaping hits fast, clears fast.' : 'Pouches have a flatter, longer curve.'}
-            </div>
-        `;
-        if (recommendEl && isLateEvening) {
-            recommendEl.style.display = 'block';
-            recommendEl.innerHTML = getRelaxationProtocol();
-        } else if (recommendEl && hour >= 18 && state.nicotine.type === 'vape') {
-            recommendEl.style.display = 'block';
-            recommendEl.innerHTML = `
-                <div style="font-weight: 600; color: #5E8A5E; margin-bottom: 6px;">
-                    💡 EVENING STRATEGY
-                </div>
-                <div style="color: #2C2825; font-size: 0.9em;">
-                    Consider <strong>Zyn/pouches</strong> for evening. Slower onset, flatter curve, easier to "land the plane" for sleep.
-                </div>
-            `;
-        } else if (recommendEl) {
-            recommendEl.style.display = 'none';
-        }
-    }
-}
-
-// Relaxation protocol for late-night nicotine use
-function getRelaxationProtocol() {
-    return `
-        <div style="font-weight: 600; color: #6B7C5E; margin-bottom: 10px;">
-            😴 Wind-Down Protocol
-        </div>
-        <div style="color: #2C2825; font-size: 0.9em; line-height: 1.6;">
-            <div style="margin-bottom: 8px;">
-                <strong>1. Dim lights</strong>, put phone away (or night mode)
-            </div>
-            <div style="margin-bottom: 8px;">
-                <strong>2. Physiologic sigh</strong> (5x):<br>
-                <span style="color: #9C948B; font-size: 0.85em; margin-left: 12px; display: block;">
-                    Inhale nose → small top-up inhale → long slow exhale
-                </span>
-            </div>
-            <div style="margin-bottom: 8px;">
-                <strong>3. If not sleepy in 20 min:</strong> get up, do something boring in dim light, return when drowsy
-            </div>
-        </div>
-        <div style="color: #C97070; font-size: 0.85em; margin-top: 10px; padding-top: 8px; border-top: 1px solid rgba(0,0,0,0.06);">
-            ❌ Avoid: Clock-watching, calculating when you'll sleep — this itself triggers arousal
-        </div>
-    `;
-}
-
-function checkRLSRisk() {
-    const rlsEl = document.getElementById('rlsEmergencyProtocol');
-    if (!rlsEl) return;
-
-    const now = getCurrentMinutes();
-    const hour = Math.floor(now / 60);
-
-    // Only check after 9 PM or before 5 AM
-    if (!((hour >= 21) || (hour < 5))) {
-        rlsEl.style.display = 'none';
-        return;
-    }
-
-    // Check amphetamine level
-    const ampLoadNow = calculateAmpLoad(now);
-    const effectiveThreshold = getEffectiveThreshold();
-    const ampPercentage = (ampLoadNow / Math.max(effectiveThreshold, 1)) * 100;
-
-    // Check nicotine status
-    let nicotineClearing = false;
-    if (state.nicotine.active && state.nicotine.lastHitTime) {
-        const lastHitMins = timeToMinutes(state.nicotine.lastHitTime);
-        let timeSinceNic = now - lastHitMins;
-        if (timeSinceNic < 0) timeSinceNic += 24 * 60;
-        nicotineClearing = timeSinceNic >= 180; // 3+ hours since last hit
-    }
-
-    // RLS risk when both are clearing
-    const highRisk = (ampPercentage < 30 && nicotineClearing) ||
-                    (ampPercentage < 20 && state.nicotine.active);
-
-    rlsEl.style.display = highRisk ? 'block' : 'none';
-}
-
-// Legacy function - kept for backward compatibility
-// Nicotine is now advisory-only, doesn't hard-block sleep
-function getNicotineCooldownTime() {
-    // Nicotine no longer blocks sleep calculation
-    // Return null to indicate no blocking
-    return null;
-}
 
 // ============================================
 // MODIFIERS / VITAMIN C UI
@@ -434,13 +79,10 @@ function getModifierEffectReadout(modName) {
 
 function updateModifierTimeInputs() {
     const vitCGroup = document.getElementById('vitCTimeRow');
-    const saunaGroup = document.getElementById('saunaTimeRow');
 
     const showVitC = state.modifiers.vitaminC.active;
-    const showSauna = state.modifiers.sauna.active;
 
     if (vitCGroup) vitCGroup.style.display = showVitC ? 'flex' : 'none';
-    if (saunaGroup) saunaGroup.style.display = showSauna ? 'flex' : 'none';
 
     // Update Vitamin C date select to match state
     const vitCDateEl = document.getElementById('vitaminCDate');
@@ -539,19 +181,9 @@ function restoreModifierUI() {
         if (workoutIntense) workoutIntense.checked = !!state.modifiers.workout.intense;
     }
 
-    // Restore sauna toggle
-    const saunaToggle = document.getElementById('saunaToggle');
-    if (saunaToggle && state.modifiers.sauna && state.modifiers.sauna.active) {
-        saunaToggle.checked = true;
-        const saunaTimeRow = document.getElementById('saunaTimeRow');
-        if (saunaTimeRow) saunaTimeRow.style.display = 'flex';
-        const saunaTime = document.getElementById('saunaTime');
-        if (saunaTime) saunaTime.value = state.modifiers.sauna.time || '18:00';
-    }
-
     // Sync chip visuals with checkbox states
-    var chipMap = { vitaminC: 'vitCChip', workout: 'workoutChip', sauna: 'saunaChip' };
-    var checkboxMap = { vitaminC: 'vitCToggle', workout: 'workoutToggle', sauna: 'saunaToggle' };
+    var chipMap = { vitaminC: 'vitCChip', workout: 'workoutChip' };
+    var checkboxMap = { vitaminC: 'vitCToggle', workout: 'workoutToggle' };
     Object.keys(chipMap).forEach(function(mod) {
         var chip = document.getElementById(chipMap[mod]);
         var cb = document.getElementById(checkboxMap[mod]);
@@ -704,487 +336,9 @@ function renderGhostLoad() {
 // WORKOUT PLANNER
 // ============================================
 
-// Note: workoutPlan is now stored in state.workoutPlan
-
-function initWorkoutPlanner() {
-    // Set default workout time to current time rounded to nearest 15 min
-    const now = new Date();
-    const minutes = Math.ceil(now.getMinutes() / 15) * 15;
-    now.setMinutes(minutes);
-    const defaultTime = now.toTimeString().slice(0, 5);
-
-    const timeInput = document.getElementById('workoutTime');
-    if (timeInput && !timeInput.value) {
-        timeInput.value = defaultTime;
-    }
-
-    updateWorkoutTimeline();
-    updateWorkoutPlan();
-}
-
-function updateWorkoutTimeline() {
-    const wakeMinutes = timeToMinutes(state.wakeTime);
-    const forbiddenStart = wakeMinutes + (13 * 60); // Wake + 13 hours
-    const sleepGateStart = wakeMinutes + (15 * 60); // Wake + 15 hours
-    const goldenEnd = wakeMinutes + (11 * 60); // Wake + 11 hours (end of golden zone)
-
-    // Calculate predicted sleep for the timeline end
-    const { sleepTime } = calculateSleepTime();
-
-    // Update labels (safely)
-    const workoutWindowStartEl = document.getElementById('workoutWindowStart');
-    const workoutWindowEndEl = document.getElementById('workoutWindowEnd');
-    if (workoutWindowStartEl) workoutWindowStartEl.textContent = formatTime12(state.wakeTime);
-    if (workoutWindowEndEl) workoutWindowEndEl.textContent = minutesToTime(sleepTime > 24*60 ? sleepTime - 24*60 : sleepTime);
-
-    // Update timeline bar gradient based on actual wake time
-    // Green: wake to golden end, Yellow: golden end to forbidden, Red: forbidden zone, Gray: after
-    const totalWindow = sleepTime - wakeMinutes;
-    const goldenPercent = Math.min(100, Math.max(0, ((goldenEnd - wakeMinutes) / totalWindow) * 100));
-    const forbiddenPercent = Math.min(100, Math.max(0, ((forbiddenStart - wakeMinutes) / totalWindow) * 100));
-    const sleepGatePercent = Math.min(100, Math.max(0, ((sleepGateStart - wakeMinutes) / totalWindow) * 100));
-
-    const timelineBar = document.getElementById('workoutTimelineBar');
-    if (timelineBar) {
-        timelineBar.style.background = `linear-gradient(90deg,
-            #5E8A5E 0%, #5E8A5E ${goldenPercent}%,
-            #C4923A ${goldenPercent}%, #C4923A ${forbiddenPercent}%,
-            #B85C5C ${forbiddenPercent}%, #B85C5C ${sleepGatePercent}%,
-            #C4BCB3 ${sleepGatePercent}%)`;
-
-        // Add current time marker
-        const now = getCurrentMinutes();
-        if (now >= wakeMinutes && now <= sleepTime) {
-            const nowPercent = ((now - wakeMinutes) / totalWindow) * 100;
-            timelineBar.innerHTML = `<div class="workout-zone-marker" style="left: ${nowPercent}%;"><div class="workout-zone-label">Now</div></div>`;
-        }
-    }
-}
-
-function calculateWorkoutImpact() {
-    const workoutTimeEl = document.getElementById('workoutTime');
-    const workoutDurationEl = document.getElementById('workoutDuration');
-    const workoutTypeEl = document.getElementById('workoutType');
-    const workoutIntensityEl = document.getElementById('workoutIntensity');
-    const workoutFastedEl = document.getElementById('workoutFasted');
-    const coldShowerEl = document.getElementById('coldShowerToggle');
-
-    if (!workoutTimeEl || !workoutTimeEl.value) return null;
-
-    const workoutStart = timeToMinutes(workoutTimeEl.value);
-    const duration = workoutDurationEl ? (parseInt(workoutDurationEl.value) || 45) : 45;
-    const type = workoutTypeEl ? workoutTypeEl.value : 'lifting';
-    const intensity = workoutIntensityEl ? workoutIntensityEl.value : 'medium';
-    const isFasted = workoutFastedEl ? workoutFastedEl.checked : false;
-    const coldShower = coldShowerEl ? coldShowerEl.checked : false;
-
-    const wakeMinutes = timeToMinutes(state.wakeTime);
-    const workoutEnd = workoutStart + duration;
-
-    // Define zones
-    const goldenStart = wakeMinutes + (3 * 60);  // Wake + 3 hours
-    const goldenEnd = wakeMinutes + (11 * 60);   // Wake + 11 hours
-    const forbiddenStart = wakeMinutes + (13 * 60); // Wake + 13 hours
-    const forbiddenEnd = wakeMinutes + (15 * 60);   // Wake + 15 hours
-
-    // Get base drug clear time (without workout effects)
-    // Use pharmacokineticFloor for "drugs only" - this is when drugs actually clear
-    // NOT sleepTime which includes circadian constraints
-    const { sleepTime: finalSleepTime, pharmacokineticFloor } = calculateSleepTime();
-    const baseSleepTime = pharmacokineticFloor; // Raw drug clearance, no circadian
-
-    // Check for hyperarousal state (acute sleep deprivation)
-    const isHyperaroused = state.hoursSleptLastNight < 4;
-
-    // Initialize impact values
-    let adenosineBonus = 0;
-    let cortisolDelay = 0;
-    let thermalDelay = 0;
-    let warnings = [];
-    let status = 'optimal'; // optimal, caution, danger
-
-    // RULE 1: Adenosine Bonus (flat -15 min for lifting/zone2, -5 for walk)
-    if (duration >= 20) {
-        if (type === 'lifting' || type === 'zone2') {
-            adenosineBonus = 15;
-        } else if (type === 'walk') {
-            adenosineBonus = 5;
-        }
-        // HIIT gets no adenosine bonus - cortisol cancels it out
-    }
-
-    // RULE 2: Fasted Penalty
-    if (isFasted && intensity !== 'low' && type !== 'walk') {
-        cortisolDelay += 45;
-        warnings.push({
-            type: 'danger',
-            icon: '🍽️',
-            title: 'GLYCOGEN PANIC',
-            text: 'Lifting fasted will spike cortisol. Eat rapid carbs (fruit/oatmeal) NOW to neutralize this risk.'
-        });
-        status = 'caution';
-    }
-
-    // RULE 3: HIIT in bad conditions
-    const isLateDay = workoutStart >= forbiddenStart || isHyperaroused;
-    if (type === 'hiit') {
-        if (isLateDay) {
-            cortisolDelay += 90;
-            warnings.push({
-                type: 'danger',
-                icon: '⚡',
-                title: 'ADRENALINE TRAP',
-                text: 'High intensity now will stack with your "Second Wind" or Sleep Debt. You will be wired until very late. Switch to heavy lifting or walking.'
-            });
-            status = 'danger';
-        } else if (workoutStart >= goldenEnd) {
-            cortisolDelay += 45;
-            warnings.push({
-                type: 'warning',
-                icon: '⚠️',
-                title: 'Late HIIT Risk',
-                text: 'HIIT after your Golden Window raises evening cortisol. Consider Zone 2 or lifting instead.'
-            });
-            status = 'caution';
-        }
-    }
-
-    // RULE 4: Thermal cooldown (2 hours, or 45 min with cold shower)
-    // SCIENTIFIC NOTE: Core temp drops ~0.5°C/hour post-exercise
-    // Research shows 90-180 min for return to baseline
-    // Cold water immersion accelerates this significantly
-    let cooldownHours = 2;
-    if (coldShower) cooldownHours = 0.75; // 45 minutes
-    if (type === 'walk') cooldownHours = 0; // Walk/yoga doesn't raise core temp significantly
-
-    const cooldownComplete = workoutEnd + (cooldownHours * 60);
-
-    // RULE 5: Check zone timing
-    if (workoutStart >= forbiddenStart && workoutStart < forbiddenEnd && type !== 'walk') {
-        warnings.push({
-            type: 'danger',
-            icon: '🚫',
-            title: 'FORBIDDEN ZONE WORKOUT',
-            text: 'Exercising during your Forbidden Zone will stack exercise cortisol with your natural "Second Wind". Only walking/yoga is safe here.'
-        });
-        status = 'danger';
-    } else if (workoutStart >= goldenEnd && workoutStart < forbiddenStart) {
-        if (type !== 'walk' && status !== 'danger') {
-            status = 'caution';
-        }
-    } else if (workoutStart >= goldenStart && workoutStart <= goldenEnd) {
-        if (status !== 'danger' && status !== 'caution') {
-            status = 'optimal';
-        }
-    }
-
-    // Calculate final sleep time
-    let predictedSleep = baseSleepTime - adenosineBonus + cortisolDelay;
-
-    // Thermal hard stop - can't sleep until cooled down
-    let thermalBlocked = false;
-    if (cooldownComplete > predictedSleep) {
-        thermalDelay = cooldownComplete - predictedSleep;
-        predictedSleep = cooldownComplete;
-        thermalBlocked = true;
-
-        if (thermalDelay > 30 && !coldShower && type !== 'walk') {
-            warnings.push({
-                type: 'warning',
-                icon: '🌡️',
-                title: 'THERMAL BLOCK',
-                text: `Drugs will clear, but your core temp won't drop until ${minutesToTime(cooldownComplete > 24*60 ? cooldownComplete - 24*60 : cooldownComplete)}. Consider a cold shower to cut cooldown time.`
-            });
-        }
-    }
-
-    // Special case: Walk/yoga is always OK
-    if (type === 'walk') {
-        status = warnings.length > 0 ? 'caution' : 'optimal';
-        if (workoutStart >= forbiddenStart) {
-            warnings = [{
-                type: 'success',
-                icon: '✅',
-                title: 'SAFE ACTIVITY',
-                text: 'Walking and yoga are the only "green light" activities during the Forbidden Zone or late evening. Good choice!'
-            }];
-            status = 'optimal';
-        }
-    }
-
-    // Build recommendation text
-    let recommendation = '';
-    if (status === 'optimal') {
-        if (workoutStart >= goldenStart && workoutStart <= goldenEnd) {
-            recommendation = `Perfect timing! This ${type === 'lifting' ? 'lifting session' : type === 'zone2' ? 'cardio session' : type === 'walk' ? 'activity' : 'workout'} will maximize sleep pressure without spiking evening cortisol.`;
-        } else {
-            recommendation = 'This workout should have minimal negative impact on your sleep.';
-        }
-    } else if (status === 'caution') {
-        recommendation = 'This workout may delay sleep. Review the warnings and consider adjustments.';
-    } else {
-        recommendation = 'This workout will significantly harm your sleep. Strongly consider rescheduling or changing type.';
-    }
-
-    return {
-        status,
-        workoutStart,
-        workoutEnd,
-        cooldownComplete,
-        baseSleepTime,
-        predictedSleep,
-        adenosineBonus,
-        cortisolDelay,
-        thermalDelay,
-        thermalBlocked,
-        warnings,
-        recommendation,
-        showColdShowerOption: thermalBlocked && !coldShower && type !== 'walk'
-    };
-}
-
-// BUG FIX 3: Early return if workout not applied
-function updateWorkoutPlan() {
-    if (!state.workoutPlan || !state.workoutPlan.applied) {
-        return;
-    }
-
-    const impact = calculateWorkoutImpact();
-    if (!impact) return;
-
-    const resultDiv = document.getElementById('workoutResult');
-    const headerDiv = document.getElementById('workoutResultHeader');
-    const textDiv = document.getElementById('workoutResultText');
-    const detailsDiv = document.getElementById('workoutResultDetails');
-    const coldShowerDiv = document.getElementById('coldShowerOption');
-    const applyBtn = document.getElementById('applyWorkoutBtn');
-
-    // Show result divs
-    if (resultDiv) resultDiv.style.display = 'block';
-    if (headerDiv) headerDiv.style.display = 'block';
-    if (textDiv) textDiv.style.display = 'block';
-    if (detailsDiv) detailsDiv.style.display = 'block';
-
-    // Update styling based on status
-    resultDiv.className = `workout-result-${impact.status}`;
-    resultDiv.style.borderLeftColor = impact.status === 'optimal' ? '#5E8A5E' : impact.status === 'caution' ? '#C4923A' : '#B85C5C';
-    resultDiv.style.background = impact.status === 'optimal' ? 'rgba(94, 138, 94, 0.1)' : impact.status === 'caution' ? 'rgba(196, 146, 58, 0.1)' : 'rgba(184, 92, 92, 0.1)';
-
-    // Update header
-    const statusIcons = { optimal: '✅ GOLDEN SLOT', caution: '⚠️ PROCEED WITH CAUTION', danger: '🚫 NOT RECOMMENDED' };
-    const statusColors = { optimal: '#5E8A5E', caution: '#C4923A', danger: '#B85C5C' };
-    headerDiv.textContent = statusIcons[impact.status];
-    headerDiv.style.color = statusColors[impact.status];
-
-    // Build text content
-    let textContent = `<div style="margin-bottom: 10px;">${impact.recommendation}</div>`;
-
-    // Add warnings
-    if (impact.warnings.length > 0) {
-        impact.warnings.forEach(w => {
-            const wColor = w.type === 'danger' ? '#B85C5C' : w.type === 'warning' ? '#C4923A' : '#5E8A5E';
-            textContent += `
-                <div style="margin: 10px 0; padding: 10px; background: rgba(0,0,0,0.03); border-radius: 8px; border-left: 3px solid ${wColor};">
-                    <div style="font-weight: 600; color: ${wColor};">${w.icon} ${w.title}</div>
-                    <div style="font-size: 0.9em; margin-top: 4px;">${w.text}</div>
-                </div>
-            `;
-        });
-    }
-
-    textDiv.innerHTML = textContent;
-
-    // Build details
-    const sleepTimeFormatted = minutesToTime(impact.predictedSleep > 24*60 ? impact.predictedSleep - 24*60 : impact.predictedSleep);
-    const baseSleepFormatted = minutesToTime(impact.baseSleepTime > 24*60 ? impact.baseSleepTime - 24*60 : impact.baseSleepTime);
-
-    // Convert adenosine bonus to threshold bonus for display
-    const thresholdBonus = Math.min(3.0, (impact.adenosineBonus || 0) / 15);
-
-    let detailsContent = `
-        <div class="workout-impact-item">
-            <span>Base Sleep Time (drugs only)</span>
-            <span>${baseSleepFormatted}</span>
-        </div>
-    `;
-
-    if (thresholdBonus > 0) {
-        detailsContent += `
-            <div class="workout-impact-item">
-                <span>Adenosine Bonus (threshold↑)</span>
-                <span class="workout-impact-positive">+${thresholdBonus.toFixed(1)}mg tolerance</span>
-            </div>
-        `;
-    }
-
-    if (impact.cortisolDelay > 0) {
-        detailsContent += `
-            <div class="workout-impact-item">
-                <span>Cortisol Delay</span>
-                <span class="workout-impact-negative">+${impact.cortisolDelay} min</span>
-            </div>
-        `;
-    }
-
-    if (impact.thermalDelay > 0) {
-        detailsContent += `
-            <div class="workout-impact-item">
-                <span>Thermal Cooldown Block</span>
-                <span class="workout-impact-negative">+${Math.round(impact.thermalDelay)} min</span>
-            </div>
-        `;
-    }
-
-    detailsContent += `
-        <div class="workout-impact-item" style="font-weight: 600; padding-top: 8px; border-top: 1px solid rgba(0,0,0,0.06);">
-            <span>Predicted Sleep After Workout</span>
-            <span style="color: ${statusColors[impact.status]};">${sleepTimeFormatted}</span>
-        </div>
-    `;
-
-    detailsDiv.innerHTML = detailsContent;
-
-    // Show/hide cold shower option
-    coldShowerDiv.style.display = impact.showColdShowerOption ? 'block' : 'none';
-
-    // Show apply button
-    applyBtn.style.display = 'block';
-
-    // Update timeline
-    updateWorkoutTimeline();
-}
-
-function toggleFastedState() {
-    // Just trigger update - checkbox handles its own state
-}
-
-function applyWorkoutPlan() {
-    const impact = calculateWorkoutImpact();
-    if (!impact) return;
-
-    const type = document.getElementById('workoutType').value;
-
-    // Store ALL workout impacts in state (CRITICAL FIX)
-    state.workoutPlan = {
-        active: true,
-        time: document.getElementById('workoutTime').value,
-        duration: parseInt(document.getElementById('workoutDuration').value),
-        type: type,
-        intensity: document.getElementById('workoutIntensity').value,
-        fasted: document.getElementById('workoutFasted').checked,
-        coldShower: document.getElementById('coldShowerToggle').checked,
-        applied: true,
-        // Store calculated impacts for use in calculateSleepTime
-        adenosineBonus: impact.adenosineBonus || 0,
-        cortisolDelay: impact.cortisolDelay || 0,
-        thermalDelay: impact.thermalDelay || 0,
-        cooldownComplete: impact.cooldownComplete || null
-    };
-
-    // Also update the heavyLift modifier for backward compatibility
-    if (type === 'lifting' || type === 'zone2') {
-        state.modifiers.heavyLift.active = true;
-        const liftToggle = document.getElementById('liftToggle');
-        if (liftToggle) liftToggle.checked = true;
-    }
-
-    // Save and recalculate - THIS NOW ACTUALLY AFFECTS THE MAIN COUNTDOWN
-    saveState();
-    recalculate();
-
-    // Show success with actual impact
-    const netImpact = (impact.cortisolDelay + impact.thermalDelay) - impact.adenosineBonus;
-    const impactText = netImpact > 0 ? `+${netImpact} min` : `${netImpact} min`;
-    showToast(`Workout applied! Net impact: ${impactText} to sleep time`, '🏋️');
-
-    // Update button to show it's applied
-    const btn = document.getElementById('applyWorkoutBtn');
-    btn.textContent = '✓ Workout Applied';
-    btn.style.background = '#5E8A5E';
-
-    // Show reset button
-    const resetBtn = document.getElementById('resetWorkoutBtn');
-    if (resetBtn) resetBtn.style.display = 'block';
-}
-
-function resetWorkoutPlan() {
-    // Reset workout plan in state
-    state.workoutPlan = {
-        active: false,
-        time: null,
-        duration: 45,
-        type: 'lifting',
-        intensity: 'medium',
-        fasted: false,
-        coldShower: false,
-        applied: false,
-        adenosineBonus: 0,
-        cortisolDelay: 0,
-        thermalDelay: 0,
-        cooldownComplete: null
-    };
-
-    // Also reset the heavyLift modifier
-    state.modifiers.heavyLift.active = false;
-    const liftingEl = document.querySelector('[data-modifier="heavyLift"]');
-    if (liftingEl) liftingEl.classList.remove('active');
-
-    // Reset UI
-    const applyBtn = document.getElementById('applyWorkoutBtn');
-    if (applyBtn) {
-        applyBtn.textContent = '✓ Apply This Workout to Calculation';
-        applyBtn.style.background = '#5E8A5E';
-    }
-
-    const resetBtn = document.getElementById('resetWorkoutBtn');
-    if (resetBtn) resetBtn.style.display = 'none';
-
-    // Reset form
-    document.getElementById('workoutFasted').checked = false;
-    document.getElementById('coldShowerToggle').checked = false;
-
-    // Save and recalculate
-    saveState();
-    recalculate();
-    initWorkoutPlanner(); // Re-initialize preview
-
-    showToast('Workout plan reset', '🔄');
-}
-
-function restoreWorkoutPlanUI() {
-    const wp = state.workoutPlan;
-    if (!wp || !wp.applied) return;
-
-    // Restore form values
-    const timeInput = document.getElementById('workoutTime');
-    const durationInput = document.getElementById('workoutDuration');
-    const typeSelect = document.getElementById('workoutType');
-    const intensitySelect = document.getElementById('workoutIntensity');
-    const fastedCheckbox = document.getElementById('workoutFasted');
-    const coldShowerCheckbox = document.getElementById('coldShowerToggle');
-
-    if (timeInput && wp.time) timeInput.value = wp.time;
-    if (durationInput && wp.duration) durationInput.value = wp.duration;
-    if (typeSelect && wp.type) typeSelect.value = wp.type;
-    if (intensitySelect && wp.intensity) intensitySelect.value = wp.intensity;
-    if (fastedCheckbox) fastedCheckbox.checked = wp.fasted || false;
-    if (coldShowerCheckbox) coldShowerCheckbox.checked = wp.coldShower || false;
-
-    // Update button to show applied state
-    const btn = document.getElementById('applyWorkoutBtn');
-    if (btn) {
-        btn.textContent = '✓ Workout Applied';
-        btn.style.background = '#5E8A5E';
-        btn.style.display = 'block';
-    }
-
-    // Show reset button
-    const resetBtn = document.getElementById('resetWorkoutBtn');
-    if (resetBtn) resetBtn.style.display = 'block';
-
-    // Update the workout preview
-    updateWorkoutPlan();
-}
+// Old workout planner removed (Task 11 needle-test cut). state.workoutPlan kept for schema compat.
+// restoreWorkoutPlanUI() kept as a no-op stub; still referenced by firebase-sync.js.
+function restoreWorkoutPlanUI() {}
 
 function toggleSettings() {
     const content = document.getElementById('settingsContent');
@@ -1221,18 +375,6 @@ function updateScenarios() {
     // Scenario 3: Take Vitamin C now (if not already active)
     const vitcSleep = simulateVitaminC();
     updateScenarioDisplay('VitC', vitcSleep, baseSleepTime);
-
-    // Scenario 4: Sauna session (if not already active)
-    const saunaSleep = simulateSauna();
-    updateScenarioDisplay('Sauna', saunaSleep, baseSleepTime);
-
-    // Scenario 5: One more vape hit
-    const vapeSleep = simulateNicotineHit('vape');
-    updateScenarioDisplay('Vape', vapeSleep, baseSleepTime);
-
-    // Scenario 6: Switch to Zyn
-    const zynSleep = simulateNicotineHit('pouch');
-    updateScenarioDisplay('Zyn', zynSleep, baseSleepTime);
 }
 
 function simulateCaffeineAddition(amount) {
@@ -1284,48 +426,6 @@ function simulateVitaminC() {
     state.modifiers.vitaminC.active = wasActive;
     state.modifiers.vitaminC.time = oldTime;
     state.modifiers.vitaminC.date = oldDate;
-
-    return sleepTime;
-}
-
-function simulateSauna() {
-    if (state.modifiers.sauna.active) {
-        return calculateSleepTime().sleepTime;
-    }
-
-    // Temporarily activate sauna
-    const wasActive = state.modifiers.sauna.active;
-
-    state.modifiers.sauna.active = true;
-
-    const { sleepTime } = calculateSleepTime();
-
-    // Restore
-    state.modifiers.sauna.active = wasActive;
-
-    return sleepTime;
-}
-
-function simulateNicotineHit(type) {
-    const now = getCurrentMinutes();
-    const nowTime = `${Math.floor(now / 60).toString().padStart(2, '0')}:${(now % 60).toString().padStart(2, '0')}`;
-
-    // Store current state
-    const wasActive = state.nicotine.active;
-    const oldType = state.nicotine.type;
-    const oldTime = state.nicotine.lastHitTime;
-
-    // Temporarily set nicotine
-    state.nicotine.active = true;
-    state.nicotine.type = type;
-    state.nicotine.lastHitTime = nowTime;
-
-    const { sleepTime } = calculateSleepTime();
-
-    // Restore
-    state.nicotine.active = wasActive;
-    state.nicotine.type = oldType;
-    state.nicotine.lastHitTime = oldTime;
 
     return sleepTime;
 }
@@ -1394,20 +494,6 @@ function simulateScenario(type) {
                 showToast('Vitamin C already active');
             }
             break;
-        case 'sauna':
-            if (!state.modifiers.sauna.active) {
-                state.modifiers.sauna.active = true;
-                state.modifiers.sauna.time = nowTime;
-                state.modifiers.sauna.date = getLocalDateString();
-                const saunaToggle = document.getElementById('saunaToggle');
-                if (saunaToggle) saunaToggle.checked = true;
-                document.getElementById('saunaTime').value = nowTime;
-                updateModifierTimeInputs();
-                showToast('🧖 Sauna session added!');
-            } else {
-                showToast('Sauna already active');
-            }
-            break;
     }
     recalculate();
 }
@@ -1443,20 +529,11 @@ function clearToday() {
             cooldownComplete: null
         };
 
-        // Reset workout planner UI
-        const applyBtn = document.getElementById('applyWorkoutBtn');
-        if (applyBtn) {
-            applyBtn.textContent = '✓ Apply This Workout to Calculation';
-            applyBtn.style.background = '#5E8A5E';
-            applyBtn.style.display = 'none';
-        }
-
         renderMedEntries();
         renderCaffeineEntries();
         renderFocusCaffeineList(); // FIX Bug 5: Sync Focus Mode on clear
         document.querySelectorAll('.modifier-item').forEach(el => el.classList.remove('active'));
         updateModifierTimeInputs();
-        initWorkoutPlanner(); // Re-initialize workout planner
         recalculate();
         saveState();
         showToast('Today cleared');
@@ -1490,8 +567,6 @@ function resetDay() {
             if (typeof renderFocusCaffeineList === 'function') renderFocusCaffeineList();
             document.querySelectorAll('.modifier-item').forEach(function(el) { el.classList.remove('active'); });
             updateModifierTimeInputs();
-            initWorkoutPlanner();
-            if (typeof updateNicotineDisplay === 'function') updateNicotineDisplay();
             if (typeof updateAllNighterUI === 'function') updateAllNighterUI();
             // 4. Save + recalculate
             recalculate();
@@ -1546,58 +621,10 @@ function generateForecastLogic() {
     const sleepGate = getSleepGate();
 
     // Calculate modifier bonuses
-    let liftBonus = 0;
-    let saunaBonus = 0;
     let workoutBonus = 0;
 
     if (state.workoutPlan && state.workoutPlan.applied && state.workoutPlan.adenosineBonus > 0) {
         workoutBonus = Math.min(3.0, state.workoutPlan.adenosineBonus / 15);
-    } else if (state.modifiers.heavyLift && state.modifiers.heavyLift.active) {
-        liftBonus = 2.0;
-    }
-
-    if (state.modifiers.sauna && state.modifiers.sauna.active) {
-        const saunaTime = timeToMinutes(state.modifiers.sauna.time);
-        const nowMins = getCurrentMinutes();
-        const fivePM = 17 * 60;
-        const todayStr = getLocalDateString();
-        const saunaDate = state.modifiers.sauna.date || todayStr;
-        let saunaTaken = false;
-
-        // Date-aware sauna check (matches getEffectiveThreshold logic)
-        const todayDate = parseLocalDate(todayStr);
-        const saunaSetDate = parseLocalDate(saunaDate);
-        const daysDiff = Math.round((todayDate - saunaSetDate) / (1000 * 60 * 60 * 24));
-
-        if (daysDiff === 0) {
-            saunaTaken = nowMins >= saunaTime;
-        } else if (daysDiff === 1) {
-            if (nowMins < 6 * 60 && saunaTime >= 17 * 60) {
-                saunaTaken = true;
-            } else {
-                saunaTaken = false;
-            }
-        } else {
-            saunaTaken = false;
-        }
-
-        if (saunaTaken) {
-            // Mirror decay logic from getEffectiveThreshold()
-            let hoursSinceSauna;
-            if (daysDiff === 0) {
-                hoursSinceSauna = (nowMins - saunaTime) / 60;
-            } else {
-                hoursSinceSauna = ((24 * 60 - saunaTime) + nowMins) / 60;
-            }
-            const peakDuration = 2;
-            const decayDuration = 4;
-            let decayFactor = 1.0;
-            if (hoursSinceSauna > peakDuration) {
-                decayFactor = Math.max(0, 1.0 - (hoursSinceSauna - peakDuration) / decayDuration);
-            }
-            const baseBonus = saunaTime >= fivePM ? 2.0 : 1.0;
-            saunaBonus = baseBonus * decayFactor;
-        }
     }
 
     // Calculate rolling sleep debt details
@@ -1726,12 +753,6 @@ function generateForecastLogic() {
             modifierDetails.push(`• Vitamin C: EXPIRED (taken at ${state.modifiers.vitaminC.time}${vitCDateLabel}, >8 hours ago) → No longer affecting half-life`);
         }
     }
-    if (state.modifiers.sauna && state.modifiers.sauna.active) {
-        modifierDetails.push(`• Sauna: Scheduled at ${state.modifiers.sauna.time} → +${saunaBonus.toFixed(1)}mg threshold (parasympathetic)`);
-    }
-    if (state.modifiers.heavyLift && state.modifiers.heavyLift.active && !state.workoutPlan?.applied) {
-        modifierDetails.push(`• Heavy Lifting: Active → +${liftBonus.toFixed(1)}mg threshold (adenosine)`);
-    }
     if (state.workoutPlan && state.workoutPlan.applied) {
         modifierDetails.push(`• Workout Plan: Applied`);
         if (state.workoutPlan.adenosineBonus > 0) {
@@ -1744,19 +765,6 @@ function generateForecastLogic() {
             modifierDetails.push(`  - Thermal cooldown until: ${minutesToTime(state.workoutPlan.cooldownComplete)}`);
         }
     }
-    if (state.nicotine && state.nicotine.active && state.nicotine.lastHitTime) {
-        const typeInfo = NICOTINE_CONSTANTS[state.nicotine.type] || NICOTINE_CONSTANTS.vape;
-        const lastHitMins = timeToMinutes(state.nicotine.lastHitTime);
-        let elapsed = getCurrentMinutes() - lastHitMins;
-        if (elapsed < 0) elapsed += 24 * 60;
-
-        let impact = 'MINIMAL';
-        if (elapsed < typeInfo.highImpactEnd) impact = 'HIGH';
-        else if (elapsed < typeInfo.moderateImpactEnd) impact = 'MODERATE';
-        else if (elapsed < typeInfo.minimalImpactEnd) impact = 'LOW';
-
-        modifierDetails.push(`• Nicotine (${state.nicotine.type}): Last at ${state.nicotine.lastHitTime} → ${impact} impact (advisory only)`);
-    }
     if (modifierDetails.length === 0) {
         modifierDetails.push('None active');
     }
@@ -1764,12 +772,8 @@ function generateForecastLogic() {
     // Build blocking factors
     let blockingDetails = [];
     blockingFactors.forEach(f => {
-        if (f.type === 'nicotine-advisory') {
-            blockingDetails.push(`• ${f.name}: ${f.impact} impact (quality modifier, not blocker)`);
-        } else {
-            const clearTime = f.clearsAt !== null ? minutesToTimeWithDay(f.clearsAt) : 'N/A';
-            blockingDetails.push(`• ${f.name}: Clears at ${clearTime}${f.note ? ' - ' + f.note : ''}`);
-        }
+        const clearTime = f.clearsAt !== null ? minutesToTimeWithDay(f.clearsAt) : 'N/A';
+        blockingDetails.push(`• ${f.name}: Clears at ${clearTime}${f.note ? ' - ' + f.note : ''}`);
     });
     if (blockingDetails.length === 0) {
         blockingDetails.push('None - sleep possible now');
@@ -1937,7 +941,6 @@ ${allNighterSection}
   → Modifiers do NOT make drugs leave faster
   → They RAISE your tolerance (effective threshold goes UP)
   → Heavy lifting floods brain with adenosine from muscle breakdown
-  → Sauna triggers parasympathetic rebound
   → Higher threshold = drug curve crosses it EARLIER = earlier sleep
 
 ┌─────────────────────────────────────────────────────────────┐
@@ -1945,8 +948,7 @@ ${allNighterSection}
 └─────────────────────────────────────────────────────────────┘
   Base threshold:              ${baseThreshold.toFixed(1)} mg
   + Sleep debt bonus:          +${sleepDebtBonus.toFixed(1)} mg
-  + Workout/Lift bonus:        +${(workoutBonus + liftBonus).toFixed(1)} mg
-  + Sauna bonus:               +${saunaBonus.toFixed(1)} mg
+  + Workout bonus:             +${workoutBonus.toFixed(1)} mg
   ─────────────────────────────────
   EFFECTIVE THRESHOLD:         ${effectiveThreshold.toFixed(1)} mg
 
