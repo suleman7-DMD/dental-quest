@@ -8564,6 +8564,16 @@
             // cloud, and the empty-library reseed re-adds deleted defaults.
             deletedFrequentFoodIds: {},
 
+            // Tombstones for deleted meals/workouts (key `${dateStr}::${id}` →
+            // ISO timestamp — container-scoped because a MOVE reuses the same id
+            // under a different date) and weigh-ins/body-comp records (plain id →
+            // ISO timestamp). Without these the per-record union merge
+            // resurrects deletes made on another device.
+            deletedMealIds: {},
+            deletedWorkoutIds: {},
+            deletedWeighInIds: {},
+            deletedBodyCompIds: {},
+
             // Weekly weigh-ins
             weighIns: {},  // Object with ID keys for Firebase safety
 
@@ -8627,6 +8637,11 @@
         // localStorage — saveToFirebase MUST NOT wholesale-replace /state, or it
         // would permanently delete cloud dailyLogs older than the local window.
         let historyFullyLoaded = false;
+        // True while local state holds changes not yet confirmed written to
+        // Firebase. Set by saveState/saveStateImmediate, cleared on save
+        // success. Gates the tab-hide emergency push and the force-sync
+        // "push local after merge" path.
+        let localChangesSinceLastSync = false;
 
         // Check if state has real user data (not just defaults)
         function isEmptyState(data) {
@@ -8639,9 +8654,16 @@
             const hasDailyLogs = getCount(data.dailyLogs) > 0;
             const hasBodyCompHistory = getCount(data.bodyCompHistory) > 0;
             const setupComplete = data.today?.setupComplete === true;
+            // Deletions ARE user data — a device whose only unsynced change is
+            // deletes must still be allowed to push, or they resurrect forever.
+            const hasTombstones = getCount(data.deletedMealIds) > 0 ||
+                getCount(data.deletedWorkoutIds) > 0 ||
+                getCount(data.deletedWeighInIds) > 0 ||
+                getCount(data.deletedBodyCompIds) > 0 ||
+                getCount(data.deletedFrequentFoodIds) > 0;
 
             // Empty if NONE of these exist
-            return !hasWeighIns && !hasMeals && !hasWorkouts && !hasDailyLogs && !hasBodyCompHistory && !setupComplete;
+            return !hasWeighIns && !hasMeals && !hasWorkouts && !hasDailyLogs && !hasBodyCompHistory && !setupComplete && !hasTombstones;
         }
 
         function hasRealData(data) {
@@ -8664,6 +8686,25 @@
         // Generate unique IDs
         function generateId(prefix = 'item') {
             return `${prefix}_${Date.now()}_${Math.random().toString(36).substring(2, 8)}`;
+        }
+
+        // Record a deletion tombstone so the cross-device union merge doesn't
+        // resurrect the record. mapName is one of the deleted*Ids maps in state;
+        // key is `${dateStr}::${id}` for meals/workouts (container-scoped — a
+        // move reuses the id under a new date) or the plain id otherwise.
+        function addTombstone(mapName, key) {
+            if (!key) return;
+            if (!state[mapName] || typeof state[mapName] !== 'object' || Array.isArray(state[mapName])) {
+                state[mapName] = {};
+            }
+            state[mapName][key] = new Date().toISOString();
+        }
+
+        // Per-record edit stamp for newer-wins merging. Empty string when the
+        // record has never been stamped (legacy data) — ties/unstamped fall back
+        // to the whole-state winner, which keeps the merge ping-pong-free.
+        function getRecStamp(rec) {
+            return (rec && (rec.updatedAt || rec._editedAt)) || '';
         }
 
         // Get values from object as array (works with both objects and arrays)
@@ -8705,10 +8746,38 @@
             return result;
         }
 
-        function mergeIdCollections(localValue, cloudValue, cloudWins = true, prefix = 'item') {
+        function mergeIdCollections(localValue, cloudValue, cloudWins = true, prefix = 'item', tombstones = null, tombKeyFn = null, stats = null) {
             const local = migrateArrayToObject(localValue, prefix);
             const cloud = migrateArrayToObject(cloudValue, prefix);
-            return cloudWins ? { ...local, ...cloud } : { ...cloud, ...local };
+            const merged = cloudWins ? { ...local, ...cloud } : { ...cloud, ...local };
+            // Per-record newer-wins: a strictly newer updatedAt/_editedAt beats
+            // the base side, so an edit made on the "losing" device survives.
+            // Ties and unstamped records keep the base side (no ping-pong).
+            Object.keys(merged).forEach(id => {
+                const l = local[id], c = cloud[id];
+                if (!l || !c) return;
+                const lAt = getRecStamp(l), cAt = getRecStamp(c);
+                if (lAt > cAt) merged[id] = l;
+                else if (cAt > lAt) merged[id] = c;
+            });
+            // Tombstone purge: a delete wins over the union unless the record
+            // was re-added/re-edited AFTER the delete (strictly newer stamp).
+            if (tombstones) {
+                Object.keys(merged).forEach(id => {
+                    const deadAt = tombstones[tombKeyFn ? tombKeyFn(id) : id];
+                    if (deadAt && !(getRecStamp(merged[id]) > deadAt)) delete merged[id];
+                });
+            }
+            // Stats drive the caller's push-back decision: LOCAL holds data the
+            // cloud lacks (surviving local-only records or newer local edits).
+            if (stats) {
+                Object.keys(merged).forEach(id => {
+                    const l = local[id], c = cloud[id];
+                    if (l && !c) stats.localOnly++;
+                    else if (l && c && merged[id] === l && getRecStamp(l) > getRecStamp(c)) stats.localNewer++;
+                });
+            }
+            return merged;
         }
 
         // Deep-merge two dailyLogs maps by date. A shallow date-key spread
@@ -8717,8 +8786,9 @@
         // other device logged for that same day. For dates in both, this unions
         // the ID-keyed meals/workouts and takes scalar/resolution fields from the
         // entry with the newer `lastUpdated` (falling back to cloudWins when the
-        // timestamps are missing or equal). Dates in only one side pass through.
-        function mergeDailyLogs(localLogs, cloudLogs, cloudWins = true) {
+        // timestamps are missing or equal). Single-sided dates still run the
+        // tombstone purge — the other device may have deleted an entry we carry.
+        function mergeDailyLogs(localLogs, cloudLogs, cloudWins = true, deadMeals = null, deadWorkouts = null, stats = null) {
             localLogs = (localLogs && typeof localLogs === 'object') ? localLogs : {};
             cloudLogs = (cloudLogs && typeof cloudLogs === 'object') ? cloudLogs : {};
             const merged = {};
@@ -8726,9 +8796,25 @@
             dates.forEach(date => {
                 const l = localLogs[date];
                 const c = cloudLogs[date];
-                if (l && !c) { merged[date] = l; return; }
-                if (c && !l) { merged[date] = c; return; }
                 if (!l && !c) { return; }
+                const keyFn = id => date + '::' + id;
+                if (l && !c) {
+                    merged[date] = {
+                        ...l,
+                        meals: mergeIdCollections(l.meals, null, cloudWins, 'meal', deadMeals, keyFn, null),
+                        workouts: mergeIdCollections(l.workouts, null, cloudWins, 'workout', deadWorkouts, keyFn, null)
+                    };
+                    if (stats) stats.localOnly++;
+                    return;
+                }
+                if (c && !l) {
+                    merged[date] = {
+                        ...c,
+                        meals: mergeIdCollections(null, c.meals, cloudWins, 'meal', deadMeals, keyFn, null),
+                        workouts: mergeIdCollections(null, c.workouts, cloudWins, 'workout', deadWorkouts, keyFn, null)
+                    };
+                    return;
+                }
                 // Both present — never let one side erase the other's entries.
                 const lt = l.lastUpdated || '';
                 const ct = c.lastUpdated || '';
@@ -8736,6 +8822,7 @@
                 if (lt && ct && lt !== ct) {
                     base = (ct > lt) ? c : l;
                     other = (ct > lt) ? l : c;
+                    if (lt > ct && stats) stats.localNewer++;
                 } else {
                     base = cloudWins ? c : l;
                     other = cloudWins ? l : c;
@@ -8743,11 +8830,295 @@
                 merged[date] = {
                     ...other,
                     ...base,
-                    meals: mergeIdCollections(l.meals, c.meals, cloudWins, 'meal'),
-                    workouts: mergeIdCollections(l.workouts, c.workouts, cloudWins, 'workout')
+                    meals: mergeIdCollections(l.meals, c.meals, cloudWins, 'meal', deadMeals, keyFn, stats),
+                    workouts: mergeIdCollections(l.workouts, c.workouts, cloudWins, 'workout', deadWorkouts, keyFn, stats)
                 };
             });
             return merged;
+        }
+
+        // Tombstone maps merge by union with the LATEST delete time winning —
+        // delete → re-add → delete-again must keep the newest marker.
+        function unionTombstones(localMap, cloudMap, stats = null) {
+            const local = (localMap && typeof localMap === 'object' && !Array.isArray(localMap)) ? localMap : {};
+            const cloud = (cloudMap && typeof cloudMap === 'object' && !Array.isArray(cloudMap)) ? cloudMap : {};
+            const merged = { ...cloud };
+            Object.keys(local).forEach(key => {
+                if (!merged[key] || local[key] > merged[key]) merged[key] = local[key];
+                if (stats && (!cloud[key] || local[key] > cloud[key])) stats.localOnly++;
+            });
+            return merged;
+        }
+
+        // Whole-object merge for profile/settings/refeedTracker: the side whose
+        // lastUpdated is strictly newer wins field conflicts; tie/unstamped
+        // falls back to the cloudWins side. Missing fields always gap-fill.
+        function mergeStamped(localObj, cloudObj, cloudWins = true, stats = null) {
+            const l = (localObj && typeof localObj === 'object') ? localObj : null;
+            const c = (cloudObj && typeof cloudObj === 'object') ? cloudObj : null;
+            if (!l && !c) return {};
+            if (!l) return { ...c };
+            if (!c) return { ...l };
+            const lt = l.lastUpdated || '';
+            const ct = c.lastUpdated || '';
+            if (lt && ct && lt !== ct) {
+                if (lt > ct) { if (stats) stats.localNewer++; return { ...c, ...l }; }
+                return { ...l, ...c };
+            }
+            return cloudWins ? { ...l, ...c } : { ...c, ...l };
+        }
+
+        // Merge the live `today` object across devices. THE day-boundary trap:
+        // a device that slept through midnight still holds YESTERDAY in
+        // state.today — flat-spreading it over this device's real today wipes
+        // the current day. Different dates → the side matching the actual
+        // current date stays live; the other side is FOLDED into dailyLogs so
+        // its meals/workouts are never lost (caller recalcs folded totals).
+        function mergeToday(localT, cloudT, cloudWins, deadMeals, deadWorkouts, stats, dailyLogsRef) {
+            localT = (localT && typeof localT === 'object') ? localT : null;
+            cloudT = (cloudT && typeof cloudT === 'object') ? cloudT : null;
+            if (!localT && !cloudT) return {};
+            if (!localT) return { ...cloudT };
+            if (!cloudT) { if (stats) stats.localOnly++; return { ...localT }; }
+
+            const todayStr = getLocalDateString();
+            const lDate = localT.date || '';
+            const cDate = cloudT.date || '';
+
+            if (lDate !== cDate) {
+                let live, foreign;
+                if (lDate === todayStr) { live = localT; foreign = cloudT; }
+                else if (cDate === todayStr) { live = cloudT; foreign = localT; }
+                else { live = (lDate > cDate) ? localT : cloudT; foreign = (lDate > cDate) ? cloudT : localT; }
+
+                const fDate = foreign.date;
+                if (fDate && dailyLogsRef) {
+                    const foldKeyFn = id => fDate + '::' + id;
+                    const existing = dailyLogsRef[fDate];
+                    if (existing) {
+                        existing.meals = mergeIdCollections(existing.meals, foreign.meals, true, 'meal', deadMeals, foldKeyFn, null);
+                        existing.workouts = mergeIdCollections(existing.workouts, foreign.workouts, true, 'workout', deadWorkouts, foldKeyFn, null);
+                        if (getCount(existing.workouts) > 0) existing.workedOut = true;
+                    } else {
+                        dailyLogsRef[fDate] = {
+                            date: fDate,
+                            meals: mergeIdCollections(foreign.meals, null, true, 'meal', deadMeals, foldKeyFn, null),
+                            workouts: mergeIdCollections(foreign.workouts, null, true, 'workout', deadWorkouts, foldKeyFn, null),
+                            workedOut: getCount(foreign.workouts) > 0,
+                            activeCalories: foreign.activeCalories ?? 0,
+                            sleepHours: foreign.sleepHours ?? null,
+                            mode: foreign.mode ?? null,
+                            lastUpdated: foreign.lastUpdated || new Date().toISOString()
+                        };
+                    }
+                    if (stats) { (stats.foldedDates = stats.foldedDates || []).push(fDate); }
+                }
+                if (stats && live === localT) stats.localNewer++;
+                const liveKeyFn = id => (live.date || todayStr) + '::' + id;
+                return {
+                    ...live,
+                    meals: mergeIdCollections(live.meals, null, true, 'meal', deadMeals, liveKeyFn, null),
+                    workouts: mergeIdCollections(live.workouts, null, true, 'workout', deadWorkouts, liveKeyFn, null)
+                };
+            }
+
+            // Same date on both devices: newer today.lastUpdated wins scalars
+            // (sleep, mode, targets, award flags); meals/workouts always union.
+            const lt = localT.lastUpdated || '';
+            const ct = cloudT.lastUpdated || '';
+            let base, other;
+            if (lt && ct && lt !== ct) {
+                base = (ct > lt) ? cloudT : localT;
+                other = (ct > lt) ? localT : cloudT;
+                if (lt > ct && stats) stats.localNewer++;
+            } else {
+                base = cloudWins ? cloudT : localT;
+                other = cloudWins ? localT : cloudT;
+            }
+            const keyFn = id => (lDate || todayStr) + '::' + id;
+            return {
+                ...other,
+                ...base,
+                meals: mergeIdCollections(localT.meals, cloudT.meals, cloudWins, 'meal', deadMeals, keyFn, stats),
+                workouts: mergeIdCollections(localT.workouts, cloudT.workouts, cloudWins, 'workout', deadWorkouts, keyFn, stats)
+            };
+        }
+
+        // Achievements: unlocks are permanent — OR-merge `unlocked` and keep
+        // the earliest unlockedDate so neither device can re-lock a badge.
+        function mergeAchievementMaps(localA, cloudA, stats = null) {
+            const l = (localA && typeof localA === 'object' && !Array.isArray(localA)) ? localA : {};
+            const c = (cloudA && typeof cloudA === 'object' && !Array.isArray(cloudA)) ? cloudA : {};
+            const merged = {};
+            new Set([...Object.keys(l), ...Object.keys(c)]).forEach(id => {
+                const lv = l[id], cv = c[id];
+                if (lv && cv) {
+                    const rec = { ...lv, ...cv };
+                    rec.unlocked = !!(lv.unlocked || cv.unlocked);
+                    const lDate = lv.unlocked ? (lv.unlockedDate || '') : '';
+                    const cDate = cv.unlocked ? (cv.unlockedDate || '') : '';
+                    const earliest = [lDate, cDate].filter(Boolean).sort()[0];
+                    if (earliest) rec.unlockedDate = earliest;
+                    merged[id] = rec;
+                    if (stats && lv.unlocked && !cv.unlocked) stats.localNewer++;
+                } else {
+                    merged[id] = { ...(lv || cv) };
+                    if (stats && lv && !cv) stats.localOnly++;
+                }
+            });
+            return merged;
+        }
+
+        // ============================================================
+        // SHARED CLOUD→LOCAL MERGE
+        // Used by ALL THREE cloud-merge sites (boot load, realtime
+        // listener, manual force sync) so they cannot drift apart.
+        // Per-record newer-wins + tombstone purge throughout. `stats`
+        // reports whether LOCAL held anything the cloud lacks — the
+        // caller then schedules a guarded union push-back, otherwise a
+        // stale device re-opening hours later still wins by silence.
+        // ============================================================
+        function mergeCloudStateIntoLocal(firebaseState, cloudWins, stats) {
+            stats = stats || { localNewer: 0, localOnly: 0, foldedDates: [] };
+            if (!stats.foldedDates) stats.foldedDates = [];
+
+            // Preserve ecosystemContext (local-only, not saved to Firebase)
+            const preservedEcosystem = state.ecosystemContext;
+
+            // Tombstones union FIRST so every purge below sees both devices' deletes
+            const deadFF = unionTombstones(state.deletedFrequentFoodIds, firebaseState.deletedFrequentFoodIds, stats);
+            const deadMeals = unionTombstones(state.deletedMealIds, firebaseState.deletedMealIds, stats);
+            const deadWorkouts = unionTombstones(state.deletedWorkoutIds, firebaseState.deletedWorkoutIds, stats);
+            const deadWeighIns = unionTombstones(state.deletedWeighInIds, firebaseState.deletedWeighInIds, stats);
+            const deadBodyComps = unionTombstones(state.deletedBodyCompIds, firebaseState.deletedBodyCompIds, stats);
+
+            // Merge frequentFoods - preserve local additions while updating usage counts
+            const mergedFrequentFoods = mergeFrequentFoods(state.frequentFoods, firebaseState.frequentFoods, deadFF);
+
+            // dailyLogs BEFORE today: mergeToday folds a foreign (stale-date)
+            // `today` from the other device into the merged dailyLogs map.
+            const mergedDailyLogs = mergeDailyLogs(state.dailyLogs, firebaseState.dailyLogs, cloudWins, deadMeals, deadWorkouts, stats);
+            const mergedToday = mergeToday(state.today, firebaseState.today, cloudWins, deadMeals, deadWorkouts, stats, mergedDailyLogs);
+
+            const localVersion = state._version || 0;
+            const cloudVersion = firebaseState._version || 0;
+
+            state = {
+                ...state,
+                profile: mergeStamped(state.profile, firebaseState.profile, cloudWins, stats),
+                settings: mergeStamped(state.settings, firebaseState.settings, cloudWins, stats),
+                today: mergedToday,
+                frequentFoods: mergedFrequentFoods,  // Already merged as object
+                deletedFrequentFoodIds: deadFF,
+                deletedMealIds: deadMeals,
+                deletedWorkoutIds: deadWorkouts,
+                deletedWeighInIds: deadWeighIns,
+                deletedBodyCompIds: deadBodyComps,
+                weighIns: mergeIdCollections(state.weighIns, firebaseState.weighIns, cloudWins, 'weighin', deadWeighIns, null, stats),
+                bodyCompHistory: mergeIdCollections(state.bodyCompHistory, firebaseState.bodyCompHistory, cloudWins, 'bodycomp', deadBodyComps, null, stats),
+                dailyLogs: mergedDailyLogs,
+                refeedTracker: mergeStamped(state.refeedTracker, firebaseState.refeedTracker, cloudWins, stats),
+                gamification: {
+                    ...(cloudWins ? state.gamification : (firebaseState.gamification || {})),
+                    ...(cloudWins ? (firebaseState.gamification || {}) : state.gamification),
+                    // Badges are unlock records — union, never replace
+                    badges: mergeIdCollections(state.gamification?.badges, firebaseState.gamification?.badges, cloudWins, 'badge'),
+                    longestStreak: Math.max(state.gamification?.longestStreak || 0, firebaseState.gamification?.longestStreak || 0)
+                },
+                achievements: mergeAchievementMaps(state.achievements, firebaseState.achievements, stats),
+                // Highest schema version wins — prevents a device with
+                // un-upgraded local state from re-running the history migration
+                calcSchemaVersion: Math.max(state.calcSchemaVersion || 0, firebaseState.calcSchemaVersion || 0),
+                // One-time fat backfill: applied on ANY device counts as applied
+                _fatPatch15Applied: (state._fatPatch15Applied || firebaseState._fatPatch15Applied) ?? false,
+                // Adopt the higher version after merge — keeps our next stamp
+                // monotonic vs the cloud even if this clock is behind
+                _version: Math.max(localVersion, cloudVersion)
+            };
+
+            // Restore ecosystemContext (loaded separately via loadEcosystemData)
+            state.ecosystemContext = preservedEcosystem;
+
+            // Migrate dailyLogs meals/workouts to objects (legacy array data)
+            Object.keys(state.dailyLogs).forEach(date => {
+                if (state.dailyLogs[date]) {
+                    state.dailyLogs[date].meals = migrateArrayToObject(state.dailyLogs[date].meals, 'meal');
+                    state.dailyLogs[date].workouts = migrateArrayToObject(state.dailyLogs[date].workouts, 'workout');
+                }
+            });
+
+            // If frequentFoods is empty after merge, populate with defaults
+            // (minus anything the user explicitly deleted)
+            if (getCount(state.frequentFoods) === 0) {
+                state.frequentFoods = getDefaultFrequentFoods();
+                Object.keys(state.deletedFrequentFoodIds || {}).forEach(id => delete state.frequentFoods[id]);
+            }
+
+            // A folded foreign `today` left its dailyLogs entry with stale
+            // totals — recompute those dates (no save; callers persist).
+            stats.foldedDates.forEach(d => {
+                try { recalculateDayLog(d, { skipSave: true }); } catch (e) { console.warn('foldedDate recalc failed:', d, e); }
+            });
+
+            // Preserve _dataLoaded flag after merge so saves aren't blocked
+            state._dataLoaded = true;
+
+            // Scalar-change baseline resets to the merged state
+            resetScalarSigs();
+
+            return stats;
+        }
+
+        // Did the merge leave LOCAL holding records the cloud doesn't have
+        // (newer edits, local-only adds, folded days, or local-only
+        // tombstones)? Then the merged union must be pushed back or the
+        // other device never sees it. Push only on strict-newer/local-only
+        // — after one union push both sides tie, so this terminates.
+        function mergeNeedsPush(stats) {
+            return !!(stats && (stats.localNewer > 0 || stats.localOnly > 0 || (stats.foldedDates && stats.foldedDates.length > 0)));
+        }
+
+        // ============================================================
+        // SCALAR CHANGE STAMPS — per-object lastUpdated for today /
+        // profile / settings / refeedTracker. A JSON signature is
+        // compared on every save; if an object's scalars changed since
+        // the baseline, its lastUpdated is bumped so the newer-wins
+        // merge above protects the edit against a stale device.
+        // ============================================================
+        let _scalarSigs = null;
+
+        function _computeScalarSigs() {
+            const todayScalars = { ...(state.today || {}) };
+            delete todayScalars.meals;
+            delete todayScalars.workouts;
+            delete todayScalars.lastUpdated;
+            const strip = obj => {
+                const o = { ...(obj || {}) };
+                delete o.lastUpdated;
+                return o;
+            };
+            return {
+                today: JSON.stringify(todayScalars),
+                profile: JSON.stringify(strip(state.profile)),
+                settings: JSON.stringify(strip(state.settings)),
+                refeedTracker: JSON.stringify(strip(state.refeedTracker))
+            };
+        }
+
+        function resetScalarSigs() {
+            _scalarSigs = _computeScalarSigs();
+        }
+
+        function stampChangedScalars() {
+            const sigs = _computeScalarSigs();
+            if (_scalarSigs) {
+                const now = new Date().toISOString();
+                if (sigs.today !== _scalarSigs.today && state.today) state.today.lastUpdated = now;
+                if (sigs.profile !== _scalarSigs.profile && state.profile) state.profile.lastUpdated = now;
+                if (sigs.settings !== _scalarSigs.settings && state.settings) state.settings.lastUpdated = now;
+                if (sigs.refeedTracker !== _scalarSigs.refeedTracker && state.refeedTracker) state.refeedTracker.lastUpdated = now;
+            }
+            _scalarSigs = sigs;
         }
 
         function makeFirebaseSafe(value) {
@@ -9884,6 +10255,12 @@
             if (legacyTotalsOnly) state.dailyLogs[dateStr]._totalsSource = 'stored-totals';
             if (legacyWorkoutOnly) state.dailyLogs[dateStr]._workoutSource = 'stored-workout';
 
+            // opts.touch: ONLY the user-edited primary date claims merge
+            // ownership. Dependent forward-days and boot-time audits must NOT
+            // bump lastUpdated — a derivable recompute claiming freshness would
+            // let a stale device clobber another device's real edits.
+            if (opts.touch) state.dailyLogs[dateStr].lastUpdated = new Date().toISOString();
+
             if (!opts.skipSave) {
                 saveState();
                 // Live mutations can flip a day tracked <-> unresolved
@@ -9899,7 +10276,7 @@
          * @param {number} forwardDays - how many following days to recalc (default 6)
          */
         function recalcDateAndDependents(dateStr, forwardDays = 6) {
-            recalculateDayLog(dateStr, { skipSave: true });
+            recalculateDayLog(dateStr, { skipSave: true, touch: true });
             const [y, m, d] = dateStr.split('-').map(Number);
             const todayStr = getLocalDateString();
             for (let i = 1; i <= forwardDays; i++) {
@@ -12249,6 +12626,7 @@
                 // Delete from dailyLogs
                 if (state.dailyLogs[historicalDate]?.workouts?.[workoutId]) {
                     delete state.dailyLogs[historicalDate].workouts[workoutId];
+                    addTombstone('deletedWorkoutIds', historicalDate + '::' + workoutId);
                     // Update workedOut flag for that day
                     state.dailyLogs[historicalDate].workedOut = getCount(state.dailyLogs[historicalDate].workouts) > 0;
                 }
@@ -12265,6 +12643,7 @@
                 // Remove workout
                 if (state.today.workouts?.[workoutId]) {
                     delete state.today.workouts[workoutId];
+                    addTombstone('deletedWorkoutIds', state.today.date + '::' + workoutId);
                 }
 
                 // Update workedOut flag
@@ -12692,7 +13071,8 @@
                 fat: fat,
                 time: existingMeal ? existingMeal.time : formatTimeET(mealTime),
                 date: mealDate,
-                fromLibrary: false
+                fromLibrary: false,
+                updatedAt: new Date().toISOString()
             };
 
             // Determine if meal is for today or a past date
@@ -12709,6 +13089,7 @@
                 } else {
                     // Date picker moved to a past day — move the meal out of today
                     delete state.today.meals[editingMealId];
+                    addTombstone('deletedMealIds', today + '::' + editingMealId);
                     if (!state.dailyLogs[mealDate]) {
                         state.dailyLogs[mealDate] = { date: mealDate, meals: {}, workouts: {} };
                     }
@@ -12874,6 +13255,7 @@
             if (confirm('Delete this meal?')) {
                 if (state.today.meals && state.today.meals[mealId]) {
                     delete state.today.meals[mealId];
+                    addTombstone('deletedMealIds', state.today.date + '::' + mealId);
                 }
                 saveState();
                 saveDayLog();  // Update dailyLogs for calendar
@@ -13086,20 +13468,25 @@
                 fat: newFat,
                 time: formattedTime,
                 date: newDate,
-                _editedAt: new Date().toISOString()
+                _editedAt: new Date().toISOString(),
+                updatedAt: new Date().toISOString()
             };
 
             // Check if date changed - need to move meal between days
             const dateChanged = newDate !== originalDateStr;
 
             if (dateChanged) {
-                // Remove from original location
+                // Remove from original location. Tombstone the ORIGINAL container —
+                // the re-add below lands under the new date's key, and its fresh
+                // updatedAt lets a move-back-to-original survive the purge.
                 if (originalDateStr === todayStr) {
                     delete state.today.meals[mealId];
+                    addTombstone('deletedMealIds', originalDateStr + '::' + mealId);
                     saveDayLog();
                 } else {
                     ensureMealsObject(originalDateStr);
                     delete state.dailyLogs[originalDateStr].meals[mealId];
+                    addTombstone('deletedMealIds', originalDateStr + '::' + mealId);
                     recalcDateAndDependents(originalDateStr);
                 }
 
@@ -13201,6 +13588,7 @@
             if (dateStr === todayStr) {
                 if (state.today.meals?.[mealId]) {
                     delete state.today.meals[mealId];
+                    addTombstone('deletedMealIds', dateStr + '::' + mealId);
                 }
                 refreshTodayTargets();
                 saveDayLog();
@@ -13223,6 +13611,7 @@
                 } else {
                     delete state.dailyLogs[dateStr].meals[mealId];
                 }
+                addTombstone('deletedMealIds', dateStr + '::' + mealId);
                 recalcDateAndDependents(dateStr);
             }
 
@@ -13418,18 +13807,22 @@
                 calories: newCalories,
                 time: formattedTime,
                 date: newDate,
-                _editedAt: new Date().toISOString()
+                _editedAt: new Date().toISOString(),
+                updatedAt: new Date().toISOString()
             };
 
             const dateChanged = newDate !== originalDateStr;
             const calDiff = newCalories - (originalWorkout.calories || 0);
 
             if (dateChanged) {
-                // Remove from original location
+                // Remove from original location. Tombstone the ORIGINAL container —
+                // the re-add lands under the new date's key, and its fresh updatedAt
+                // lets a move-back-to-original survive the purge.
                 if (originalDateStr === todayStr) {
                     // Subtract old calories from today's active calories
                     state.today.activeCalories = Math.max(0, (state.today.activeCalories || 0) - (originalWorkout.calories || 0));
                     delete state.today.workouts[workoutId];
+                    addTombstone('deletedWorkoutIds', originalDateStr + '::' + workoutId);
                     state.today.workedOut = getCount(state.today.workouts) > 0;
 
                     // Recalculate today's TDEE
@@ -13438,6 +13831,7 @@
                 } else {
                     ensureWorkoutsObject(originalDateStr);
                     delete state.dailyLogs[originalDateStr].workouts[workoutId];
+                    addTombstone('deletedWorkoutIds', originalDateStr + '::' + workoutId);
                     state.dailyLogs[originalDateStr].workedOut = getCount(state.dailyLogs[originalDateStr].workouts) > 0;
                     recalcDateAndDependents(originalDateStr);
                 }
@@ -13517,6 +13911,7 @@
                 if (workout) {
                     state.today.activeCalories = Math.max(0, (state.today.activeCalories || 0) - (workout.calories || 0));
                     delete state.today.workouts[workoutId];
+                    addTombstone('deletedWorkoutIds', dateStr + '::' + workoutId);
                     state.today.workedOut = getCount(state.today.workouts) > 0;
 
                     // Recompute TDEE + targets via the shared helper. The old inline
@@ -13543,6 +13938,7 @@
                 } else {
                     delete state.dailyLogs[dateStr].workouts[workoutId];
                 }
+                addTombstone('deletedWorkoutIds', dateStr + '::' + workoutId);
                 recalcDateAndDependents(dateStr);
                 renderWorkoutHistoryManager();
             }
@@ -13684,7 +14080,8 @@
                 carbs: originalMeal.carbs || 0,
                 fat: originalMeal.fat || 0,
                 time: formatTimeET(new Date()),
-                date: targetDate
+                date: targetDate,
+                updatedAt: new Date().toISOString()
             };
 
             // Repeats credit the library too — libraryId handles "×2"-suffixed names
@@ -13915,7 +14312,8 @@
                     carbs: m.carbs,
                     fat: m.fat,
                     time: m.time,
-                    date: m.date
+                    date: m.date,
+                    updatedAt: new Date().toISOString()
                 };
 
                 if (m.date === today) {
@@ -14089,7 +14487,8 @@
                 date: targetDate,
                 fromLibrary: true,
                 libraryId: food.id,
-                servings: currentQty
+                servings: currentQty,
+                updatedAt: new Date().toISOString()
             };
 
             if (isForToday) {
@@ -14377,7 +14776,8 @@
                 duration: defaults[type]?.duration || 30,
                 calories: defaults[type]?.calories || 200,
                 time: formatTimeET(new Date()),
-                date: workoutDate
+                date: workoutDate,
+                updatedAt: new Date().toISOString()
             };
 
             if (isForToday) {
@@ -14509,7 +14909,8 @@
                     duration: w.duration,
                     calories: w.calories,
                     time: timeStr,
-                    date: w.date
+                    date: w.date,
+                    updatedAt: new Date().toISOString()
                 };
 
                 // If it's for today, add to state.today.workouts
@@ -15005,7 +15406,8 @@
                 weight: weight,
                 bodyFat: bodyFat,
                 leanMass: bodyFat ? Math.round((weight * (1 - bodyFat / 100)) * 10) / 10 : null,
-                fatMass: bodyFat ? Math.round((weight * (bodyFat / 100)) * 10) / 10 : null
+                fatMass: bodyFat ? Math.round((weight * (bodyFat / 100)) * 10) / 10 : null,
+                updatedAt: new Date().toISOString()
             };
 
             // Check if already weighed in on the selected date
@@ -16318,7 +16720,8 @@ TDEE TODAY: ~${formatNumber(calculateTDEE(getWeightForDate(state.today.date || g
                 measurements: {
                     neck: neck,
                     waist: waist
-                }
+                },
+                updatedAt: new Date().toISOString()
             };
 
             // Save to body comp history
@@ -16340,7 +16743,8 @@ TDEE TODAY: ~${formatNumber(calculateTDEE(getWeightForDate(state.today.date || g
                 bodyFat: bodyFat,
                 leanMass: leanMass,
                 fatMass: fatMass,
-                method: 'navy'
+                method: 'navy',
+                updatedAt: new Date().toISOString()
             };
 
             // Update profile
@@ -16382,7 +16786,8 @@ TDEE TODAY: ~${formatNumber(calculateTDEE(getWeightForDate(state.today.date || g
                 weight: weight,
                 bodyFat: bodyFat,
                 fatMass: fatMass,
-                leanMass: leanMass
+                leanMass: leanMass,
+                updatedAt: new Date().toISOString()
             };
 
             // Save to body comp history
@@ -16404,7 +16809,8 @@ TDEE TODAY: ~${formatNumber(calculateTDEE(getWeightForDate(state.today.date || g
                 bodyFat: bodyFat,
                 leanMass: leanMass,
                 fatMass: fatMass,
-                method: 'scale'
+                method: 'scale',
+                updatedAt: new Date().toISOString()
             };
 
             // Update profile
@@ -16795,7 +17201,8 @@ TDEE TODAY: ~${formatNumber(calculateTDEE(getWeightForDate(state.today.date || g
                         fat: item.fat,
                         time: item.time,  // Store raw time string (HH:MM), format only on display
                         date: item.date,
-                        fromImport: true
+                        fromImport: true,
+                        updatedAt: new Date().toISOString()
                     };
 
                     if (item.date === today) {
@@ -16824,7 +17231,8 @@ TDEE TODAY: ~${formatNumber(calculateTDEE(getWeightForDate(state.today.date || g
                         duration: item.duration,
                         calories: item.calories,
                         time: item.time,  // Store raw time string (HH:MM), format only on display
-                        date: item.date
+                        date: item.date,
+                        updatedAt: new Date().toISOString()
                     };
 
                     if (item.date === today) {
@@ -16855,7 +17263,8 @@ TDEE TODAY: ~${formatNumber(calculateTDEE(getWeightForDate(state.today.date || g
                         weight: item.weight,
                         bodyFat: item.bodyFat,
                         leanMass: item.bodyFat ? Math.round((item.weight * (1 - item.bodyFat / 100)) * 10) / 10 : null,
-                        fatMass: item.bodyFat ? Math.round((item.weight * (item.bodyFat / 100)) * 10) / 10 : null
+                        fatMass: item.bodyFat ? Math.round((item.weight * (item.bodyFat / 100)) * 10) / 10 : null,
+                        updatedAt: new Date().toISOString()
                     };
 
                     if (!state.weighIns || Array.isArray(state.weighIns)) {
@@ -17017,7 +17426,8 @@ TDEE TODAY: ~${formatNumber(calculateTDEE(getWeightForDate(state.today.date || g
                 weight: newWeight,
                 bodyFat: newBf,
                 leanMass: newBf ? Math.round((newWeight * (1 - newBf / 100)) * 10) / 10 : null,
-                fatMass: newBf ? Math.round((newWeight * (newBf / 100)) * 10) / 10 : null
+                fatMass: newBf ? Math.round((newWeight * (newBf / 100)) * 10) / 10 : null,
+                updatedAt: new Date().toISOString()
             };
 
             // Update profile if this is most recent weigh-in
@@ -17051,6 +17461,7 @@ TDEE TODAY: ~${formatNumber(calculateTDEE(getWeightForDate(state.today.date || g
 
             const deletedDate = state.weighIns[id]?.date;
             delete state.weighIns[id];
+            addTombstone('deletedWeighInIds', id);
 
             // Revert profile weight to most recent remaining weigh-in
             const remaining = getValues(state.weighIns);
@@ -17081,6 +17492,7 @@ TDEE TODAY: ~${formatNumber(calculateTDEE(getWeightForDate(state.today.date || g
 
             const deletedDate = state.weighIns[editingWeighInId]?.date;
             delete state.weighIns[editingWeighInId];
+            addTombstone('deletedWeighInIds', editingWeighInId);
 
             // Revert profile weight to most recent remaining weigh-in
             const remaining = getValues(state.weighIns);
@@ -17222,7 +17634,8 @@ TDEE TODAY: ~${formatNumber(calculateTDEE(getWeightForDate(state.today.date || g
                 weight: newWeight,
                 bodyFat: newBf,
                 leanMass: Math.round((newWeight * (1 - newBf / 100)) * 10) / 10,
-                fatMass: Math.round((newWeight * (newBf / 100)) * 10) / 10
+                fatMass: Math.round((newWeight * (newBf / 100)) * 10) / 10,
+                updatedAt: new Date().toISOString()
             };
 
             // Update measurements if navy method
@@ -17245,6 +17658,7 @@ TDEE TODAY: ~${formatNumber(calculateTDEE(getWeightForDate(state.today.date || g
             if (!confirm('Delete this body comp record?')) return;
 
             delete state.bodyCompHistory[id];
+            addTombstone('deletedBodyCompIds', id);
             saveState();
             renderBodyCompHistory();
             showToast('Body comp record deleted');
@@ -17255,6 +17669,7 @@ TDEE TODAY: ~${formatNumber(calculateTDEE(getWeightForDate(state.today.date || g
             if (!confirm('Delete this body comp record?')) return;
 
             delete state.bodyCompHistory[editingBodyCompId];
+            addTombstone('deletedBodyCompIds', editingBodyCompId);
             saveState();
             closeEditBodyCompModal();
             renderBodyCompHistory();
@@ -17561,7 +17976,8 @@ TDEE TODAY: ~${formatNumber(calculateTDEE(getWeightForDate(state.today.date || g
                     // A settings edit is NOT a morning empty-stomach weigh-in —
                     // tag it so trend logic can discount it. Never re-tag a
                     // real weigh-in that already exists for today.
-                    source: existing ? (existing.source ?? null) : 'settings'
+                    source: existing ? (existing.source ?? null) : 'settings',
+                    updatedAt: new Date().toISOString()
                 };
             }
 
@@ -17790,7 +18206,13 @@ TDEE TODAY: ~${formatNumber(calculateTDEE(getWeightForDate(state.today.date || g
             }
 
             // Guards 0/A/B/D passed — a real, fully-loaded session is making
-            // this change. Monotonic version stamp (never regresses even if
+            // this change. Stamp any changed scalar objects (today/profile/
+            // settings/refeedTracker) so per-record newer-wins protects them,
+            // and mark unsynced work pending until Firebase confirms.
+            stampChangedScalars();
+            localChangesSinceLastSync = true;
+
+            // Monotonic version stamp (never regresses even if
             // the device clock is behind the cloud's last stamp).
             state._version = Math.max(Date.now(), (state._version || 0) + 1);
             state._lastModified = new Date().toISOString();
@@ -17850,7 +18272,10 @@ TDEE TODAY: ~${formatNumber(calculateTDEE(getWeightForDate(state.today.date || g
                 return false;
             }
 
-            // Guards 0/A/B/D passed — monotonic version stamp (see saveState)
+            // Guards 0/A/B/D passed — stamp changed scalars + mark unsynced
+            // work pending (see saveState), then monotonic version stamp
+            stampChangedScalars();
+            localChangesSinceLastSync = true;
             state._version = Math.max(Date.now(), (state._version || 0) + 1);
             state._lastModified = new Date().toISOString();
 
@@ -18005,6 +18430,9 @@ TDEE TODAY: ~${formatNumber(calculateTDEE(getWeightForDate(state.today.date || g
                     console.error('Failed to parse localStorage:', e);
                 }
             }
+            // Baseline the scalar-change signatures to what we just loaded —
+            // stampChangedScalars() only bumps lastUpdated on REAL changes
+            resetScalarSigs();
         }
 
         function saveToFirebase() {
@@ -18047,6 +18475,10 @@ TDEE TODAY: ~${formatNumber(calculateTDEE(getWeightForDate(state.today.date || g
                 today: state.today,
                 frequentFoods: state.frequentFoods,
                 deletedFrequentFoodIds: state.deletedFrequentFoodIds ?? {},
+                deletedMealIds: state.deletedMealIds ?? {},
+                deletedWorkoutIds: state.deletedWorkoutIds ?? {},
+                deletedWeighInIds: state.deletedWeighInIds ?? {},
+                deletedBodyCompIds: state.deletedBodyCompIds ?? {},
                 weighIns: state.weighIns,
                 bodyCompHistory: state.bodyCompHistory,
                 dailyLogs: state.dailyLogs,
@@ -18078,9 +18510,10 @@ TDEE TODAY: ~${formatNumber(calculateTDEE(getWeightForDate(state.today.date || g
                 // field at its own deep path and MERGE dailyLogs per-date, so any
                 // cloud-only history we don't hold locally is preserved untouched.
                 updatePayload = { lastUpdated: saveTime };
+                const TOMBSTONE_KEYS = ['deletedFrequentFoodIds', 'deletedMealIds', 'deletedWorkoutIds', 'deletedWeighInIds', 'deletedBodyCompIds'];
                 Object.keys(stateToSave).forEach(key => {
                     if (key === 'dailyLogs') return; // merged per-date below
-                    if (key === 'deletedFrequentFoodIds') return; // merged per-id below
+                    if (TOMBSTONE_KEYS.includes(key)) return; // merged per-id below
                     updatePayload['state/' + key] = stateToSave[key];
                 });
                 const safeDailyLogs = stateToSave.dailyLogs || {};
@@ -18089,9 +18522,11 @@ TDEE TODAY: ~${formatNumber(calculateTDEE(getWeightForDate(state.today.date || g
                 });
                 // Tombstones also merge per-id: a session that never deleted
                 // anything must not erase another device's delete markers
-                const safeFfTombstones = stateToSave.deletedFrequentFoodIds || {};
-                Object.keys(safeFfTombstones).forEach(id => {
-                    updatePayload['state/deletedFrequentFoodIds/' + id] = safeFfTombstones[id];
+                TOMBSTONE_KEYS.forEach(mapName => {
+                    const tombs = stateToSave[mapName] || {};
+                    Object.keys(tombs).forEach(id => {
+                        updatePayload['state/' + mapName + '/' + id] = tombs[id];
+                    });
                 });
             }
 
@@ -18106,6 +18541,8 @@ TDEE TODAY: ~${formatNumber(calculateTDEE(getWeightForDate(state.today.date || g
             database.ref(userPath).update(updatePayload)
             .then(() => {
                 if (firebaseSaveWatchdog) { clearTimeout(firebaseSaveWatchdog); firebaseSaveWatchdog = null; }
+                // Cloud confirmed this write — nothing unsynced remains
+                localChangesSinceLastSync = false;
                 updateSyncStatus('connected', 'Saved ✓');
             })
             .catch(error => {
@@ -18149,83 +18586,22 @@ TDEE TODAY: ~${formatNumber(calculateTDEE(getWeightForDate(state.today.date || g
                     clearTimeout(loadWatchdog);
                     const data = snapshot.val();
 
+                    // Baseline for realtime echo suppression: the listener's
+                    // first event re-delivers this exact snapshot — with the
+                    // timestamp recorded here it's skipped as an echo, but a
+                    // NEWER remote save arriving before attach still merges
+                    // (the old isFirstLoad swallow dropped it forever).
+                    lastKnownTimestamp = (data && data.lastUpdated) || lastKnownTimestamp;
+
+                    let bootMergeStats = null;
                     if (data && data.state) {
                         const firebaseState = data.state;
                         const cloudWins = (firebaseState._version || 0) >= (state._version || 0);
 
-                        // Preserve ecosystemContext (local-only, not saved to Firebase)
-                        const preservedEcosystem = state.ecosystemContext;
-
-                        // Merge frequentFoods - preserve local additions while updating usage counts.
-                        // Tombstones union first so a delete on either device wins over the union.
-                        const mergedFfTombstones = {
-                            ...(firebaseState.deletedFrequentFoodIds || {}),
-                            ...(state.deletedFrequentFoodIds || {})
-                        };
-                        const mergedFrequentFoods = mergeFrequentFoods(
-                            state.frequentFoods,
-                            firebaseState.frequentFoods,
-                            mergedFfTombstones
-                        );
-
-                        // Merge Firebase data - use objects with ID keys (immune to Firebase array corruption)
-                        state = {
-                            ...state,
-                            profile: cloudWins
-                                ? { ...state.profile, ...(firebaseState.profile || {}) }
-                                : { ...(firebaseState.profile || {}), ...state.profile },
-                            settings: cloudWins
-                                ? { ...state.settings, ...(firebaseState.settings || {}) }
-                                : { ...(firebaseState.settings || {}), ...state.settings },
-                            today: {
-                                ...(cloudWins
-                                    ? { ...state.today, ...(firebaseState.today || {}) }
-                                    : { ...(firebaseState.today || {}), ...state.today }),
-                                // Union ID-keyed live collections so two devices
-                                // adding different entries cannot erase each other.
-                                meals: mergeIdCollections(state.today.meals, firebaseState.today?.meals, cloudWins, 'meal'),
-                                workouts: mergeIdCollections(state.today.workouts, firebaseState.today?.workouts, cloudWins, 'workout')
-                            },
-                            frequentFoods: mergedFrequentFoods,  // Already merged as object
-                            deletedFrequentFoodIds: mergedFfTombstones,
-                            weighIns: mergeIdCollections(state.weighIns, firebaseState.weighIns, cloudWins, 'weighin'),
-                            bodyCompHistory: mergeIdCollections(state.bodyCompHistory, firebaseState.bodyCompHistory, cloudWins, 'bodycomp'),
-                            dailyLogs: mergeDailyLogs(state.dailyLogs, firebaseState.dailyLogs, cloudWins),
-                            refeedTracker: { ...state.refeedTracker, ...(firebaseState.refeedTracker || {}) },
-                            gamification: {
-                                ...state.gamification,
-                                ...(firebaseState.gamification || {}),
-                                badges: migrateArrayToObject(firebaseState.gamification?.badges || state.gamification.badges, 'badge')
-                            },
-                            achievements: { ...state.achievements, ...(firebaseState.achievements || {}) },
-                            // Highest schema version wins — prevents a device with
-                            // un-upgraded local state from re-running the history migration
-                            calcSchemaVersion: Math.max(state.calcSchemaVersion || 0, firebaseState.calcSchemaVersion || 0),
-                            // One-time fat backfill: applied on ANY device counts as applied
-                            _fatPatch15Applied: (state._fatPatch15Applied || firebaseState._fatPatch15Applied) ?? false
-                        };
-
-                        // Restore ecosystemContext (it's loaded separately via loadEcosystemData)
-                        state.ecosystemContext = preservedEcosystem;
-
-                        // Adopt the higher version after merge — keeps our next
-                        // stamp monotonic vs the cloud even if this clock is behind
-                        state._version = Math.max(state._version || 0, firebaseState._version || 0);
-
-                        // Migrate dailyLogs meals/workouts to objects
-                        Object.keys(state.dailyLogs).forEach(date => {
-                            if (state.dailyLogs[date]) {
-                                state.dailyLogs[date].meals = migrateArrayToObject(state.dailyLogs[date].meals, 'meal');
-                                state.dailyLogs[date].workouts = migrateArrayToObject(state.dailyLogs[date].workouts, 'workout');
-                            }
-                        });
-
-                        // FIX: If frequentFoods is empty after merge, populate with defaults
-                        // (minus anything the user explicitly deleted)
-                        if (getCount(state.frequentFoods) === 0) {
-                            state.frequentFoods = getDefaultFrequentFoods();
-                            Object.keys(state.deletedFrequentFoodIds || {}).forEach(id => delete state.frequentFoods[id]);
-                        }
+                        // Shared merge: per-record newer-wins + tombstones.
+                        // Returns stats saying whether LOCAL held anything the
+                        // cloud lacks (drives the union push-back below).
+                        bootMergeStats = mergeCloudStateIntoLocal(firebaseState, cloudWins, null);
 
                         // Check for new day
                         const today = getLocalDateString();
@@ -18266,16 +18642,26 @@ TDEE TODAY: ~${formatNumber(calculateTDEE(getWeightForDate(state.today.date || g
 
                         persistStateToLocal();
 
+                        // LOCAL held newer edits / records the cloud lacks —
+                        // push the merged union back so other devices see it.
+                        // Deferred so the sync flags below are set first;
+                        // saveStateImmediate re-checks all 5 guards itself.
+                        if (mergeNeedsPush(bootMergeStats)) {
+                            setTimeout(() => saveStateImmediate(), 800);
+                        }
+
                         updateSyncStatus('connected', 'Synced ✓');
                         showToast('☁️ Synced from cloud');
                     } else {
                         // No Firebase data - check if we have local data
                         const hasLocalData = hasRealData(state);
                         if (hasLocalData) {
-                            // We have local data but no cloud data - push to cloud
+                            // We have local data but no cloud data — push it up.
+                            // Deferred so the sync flags below are set first;
+                            // saveStateImmediate re-checks all 5 guards itself.
                             state._dataLoaded = true;
                             updateSyncStatus('connected', 'Connected');
-                            // Don't call saveToFirebase here - let user actions trigger it
+                            setTimeout(() => saveStateImmediate(), 800);
                         } else {
                             // Fresh start - no data anywhere
                             state._dataLoaded = true;  // Allow saves after user starts entering data
@@ -18360,129 +18746,73 @@ TDEE TODAY: ~${formatNumber(calculateTDEE(getWeightForDate(state.today.date || g
             if (realtimeSyncEnabled || !database || !userPath) return;
             realtimeSyncEnabled = true;
 
-            let isFirstLoad = true;
-
             database.ref(userPath).on('value', snapshot => {
-                if (isFirstLoad) {
-                    isFirstLoad = false;
-                    const data = snapshot.val();
-                    if (data && data.lastUpdated) {
-                        lastKnownTimestamp = data.lastUpdated;
-                    }
-                    return;
-                }
-
-                // Skip during initial load (we handle this separately)
+                // Skip during initial load (loadFromFirebase handles that
+                // snapshot itself and records its timestamp for the echo
+                // check below — no first-event swallow needed, so a remote
+                // save arriving between load and attach still merges)
                 if (isInitialLoad) {
                     return;
                 }
 
                 const data = snapshot.val();
 
-                // Skip if cloud data is empty
+                // Skip if cloud data is empty or unstamped
                 if (!data || !data.state || isEmptyState(data.state)) {
                     return;
                 }
+                if (!data.lastUpdated) {
+                    return;
+                }
 
-                if (data && data.state && data.lastUpdated) {
-                    if (data.lastUpdated === lastKnownTimestamp) {
-                        return;
-                    }
+                // Echo suppression: our own save (and the initial replay of
+                // the snapshot loadFromFirebase already merged) comes back
+                // with a timestamp we've recorded — skip it
+                if (data.lastUpdated === lastKnownTimestamp) {
+                    return;
+                }
 
-                    lastKnownTimestamp = data.lastUpdated;
+                lastKnownTimestamp = data.lastUpdated;
 
-                    const firebaseState = data.state;
+                const firebaseState = data.state;
 
-                    // Version check: skip if local is newer (prevent overwriting local edits)
-                    const localVersion = state._version || 0;
-                    const cloudVersion = firebaseState._version || 0;
+                // No version-skip here: even when local _version is newer,
+                // the remote snapshot may hold per-record edits we lack.
+                // The shared merge keeps every newer-stamped local record,
+                // so nothing of ours can be clobbered — and if local held
+                // anything the cloud lacks, we push the union back below.
+                const cloudWins = (firebaseState._version || 0) >= (state._version || 0);
+                const mergeStats = mergeCloudStateIntoLocal(firebaseState, cloudWins, null);
 
-                    if (localVersion > cloudVersion) {
-                        return;
-                    }
+                // A realtime push carries the full cloud state — history is now
+                // fully represented in memory, so wholesale writes are safe again.
+                historyFullyLoaded = true;
 
-                    // Merge frequentFoods - preserve local additions.
-                    // Tombstones union first so deletes win over the union.
-                    const mergedFfTombstones = {
-                        ...(firebaseState.deletedFrequentFoodIds || {}),
-                        ...(state.deletedFrequentFoodIds || {})
-                    };
-                    const mergedFrequentFoods = mergeFrequentFoods(
-                        state.frequentFoods,
-                        firebaseState.frequentFoods,
-                        mergedFfTombstones
-                    );
+                persistStateToLocal();
 
-                    // Merge - use objects with ID keys (immune to Firebase array corruption)
-                    state = {
-                        ...state,
-                        profile: { ...state.profile, ...(firebaseState.profile || {}) },
-                        settings: { ...state.settings, ...(firebaseState.settings || {}) },
-                        today: {
-                            ...state.today,
-                            ...(firebaseState.today || {}),
-                            meals: {
-                                ...migrateArrayToObject(state.today.meals, 'meal'),
-                                ...migrateArrayToObject(firebaseState.today?.meals, 'meal')
-                            },
-                            workouts: {
-                                ...migrateArrayToObject(state.today.workouts, 'workout'),
-                                ...migrateArrayToObject(firebaseState.today?.workouts, 'workout')
-                            }
-                        },
-                        frequentFoods: mergedFrequentFoods,  // Already merged as object
-                        deletedFrequentFoodIds: mergedFfTombstones,
-                        weighIns: mergeIdCollections(state.weighIns, firebaseState.weighIns, true, 'weighin'),
-                        bodyCompHistory: mergeIdCollections(state.bodyCompHistory, firebaseState.bodyCompHistory, true, 'bodycomp'),
-                        dailyLogs: mergeDailyLogs(state.dailyLogs, firebaseState.dailyLogs, true),
-                        refeedTracker: { ...state.refeedTracker, ...(firebaseState.refeedTracker || {}) },
-                        gamification: {
-                            ...state.gamification,
-                            ...(firebaseState.gamification || {}),
-                            badges: migrateArrayToObject(firebaseState.gamification?.badges || state.gamification.badges, 'badge')
-                        },
-                        achievements: { ...state.achievements, ...(firebaseState.achievements || {}) },
-                        // Highest schema version wins — prevents re-running the history migration
-                        calcSchemaVersion: Math.max(state.calcSchemaVersion || 0, firebaseState.calcSchemaVersion || 0),
-                        // One-time fat backfill: applied on ANY device counts as applied
-                        _fatPatch15Applied: (state._fatPatch15Applied || firebaseState._fatPatch15Applied) ?? false,
-                        // Adopt the higher version so our next stamp stays
-                        // monotonic vs the cloud even if this clock is behind
-                        _version: Math.max(localVersion, cloudVersion)
-                    };
+                // Re-render the dashboard plus whichever tab is active —
+                // a merge while Progress/Calendar/Badges is open must not
+                // leave that tab showing pre-merge numbers
+                renderSimpleView();
+                const activeTab = document.querySelector('.tab-content.active');
+                if (activeTab && activeTab.id === 'progressTab') {
+                    renderProgressTab();
+                } else if (activeTab && activeTab.id === 'calendarTab') {
+                    renderCalendarHeatmap();
+                } else if (activeTab && activeTab.id === 'badgesTab') {
+                    renderAchievements();
+                }
+                setTimeout(() => runHistoryUpgradeV3(), 0);
+                setTimeout(() => runFrequentFoodFatPatch(), 0);
+                updateSyncStatus('connected', '🔄 Updated');
+                showToast('📥 Synced from another device');
 
-                    // Migrate dailyLogs meals/workouts to objects
-                    Object.keys(state.dailyLogs).forEach(date => {
-                        if (state.dailyLogs[date]) {
-                            state.dailyLogs[date].meals = migrateArrayToObject(state.dailyLogs[date].meals, 'meal');
-                            state.dailyLogs[date].workouts = migrateArrayToObject(state.dailyLogs[date].workouts, 'workout');
-                        }
-                    });
-
-                    // Preserve _dataLoaded flag after merge so saves aren't blocked
-                    state._dataLoaded = true;
-                    // A realtime push carries the full cloud state — history is now
-                    // fully represented in memory, so wholesale writes are safe again.
-                    historyFullyLoaded = true;
-
-                    persistStateToLocal();
-
-                    // Re-render the dashboard plus whichever tab is active —
-                    // a merge while Progress/Calendar/Badges is open must not
-                    // leave that tab showing pre-merge numbers
-                    renderSimpleView();
-                    const activeTab = document.querySelector('.tab-content.active');
-                    if (activeTab && activeTab.id === 'progressTab') {
-                        renderProgressTab();
-                    } else if (activeTab && activeTab.id === 'calendarTab') {
-                        renderCalendarHeatmap();
-                    } else if (activeTab && activeTab.id === 'badgesTab') {
-                        renderAchievements();
-                    }
-                    setTimeout(() => runHistoryUpgradeV3(), 0);
-                    setTimeout(() => runFrequentFoodFatPatch(), 0);
-                    updateSyncStatus('connected', '🔄 Updated');
-                    showToast('📥 Synced from another device');
+                // LOCAL held newer edits / records the cloud lacks — push
+                // the merged union back so the other device gets them too.
+                // Strict-newer overlays guarantee this converges: after one
+                // round-trip both sides hold identical records and stop.
+                if (mergeNeedsPush(mergeStats)) {
+                    setTimeout(() => saveStateImmediate(), 600);
                 }
             });
         }
@@ -18500,90 +18830,40 @@ TDEE TODAY: ~${formatNumber(calculateTDEE(getWeightForDate(state.today.date || g
                 .then(snapshot => {
                     const data = snapshot.val();
                     if (!data || !data.state) {
-                        showToast('No cloud data found');
-                        updateSyncStatus('connected', 'No cloud data');
+                        if (hasRealData(state)) {
+                            // Cloud is empty but local has real data — push it
+                            saveStateImmediate();
+                            updateSyncStatus('connected', 'Pushed local ✓');
+                            showToast('⬆️ Pushed local data to cloud');
+                        } else {
+                            showToast('No cloud data found');
+                            updateSyncStatus('connected', 'No cloud data');
+                        }
                         return;
                     }
 
                     const firebaseState = data.state;
 
-                    // Version check: if local is newer, push to cloud instead of overwriting
-                    const localVersion = state._version || 0;
-                    const cloudVersion = firebaseState._version || 0;
-
-                    if (localVersion > cloudVersion) {
-                        // Local is newer - push to cloud
-                        saveToFirebase();
-                        updateSyncStatus('connected', 'Pushed local ✓');
-                        return;
-                    }
-
-                    // Merge frequentFoods - preserve local additions.
-                    // Tombstones union first so deletes win over the union.
-                    const mergedFfTombstones = {
-                        ...(firebaseState.deletedFrequentFoodIds || {}),
-                        ...(state.deletedFrequentFoodIds || {})
-                    };
-                    const mergedFrequentFoods = mergeFrequentFoods(
-                        state.frequentFoods,
-                        firebaseState.frequentFoods,
-                        mergedFfTombstones
-                    );
-
-                    // Merge - use objects with ID keys (immune to Firebase array corruption)
-                    state = {
-                        ...state,
-                        profile: { ...state.profile, ...(firebaseState.profile || {}) },
-                        settings: { ...state.settings, ...(firebaseState.settings || {}) },
-                        today: {
-                            ...state.today,
-                            ...(firebaseState.today || {}),
-                            meals: {
-                                ...migrateArrayToObject(state.today.meals, 'meal'),
-                                ...migrateArrayToObject(firebaseState.today?.meals, 'meal')
-                            },
-                            workouts: {
-                                ...migrateArrayToObject(state.today.workouts, 'workout'),
-                                ...migrateArrayToObject(firebaseState.today?.workouts, 'workout')
-                            }
-                        },
-                        frequentFoods: mergedFrequentFoods,  // Already merged as object
-                        deletedFrequentFoodIds: mergedFfTombstones,
-                        // Union local + cloud so local-only weigh-ins/measurements aren't dropped
-                        weighIns: mergeIdCollections(state.weighIns, firebaseState.weighIns, true, 'weighin'),
-                        bodyCompHistory: mergeIdCollections(state.bodyCompHistory, firebaseState.bodyCompHistory, true, 'bodycomp'),
-                        dailyLogs: mergeDailyLogs(state.dailyLogs, firebaseState.dailyLogs, true),
-                        refeedTracker: { ...state.refeedTracker, ...(firebaseState.refeedTracker || {}) },
-                        gamification: {
-                            ...state.gamification,
-                            ...(firebaseState.gamification || {}),
-                            badges: migrateArrayToObject(firebaseState.gamification?.badges || state.gamification.badges, 'badge')
-                        },
-                        achievements: { ...state.achievements, ...(firebaseState.achievements || {}) },
-                        // Highest schema version wins — prevents re-running the history migration
-                        calcSchemaVersion: Math.max(state.calcSchemaVersion || 0, firebaseState.calcSchemaVersion || 0),
-                        // One-time fat backfill: applied on ANY device counts as applied
-                        _fatPatch15Applied: (state._fatPatch15Applied || firebaseState._fatPatch15Applied) ?? false,
-                        // Adopt the higher version so our next stamp stays
-                        // monotonic vs the cloud even if this clock is behind
-                        _version: Math.max(localVersion, cloudVersion)
-                    };
-
-                    // Migrate dailyLogs meals/workouts to objects
-                    Object.keys(state.dailyLogs).forEach(date => {
-                        if (state.dailyLogs[date]) {
-                            state.dailyLogs[date].meals = migrateArrayToObject(state.dailyLogs[date].meals, 'meal');
-                            state.dailyLogs[date].workouts = migrateArrayToObject(state.dailyLogs[date].workouts, 'workout');
-                        }
-                    });
+                    // No push-without-merge shortcut: even when local _version
+                    // is newer, the cloud may hold per-record edits we lack.
+                    // Merge first (newer-stamped local records always survive),
+                    // then push the union if local held anything cloud lacks.
+                    const cloudWins = (firebaseState._version || 0) >= (state._version || 0);
+                    const mergeStats = mergeCloudStateIntoLocal(firebaseState, cloudWins, null);
 
                     persistStateToLocal();
                     // Full cloud history merged into memory — wholesale writes safe.
                     historyFullyLoaded = true;
 
                     initializeUI();
-                    updateSyncStatus('connected', 'Synced ✓');
-                    showToast('✅ Synced from cloud');
+                    if (mergeNeedsPush(mergeStats) || localChangesSinceLastSync) {
+                        saveStateImmediate();
+                        updateSyncStatus('connected', 'Merged + pushed ✓');
+                        showToast('✅ Synced — local changes pushed');
+                    } else {
+                        updateSyncStatus('connected', 'Synced ✓');
+                        showToast('✅ Synced from cloud');
+                    }
                 })
                 .catch(err => {
                     console.error('Force sync failed:', err);
@@ -19092,6 +19372,10 @@ TDEE TODAY: ~${formatNumber(calculateTDEE(getWeightForDate(state.today.date || g
                 today: state.today,
                 frequentFoods: state.frequentFoods,
                 deletedFrequentFoodIds: state.deletedFrequentFoodIds ?? {},
+                deletedMealIds: state.deletedMealIds ?? {},
+                deletedWorkoutIds: state.deletedWorkoutIds ?? {},
+                deletedWeighInIds: state.deletedWeighInIds ?? {},
+                deletedBodyCompIds: state.deletedBodyCompIds ?? {},
                 weighIns: state.weighIns,
                 bodyCompHistory: state.bodyCompHistory,
                 dailyLogs: state.dailyLogs,
@@ -19113,6 +19397,8 @@ TDEE TODAY: ~${formatNumber(calculateTDEE(getWeightForDate(state.today.date || g
                 // Record our own write so the realtime listener doesn't echo it
                 // back as a remote change (it compares data.lastUpdated to this).
                 lastKnownTimestamp = saveTime;
+                // Cloud now matches local exactly — nothing unsynced remains
+                localChangesSinceLastSync = false;
                 persistStateToLocal();
                 updateSyncStatus('connected', 'Force uploaded ✓');
                 showToast('⬆️ Force uploaded to cloud');
@@ -19180,6 +19466,11 @@ TDEE TODAY: ~${formatNumber(calculateTDEE(getWeightForDate(state.today.date || g
                         log.meals = migrateArrayToObject(log.meals, 'meal');
                         log.workouts = migrateArrayToObject(log.workouts, 'workout');
                     });
+
+                    // Local now matches cloud exactly — re-baseline the scalar
+                    // signatures and clear the unsynced-work flag
+                    resetScalarSigs();
+                    localChangesSinceLastSync = false;
 
                     persistStateToLocal();
 
@@ -24134,17 +24425,31 @@ TDEE TODAY: ~${formatNumber(calculateTDEE(getWeightForDate(state.today.date || g
         });
 
         // pagehide is the unload signal iOS Safari actually fires
-        // (beforeunload often never does there) — flush a full immediate
-        // save; its own guards make this safe at any lifecycle point
+        // (beforeunload often never does there) — flush localStorage
+        // unconditionally, but push to Firebase ONLY when this session
+        // actually holds unsynced changes. An unconditional full-snapshot
+        // re-upload from a stale tab (open since morning, edits made on
+        // another device meanwhile) was the killer cross-device clobber.
         window.addEventListener('pagehide', function() {
-            saveStateImmediate();
+            if (!isInitialLoad && hasLoadedFromCloud && state._dataLoaded && !isEmptyState(state)) {
+                persistStateToLocal();
+            }
+            if (localChangesSinceLastSync) {
+                saveStateImmediate();
+            }
         });
 
         // Save when tab becomes hidden, refresh when visible - WITH GUARDS
         document.addEventListener('visibilitychange', function() {
             if (document.hidden) {
-                // saveStateImmediate already has guards
-                saveStateImmediate();
+                // localStorage flush always; Firebase push gated on real
+                // unsynced changes (see pagehide comment)
+                if (!isInitialLoad && hasLoadedFromCloud && state._dataLoaded && !isEmptyState(state)) {
+                    persistStateToLocal();
+                }
+                if (localChangesSinceLastSync) {
+                    saveStateImmediate();
+                }
             } else {
                 // Check for day change first (handles midnight crossing while app was hidden)
                 if (!isInitialLoad && hasLoadedFromCloud) {
@@ -24403,6 +24708,9 @@ TDEE TODAY: ~${formatNumber(calculateTDEE(getWeightForDate(state.today.date || g
                 logicLog: logicSnapshot,
                 // Timestamp
                 savedAt: new Date().toISOString(),
+                // Per-date merge stamp: the rollover snapshot is authoritative
+                // for its day, so it must claim newer-wins ownership too.
+                lastUpdated: new Date().toISOString(),
                 isEndOfDaySnapshot: true
             };
 
