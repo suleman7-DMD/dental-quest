@@ -176,6 +176,7 @@ function calOnThresholdInput(el) {
         const _pause = new Date(_t.getFullYear(), _t.getMonth(), _t.getDate() + CALIBRATION.MANUAL_PAUSE_DAYS);
         state.calibration.manualPauseUntil = getLocalDateString(_pause);
         state.calibration.fittedThreshold = null;
+        saveState();
     }
     recalculate();
 }

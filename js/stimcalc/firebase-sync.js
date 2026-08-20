@@ -1433,7 +1433,8 @@ function loadState() {
             sleepHistory: { ...state.sleepHistory, ...(loaded.sleepHistory || {}) },
             sleepDailyLogs: { ...state.sleepDailyLogs, ...(loaded.sleepDailyLogs || {}) },
             workoutPlan: { ...state.workoutPlan, ...(loaded.workoutPlan || {}) },
-            nicotine: { ...state.nicotine, ...(loaded.nicotine || {}) }
+            nicotine: { ...state.nicotine, ...(loaded.nicotine || {}) },
+            calibration: Object.assign({}, state.calibration, (loaded.calibration || {}))
         };
 
         // FIX: Migrate arrays to objects to prevent Firebase corruption
