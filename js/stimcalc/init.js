@@ -860,11 +860,10 @@ function scNavigate(page) {
     if (bc) {
         var labels = {
             dashboard: 'Dashboard',
-            modifiers: 'Modifiers & Timing',
             calendar: 'Calendar',
             insights: 'Insights',
             accuracy: 'Accuracy',
-            settings: 'Tools'
+            settings: 'Settings'
         };
         bc.textContent = '\u203A ' + (labels[page] || page);
     }
@@ -997,17 +996,6 @@ function updateSidebarBadges() {
         caffBadge.style.display = caffCount > 0 ? 'flex' : 'none';
     }
 
-    // Modifiers badge
-    var modBadge = document.getElementById('scModBadge');
-    if (modBadge) {
-        var activeCount = 0;
-        if (state && state.modifiers) {
-            if (state.modifiers.vitaminC && state.modifiers.vitaminC.active) activeCount++;
-            if (state.modifiers.workout && state.modifiers.workout.active) activeCount++;
-        }
-        modBadge.textContent = activeCount > 0 ? activeCount : '';
-        modBadge.style.display = activeCount > 0 ? 'flex' : 'none';
-    }
 }
 
 // ============================================

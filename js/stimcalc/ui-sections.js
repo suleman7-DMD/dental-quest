@@ -353,7 +353,7 @@ function toggleSettings() {
 
 // Skip renders when the host page isn't active (runs every 5s via updateUI)
 function updateScenarios() {
-    if (typeof currentPage !== 'undefined' && currentPage !== 'modifiers') return;
+    if (typeof currentPage !== 'undefined' && currentPage !== 'dashboard') return;
 
     const now = getCurrentMinutes();
     const { sleepTime: baseSleepTime } = calculateSleepTime();
