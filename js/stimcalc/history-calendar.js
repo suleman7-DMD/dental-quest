@@ -717,7 +717,7 @@ function migrateSleepDailyLogs() {
         // Check modifiers from entry top-level or inputs
         var mods = entry.modifiers || {};
         var hadWorkout = !!(mods.workout && mods.workout.active) || (inp.hasWorkout ?? false);
-        var hadSauna = !!(mods.sauna && mods.sauna.active) || (inp.hasSauna ?? false);
+        var hadSauna = (inp.hasSauna ?? false);
         var hadVitC = !!(mods.vitaminC && mods.vitaminC.active) || (inp.hasVitC ?? false);
 
         state.sleepDailyLogs[dateStr] = {
@@ -921,7 +921,6 @@ function saveSleepDayLog() {
         medications: JSON.parse(JSON.stringify(getValues(state.medications))),
         caffeine: JSON.parse(JSON.stringify(getValues(state.caffeine))),
         hadWorkout: !!(state.workoutPlan && state.workoutPlan.applied),
-        hadSauna: !!(state.modifiers && state.modifiers.sauna && state.modifiers.sauna.active),
         hadVitC: !!(state.modifiers && state.modifiers.vitaminC && state.modifiers.vitaminC.active),
         allNighterMode: !!state.allNighterMode,
         predictedSleep: existing.predictedSleep ?? null,
@@ -1197,7 +1196,6 @@ function renderAccInputVerification() {
     var modifiers = [];
     if (state.modifiers) {
         if (state.modifiers.vitaminC && state.modifiers.vitaminC.active) modifiers.push('VitC');
-        if (state.modifiers.sauna && state.modifiers.sauna.active) modifiers.push('Sauna');
     }
     if (state.workoutPlan && state.workoutPlan.applied) modifiers.push('Workout');
 

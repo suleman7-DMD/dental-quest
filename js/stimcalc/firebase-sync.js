@@ -1413,7 +1413,7 @@ function saveStateImmediate() {
     return true;
 }
 
-// Legacy migration (Task 8, spec D4): the old dual heavyLift/sauna modifiers
+// Legacy migration (Task 8, spec D4): the old pre-v2 threshold modifiers
 // collapsed into a single `workout` chip. Ensure the workout object exists
 // FIRST (force-pull's shallow { ...defaults, ...firebaseState } spread can drop
 // it when old cloud data lacks the key), THEN fold a still-active legacy

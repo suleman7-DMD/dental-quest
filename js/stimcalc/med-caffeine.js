@@ -179,7 +179,7 @@ function updateStackingWarning() {
                 </div>
             ` : ''}
             <div style="margin-top: 10px; font-size: 0.85em; color: #8B92A0;">
-                <strong>Escape hatches:</strong> Vitamin C flush at 5 PM • Evening sauna • Heavy lifting
+                <strong>Escape hatches:</strong> Vitamin C flush at 5 PM
             </div>
         `;
     } else if (totalDose >= 60) {

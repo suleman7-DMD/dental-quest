@@ -367,7 +367,7 @@ function snapshotPredictionInputs() {
         caffHalfLife: (typeof getActiveCaffHalfLife === 'function') ? getActiveCaffHalfLife() : numOr(state.settings.caffHalfLife, 5),
         totalAmpDose: getValues(state.medications).reduce((s, m) => s + m.dose, 0),
         totalCaffDose: getValues(state.caffeine).reduce((s, c) => s + c.amount, 0),
-        hasWorkout: !!(state.workoutPlan && state.workoutPlan.applied),
+        hasWorkout: !!(state.modifiers && state.modifiers.workout && state.modifiers.workout.active),
         hasVitC: !!(state.modifiers && state.modifiers.vitaminC && state.modifiers.vitaminC.active),
         allNighterMode: !!state.allNighterMode
     };
