@@ -542,7 +542,7 @@ function clearToday() {
 
 function resetDay() {
     showCustomConfirm(
-        'Save today\'s prediction to history, then clear all medications, caffeine, modifiers, workout, and nicotine for a fresh start.\n\nWake time and sleep hours will NOT be cleared.',
+        'Save today\'s prediction to history, then clear all medications, caffeine, and modifiers for a fresh start.\n\nWake time and sleep hours will NOT be cleared.',
         function() {
             // 1. Archive before clearing
             saveDay();
@@ -613,19 +613,18 @@ function generateForecastLogic() {
     const currentTime = minutesToTime(getCurrentMinutes());
     const { sleepTime, blockingFactors } = calculateSleepTime();
     const effectiveThreshold = getEffectiveThreshold();
-    const baseThreshold = state.settings.sleepThreshold;
+    const baseThreshold = (typeof getActiveBaseThreshold === 'function')
+        ? getActiveBaseThreshold()
+        : numOr(state.settings.sleepThreshold, 14);
     const sleepDebtBonus = calculateSleepDebtBonus();
     const ampLoad = calculateAmpLoad(getCurrentMinutes());
     const caffLoad = calculateCaffLoad(getCurrentMinutes());
     const forbiddenZone = getForbiddenZone();
     const sleepGate = getSleepGate();
 
-    // Calculate modifier bonuses
-    let workoutBonus = 0;
-
-    if (state.workoutPlan && state.workoutPlan.applied && state.workoutPlan.adenosineBonus > 0) {
-        workoutBonus = Math.min(3.0, state.workoutPlan.adenosineBonus / 15);
-    }
+    // Workout's current contribution, derived from the engine so the
+    // breakdown always sums to the effective threshold (incl. cap/decay).
+    const workoutBonus = Math.max(0, effectiveThreshold - baseThreshold - sleepDebtBonus);
 
     // Calculate rolling sleep debt details
     const today = new Date();
@@ -753,16 +752,11 @@ function generateForecastLogic() {
             modifierDetails.push(`• Vitamin C: EXPIRED (taken at ${state.modifiers.vitaminC.time}${vitCDateLabel}, >8 hours ago) → No longer affecting half-life`);
         }
     }
-    if (state.workoutPlan && state.workoutPlan.applied) {
-        modifierDetails.push(`• Workout Plan: Applied`);
-        if (state.workoutPlan.adenosineBonus > 0) {
-            modifierDetails.push(`  - Adenosine bonus: ${state.workoutPlan.adenosineBonus} min → +${workoutBonus.toFixed(1)}mg threshold`);
-        }
-        if (state.workoutPlan.cortisolDelay > 0) {
-            modifierDetails.push(`  - Cortisol delay: +${state.workoutPlan.cortisolDelay} min (HPA axis)`);
-        }
-        if (state.workoutPlan.cooldownComplete) {
-            modifierDetails.push(`  - Thermal cooldown until: ${minutesToTime(state.workoutPlan.cooldownComplete)}`);
+    if (state.modifiers.workout && state.modifiers.workout.active) {
+        const wMod = state.modifiers.workout;
+        modifierDetails.push(`• Workout: ends ${wMod.endTime || '18:00'}${wMod.intense ? ' (intense)' : ''} → +${workoutBonus.toFixed(1)}mg threshold right now`);
+        if (wMod.intense) {
+            modifierDetails.push(`  - Intense session: 60-min post-workout cooldown blocker after end`);
         }
     }
     if (modifierDetails.length === 0) {
@@ -937,10 +931,10 @@ ${allNighterSection}
 └─────────────────────────────────────────────────────────────┘
   ${modifierDetails.join('\n  ')}
 
-  HOW MODIFIERS AFFECT THRESHOLD:
-  → Modifiers do NOT make drugs leave faster
-  → They RAISE your tolerance (effective threshold goes UP)
-  → Heavy lifting floods brain with adenosine from muscle breakdown
+  HOW MODIFIERS AFFECT THE PREDICTION:
+  → Vitamin C acidifies urine → amphetamine clears FASTER (half-life ×0.70)
+  → A workout floods the brain with adenosine → threshold +2mg (+1 if intense),
+    holding 2h after the workout ends, then decaying to 0 by 6h
   → Higher threshold = drug curve crosses it EARLIER = earlier sleep
 
 ┌─────────────────────────────────────────────────────────────┐
