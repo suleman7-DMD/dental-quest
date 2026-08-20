@@ -493,7 +493,9 @@
         .sc-dash-col--main { flex: 5; }
         .sc-dash-col--mid  { flex: 4; }
         .sc-dash-col--side { flex: 3; }
-        #scSleepHistoryCard { flex: 1 1 100%; }
+        /* min-width: 0 — flex min-width:auto would let the wide scrollable canvas
+           blow the card (and the whole page) out to the canvas width */
+        #scSleepHistoryCard { flex: 1 1 100%; min-width: 0; max-width: 100%; }
 
         .sc-card {
             background: var(--surface-primary);
@@ -572,14 +574,6 @@
             display: none !important;
         }
 
-        body.has-sc-sidebar .unified-header {
-            display: none !important;
-        }
-
-        body.has-sc-sidebar .status-pills {
-            display: none !important;
-        }
-
         body.has-sc-sidebar .unified-container {
             max-width: none;
             padding: 0;
@@ -590,14 +584,6 @@
             padding: 0;
         }
 
-        /* Ensure hero, accordion, graph work inside sc-card */
-        .sc-card .unified-hero {
-            margin-bottom: 0;
-            border: none;
-            box-shadow: none;
-            padding: 10px 8px 8px;
-        }
-
         .sc-card .unified-graph-wrap {
             margin-bottom: 0;
             border: none;
@@ -606,15 +592,6 @@
         }
 
         .sc-card .unified-blocking {
-            margin-bottom: 0;
-        }
-
-        .sc-card .accordion-section {
-            margin-bottom: 6px;
-            box-shadow: none;
-        }
-
-        .sc-card .accordion-section:last-child {
             margin-bottom: 0;
         }
 
@@ -632,342 +609,6 @@
 
         .sc-section-title:first-child {
             margin-top: 0;
-        }
-
-        /* ============================================
-           MEDICATION INVENTORY STYLES
-           ============================================ */
-        .sc-inv-info-grid {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 12px;
-            margin-bottom: 14px;
-        }
-
-        .sc-inv-info-item {
-            text-align: center;
-        }
-
-        .sc-inv-info-label {
-            display: block;
-            font-size: 10px;
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            color: var(--fg-muted);
-            margin-bottom: 4px;
-        }
-
-        .sc-inv-info-value {
-            display: block;
-            font-size: 1.1em;
-            font-weight: 700;
-            color: var(--fg-primary);
-            font-family: var(--font-mono);
-        }
-
-        .sc-inv-progress-bar {
-            height: 6px;
-            background: var(--canvas-inset);
-            border-radius: 3px;
-            overflow: hidden;
-            margin-bottom: 10px;
-        }
-
-        .sc-inv-progress-fill {
-            height: 100%;
-            background: var(--accent);
-            border-radius: 3px;
-            transition: width 0.3s ease;
-        }
-
-        .sc-inv-status {
-            font-size: 0.82em;
-            color: var(--fg-secondary);
-            cursor: pointer;
-            padding: 8px 0;
-            line-height: 1.5;
-        }
-
-        .sc-inv-status.on-track { color: var(--success); }
-        .sc-inv-status.ahead { color: var(--success); }
-        .sc-inv-status.slightly-behind { color: var(--warning); }
-        .sc-inv-status.behind { color: var(--destructive); }
-
-        .sc-inv-actions {
-            display: flex;
-            gap: 8px;
-            margin-top: 12px;
-        }
-
-        .sc-inv-actions button {
-            flex: 1;
-            padding: 8px 12px;
-            background: var(--canvas-subtle);
-            border: 1px solid var(--border-default);
-            border-radius: var(--radius-sm);
-            color: var(--fg-secondary);
-            font-size: 0.85em;
-            font-weight: 500;
-            cursor: pointer;
-            transition: all 0.15s;
-        }
-
-        .sc-inv-actions button:hover {
-            background: var(--canvas-inset);
-            border-color: var(--border-strong);
-        }
-
-        .sc-inv-calendar-wrap,
-        .sc-inv-dash-cal-wrap {
-            margin-top: 14px;
-            padding-top: 14px;
-            border-top: 1px solid var(--border-subtle);
-        }
-
-        .sc-inv-calendar-wrap .calendar-grid,
-        .sc-inv-dash-cal-wrap .calendar-grid {
-            display: grid;
-            grid-template-columns: repeat(7, 1fr);
-            gap: 4px;
-        }
-
-        .sc-inv-calendar-wrap .calendar-day-header,
-        .sc-inv-dash-cal-wrap .calendar-day-header {
-            text-align: center;
-            font-size: 0.7em;
-            font-weight: 600;
-            color: var(--fg-muted);
-            padding: 4px 0;
-        }
-
-        .sc-inv-calendar-wrap .calendar-day,
-        .sc-inv-dash-cal-wrap .calendar-day {
-            text-align: center;
-            padding: 6px 2px;
-            border-radius: var(--radius-sm);
-            font-size: 0.75em;
-            cursor: pointer;
-            transition: all 0.15s;
-            border: 1px solid transparent;
-            position: relative;
-        }
-
-        .sc-inv-calendar-wrap .calendar-day:hover,
-        .sc-inv-dash-cal-wrap .calendar-day:hover {
-            border-color: var(--border-strong);
-        }
-
-        .sc-inv-calendar-wrap .calendar-day.empty,
-        .sc-inv-dash-cal-wrap .calendar-day.empty {
-            cursor: default;
-        }
-
-        .sc-inv-calendar-wrap .calendar-day.has-pill,
-        .sc-inv-dash-cal-wrap .calendar-day.has-pill {
-            background: rgba(94, 138, 94, 0.12);
-            color: var(--success);
-        }
-
-        .sc-inv-calendar-wrap .calendar-day.no-pill-weekday,
-        .sc-inv-dash-cal-wrap .calendar-day.no-pill-weekday {
-            background: rgba(184, 92, 92, 0.12);
-            color: var(--destructive);
-        }
-
-        .sc-inv-calendar-wrap .calendar-day.no-pill-weekend,
-        .sc-inv-dash-cal-wrap .calendar-day.no-pill-weekend {
-            background: rgba(196, 146, 58, 0.08);
-            color: var(--warning);
-        }
-
-        .sc-inv-calendar-wrap .calendar-day.refill,
-        .sc-inv-dash-cal-wrap .calendar-day.refill {
-            background: rgba(94, 122, 138, 0.15);
-            color: var(--info);
-            font-weight: 600;
-        }
-
-        .sc-inv-calendar-wrap .calendar-day-num,
-        .sc-inv-dash-cal-wrap .calendar-day-num {
-            font-weight: 600;
-            font-size: 0.85em;
-        }
-
-        .sc-inv-calendar-wrap .calendar-day-icon,
-        .sc-inv-dash-cal-wrap .calendar-day-icon {
-            font-size: 0.9em;
-            margin-top: 2px;
-        }
-
-        .sc-inv-calendar-wrap .calendar-day-note,
-        .sc-inv-dash-cal-wrap .calendar-day-note {
-            font-size: 0.65em;
-            color: var(--fg-tertiary);
-            overflow: hidden;
-            text-overflow: ellipsis;
-            white-space: nowrap;
-            max-width: 100%;
-            margin-top: 2px;
-        }
-
-        .sc-inv-day-note-btn {
-            position: absolute;
-            top: 1px;
-            right: 1px;
-            width: 14px;
-            height: 14px;
-            border: none;
-            background: transparent;
-            color: var(--fg-muted);
-            font-size: 0.65em;
-            cursor: pointer;
-            opacity: 0;
-            transition: opacity 0.15s;
-            padding: 0;
-            line-height: 14px;
-        }
-
-        .sc-inv-calendar-wrap .calendar-day:hover .sc-inv-day-note-btn,
-        .sc-inv-dash-cal-wrap .calendar-day:hover .sc-inv-day-note-btn {
-            opacity: 1;
-        }
-
-        .sc-inv-calendar-legend {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 12px;
-            margin-top: 12px;
-            padding-top: 10px;
-            border-top: 1px solid var(--border-subtle);
-        }
-
-        .sc-inv-legend-item {
-            display: flex;
-            align-items: center;
-            gap: 5px;
-            font-size: 0.72em;
-            color: var(--fg-tertiary);
-        }
-
-        .sc-inv-legend-box {
-            width: 12px;
-            height: 12px;
-            border-radius: 3px;
-        }
-
-        .sc-inv-legend-box.has-pill { background: rgba(94, 138, 94, 0.3); }
-        .sc-inv-legend-box.no-pill-weekday { background: rgba(184, 92, 92, 0.3); }
-        .sc-inv-legend-box.no-pill-weekend { background: rgba(196, 146, 58, 0.2); }
-        .sc-inv-legend-box.refill { background: rgba(94, 122, 138, 0.3); }
-
-        /* Inventory modal styles */
-        #scInvMedModal.show,
-        #scInvNoteModal.show {
-            display: flex;
-        }
-
-        #scInvMedModal,
-        #scInvNoteModal {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: rgba(0,0,0,0.35);
-            align-items: center;
-            justify-content: center;
-            z-index: 10001;
-        }
-
-        #scInvMedModal .modal-content,
-        #scInvNoteModal .modal-content {
-            background: var(--surface-primary);
-            border-radius: var(--radius-lg);
-            padding: 24px;
-            border: 1px solid var(--border-default);
-            box-shadow: 0 8px 32px rgba(0,0,0,0.12);
-        }
-
-        #scInvMedModal h3,
-        #scInvNoteModal h3 {
-            margin: 0 0 16px 0;
-            color: var(--fg-primary);
-            font-size: 1.1em;
-        }
-
-        #scInvMedModal .input-group label,
-        #scInvNoteModal .input-group label {
-            display: block;
-            font-size: 0.82em;
-            font-weight: 600;
-            color: var(--fg-secondary);
-            margin-bottom: 6px;
-        }
-
-        #scInvMedModal input,
-        #scInvNoteModal textarea {
-            padding: 10px 12px;
-            border: 1px solid var(--border-default);
-            border-radius: var(--radius-sm);
-            background: var(--canvas-subtle);
-            color: var(--fg-primary);
-            font-size: 0.9em;
-            box-sizing: border-box;
-        }
-
-        #scInvMedModal .modal-actions,
-        #scInvNoteModal .modal-actions {
-            display: flex;
-            gap: 8px;
-            justify-content: flex-end;
-            margin-top: 16px;
-        }
-
-        #scInvMedModal .modal-actions button,
-        #scInvNoteModal .modal-actions button {
-            padding: 10px 20px;
-            border-radius: var(--radius-sm);
-            font-weight: 600;
-            font-size: 0.85em;
-            cursor: pointer;
-            border: none;
-        }
-
-        #scInvMedModal .btn-primary,
-        #scInvNoteModal .btn-primary {
-            background: var(--accent);
-            color: var(--accent-fg);
-        }
-
-        #scInvMedModal .btn-secondary,
-        #scInvNoteModal .btn-secondary {
-            background: var(--canvas-subtle);
-            color: var(--fg-secondary);
-            border: 1px solid var(--border-default);
-        }
-
-        @media (max-width: 768px) {
-            .sc-inv-info-grid {
-                grid-template-columns: 1fr;
-                gap: 8px;
-            }
-
-            .sc-inv-info-item {
-                display: flex;
-                justify-content: space-between;
-                align-items: center;
-                text-align: left;
-            }
-
-            .sc-inv-actions {
-                flex-direction: column;
-            }
-
-            .sc-inv-actions button {
-                padding: 12px;
-            }
         }
 
         /* ============================================
@@ -1210,7 +851,7 @@
                 gap: 6px;
             }
 
-            .quick-btn, .accordion-body .quick-btn {
+            .quick-btn {
                 padding: 6px 10px !important;
                 font-size: 0.78em !important;
             }
@@ -1294,22 +935,11 @@
         }
 
         /* Modifiers page card spacing */
-        #scPageModifiers > .sc-card + .sc-card {
-            margin-top: 20px;
-        }
 
         /* Calendar + Settings page card spacing */
         #scPageCalendar > .sc-card + .sc-card,
         #scPageSettings > .sc-card + .sc-card {
             margin-top: 20px;
-        }
-
-        /* Strip shadow/border from nested accordions in pages */
-        .sc-page .ins-section {
-            box-shadow: none;
-            border: none;
-            border-bottom: 1px solid var(--border-subtle);
-            border-radius: 0;
         }
 
         .sc-page .ins-section:last-child {
@@ -1320,60 +950,6 @@
            MOBILE: Inventory page responsive
            ============================================ */
         @media (max-width: 768px) {
-            #scPageInventory .sc-inv-info-grid {
-                grid-template-columns: 1fr;
-                gap: 6px;
-            }
-
-            #scPageInventory .sc-inv-info-item {
-                display: flex;
-                justify-content: space-between;
-                align-items: center;
-                text-align: left;
-                padding: 4px 0;
-            }
-
-            #scPageInventory .sc-inv-actions {
-                flex-direction: column;
-            }
-
-            #scPageInventory .sc-inv-actions button {
-                padding: 12px;
-                min-height: 44px;
-            }
-
-            #scPageInventory .sc-inv-calendar-wrap .calendar-grid {
-                gap: 2px;
-            }
-
-            #scPageInventory .sc-inv-calendar-wrap .calendar-day {
-                padding: 4px 1px;
-                font-size: 0.68em;
-            }
-
-            /* Dashboard inventory calendar — mobile */
-            .sc-inv-dash-cal-wrap .calendar-grid {
-                gap: 2px;
-            }
-            .sc-inv-dash-cal-wrap .calendar-day {
-                padding: 3px 1px;
-                font-size: 0.65em;
-            }
-
-            /* Week at a Glance — mobile */
-            .sc-week-glance-day-dot {
-                font-size: 0.6em;
-                padding: 4px 0;
-            }
-            .sc-week-glance-item {
-                padding: 5px 6px;
-                font-size: 0.82em;
-                min-height: 32px;
-            }
-            .sc-week-glance-day-label {
-                font-size: 0.75em;
-                margin-top: 6px;
-            }
 
             /* Med entry — mobile tighter */
             .sc-med-entry {
@@ -1480,16 +1056,22 @@
                 font-size: 0.8em;
             }
 
-            /* iPhone: Week at a Glance tighter */
-            .sc-week-glance-days { gap: 1px; }
-            .sc-week-glance-day-dot { font-size: 0.55em; padding: 3px 0; }
-            .sc-week-glance-item { font-size: 0.76em; gap: 4px; }
+            /* iPhone: Med entry wrap on very small screens.
+               Class doubled for specificity — the base .med-entry select rule
+               comes later in the file and would win at equal specificity. */
+            .sc-med-entry.sc-med-entry { flex-wrap: wrap; gap: 4px; padding: 6px; }
+            .sc-med-entry.sc-med-entry input[type="date"] { flex: 1 1 45%; }
+            .sc-med-entry.sc-med-entry select { flex: 1 1 45%; min-width: 0; }
+            .sc-med-entry.sc-med-entry input[type="time"] { flex: 1 1 40%; max-width: none; }
 
-            /* iPhone: Med entry wrap on very small screens */
-            .sc-med-entry { flex-wrap: wrap; gap: 4px; padding: 6px; }
-            .sc-med-entry input[type="date"] { flex: 1 1 45%; }
-            .sc-med-entry select { flex: 1 1 45%; }
-            .sc-med-entry input[type="time"] { flex: 1 1 40%; }
+            /* iPhone: Caffeine entry — let the row wrap instead of crushing the
+               drink label when date + time inputs don't fit on one line */
+            .sc-caff-entry.sc-caff-entry { flex-wrap: wrap; }
+            .sc-caff-entry.sc-caff-entry .caffeine-info { flex: 1 1 120px; }
+
+            /* iPhone: Morning check-in — full-width save button so the
+               wrapped row reads as two intentional lines */
+            .sc-checkin-row .sc-btn-sm { flex: 1 1 100%; }
         }
 
         /* Motion reduction for users who prefer reduced motion */
@@ -1557,20 +1139,6 @@
         @keyframes spin {
             to { transform: rotate(360deg); }
         }
-
-        /* Current Status */
-        .status-item {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 14px 18px;
-            background: var(--canvas-subtle);
-            border-radius: var(--radius-md);
-            border-left: 4px solid var(--border-strong);
-        }
-
-        .status-item.ok { border-left-color: var(--status-safe); }
-        .status-item.blocking { border-left-color: var(--status-danger); }
 
         .status-label {
             display: flex;
@@ -1814,6 +1382,17 @@
             font-size: 1.1em;
         }
 
+        .sc-modifier-chip .sc-chip-effect {
+            font-size: 0.85em;
+            font-weight: 500;
+            color: var(--fg-tertiary);
+            margin-left: 4px;
+        }
+
+        .sc-modifier-chip .sc-chip-effect:empty {
+            display: none;
+        }
+
         .sc-allnighter-chip {
             display: inline-flex;
             align-items: center;
@@ -1921,162 +1500,6 @@
             border-radius: 10px;
             margin-bottom: 6px;
             font-size: 0.85em;
-        }
-
-        /* Dashboard Inventory Compact */
-        #scDashInvCard .sc-inv-dash-row {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 6px 0;
-            border-bottom: 1px solid var(--border-subtle);
-        }
-
-        #scDashInvCard .sc-inv-dash-row:last-child {
-            border-bottom: none;
-        }
-
-        #scDashInvCard .sc-inv-dash-pills {
-            font-size: 1.3em;
-            font-weight: 700;
-            color: var(--fg-primary);
-        }
-
-        #scDashInvCard .sc-inv-dash-label {
-            font-size: 0.82em;
-            color: var(--fg-secondary);
-        }
-
-        #scDashInvCard .sc-inv-dash-days {
-            font-size: 0.75em;
-            color: var(--fg-tertiary);
-        }
-
-        .sc-inv-dash-refill {
-            font-size: 0.72em;
-            color: var(--fg-tertiary);
-            margin-top: 1px;
-        }
-        .sc-inv-dash-status {
-            display: inline-block;
-            font-size: 0.7em;
-            font-weight: 600;
-            padding: 1px 6px;
-            border-radius: 4px;
-            margin-top: 2px;
-        }
-        .sc-inv-dash-status.on-track,
-        .sc-inv-dash-status.ahead { color: var(--success); background: rgba(94, 138, 94, 0.1); }
-        .sc-inv-dash-status.slightly-behind { color: var(--warning); background: rgba(196, 146, 58, 0.1); }
-        .sc-inv-dash-status.behind { color: var(--destructive); background: rgba(184, 92, 92, 0.1); }
-        .sc-inv-dash-cal-toggle {
-            display: block;
-            width: 100%;
-            padding: 5px 0;
-            margin-top: 6px;
-            background: none;
-            border: none;
-            border-top: 1px solid var(--border-subtle);
-            color: var(--fg-tertiary);
-            font-size: 0.72em;
-            cursor: pointer;
-            text-align: center;
-            transition: color 0.15s ease;
-        }
-        .sc-inv-dash-cal-toggle:hover { color: var(--accent); }
-        .sc-inv-dash-cal-wrap {
-            margin-top: 4px;
-            max-height: 300px;
-            overflow-y: auto;
-        }
-
-        /* Week at a Glance */
-        .sc-week-glance-header {
-            font-size: 0.82em;
-            font-weight: 600;
-            color: var(--fg-secondary);
-            margin-bottom: 6px;
-        }
-        .sc-week-glance-days {
-            display: flex;
-            gap: 2px;
-            margin-bottom: 8px;
-        }
-        .sc-week-glance-day-dot {
-            flex: 1;
-            text-align: center;
-            font-size: 0.65em;
-            font-weight: 600;
-            color: var(--fg-tertiary);
-            padding: 3px 0;
-            border-radius: 4px;
-            background: var(--canvas-subtle);
-        }
-        .sc-week-glance-day-dot.has-items {
-            background: var(--accent-light);
-            color: var(--accent);
-        }
-        .sc-week-glance-day-dot.is-today {
-            background: var(--accent);
-            color: var(--accent-fg);
-        }
-        .sc-week-glance-list {
-            display: flex;
-            flex-direction: column;
-            gap: 2px;
-        }
-        .sc-week-glance-item {
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            padding: 3px 6px;
-            border-radius: 4px;
-            font-size: 0.78em;
-            background: var(--canvas-subtle);
-        }
-        .sc-week-glance-item.completed {
-            opacity: 0.45;
-        }
-        .sc-week-glance-item.completed .sc-week-glance-item-text {
-            text-decoration: line-through;
-        }
-        .sc-week-glance-type-dot {
-            width: 6px;
-            height: 6px;
-            border-radius: 50%;
-            flex-shrink: 0;
-        }
-        .sc-week-glance-item-text {
-            flex: 1;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            color: var(--fg-secondary);
-        }
-        .sc-week-glance-item-time {
-            font-size: 0.85em;
-            color: var(--fg-tertiary);
-            flex-shrink: 0;
-        }
-        .sc-week-glance-day-label {
-            font-size: 0.72em;
-            font-weight: 700;
-            color: var(--fg-tertiary);
-            text-transform: uppercase;
-            margin-top: 5px;
-            margin-bottom: 1px;
-            padding-bottom: 2px;
-            border-bottom: 1px solid var(--border-subtle);
-        }
-        .sc-week-glance-day-label:first-child {
-            margin-top: 0;
-        }
-        .sc-week-glance-empty {
-            color: var(--fg-tertiary);
-            font-size: 0.82em;
-            text-align: center;
-            padding: 10px 0;
-            font-style: italic;
         }
 
         /* Sleep History Stat Chips */
@@ -2244,64 +1667,6 @@
 
         .modifier-time {
             width: auto;
-        }
-
-        /* Workout Planner */
-        .workout-zone-marker {
-            position: absolute;
-            top: 0;
-            bottom: 0;
-            width: 3px;
-            background: var(--fg-primary);
-            box-shadow: 0 0 8px rgba(44, 40, 37, 0.3);
-            z-index: 10;
-        }
-
-        .workout-zone-label {
-            position: absolute;
-            top: -20px;
-            transform: translateX(-50%);
-            font-size: 0.7em;
-            color: var(--fg-primary);
-            white-space: nowrap;
-        }
-
-        .workout-result-optimal {
-            background: var(--success-light);
-            border-left-color: var(--success);
-        }
-
-        .workout-result-caution {
-            background: var(--warning-light);
-            border-left-color: var(--warning);
-        }
-
-        .workout-result-danger {
-            background: var(--destructive-light);
-            border-left-color: var(--destructive);
-        }
-
-        .workout-impact-item {
-            display: flex;
-            justify-content: space-between;
-            padding: 6px 0;
-            border-bottom: 1px solid var(--border-subtle);
-        }
-
-        .workout-impact-item:last-child {
-            border-bottom: none;
-        }
-
-        .workout-impact-positive {
-            color: var(--success);
-        }
-
-        .workout-impact-negative {
-            color: var(--destructive);
-        }
-
-        .workout-impact-neutral {
-            color: var(--fg-tertiary);
         }
 
         /* Graph Tooltip */
@@ -2494,47 +1859,6 @@
             margin-top: 4px;
             opacity: 0.9;
         }
-
-        /* ============================================
-           SLEEP INTELLIGENCE CSS
-           ============================================ */
-
-        /* Tab navigation */
-        .si-tabs {
-            display: flex;
-            background: var(--canvas-inset);
-            border-radius: var(--radius-md);
-            padding: 3px;
-            margin-bottom: 14px;
-            gap: 2px;
-        }
-        .si-tab {
-            flex: 1;
-            padding: 10px 6px;
-            border: none;
-            border-bottom: 2px solid transparent;
-            border-radius: var(--radius-sm);
-            background: transparent;
-            color: var(--fg-tertiary);
-            font-family: var(--font-body);
-            font-size: 0.78em;
-            font-weight: 500;
-            cursor: pointer;
-            transition: all 0.25s ease;
-            text-align: center;
-            min-height: 44px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-        .si-tab:hover { background: var(--canvas-subtle); color: var(--fg-secondary); }
-        .si-tab.active {
-            background: var(--surface-primary);
-            color: var(--fg-primary);
-            border-bottom-color: transparent;
-            box-shadow: var(--shadow-sm);
-        }
-        .si-tab-content { animation: siFadeIn 0.25s ease; }
         @keyframes siFadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
 
         /* Calendar day cards */
@@ -2576,22 +1900,6 @@
         .si-stat:active { transform: scale(0.98); }
         .si-stat__label { font-size: 0.75em; margin-bottom: 2px; color: var(--fg-secondary); }
         .si-stat__value { font-size: 1.4em; font-weight: 700; color: var(--fg-primary); }
-
-        /* Achievement badges */
-        .si-badges { display: flex; flex-wrap: wrap; gap: 6px; }
-        .si-badge {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            min-width: 60px;
-            padding: 8px;
-            border-radius: 10px;
-            transition: all 0.3s;
-            cursor: pointer;
-        }
-        .si-badge--locked { opacity: 0.4; }
-        .si-badge__icon { font-size: 1.4em; }
-        .si-badge__name { font-size: 0.55em; margin-top: 4px; text-align: center; white-space: nowrap; color: var(--fg-secondary); }
 
         /* History list items */
         .si-history-row {
@@ -3047,8 +2355,12 @@
             align-items: center;
             gap: 12px;
             color: var(--fg-primary);
-            transform: translateX(400px);
-            transition: transform 0.3s ease;
+            max-width: min(420px, calc(100vw - 60px));
+            /* Hide by full own width — a fixed 400px translate leaves wide toasts peeking */
+            transform: translateX(calc(100% + 40px));
+            opacity: 0;
+            pointer-events: none;
+            transition: transform 0.3s ease, opacity 0.3s ease;
             z-index: 1000;
             border: 1px solid var(--border-default);
             border-left: 3px solid var(--accent);
@@ -3056,6 +2368,8 @@
 
         .toast.show {
             transform: translateX(0);
+            opacity: 1;
+            pointer-events: auto;
         }
 
         /* Blocking Factors */
@@ -3116,6 +2430,8 @@
             padding: 30px;
             max-width: 450px;
             width: 90%;
+            max-height: 85vh;
+            overflow-y: auto;
             border: 1px solid var(--border-subtle);
             box-shadow: var(--shadow-overlay);
             color: var(--fg-primary);
@@ -3364,41 +2680,6 @@
             font-family: var(--font-body);
         }
 
-        .unified-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 8px 12px;
-            background: var(--surface-primary);
-            border: 1px solid var(--border-default);
-            box-shadow: var(--shadow-sm);
-            border-radius: 12px;
-            margin-bottom: 12px;
-            flex-wrap: wrap;
-            gap: 6px;
-        }
-
-        .unified-header .checkpoint-controls {
-            display: flex;
-            gap: 4px;
-            flex-wrap: wrap;
-        }
-
-        .unified-header .checkpoint-controls button {
-            padding: 4px 8px;
-            font-size: 0.75em;
-            border-radius: 6px;
-            border: 1px solid var(--border-default);
-            background: var(--canvas-subtle);
-            color: var(--fg-secondary);
-            cursor: pointer;
-            transition: background 0.2s;
-        }
-
-        .unified-header .checkpoint-controls button:hover {
-            background: var(--canvas-inset);
-        }
-
         .unified-hero {
             text-align: center;
             padding: 24px 16px 20px;
@@ -3440,8 +2721,6 @@
         .unified-hero.state-green { border-left-color: var(--status-safe); }
         .unified-hero.state-yellow { border-left-color: var(--status-caution); }
         .unified-hero.state-red { border-left-color: var(--status-danger); }
-        .status-pill.pill-safe { background: var(--status-safe-light); border-color: var(--status-safe); color: var(--status-safe); }
-        .status-pill.pill-danger { background: var(--status-danger-light); border-color: var(--status-danger); color: var(--status-danger); }
         #bottleneckIndicator { display: inline-block; font-size: 0.75em; font-weight: 500; color: var(--status-caution); background: var(--status-caution-light); border-radius: var(--radius-full); padding: 3px 10px; margin-top: 6px; }
 
         .unified-hero .hero-countdown {
@@ -3466,6 +2745,99 @@
             display: inline-block;
             margin-bottom: 10px;
         }
+
+        /* --- Honest hero window band + binding caption (spec D5) --- */
+        .unified-hero .hero-window {
+            display: inline-block;
+            font-size: 0.72em;
+            font-weight: 600;
+            color: var(--fg-tertiary);
+            letter-spacing: 0.02em;
+            margin: -2px 0 6px;
+        }
+        .unified-hero .hero-binding {
+            font-size: 0.8em;
+            color: var(--fg-secondary);
+            line-height: 1.35;
+            margin-bottom: 8px;
+        }
+
+        /* --- Morning check-in strip (spec D7) --- */
+        .sc-checkin-card { padding: 12px 16px; }
+        .sc-checkin-row {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.85em;
+            color: var(--fg-secondary);
+        }
+        .sc-checkin-label { font-weight: 600; color: var(--fg-primary); }
+        .sc-checkin-row input[type="time"],
+        .sc-checkin-row input[type="number"] {
+            padding: 4px 6px;
+            border: 1px solid var(--border-default);
+            border-radius: 6px;
+            background: var(--surface-primary);
+            color: var(--fg-primary);
+            font-size: 0.95em;
+        }
+        .sc-checkin-row input[type="number"] { width: 56px; }
+        .sc-checkin-done { font-size: 0.85em; font-weight: 600; color: var(--success); }
+
+        /* --- Small button (check-in + calibration cards) --- */
+        .sc-btn-sm {
+            padding: 5px 12px;
+            border: 1px solid var(--border-default);
+            border-radius: 6px;
+            background: var(--accent);
+            color: #fff;
+            font-size: 0.82em;
+            font-weight: 600;
+            cursor: pointer;
+        }
+        .sc-btn-sm:hover { opacity: 0.9; }
+
+        /* --- Calibration card (Accuracy page; spec D1) --- */
+        .sc-cal-value { font-size: 0.95em; color: var(--fg-primary); margin-bottom: 4px; }
+        .sc-cal-tag {
+            font-size: 0.72em;
+            font-weight: 600;
+            color: var(--success);
+            background: var(--success-light);
+            border-radius: 10px;
+            padding: 1px 8px;
+            margin-left: 4px;
+        }
+        .sc-cal-status { font-size: 0.82em; color: var(--fg-secondary); margin-bottom: 4px; }
+        .sc-cal-last, .sc-cal-caff { font-size: 0.78em; color: var(--fg-tertiary); margin-bottom: 4px; }
+        .sc-cal-actions {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex-wrap: wrap;
+            margin-top: 8px;
+            font-size: 0.82em;
+            color: var(--fg-secondary);
+        }
+        .sc-cal-actions label { display: flex; align-items: center; gap: 6px; cursor: pointer; }
+
+        /* --- Caffeine cutoff card (spec D6) --- */
+        .sc-cutoff-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+            gap: 10px;
+            padding: 5px 0;
+            font-size: 0.85em;
+            color: var(--fg-secondary);
+            border-bottom: 1px solid var(--border-default);
+        }
+        .sc-cutoff-row:last-child { border-bottom: none; }
+        .sc-cutoff-val { font-weight: 600; text-align: right; }
+        .sc-cutoff-open, .sc-cutoff-anytime { color: var(--success); }
+        .sc-cutoff-passed { color: var(--warning); }
+        .sc-cutoff-closed { color: var(--destructive); }
 
         .hero-progress-bar {
             height: 4px;
@@ -3501,34 +2873,6 @@
             background: #fdf2f2;
         }
 
-        .status-pills {
-            display: flex;
-            gap: 8px;
-            justify-content: center;
-            flex-wrap: nowrap;
-            overflow-x: auto;
-            -webkit-overflow-scrolling: touch;
-            margin-bottom: 12px;
-            padding-bottom: 4px;
-            scrollbar-width: none;
-        }
-        .status-pills::-webkit-scrollbar { display: none; }
-
-        .status-pill {
-            padding: 6px 14px;
-            background: var(--surface-primary);
-            border-radius: 20px;
-            font-size: 0.8em;
-            border: 1.5px solid var(--border-default);
-            color: var(--fg-secondary);
-            transition: border-color 0.3s;
-            white-space: nowrap;
-            flex-shrink: 0;
-            box-shadow: var(--shadow-sm);
-            font-family: var(--font-body);
-            font-weight: 500;
-        }
-
         .unified-graph-wrap {
             background: var(--surface-primary);
             border-radius: 12px;
@@ -3543,164 +2887,6 @@
             width: 100% !important;
             height: 200px !important;
             display: block;
-        }
-
-        /* Accordion Sections */
-        .accordion-section {
-            margin-bottom: 6px;
-            border-radius: 12px;
-            border: 1px solid var(--border-default);
-            overflow: hidden;
-            background: var(--surface-primary);
-            box-shadow: var(--shadow-sm);
-            transition: border-color 0.2s, background 0.2s;
-        }
-
-        .accordion-section:hover {
-            border-color: var(--border-strong);
-        }
-
-        .accordion-section.open {
-            border-color: var(--accent-light);
-        }
-
-        .accordion-section.has-content {
-            border-left: 3px solid var(--accent);
-        }
-
-        .accordion-header {
-            display: flex;
-            align-items: center;
-            padding: 13px 16px;
-            cursor: pointer;
-            user-select: none;
-            gap: 10px;
-            font-weight: 600;
-            font-size: 0.92em;
-            color: var(--fg-primary);
-            font-family: var(--font-heading);
-            transition: background 0.2s;
-        }
-
-        .accordion-header:hover {
-            background: var(--canvas-subtle);
-        }
-
-        .accordion-summary {
-            margin-left: auto;
-            font-size: 0.8em;
-            color: var(--fg-tertiary);
-            font-weight: 400;
-            white-space: nowrap;
-        }
-
-        .accordion-arrow {
-            font-size: 0.65em;
-            transition: transform 0.25s ease;
-            color: var(--fg-muted);
-        }
-
-        .accordion-section.open .accordion-arrow {
-            transform: rotate(180deg);
-            color: var(--accent);
-        }
-
-        .accordion-body {
-            max-height: 0;
-            overflow: hidden;
-            transition: max-height 0.35s cubic-bezier(0.4, 0, 0.2, 1);
-            padding: 0 16px;
-        }
-
-        .accordion-section.open .accordion-body {
-            max-height: 3000px;
-            padding: 0 16px 16px;
-        }
-
-        .accordion-body .input-row {
-            display: flex;
-            gap: 10px;
-            margin-bottom: 8px;
-        }
-
-        .accordion-body .input-group {
-            flex: 1;
-        }
-
-        .accordion-body .input-group label {
-            display: block;
-            font-size: 0.78em;
-            color: var(--fg-secondary);
-            margin-bottom: 3px;
-        }
-
-        .accordion-body .input-group input,
-        .accordion-body .input-group select {
-            width: 100%;
-            padding: 8px 10px;
-            border-radius: 8px;
-            border: 1px solid var(--control-border);
-            background: var(--control-bg);
-            color: var(--fg-primary);
-            font-size: 0.9em;
-            box-sizing: border-box;
-        }
-
-        .accordion-body .input-group input:focus,
-        .accordion-body .input-group select:focus {
-            outline: none;
-            border-color: var(--control-border-focus);
-            box-shadow: 0 0 0 3px var(--control-ring);
-        }
-
-        .accordion-body .quick-actions {
-            display: flex;
-            gap: 6px;
-            flex-wrap: wrap;
-            margin-bottom: 8px;
-        }
-
-        .accordion-body .quick-btn {
-            padding: 5px 12px;
-            border-radius: 20px;
-            border: 1px solid var(--border-default);
-            background: var(--canvas-subtle);
-            color: var(--fg-secondary);
-            cursor: pointer;
-            font-size: 0.78em;
-            font-weight: 500;
-            letter-spacing: 0.01em;
-            transition: all 0.15s;
-            white-space: nowrap;
-        }
-
-        .accordion-body .quick-btn:hover {
-            background: var(--accent-subtle);
-            border-color: var(--accent);
-            color: var(--accent);
-        }
-
-        .accordion-body .quick-btn:active {
-            transform: scale(0.96);
-        }
-
-        .accordion-body .add-btn {
-            width: 100%;
-            padding: 8px;
-            border-radius: 8px;
-            border: 1px dashed var(--border-strong);
-            background: transparent;
-            color: var(--fg-tertiary);
-            cursor: pointer;
-            font-size: 0.85em;
-            margin-top: 8px;
-            transition: all 0.15s;
-        }
-
-        .accordion-body .add-btn:hover {
-            background: var(--accent-lighter);
-            border-color: var(--accent-light);
-            color: var(--accent);
         }
 
         /* Unified med/caff entry styling */
@@ -3988,38 +3174,6 @@
             color: var(--warning);
         }
 
-        /* Workout result in accordion */
-        .workout-result-compact {
-            margin-top: 10px;
-            padding: 10px 12px;
-            border-radius: 8px;
-            font-size: 0.88em;
-            border-left: 3px solid;
-        }
-
-        /* Nicotine quick buttons */
-        .nic-quick-btns {
-            display: flex;
-            gap: 8px;
-            margin-bottom: 10px;
-        }
-
-        .nic-quick-btns button {
-            flex: 1;
-            padding: 10px;
-            border-radius: 8px;
-            border: 1px solid var(--border-default);
-            background: var(--canvas-subtle);
-            color: var(--fg-secondary);
-            cursor: pointer;
-            font-size: 0.88em;
-            transition: all 0.15s;
-        }
-
-        .nic-quick-btns button:hover {
-            background: var(--canvas-inset);
-        }
-
         /* Circadian timeline compact */
         .circadian-compact {
             display: flex;
@@ -4067,16 +3221,12 @@
                 grid-template-columns: repeat(3, 1fr);
                 gap: 4px;
             }
+        }
 
-            .accordion-header {
-                padding: 11px 12px;
-                font-size: 0.88em;
-            }
-
-            .unified-header .checkpoint-controls button {
-                padding: 3px 6px;
-                font-size: 0.7em;
-            }
+        @media (max-width: 420px) {
+            .hero-time { font-size: clamp(2.2rem, 12vw, 3.5rem); }
+            .med-entry, .sc-med-entry { flex-wrap: wrap; }
+            .med-entry input[type="date"], .sc-med-entry input[type="date"] { max-width: 100%; min-width: 0; }
         }
 
     </style>
@@ -4183,19 +3333,6 @@
             </div>
 
             <div class="sc-sidebar-section">
-                <div class="sc-sidebar-section-label">TIMING</div>
-                <button class="sc-sidebar-item" data-page="modifiers" onclick="scNavigate('modifiers')">
-                    <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
-                    <span class="sc-sidebar-label">Modifiers</span>
-                    <span class="sc-sidebar-badge" id="scModBadge"></span>
-                </button>
-                <button class="sc-sidebar-item" data-page="inventory" onclick="scNavigate('inventory')">
-                    <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16.5 9.4l-9-5.19M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 003 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>
-                    <span class="sc-sidebar-label">Inventory</span>
-                </button>
-            </div>
-
-            <div class="sc-sidebar-section">
                 <div class="sc-sidebar-section-label">ANALYSIS</div>
                 <button class="sc-sidebar-item" data-page="calendar" onclick="scNavigate('calendar')">
                     <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
@@ -4215,7 +3352,7 @@
                 <div class="sc-sidebar-section-label">CONFIG</div>
                 <button class="sc-sidebar-item" data-page="settings" onclick="scNavigate('settings')">
                     <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="21" x2="4" y2="14"/><line x1="4" y1="10" x2="4" y2="3"/><line x1="12" y1="21" x2="12" y2="12"/><line x1="12" y1="8" x2="12" y2="3"/><line x1="20" y1="21" x2="20" y2="16"/><line x1="20" y1="12" x2="20" y2="3"/><line x1="1" y1="14" x2="7" y2="14"/><line x1="9" y1="8" x2="15" y2="8"/><line x1="17" y1="16" x2="23" y2="16"/></svg>
-                    <span class="sc-sidebar-label">Tools</span>
+                    <span class="sc-sidebar-label">Settings</span>
                 </button>
             </div>
 
@@ -4303,6 +3440,7 @@
 
                 <!-- ==================== DASHBOARD PAGE ==================== -->
                 <div class="sc-page active" id="scPageDashboard">
+                    <div class="sc-card sc-checkin-card" id="morningCheckin"></div>
                     <div class="sc-dashboard-grid">
                         <div class="sc-dash-col sc-dash-col--main">
                         <!-- Column 1: Hero, Meds, Graph -->
@@ -4310,7 +3448,9 @@
                             <div class="unified-hero">
                                 <div class="hero-label">Projected Sleep Window</div>
                                 <div class="hero-time green" id="sleepTime">--:-- PM</div>
+                                <span class="hero-window" id="heroWindowBand"></span>
                                 <div class="hero-countdown" id="timeRemaining">Calculating...</div>
+                                <div class="hero-binding" id="heroBindingLine"></div>
                                 <div class="hero-quality green" id="sleepQuality"></div>
                                 <div id="bottleneckIndicator" style="display:none; margin-top:4px;"></div>
                                 <div id="accuracyHeroHint" class="accuracy-hero-hint" style="display:none;"></div>
@@ -4368,12 +3508,16 @@
                             <div class="sc-card-title" style="margin-top:4px;">Calibration</div>
                             <div class="sc-calibration-inline">
                                 <div class="input-group"><label>Amp t&#189;</label><input type="number" id="ampHalfLife" value="11" min="8" max="15" step="0.5" onchange="recalculate()"></div>
-                                <div class="input-group"><label>Amp Thresh</label><input type="number" id="sleepThreshold" value="14" min="8" max="25" step="1" onchange="recalculate()"></div>
+                                <div class="input-group"><label>Amp Thresh</label><input type="number" id="sleepThreshold" value="14" min="8" max="25" step="1" onchange="calOnThresholdInput(this)"></div>
                                 <div class="input-group"><label>Caff t&#189;</label><input type="number" id="caffHalfLife" value="5" min="3" max="8" step="0.5" onchange="recalculate()"></div>
                                 <div class="input-group"><label>Caff Thresh</label><input type="number" id="caffThreshold" value="25" min="10" max="50" step="5" onchange="recalculate()"></div>
                                 <div class="input-group"><label>Weight</label><input type="number" id="weight" value="190" min="100" max="350" step="1" onchange="recalculate()"></div>
                                 <div class="input-group"><label>Sleep Goal</label><input type="number" id="sleepTarget" value="8" min="5" max="10" step="0.5" onchange="state.settings.sleepTarget=parseFloat(this.value)||8; recalculate(); renderSleepIntelligence();"></div>
                             </div>
+                            <label style="display:flex; align-items:center; gap:6px; margin-top:8px; font-size:12px; cursor:pointer;">
+                                <input type="checkbox" id="vitcHighDose" onchange="state.settings.vitcHighDose = this.checked; recalculate(); saveState();">
+                                High-dose vitamin C acidification protocol (2g+ with food)
+                            </label>
                         </div>
                         <!-- Caffeine -->
                         <div class="sc-card" id="scCaffeineCard">
@@ -4388,6 +3532,11 @@
                             <button class="sc-btn sc-btn--add" onclick="addCustomCaffeine()">+ Custom Amount</button>
                             <div id="caffeineEntries"></div>
                             <div id="coffeeStatus" style="font-size:0.82em; color:var(--fg-tertiary); margin-top:4px;"></div>
+                        </div>
+                        <!-- Caffeine cutoff — tonight (spec D6) -->
+                        <div class="sc-card" id="scCaffeineCutoffCard">
+                            <div class="sc-card-title">Caffeine cutoff — tonight</div>
+                            <div id="caffeineCutoffCard"></div>
                         </div>
                         <!-- Sleep Intelligence -->
                         <div class="sc-card sc-intel-card">
@@ -4411,36 +3560,20 @@
                         </div><!-- /sc-dash-col--mid -->
 
                         <div class="sc-dash-col sc-dash-col--side">
-                        <!-- Inventory -->
-                        <div class="sc-card sc-card--compact" id="scDashInvCard">
-                            <div class="sc-card-title">Inventory</div>
-                            <div id="scDashInvContent"></div>
-                        </div>
-                        <!-- Week at a Glance (cross-app from D3 Roadmap) -->
-                        <div class="sc-card sc-card--compact" id="scWeekGlanceCard">
-                            <div class="sc-card-title">Week at a Glance</div>
-                            <div id="scWeekGlanceContent">
-                                <div style="color:var(--fg-tertiary);font-size:0.82em;text-align:center;padding:12px 0;">Loading schedule...</div>
-                            </div>
-                        </div>
                         <!-- Modifiers -->
                         <div class="sc-card sc-card--compact" id="scModifiersCard">
                             <div class="sc-card-title">Modifiers</div>
                             <div class="sc-modifier-chips">
                                 <button class="sc-modifier-chip" id="vitCChip" onclick="toggleModifierChip('vitaminC')">
-                                    <span class="chip-icon">&#127818;</span> Vitamin C
+                                    <span class="chip-icon">&#127818;</span> Vitamin C<span class="sc-chip-effect" id="vitCEffect"></span>
                                 </button>
-                                <button class="sc-modifier-chip" id="liftChip" onclick="toggleModifierChip('heavyLift')">
-                                    <span class="chip-icon">&#127947;</span> Heavy Lift
-                                </button>
-                                <button class="sc-modifier-chip" id="saunaChip" onclick="toggleModifierChip('sauna')">
-                                    <span class="chip-icon">&#9832;</span> Sauna
+                                <button class="sc-modifier-chip" id="workoutChip" onclick="toggleModifierChip('workout')">
+                                    <span class="chip-icon">&#127947;</span> Worked out today<span class="sc-chip-effect" id="workoutEffect"></span>
                                 </button>
                             </div>
                             <!-- Hidden checkboxes for backward compat with toggleModifier/restoreModifierUI -->
                             <input type="checkbox" id="vitCToggle" style="display:none;">
-                            <input type="checkbox" id="liftToggle" style="display:none;">
-                            <input type="checkbox" id="saunaToggle" style="display:none;">
+                            <input type="checkbox" id="workoutToggle" style="display:none;">
                             <span id="vitCBadge" class="modifier-badge" style="display:none;"></span>
                             <div class="modifier-time" id="vitCTimeRow" style="display:none; margin-top:8px;">
                                 <input type="time" id="vitaminCTime" value="17:00" onchange="recalculate(); saveState();">
@@ -4449,9 +3582,31 @@
                                     <option value="tomorrow">Tomorrow</option>
                                 </select>
                             </div>
-                            <div class="modifier-time" id="saunaTimeRow" style="display:none; margin-top:8px;">
-                                <input type="time" id="saunaTime" value="18:00" onchange="updateModifierTimeInputs(); recalculate();">
+                            <div class="modifier-time" id="workoutTimeRow" style="display:none; margin-top:8px; align-items:center; gap:8px;">
+                                <input type="time" id="workoutEndTime" value="18:00" onchange="state.modifiers.workout.endTime = this.value; recalculate(); saveState();">
+                                <label style="display:flex; align-items:center; gap:6px; font-size:0.85em; color:var(--fg-secondary); cursor:pointer;">
+                                    <input type="checkbox" id="workoutIntense" onchange="state.modifiers.workout.intense = this.checked; recalculate(); saveState();"> intense session
+                                </label>
                             </div>
+                        </div>
+                        <!-- What-If Scenarios -->
+                        <div class="sc-card sc-card--compact">
+                            <div class="sc-card-title">What-If Scenarios</div>
+                            <div class="scenario-compact-grid">
+                                <div class="scenario-compact" onclick="simulateScenario('coffee')" style="background: var(--warning-light); border: 1px solid var(--border-default);"><div class="scenario-icon">Coffee</div><div class="scenario-time" id="scenarioCoffeeSleep">--</div><div class="scenario-delta" id="scenarioCoffeeDelta">Coffee</div></div>
+                                <div class="scenario-compact" onclick="simulateScenario('espresso')" style="background: var(--destructive-light); border: 1px solid var(--border-default);"><div class="scenario-icon">Espresso</div><div class="scenario-time" id="scenarioEspressoSleep">--</div><div class="scenario-delta" id="scenarioEspressoDelta">Espresso</div></div>
+                                <div class="scenario-compact" onclick="simulateScenario('vitc')" style="background: var(--success-light); border: 1px solid var(--border-default);"><div class="scenario-icon">VitC</div><div class="scenario-time" id="scenarioVitCSleep">--</div><div class="scenario-delta" id="scenarioVitCDelta">Vitamin C</div></div>
+                            </div>
+                        </div>
+                        <!-- Circadian & Feelings -->
+                        <div class="sc-card sc-card--compact">
+                            <div class="sc-card-title">Circadian &amp; Feelings</div>
+                            <div class="circadian-compact">
+                                <div class="circadian-box forbidden"><div style="font-weight:600; margin-bottom:2px;">Forbidden Zone</div><div id="forbiddenZoneTime" style="font-size:0.95em;">--</div></div>
+                                <div class="circadian-box gate"><div style="font-weight:600; margin-bottom:2px;">Sleep Gate</div><div id="sleepGateTime" style="font-size:0.95em;">--</div></div>
+                            </div>
+                            <div style="font-size:0.82em; color:var(--fg-tertiary); margin-bottom:10px;">Wake: <span id="wakeTimeDisplay">--</span></div>
+                            <div id="feelingsList" style="font-size:0.88em;"></div>
                         </div>
                         </div><!-- /sc-dash-col--side -->
 
@@ -4477,72 +3632,6 @@
                                 <div id="blockingList"></div>
                             </div>
                         </div>
-                    </div>
-                </div>
-
-                <!-- ==================== MODIFIERS PAGE ==================== -->
-                <div class="sc-page" id="scPageModifiers">
-                    <div class="sc-card">
-                        <div class="sc-card-title">Nicotine Tracking</div>
-                        <div class="nic-quick-btns">
-                            <button id="logVapeBtn" onclick="logNicotine('vape')">Log Vape Hit</button>
-                            <button id="logPouchBtn" onclick="logNicotine('pouch')">Log Zyn/Pouch</button>
-                        </div>
-                        <div id="nicotineStatus" style="display:none; padding:10px; background:var(--canvas-subtle); border:1px solid var(--border-subtle); border-radius:8px; margin-bottom:8px;">
-                            <div style="display:flex; justify-content:space-between; font-size:0.85em;">
-                                <span id="lastNicotineDisplay" style="color:var(--fg-secondary);"></span>
-                                <span id="nicotineTypeDisplay" style="font-weight:600;"></span>
-                            </div>
-                            <div id="nicotineClearDisplay" style="font-size:0.8em; color:var(--fg-tertiary); margin-top:4px;"></div>
-                            <div style="display:flex; gap:6px; margin-top:6px;">
-                                <input type="time" id="nicotineTimeInput" style="flex:1; padding:5px; border-radius:6px; border:1px solid var(--control-border); background:var(--control-bg); color:var(--fg-primary); font-size:0.85em;" onchange="state.nicotine.active = true; state.nicotine.lastHitTime = this.value; updateNicotineDisplay(); recalculate(); saveState();">
-                                <button onclick="clearNicotine()" style="padding:5px 10px; background:var(--destructive-light); border:1px solid var(--destructive); border-radius:6px; color:var(--destructive); cursor:pointer; font-size:0.82em;">Clear</button>
-                            </div>
-                        </div>
-                        <div id="nicotineWarning" style="display:none;"></div>
-                        <div id="nicotineRecommendation" style="display:none;"></div>
-                        <div id="rlsEmergencyProtocol" style="display:none;"></div>
-                    </div>
-                    <div class="sc-card">
-                        <div class="sc-card-title">Workout Planner</div>
-                        <div class="input-row">
-                            <div class="input-group"><label>Time</label><input type="time" id="workoutTime" onchange="updateWorkoutPlan()"></div>
-                            <div class="input-group"><label>Type</label><select id="workoutType" onchange="updateWorkoutPlan()"><option value="lifting">Heavy Lifting</option><option value="zone2">Zone 2 Cardio</option><option value="hiit">HIIT</option><option value="walk">Walk / Yoga</option></select></div>
-                        </div>
-                        <div class="input-row">
-                            <div class="input-group"><label>Duration</label><select id="workoutDuration" onchange="updateWorkoutPlan()"><option value="20">20 min</option><option value="30">30 min</option><option value="45" selected>45 min</option><option value="60">60 min</option><option value="75">75 min</option><option value="90">90 min</option></select></div>
-                            <div class="input-group"><label>Intensity</label><select id="workoutIntensity" onchange="updateWorkoutPlan()"><option value="low">Low</option><option value="medium" selected>Medium</option><option value="redline">Redline</option></select></div>
-                        </div>
-                        <label style="display:flex; align-items:center; gap:8px; font-size:0.85em; color:var(--fg-primary); margin:6px 0 10px;"><input type="checkbox" id="workoutFasted" onchange="updateWorkoutPlan()"> Fasted Training</label>
-                        <div id="workoutResult" style="display:none;"></div>
-                        <div id="workoutResultHeader" style="display:none;"></div>
-                        <div id="workoutResultText" style="display:none;"></div>
-                        <div id="workoutResultDetails" style="display:none;"></div>
-                        <div id="coldShowerOption" style="display:none; margin-top:8px;"><label style="display:flex; align-items:center; gap:8px; font-size:0.85em; color:var(--fg-primary);"><input type="checkbox" id="coldShowerToggle" onchange="updateWorkoutPlan()"> Cold Shower After (cuts cooldown to 45min)</label></div>
-                        <div style="display:flex; gap:8px; margin-top:10px;" id="workoutButtons">
-                            <button id="applyWorkoutBtn" onclick="applyWorkoutPlan()" style="display:none; flex:1; padding:8px; border-radius:8px; border:1px solid var(--success); background:var(--success-light); color:var(--success); cursor:pointer; font-size:0.85em; font-weight:600;">Apply to Prediction</button>
-                            <button id="resetWorkoutBtn" onclick="resetWorkoutPlan()" style="display:none; padding:8px 14px; border-radius:8px; border:1px solid var(--destructive); background:var(--destructive-light); color:var(--destructive); cursor:pointer; font-size:0.85em;">Reset</button>
-                        </div>
-                    </div>
-                    <div class="sc-card">
-                        <div class="sc-card-title">What-If Scenarios</div>
-                        <div class="scenario-compact-grid">
-                            <div class="scenario-compact" onclick="simulateScenario('coffee')" style="background: var(--warning-light); border: 1px solid var(--border-default);"><div class="scenario-icon">Coffee</div><div class="scenario-time" id="scenarioCoffeeSleep">--</div><div class="scenario-delta" id="scenarioCoffeeDelta">Coffee</div></div>
-                            <div class="scenario-compact" onclick="simulateScenario('espresso')" style="background: var(--destructive-light); border: 1px solid var(--border-default);"><div class="scenario-icon">Espresso</div><div class="scenario-time" id="scenarioEspressoSleep">--</div><div class="scenario-delta" id="scenarioEspressoDelta">Espresso</div></div>
-                            <div class="scenario-compact" onclick="simulateScenario('vitc')" style="background: var(--success-light); border: 1px solid var(--border-default);"><div class="scenario-icon">VitC</div><div class="scenario-time" id="scenarioVitCSleep">--</div><div class="scenario-delta" id="scenarioVitCDelta">Vitamin C</div></div>
-                            <div class="scenario-compact" onclick="simulateScenario('sauna')" style="background: var(--info-light); border: 1px solid var(--border-default);"><div class="scenario-icon">Sauna</div><div class="scenario-time" id="scenarioSaunaSleep">--</div><div class="scenario-delta" id="scenarioSaunaDelta">Sauna</div></div>
-                            <div class="scenario-compact" onclick="simulateScenario('vape')" style="background: var(--destructive-light); border: 1px solid var(--border-default);"><div class="scenario-icon">Vape</div><div class="scenario-time" id="scenarioVapeSleep">--</div><div class="scenario-delta" id="scenarioVapeDelta">Vape</div></div>
-                            <div class="scenario-compact" onclick="simulateScenario('zyn')" style="background: var(--success-light); border: 1px solid var(--border-default);"><div class="scenario-icon">Zyn</div><div class="scenario-time" id="scenarioZynSleep">--</div><div class="scenario-delta" id="scenarioZynDelta">Zyn</div></div>
-                        </div>
-                    </div>
-                    <div class="sc-card">
-                        <div class="sc-card-title">Circadian &amp; Feelings</div>
-                        <div class="circadian-compact">
-                            <div class="circadian-box forbidden"><div style="font-weight:600; margin-bottom:2px;">Forbidden Zone</div><div id="forbiddenZoneTime" style="font-size:0.95em;">--</div></div>
-                            <div class="circadian-box gate"><div style="font-weight:600; margin-bottom:2px;">Sleep Gate</div><div id="sleepGateTime" style="font-size:0.95em;">--</div></div>
-                        </div>
-                        <div style="font-size:0.82em; color:var(--fg-tertiary); margin-bottom:10px;">Wake: <span id="wakeTimeDisplay">--</span></div>
-                        <div id="feelingsList" style="font-size:0.88em;"></div>
                     </div>
                 </div>
 
@@ -4580,9 +3669,8 @@
                         </div>
                     </div>
                     <div class="sc-card">
-                        <div class="sc-card-title">Stats &amp; Achievements</div>
+                        <div class="sc-card-title">Stats</div>
                         <div id="siStatsGrid" class="si-stats-grid"></div>
-                        <div id="sleepAchievements" class="si-badges" style="margin-top:12px;"></div>
                         <div id="sleepHistoryList" style="margin-top:12px;"></div>
                     </div>
                 </div>
@@ -4595,21 +3683,20 @@
                         <div id="insDoseResponse" class="ins-section"></div>
                         <div id="insCaffeineImpact" class="ins-section"></div>
                         <div id="insSleepPatterns" class="ins-section"></div>
-                        <div id="insModifierImpact" class="ins-section"></div>
-                        <div id="insDosingWindows" class="ins-section"></div>
                         <div id="insCaffeineTiming" class="ins-section"></div>
                         <div id="insSleepEfficiency" class="ins-section"></div>
-                        <div id="insPredictionReliability" class="ins-section"></div>
                         <div id="insCircadianConsistency" class="ins-section"></div>
                         <div id="insStimulantTrends" class="ins-section"></div>
                         <div id="insRiskIndicators" class="ins-section"></div>
-                        <div id="insPersonalRecords" class="ins-section"></div>
-                        <div id="insResearchBenchmarks" class="ins-section"></div>
                     </div>
                 </div>
 
                 <!-- ==================== ACCURACY PAGE ==================== -->
                 <div class="sc-page" id="scPageAccuracy">
+                    <div class="sc-card" id="scCalibrationCard" style="margin-bottom:20px;">
+                        <div class="sc-card-title">Auto-calibration</div>
+                        <div id="calibrationCard"></div>
+                    </div>
                     <div id="accuracyContent" class="sc-card" style="padding:24px;">
                         <div id="accOverallGrade"></div>
                         <div id="accMethodology" class="ins-section"></div>
@@ -4638,85 +3725,9 @@
                             <button class="action-btn action-btn-secondary" onclick="clearToday()">Reset Inputs</button>
                             <button class="action-btn action-btn-primary" onclick="saveDay()">Save Prediction</button>
                         </div>
-                        <div style="display:flex; gap:8px; margin-top:8px; justify-content:center;">
-                            <button class="action-btn action-btn-small" onclick="BackupManager.exportData()">Export</button>
-                            <label class="action-btn action-btn-small" style="cursor:pointer; text-align:center;">Import<input type="file" accept=".json" onchange="BackupManager.importData(this.files[0]); this.value='';" style="display:none;"></label>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- ==================== INVENTORY PAGE ==================== -->
-                <div class="sc-page" id="scPageInventory">
-                    <!-- Quick Actions Bar -->
-                    <div class="sc-card full-width" style="margin-bottom:20px;">
-                        <div style="display:flex; gap:10px; flex-wrap:wrap; align-items:center;">
-                            <button onclick="scInvTakeBothMeds()" style="flex:1; min-width:140px; padding:12px 16px; background:var(--accent); color:var(--accent-fg); border:none; border-radius:var(--radius-md); font-size:0.9em; font-weight:600; cursor:pointer; transition:all 0.15s;">Take Daily Dose</button>
-                            <button onclick="scInvTakeMed('30mg')" style="padding:10px 16px; background:var(--surface-primary); border:1px solid var(--border-default); border-radius:var(--radius-md); color:var(--fg-secondary); font-size:0.85em; cursor:pointer;">Take 30mg</button>
-                            <button onclick="scInvTakeMed('20mg')" style="padding:10px 16px; background:var(--surface-primary); border:1px solid var(--border-default); border-radius:var(--radius-md); color:var(--fg-secondary); font-size:0.85em; cursor:pointer;">Take 20mg</button>
-                        </div>
-                    </div>
-
-                    <!-- 30mg Card -->
-                    <div class="sc-card" style="margin-bottom:20px;">
-                        <div class="sc-card-title">Adderall XR 30mg</div>
-                        <div class="sc-inv-med-info">
-                            <div class="sc-inv-info-grid">
-                                <div class="sc-inv-info-item">
-                                    <span class="sc-inv-info-label">Pills</span>
-                                    <span class="sc-inv-info-value" id="sc-inv-pills-30mg">0</span>
-                                </div>
-                                <div class="sc-inv-info-item">
-                                    <span class="sc-inv-info-label">Refill</span>
-                                    <span class="sc-inv-info-value" id="sc-inv-refill-30mg">Not set</span>
-                                </div>
-                                <div class="sc-inv-info-item">
-                                    <span class="sc-inv-info-label">Last Change</span>
-                                    <span class="sc-inv-info-value" id="sc-inv-lastChange-30mg">Never</span>
-                                </div>
-                            </div>
-                            <div class="sc-inv-progress-bar"><div class="sc-inv-progress-fill" id="sc-inv-progress-30mg"></div></div>
-                            <div class="sc-inv-status" id="sc-inv-status-30mg" onclick="scInvToggleCalendar('30mg')"></div>
-                        </div>
-                        <div class="sc-inv-actions">
-                            <button onclick="scInvAdjustMed('30mg', -1)">-1</button>
-                            <button onclick="scInvAdjustMed('30mg', 1)">+1</button>
-                            <button onclick="scInvOpenMedSettings('30mg')">Settings</button>
-                        </div>
-                        <div id="sc-inv-calendar-30mg" class="sc-inv-calendar-wrap" style="display:none;">
-                            <div id="sc-inv-calendarContent-30mg"></div>
-                            <button onclick="scInvResetPillAssignments('30mg')" style="margin-top:8px; padding:6px 12px; background:var(--canvas-subtle); border:1px solid var(--border-default); border-radius:6px; color:var(--fg-tertiary); cursor:pointer; font-size:0.8em;">Reset Assignments</button>
-                        </div>
-                    </div>
-
-                    <!-- 20mg Card -->
-                    <div class="sc-card" style="margin-bottom:20px;">
-                        <div class="sc-card-title">Adderall XR 20mg</div>
-                        <div class="sc-inv-med-info">
-                            <div class="sc-inv-info-grid">
-                                <div class="sc-inv-info-item">
-                                    <span class="sc-inv-info-label">Pills</span>
-                                    <span class="sc-inv-info-value" id="sc-inv-pills-20mg">0</span>
-                                </div>
-                                <div class="sc-inv-info-item">
-                                    <span class="sc-inv-info-label">Refill</span>
-                                    <span class="sc-inv-info-value" id="sc-inv-refill-20mg">Not set</span>
-                                </div>
-                                <div class="sc-inv-info-item">
-                                    <span class="sc-inv-info-label">Last Change</span>
-                                    <span class="sc-inv-info-value" id="sc-inv-lastChange-20mg">Never</span>
-                                </div>
-                            </div>
-                            <div class="sc-inv-progress-bar"><div class="sc-inv-progress-fill" id="sc-inv-progress-20mg"></div></div>
-                            <div class="sc-inv-status" id="sc-inv-status-20mg" onclick="scInvToggleCalendar('20mg')"></div>
-                        </div>
-                        <div class="sc-inv-actions">
-                            <button onclick="scInvAdjustMed('20mg', -1)">-1</button>
-                            <button onclick="scInvAdjustMed('20mg', 1)">+1</button>
-                            <button onclick="scInvOpenMedSettings('20mg')">Settings</button>
-                        </div>
-                        <div id="sc-inv-calendar-20mg" class="sc-inv-calendar-wrap" style="display:none;">
-                            <div id="sc-inv-calendarContent-20mg"></div>
-                            <button onclick="scInvResetPillAssignments('20mg')" style="margin-top:8px; padding:6px 12px; background:var(--canvas-subtle); border:1px solid var(--border-default); border-radius:6px; color:var(--fg-tertiary); cursor:pointer; font-size:0.8em;">Reset Assignments</button>
+                        <div style="display:flex; gap:8px; margin-top:8px;">
+                            <button class="action-btn action-btn-small" style="flex:1;" onclick="BackupManager.exportData()">Export</button>
+                            <label class="action-btn action-btn-small" style="flex:1; cursor:pointer; text-align:center;">Import<input type="file" accept=".json" onchange="BackupManager.importData(this.files[0]); this.value='';" style="display:none;"></label>
                         </div>
                     </div>
                 </div>
@@ -4725,92 +3736,17 @@
         </main>
     </div><!-- end .app-layout -->
 
-    <!-- Medication Settings Modal -->
-    <div class="modal-overlay" id="scInvMedModal" onclick="if(event.target===this)scInvCloseMedModal()">
-        <div class="modal-content" style="max-width:360px;">
-            <h3 id="sc-inv-modalTitle">Settings</h3>
-            <div class="input-group" style="margin-bottom:15px;">
-                <label>Pill Count</label>
-                <input type="number" id="sc-inv-modalPills" min="0" max="60" style="width:100%;">
-            </div>
-            <div class="input-group" style="margin-bottom:15px;">
-                <label>Refill Date</label>
-                <input type="date" id="sc-inv-modalRefill" style="width:100%;">
-            </div>
-            <div class="modal-actions">
-                <button class="btn btn-secondary" onclick="scInvCloseMedModal()">Cancel</button>
-                <button class="btn btn-primary" onclick="scInvSaveMedSettings()">Save</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- Calendar Note Modal -->
-    <div class="modal-overlay" id="scInvNoteModal" onclick="if(event.target===this)scInvCloseNoteModal()">
-        <div class="modal-content" style="max-width:360px;">
-            <h3 id="sc-inv-noteModalTitle">Note</h3>
-            <div class="input-group" style="margin-bottom:15px;">
-                <textarea id="sc-inv-noteInput" rows="4" maxlength="500" style="width:100%; resize:vertical;"></textarea>
-                <div style="text-align:right; font-size:0.75em; color:var(--fg-tertiary);"><span id="sc-inv-noteCharCount">0</span>/500</div>
-            </div>
-            <div class="modal-actions">
-                <button class="btn btn-secondary" onclick="scInvDeleteNote()">Delete</button>
-                <button class="btn btn-secondary" onclick="scInvCloseNoteModal()">Cancel</button>
-                <button class="btn btn-primary" onclick="scInvSaveNote()">Save</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- ============================================ -->
-    <!-- HIDDEN COMPATIBILITY LAYER -->
-    <!-- ============================================ -->
-    <div style="display:none" aria-hidden="true">
-        <div class="status-pills">
-            <div class="status-pill" id="ampStatusPill"><span id="currentAmpLoad">0.0 mg</span></div>
-            <div class="status-pill" id="caffStatusPill"><span id="currentCaffLoad">0.0 mg</span></div>
-            <div class="status-pill" id="circadianPill"><span id="circadianStatus">Normal</span></div>
-        </div>
-        <div id="circadianStatusItem" class="status-item ok"><span id="circadianIndicator">OK</span></div>
-        <span id="ampStatus"></span><span id="ampIndicator"></span>
-        <span id="caffStatus"></span><span id="caffIndicator"></span>
-        <div id="workoutStatusItem"><span id="workoutStatus"></span><span id="workoutIndicator"></span></div>
-        <div id="syncStatus"><span id="syncIcon"></span><span id="syncText">Connecting...</span></div>
-        <div class="unified-header"></div>
-        <div class="accordion-section" data-section="sleep"><div class="accordion-header"><span class="accordion-summary" id="sleepAccordionSummary">--</span><span class="accordion-arrow"></span></div><div class="accordion-body"></div></div>
-        <div class="accordion-section" data-section="meds"><div class="accordion-header"><span class="accordion-summary" id="medsAccordionSummary">No meds logged</span><span class="accordion-arrow"></span></div><div class="accordion-body"></div></div>
-        <div class="accordion-section" data-section="caffeine"><div class="accordion-header"><span class="accordion-summary" id="caffeineAccordionSummary">No caffeine</span><span class="accordion-arrow"></span></div><div class="accordion-body"></div></div>
-        <div class="accordion-section" data-section="modifiers"><div class="accordion-header"><span class="accordion-summary" id="modifiersAccordionSummary">None active</span><span class="accordion-arrow"></span></div><div class="accordion-body"></div></div>
-        <div class="accordion-section" data-section="nicotine"><div class="accordion-header"><span class="accordion-summary" id="nicotineAccordionSummary">Not tracked</span><span class="accordion-arrow"></span></div><div class="accordion-body"></div></div>
-        <div class="accordion-section" data-section="workout"><div class="accordion-header"><span class="accordion-summary" id="workoutAccordionSummary">Not planned</span><span class="accordion-arrow"></span></div><div class="accordion-body"></div></div>
-        <div class="accordion-section" data-section="circadian"><div class="accordion-header"><span class="accordion-summary" id="circadianAccordionSummary">--</span><span class="accordion-arrow"></span></div><div class="accordion-body"></div></div>
-        <div class="accordion-section" data-section="sleepIntel"><div class="accordion-header"><span id="sleepIntelSummary" class="accordion-summary"></span><span class="accordion-arrow"></span></div><div class="accordion-body"></div></div>
-        <div class="accordion-section" data-section="recs"><div class="accordion-header"><span class="accordion-arrow"></span></div><div class="accordion-body"></div></div>
-        <div class="accordion-section" data-section="forecast"><div class="accordion-header"><span class="accordion-arrow"></span></div><div class="accordion-body"></div></div>
-        <div class="accordion-section" data-section="settings"><div class="accordion-header"><span class="accordion-arrow"></span></div><div class="accordion-body"></div></div>
-        <div class="accordion-section" data-section="whatif"><div class="accordion-header"><span class="accordion-arrow"></span></div><div class="accordion-body"></div></div>
-        <div id="siTabs">
-            <button class="si-tab active" data-tab="overview" onclick="switchSITab('overview')">Overview</button>
-            <button class="si-tab" data-tab="insights" onclick="switchSITab('insights')">Insights</button>
-            <button class="si-tab" data-tab="accuracy" onclick="switchSITab('accuracy')">Accuracy</button>
-            <button class="si-tab" data-tab="calendar" onclick="switchSITab('calendar')">Calendar</button>
-        </div>
-        <div id="siTabOverview" style="display:block"></div>
-        <div id="siTabInsights" style="display:none"></div>
-        <div id="siTabAccuracy" style="display:none"></div>
-        <div id="siTabCalendar" style="display:none"></div>
-    </div>
-
     <!-- Scripts (unchanged order) -->
-    <script src="js/stimcalc/state.js?v=20260402a"></script>
-    <script src="js/stimcalc/circadian.js?v=20260315"></script>
-    <script src="js/stimcalc/pharma-engine.js?v=20260315"></script>
-    <script src="js/stimcalc/sleep-prediction.js?v=20260315"></script>
-    <script src="js/stimcalc/firebase-sync.js?v=20260315"></script>
-    <script src="js/stimcalc/med-caffeine.js?v=20260315"></script>
-    <script src="js/stimcalc/ui-sections.js?v=20260315"></script>
-    <script src="js/stimcalc/history-calendar.js?v=20260315"></script>
-    <script src="js/stimcalc/graph.js?v=20260315"></script>
-    <script src="js/stimcalc/med-inventory.js?v=20260316"></script>
-    <script src="js/stimcalc/week-glance.js?v=20260321c"></script>
-    <script src="js/stimcalc/init.js?v=20260402a"></script>
+    <script src="js/stimcalc/state.js?v=20260820d"></script>
+    <script src="js/stimcalc/circadian.js?v=20260820d"></script>
+    <script src="js/stimcalc/pharma-engine.js?v=20260820d"></script>
+    <script src="js/stimcalc/sleep-prediction.js?v=20260820d"></script>
+    <script src="js/stimcalc/firebase-sync.js?v=20260820d"></script>
+    <script src="js/stimcalc/med-caffeine.js?v=20260820d"></script>
+    <script src="js/stimcalc/ui-sections.js?v=20260820d"></script>
+    <script src="js/stimcalc/history-calendar.js?v=20260820d"></script>
+    <script src="js/stimcalc/graph.js?v=20260820d"></script>
+    <script src="js/stimcalc/calibration.js?v=20260820d"></script>
+    <script src="js/stimcalc/init.js?v=20260820d"></script>
 </body>
 </html>

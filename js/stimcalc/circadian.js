@@ -8,10 +8,13 @@ function analyzeCircadianPhase() {
     const todayStr = getLocalDateString(today);
     const wakeTimes = [];
 
-    // ALWAYS include today first with current inputs
+    // ALWAYS include today first with current inputs.
+    // wakeMinutes is null on purpose: today's typed wake is a live input, not
+    // logged history — it must NOT pollute the 7-day circular mean (Bug 7).
+    // hoursSlept is real data and still feeds the sleep-average calculations below.
     wakeTimes.push({
         date: todayStr,
-        wakeMinutes: timeToMinutes(state.wakeTime),
+        wakeMinutes: null,
         hoursSlept: state.hoursSleptLastNight
     });
 
@@ -33,8 +36,9 @@ function analyzeCircadianPhase() {
         }
     }
 
-    // Filter to only entries with wake times for phase calculation
-    const wakeTimesWithData = wakeTimes.filter(w => w.wakeMinutes !== null);
+    // Filter to only entries with valid historical wake times for phase calculation.
+    // Excludes today (wakeMinutes === null) and any corrupted NaN wake values.
+    const wakeTimesWithData = wakeTimes.filter(w => w.wakeMinutes !== null && Number.isFinite(w.wakeMinutes));
 
     // Calculate average sleep from ALL entries (even without wake time)
     const allSleepData = wakeTimes.filter(w => w.hoursSlept > 0);
@@ -166,24 +170,51 @@ function analyzeCircadianPhase() {
 // PROCESS C: Circadian Rhythm
 // ============================================
 
-// BUG FIX: Use 7-day average wake time when available
-function getForbiddenZone() {
-    // Forbidden Zone: 13-15 hours after wake time
-    const phase = analyzeCircadianPhase();
-    const wakeMin = (phase && phase.avgWakeTime) ? phase.avgWakeTime : timeToMinutes(state.wakeTime);
-    const start = wakeMin + (13 * 60); // 13 hours after wake
-    const end = wakeMin + (15 * 60);   // 15 hours after wake
-    return { start, end };
+// v2 anchor: 7-day circular mean of ACTUAL sleep onset. Falls back to
+// avgWake + 16h when fewer than 3 onset nights exist.
+function getSleepOnsetAnchor() {
+    const onsets = [];
+    const now = new Date();
+    for (let i = 1; i <= 7; i++) {
+        const d = new Date(now.getFullYear(), now.getMonth(), now.getDate() - i);
+        const ds = getLocalDateString(d);
+        const log = (state.sleepDailyLogs || {})[ds];
+        let onset = null;
+        if (log && Number.isFinite(log.sleepOnsetMinutes)) onset = log.sleepOnsetMinutes;
+        if (onset !== null) onsets.push(onset);
+    }
+    if (onsets.length >= 3) {
+        let sx = 0, sy = 0;
+        onsets.forEach(m => {
+            const a = (m / 1440) * 2 * Math.PI;
+            sx += Math.cos(a); sy += Math.sin(a);
+        });
+        let mean = Math.atan2(sy, sx) / (2 * Math.PI) * 1440;
+        if (mean < 0) mean += 1440;
+        return { anchor: Math.round(mean), nights: onsets.length, source: 'onset-history' };
+    }
+    // analyzeCircadianPhase() exposes the 7-day circular-mean wake time as avgWakeTime.
+    const analysis = analyzeCircadianPhase();
+    const avgWake = (analysis && Number.isFinite(analysis.avgWakeTime))
+        ? analysis.avgWakeTime
+        : timeToMinutes(state.wakeTime || '08:00');
+    return { anchor: (avgWake + 16 * 60) % 1440, nights: onsets.length, source: 'wake-fallback' };
 }
 
-// BUG FIX: Use 7-day average wake time when available
+// v2: FZ = [anchor-3h, anchor-1h] in wake-normalized space (evening alertness
+// peak before natural onset). WMZ concept removed. Values may exceed 1440;
+// consumers must wrap with % 1440 or minutesToTimeWithDay at DISPLAY sites.
+function getForbiddenZone() {
+    const { anchor } = getSleepOnsetAnchor();
+    const wakeMin = timeToMinutes(state.wakeTime || '08:00');
+    let a = anchor;
+    if (a < wakeMin) a += 1440;   // normalize past-midnight anchors
+    return { start: a - 180, end: a - 60 };
+}
+
 function getSleepGate() {
-    // Sleep Gate: 15-17 hours after wake time (optimal window)
-    const phase = analyzeCircadianPhase();
-    const wakeMin = (phase && phase.avgWakeTime) ? phase.avgWakeTime : timeToMinutes(state.wakeTime);
-    const start = wakeMin + (15 * 60); // 15 hours after wake
-    const end = wakeMin + (17 * 60);   // 17 hours after wake
-    return { start, end };
+    const fz = getForbiddenZone();
+    return { start: fz.end, end: fz.end + 120 };
 }
 
 function isInForbiddenZone(timeMinutes) {

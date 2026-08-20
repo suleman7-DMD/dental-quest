@@ -3,13 +3,18 @@
 // ============================================
 
 function addMedEntry(dose = 50, time = null) {
+    dose = Number(dose);
+    if (!Number.isFinite(dose) || dose <= 0 || dose > 200) {
+        showToast('Invalid dose');
+        return;
+    }
     const now = new Date();
     const defaultTime = time || `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
     const today = getLocalDateString(now); // YYYY-MM-DD format
 
     // FIX: Use object with unique ID key instead of array
     const id = generateId('med');
-    const entry = { id, dose, time: defaultTime, date: today };
+    const entry = { id, dose, time: defaultTime, date: today, updatedAt: now.toISOString() };
     if (!state.medications || Array.isArray(state.medications)) {
         state.medications = migrateArrayToObject(state.medications, 'med');
     }
@@ -54,6 +59,10 @@ function cleanupOldMedications() {
 function removeMedEntry(id) {
     // FIX: Delete from object instead of filter array
     if (state.medications && state.medications[id]) {
+        // Tombstone BEFORE delete so the removal survives cross-device merges
+        if (!state.tombstones) state.tombstones = { meds: {}, caffeine: {}, sleepDays: {} };
+        if (!state.tombstones.meds) state.tombstones.meds = {};
+        state.tombstones.meds[String(id)] = new Date().toISOString();
         delete state.medications[id];
     }
     renderMedEntries();
@@ -66,7 +75,9 @@ function updateMedEntry(id, field, value) {
     const med = state.medications ? state.medications[id] : null;
     if (med) {
         if (field === 'dose') {
-            med.dose = parseInt(value);
+            const newDose = parseInt(value, 10);
+            if (!Number.isFinite(newDose) || newDose <= 0) return;
+            med.dose = newDose;
             // Only re-render for dose changes (affects stacking warning display)
             renderMedEntries();
         } else if (field === 'time') {
@@ -79,6 +90,7 @@ function updateMedEntry(id, field, value) {
             renderMedEntries(); // Re-render to update date selector color
             renderGhostLoad(); // Update ghost load display
         }
+        med.updatedAt = new Date().toISOString();
         // Always recalculate and save
         recalculate();
         saveState();
@@ -91,6 +103,8 @@ function renderMedEntries() {
 
     // FIX: Use getValues() to iterate object as array
     const meds = getValues(state.medications);
+    // FIX (bug 11): only TODAY's meds can be "stacked" — a cloud merge can pull in yesterday's doses
+    const todayMedIds = meds.filter(m => (m.date || today) === today).map(m => m.id);
     container.innerHTML = meds.map((med, index) => {
         const medDate = med.date || today;
         const isToday = medDate === today;
@@ -111,7 +125,7 @@ function renderMedEntries() {
                 <option value="70" ${med.dose === 70 ? 'selected' : ''}>70mg XR (30+20+20)</option>
             </select>
             <input type="time" value="${med.time}" onchange="updateMedEntry('${med.id}', 'time', this.value)">
-            ${index > 0 ? '<span class="stacking-warning">⚠️ STACKED</span>' : ''}
+            ${todayMedIds.indexOf(med.id) > 0 ? '<span class="stacking-warning">⚠️ STACKED</span>' : ''}
             <button class="remove-btn sc-btn sc-btn--ghost" onclick="removeMedEntry('${med.id}')">×</button>
         </div>
     `}).join('');
@@ -137,8 +151,9 @@ function updateStackingWarning() {
     const warningEl = document.getElementById('stackingWarning');
     if (!warningEl) return;
 
-    // FIX: Use getValues() and getCount() for object
-    const meds = getValues(state.medications);
+    // FIX (bug 11): only count TODAY's meds — a cloud merge can pull in yesterday's doses
+    const today = getLocalDateString(new Date());
+    const meds = getValues(state.medications).filter(m => (m.date || today) === today);
     const totalDose = meds.reduce((sum, m) => sum + m.dose, 0);
     const numDoses = meds.length;
     const sleepDebt = Math.max(0, 8 - state.hoursSleptLastNight);
@@ -176,7 +191,7 @@ function updateStackingWarning() {
                 </div>
             ` : ''}
             <div style="margin-top: 10px; font-size: 0.85em; color: #8B92A0;">
-                <strong>Escape hatches:</strong> Vitamin C flush at 5 PM • Evening sauna • Heavy lifting
+                <strong>Escape hatches:</strong> Vitamin C flush at 5 PM
             </div>
         `;
     } else if (totalDose >= 60) {
@@ -199,6 +214,11 @@ function updateStackingWarning() {
 }
 
 function addCaffeine(amount, name) {
+    amount = Number(amount);
+    if (!Number.isFinite(amount) || amount <= 0 || amount > 1000) {
+        showToast('Invalid caffeine amount');
+        return;
+    }
     const now = new Date();
     const time = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
     const today = getLocalDateString(now);
@@ -207,7 +227,7 @@ function addCaffeine(amount, name) {
     if (!state.caffeine || Array.isArray(state.caffeine)) {
         state.caffeine = migrateArrayToObject(state.caffeine, 'caf');
     }
-    state.caffeine[id] = { id, amount, name, time, date: today };
+    state.caffeine[id] = { id, amount, name: name || 'Caffeine', time, date: today, updatedAt: now.toISOString() };
     renderCaffeineEntries();
     renderFocusCaffeineList(); // FIX Bug 5: Keep Focus Mode in sync
     recalculate();
@@ -228,6 +248,10 @@ function addCustomCaffeine() {
 function removeCaffeine(id) {
     // FIX: Delete from object instead of filter array
     if (state.caffeine && state.caffeine[id]) {
+        // Tombstone BEFORE delete so the removal survives cross-device merges
+        if (!state.tombstones) state.tombstones = { meds: {}, caffeine: {}, sleepDays: {} };
+        if (!state.tombstones.caffeine) state.tombstones.caffeine = {};
+        state.tombstones.caffeine[String(id)] = new Date().toISOString();
         delete state.caffeine[id];
     }
     renderCaffeineEntries();
@@ -258,9 +282,9 @@ function renderCaffeineEntries() {
         return `
         <div class="caffeine-entry sc-caff-entry" ${isSipPart ? 'style="background: rgba(107, 124, 94, 0.08); border-color: rgba(107, 124, 94, 0.15);"' : ''}>
             ${dateSelector}
-            <span class="caffeine-info">${caff.name} (${caff.amount}mg)${sipBadge}</span>
+            <span class="caffeine-info">${escapeHtml(caff.name)} (${caff.amount}mg)${sipBadge}</span>
             <input type="time" value="${caff.time}" onchange="updateCaffeineTime('${caff.id}', this.value)"
-                   style="padding: 4px 8px; background: var(--sc-surface-warm, #F5F2ED); border: 1px solid var(--sc-border, rgba(0,0,0,0.12)); border-radius: 6px; color: var(--sc-text, #2C2825); font-size: 0.85em; width: 100px;">
+                   style="padding: 4px 8px; background: var(--sc-surface-warm, #F5F2ED); border: 1px solid var(--sc-border, rgba(0,0,0,0.12)); border-radius: 6px; color: var(--sc-text, #2C2825); font-size: 0.85em; width: 112px;">
             <button class="remove-btn sc-btn sc-btn--ghost" style="width: 24px; height: 24px; font-size: 1em;" onclick="removeCaffeine('${caff.id}')">×</button>
         </div>
     `}).join('');
@@ -270,6 +294,7 @@ function renderCaffeineEntries() {
 function updateCaffeineTime(id, newTime) {
     if (state.caffeine && state.caffeine[id]) {
         state.caffeine[id].time = newTime;
+        state.caffeine[id].updatedAt = new Date().toISOString();
         recalculate();
         saveState();
 
@@ -286,6 +311,7 @@ function updateCaffeineTime(id, newTime) {
 function updateCaffeineDate(id, newDate) {
     if (state.caffeine && state.caffeine[id]) {
         state.caffeine[id].date = newDate;
+        state.caffeine[id].updatedAt = new Date().toISOString();
         renderCaffeineEntries(); // Re-render to update date selector color
         renderFocusCaffeineList(); // Keep Focus Mode in sync
         renderGhostLoad(); // Update ghost load display

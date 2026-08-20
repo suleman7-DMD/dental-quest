@@ -7,14 +7,18 @@ function drawGraph() {
     if (!canvas) return;
     const ctx = canvas.getContext('2d');
 
-    // Set canvas size — bail if container not visible (e.g. display:none page)
-    const rect = canvas.parentElement.getBoundingClientRect();
+    // Size the buffer from the canvas's own rendered rect — CSS owns the display
+    // size (.unified-graph-wrap canvas uses !important, so inline styles lose)
+    const rect = canvas.getBoundingClientRect();
     if (rect.width < 10) return;
-    canvas.width = rect.width - 40;
-    canvas.height = rect.height - 40;
-
-    const width = canvas.width;
-    const height = canvas.height;
+    const dpr = window.devicePixelRatio || 1;
+    const cssW = rect.width;
+    const cssH = rect.height;
+    canvas.width = cssW * dpr;
+    canvas.height = cssH * dpr;
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    const width = cssW;
+    const height = cssH;
     const padding = { left: 50, right: 20, top: 20, bottom: 30 };
     const graphWidth = width - padding.left - padding.right;
     const graphHeight = height - padding.top - padding.bottom;
@@ -33,11 +37,14 @@ function drawGraph() {
     let maxCaff = state.settings.caffThreshold * 2;
 
     for (let t = startTime; t <= endTime; t += 15) {
-        maxAmp = Math.max(maxAmp, calculateAmpLoad(t));
-        maxCaff = Math.max(maxCaff, calculateCaffLoad(t));
+        const a = calculateAmpLoad(t);
+        const c = calculateCaffLoad(t);
+        if (Number.isFinite(a)) maxAmp = Math.max(maxAmp, a);
+        if (Number.isFinite(c)) maxCaff = Math.max(maxCaff, c);
     }
 
-    const maxY = Math.max(maxAmp, maxCaff, 50);
+    let maxY = Math.max(maxAmp, maxCaff, 50);
+    if (!Number.isFinite(maxY)) maxY = 50;
 
     // Draw Forbidden Zone band (red, semi-transparent)
     const forbiddenZone = getForbiddenZone();
@@ -53,12 +60,15 @@ function drawGraph() {
         ctx.fillStyle = 'rgba(184, 92, 92, 0.08)';
         ctx.fillRect(fzStartX, padding.top, fzEndX - fzStartX, graphHeight);
 
-        // Label
-        ctx.fillStyle = 'rgba(184, 92, 92, 0.5)';
+        // Label — skip when the visible band is too narrow to hold the text
+        // (narrow mobile graphs otherwise overlap this with the Sleep Gate label)
         ctx.font = 'bold 9px Inter, sans-serif';
-        ctx.textAlign = 'center';
-        ctx.fillText('FORBIDDEN', (fzStartX + fzEndX) / 2, padding.top + 12);
-        ctx.fillText('ZONE', (fzStartX + fzEndX) / 2, padding.top + 22);
+        if (fzEndX - fzStartX >= ctx.measureText('FORBIDDEN').width + 8) {
+            ctx.fillStyle = 'rgba(184, 92, 92, 0.5)';
+            ctx.textAlign = 'center';
+            ctx.fillText('FORBIDDEN', (fzStartX + fzEndX) / 2, padding.top + 12);
+            ctx.fillText('ZONE', (fzStartX + fzEndX) / 2, padding.top + 22);
+        }
     }
 
     // Draw Sleep Gate band (green, semi-transparent)
@@ -74,12 +84,14 @@ function drawGraph() {
         ctx.fillStyle = 'rgba(94, 138, 94, 0.08)';
         ctx.fillRect(sgStartX, padding.top, sgEndX - sgStartX, graphHeight);
 
-        // Label
-        ctx.fillStyle = 'rgba(94, 138, 94, 0.5)';
+        // Label — same narrow-band skip as the Forbidden Zone label
         ctx.font = 'bold 9px Inter, sans-serif';
-        ctx.textAlign = 'center';
-        ctx.fillText('SLEEP', (sgStartX + sgEndX) / 2, padding.top + 12);
-        ctx.fillText('GATE', (sgStartX + sgEndX) / 2, padding.top + 22);
+        if (sgEndX - sgStartX >= ctx.measureText('SLEEP').width + 8) {
+            ctx.fillStyle = 'rgba(94, 138, 94, 0.5)';
+            ctx.textAlign = 'center';
+            ctx.fillText('SLEEP', (sgStartX + sgEndX) / 2, padding.top + 12);
+            ctx.fillText('GATE', (sgStartX + sgEndX) / 2, padding.top + 22);
+        }
     }
 
     // Draw grid
@@ -274,11 +286,19 @@ function drawGraph() {
         ctx.closePath();
         ctx.fill();
 
-        // Label
+        // Label — inside the plot just above the axis, on a backing chip.
+        // The old below-axis position collided with the x-axis time labels
+        // and clipped the time line off the bottom of the canvas.
+        const sleepLabel = minutesToTime(displaySleepTime);
         ctx.font = 'bold 10px Inter, sans-serif';
+        const labelW = Math.max(ctx.measureText('SLEEP').width, ctx.measureText(sleepLabel).width);
+        const labelX = Math.min(Math.max(sleepX, padding.left + labelW / 2 + 3), width - labelW / 2 - 3);
+        ctx.fillStyle = 'rgba(250, 248, 245, 0.85)';
+        ctx.fillRect(labelX - labelW / 2 - 3, height - padding.bottom - 28, labelW + 6, 25);
+        ctx.fillStyle = '#5E8A5E';
         ctx.textAlign = 'center';
-        ctx.fillText('SLEEP', sleepX, height - padding.bottom + 24);
-        ctx.fillText(minutesToTime(displaySleepTime), sleepX, height - padding.bottom + 35);
+        ctx.fillText('SLEEP', labelX, height - padding.bottom - 17);
+        ctx.fillText(sleepLabel, labelX, height - padding.bottom - 6);
     }
 }
 
@@ -298,14 +318,16 @@ function setupGraphTooltip() {
         const x = e.clientX - rect.left;
         const y = e.clientY - rect.top;
 
-        // Graph dimensions (must match drawGraph)
+        // Graph dimensions (must match drawGraph) — use CSS-pixel dims from
+        // getBoundingClientRect so hit-testing stays consistent with the mouse
+        // coords above after the canvas backing store is DPR-scaled.
         const padding = { left: 50, right: 20, top: 20, bottom: 30 };
-        const graphWidth = canvas.width - padding.left - padding.right;
-        const graphHeight = canvas.height - padding.top - padding.bottom;
+        const graphWidth = rect.width - padding.left - padding.right;
+        const graphHeight = rect.height - padding.top - padding.bottom;
 
         // Check if within graph area
-        if (x < padding.left || x > canvas.width - padding.right ||
-            y < padding.top || y > canvas.height - padding.bottom) {
+        if (x < padding.left || x > rect.width - padding.right ||
+            y < padding.top || y > rect.height - padding.bottom) {
             tooltip.style.display = 'none';
             return;
         }
@@ -413,10 +435,9 @@ function getCardinalSplinePoints(points, tension) {
             const t2 = t * t;
             const t3 = t2 * t;
 
-            const x = 0.5 * ((2 * p1.x) +
-                (-p0.x + p2.x) * t +
-                (2 * p0.x - 5 * p1.x + 4 * p2.x - p3.x) * t2 +
-                (-p0.x + 3 * p1.x - 3 * p2.x + p3.x) * t3);
+            // x moves linearly p1→p2 (splining x too loops backward when point
+            // spacing is uneven — e.g. a months-long data gap next to daily points)
+            const x = p1.x + (p2.x - p1.x) * t;
 
             const y = 0.5 * ((2 * p1.y) +
                 (-p0.y + p2.y) * t +
@@ -545,14 +566,15 @@ function _drawSleepGraphToCanvas(canvasId, data) {
     const ctx = canvas.getContext('2d');
     const dpr = window.devicePixelRatio || 1;
 
-    // Set canvas size
+    // Set canvas size — draw at the canvas's actual rendered height (each call
+    // site pins its own CSS height: dashboard 180px, calendar 240px)
     const rect = canvas.getBoundingClientRect();
     canvas.width = rect.width * dpr;
-    canvas.height = 220 * dpr;
+    canvas.height = rect.height * dpr;
     ctx.scale(dpr, dpr);
 
     const width = rect.width;
-    const height = 220;
+    const height = rect.height;
     const padding = { top: 25, right: 15, bottom: 35, left: 35 };
     const graphWidth = width - padding.left - padding.right;
     const graphHeight = height - padding.top - padding.bottom;
@@ -562,12 +584,12 @@ function _drawSleepGraphToCanvas(canvasId, data) {
 
     // Collect valid data points for the curve
     const validPoints = [];
-    if (data.length < 2) return;
+    if (!data || !Array.isArray(data) || data.length < 2) return;
     const pointSpacing = graphWidth / (data.length - 1);
 
     data.forEach((d, i) => {
         const x = padding.left + i * pointSpacing;
-        if (d.hoursSlept !== null) {
+        if (d.hoursSlept !== null && Number.isFinite(d.hoursSlept)) {
             const y = padding.top + graphHeight - (Math.min(d.hoursSlept, 12) / 12) * graphHeight;
             validPoints.push({ x, y, hours: d.hoursSlept, isToday: d.isToday, dayLabel: d.dayLabel, index: i });
         }
@@ -593,8 +615,19 @@ function _drawSleepGraphToCanvas(canvasId, data) {
         ctx.fillText(hours + 'h', padding.left - 8, y + 3);
     });
 
-    if (validPoints.length >= 2) {
-        const smoothPoints = getCardinalSplinePoints(validPoints);
+    if (validPoints.length >= 1) {
+        // Split into segments — never connect the curve across a gap of more
+        // than 7 missing days (e.g. months with no tracking)
+        const segments = [];
+        let seg = [validPoints[0]];
+        for (let i = 1; i < validPoints.length; i++) {
+            if (validPoints[i].index - validPoints[i - 1].index > 7) {
+                segments.push(seg);
+                seg = [];
+            }
+            seg.push(validPoints[i]);
+        }
+        segments.push(seg);
 
         // Draw gradient fill under the curve
         const gradient = ctx.createLinearGradient(0, padding.top, 0, padding.top + graphHeight);
@@ -603,26 +636,31 @@ function _drawSleepGraphToCanvas(canvasId, data) {
         gradient.addColorStop(0.6, 'rgba(74, 124, 155, 0.08)'); // Medical blue
         gradient.addColorStop(1, 'rgba(74, 124, 155, 0.05)');   // Fade to near-transparent
 
-        ctx.beginPath();
-        ctx.moveTo(smoothPoints[0].x, padding.top + graphHeight);
-        ctx.lineTo(smoothPoints[0].x, smoothPoints[0].y);
+        segments.forEach(segPoints => {
+            if (segPoints.length < 2) return; // lone points render as dots below
+            const smoothPoints = getCardinalSplinePoints(segPoints);
 
-        smoothPoints.forEach(p => ctx.lineTo(p.x, p.y));
+            ctx.beginPath();
+            ctx.moveTo(smoothPoints[0].x, padding.top + graphHeight);
+            ctx.lineTo(smoothPoints[0].x, smoothPoints[0].y);
 
-        ctx.lineTo(smoothPoints[smoothPoints.length - 1].x, padding.top + graphHeight);
-        ctx.closePath();
-        ctx.fillStyle = gradient;
-        ctx.fill();
+            smoothPoints.forEach(p => ctx.lineTo(p.x, p.y));
 
-        // Draw the main line — clean, no glow
-        ctx.beginPath();
-        ctx.moveTo(smoothPoints[0].x, smoothPoints[0].y);
-        smoothPoints.forEach(p => ctx.lineTo(p.x, p.y));
-        ctx.strokeStyle = '#5E8A5E';
-        ctx.lineWidth = 2;
-        ctx.lineCap = 'round';
-        ctx.lineJoin = 'round';
-        ctx.stroke();
+            ctx.lineTo(smoothPoints[smoothPoints.length - 1].x, padding.top + graphHeight);
+            ctx.closePath();
+            ctx.fillStyle = gradient;
+            ctx.fill();
+
+            // Draw the main line — clean, no glow
+            ctx.beginPath();
+            ctx.moveTo(smoothPoints[0].x, smoothPoints[0].y);
+            smoothPoints.forEach(p => ctx.lineTo(p.x, p.y));
+            ctx.strokeStyle = '#5E8A5E';
+            ctx.lineWidth = 2;
+            ctx.lineCap = 'round';
+            ctx.lineJoin = 'round';
+            ctx.stroke();
+        });
 
         // Draw data points — crisp dots, no glow layers
         validPoints.forEach((p, idx) => {

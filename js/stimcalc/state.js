@@ -46,7 +46,7 @@ function getDefaultState() {
         modifiers: {
             vitaminC: { active: false, time: '17:00', date: null },
             heavyLift: { active: false },
-            sauna: { active: false, time: '18:00', date: null }
+            workout: { active: false, endTime: '18:00', intense: false, date: null }
         },
         nicotine: {
             active: false,
@@ -73,7 +73,17 @@ function getDefaultState() {
             caffHalfLife: 5,
             caffThreshold: 25,
             weight: 190,
-            sleepTarget: 8
+            sleepTarget: 8,
+            vitcHighDose: false
+        },
+        calibration: {
+            autoFit: true,             // master switch; false = frozen
+            fittedThreshold: null,     // mg; null = use settings.sleepThreshold
+            lastFitDate: null,         // YYYY-MM-DD of last fit run (once per day)
+            lastAdjustment: 0,         // mg delta applied by last fit (for the card)
+            lastFitNights: 0,          // nights used in last fit
+            manualPauseUntil: null,    // YYYY-MM-DD; manual slider edit pauses auto-fit 7 days
+            fittedCaffHalfLife: null   // hours; null = use settings.caffHalfLife
         },
         history: {},
         _version: 0,
@@ -82,6 +92,9 @@ function getDefaultState() {
         _sleepDailyLogsMigrated: false,
         _sleepDailyLogsMigratedV2: false,
         _sleepDailyLogsMigratedV3: false,
+        tombstones: { meds: {}, caffeine: {}, sleepDays: {} }, // delete markers: id -> ISO deleted-at (sync merge engine)
+        _stamps: {},    // per-group edit stamps for scalar-group newer-wins merge
+        _stampSigs: {}, // content signatures backing _stamps (bump only on real change)
         _dataLoaded: false
     };
 }
@@ -286,6 +299,14 @@ function getLocalDateString(date = new Date()) {
     return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
 }
 
+// NaN guard: a corrupted/blank settings value would poison every load
+// calculation downstream (NaN propagates silently). Coerce to a sane default.
+// (Single definition — lives here in state.js so all later modules share it.)
+function numOr(v, fallback) {
+    const n = Number(v);
+    return Number.isFinite(n) ? n : fallback;
+}
+
 // Helper to parse YYYY-MM-DD as local date (avoids UTC timezone issues)
 function parseLocalDate(dateStr) {
     if (!dateStr) return null;
@@ -344,13 +365,12 @@ function snapshotPredictionInputs() {
         caffLoadAtPrediction: parseFloat(calculateCaffLoad(now).toFixed(1)),
         effectiveThreshold: parseFloat(getEffectiveThreshold().toFixed(1)),
         sleepDebtBonus: parseFloat(calculateSleepDebtBonus().toFixed(1)),
-        baseThreshold: state.settings.sleepThreshold,
+        baseThreshold: (typeof getActiveBaseThreshold === 'function') ? getActiveBaseThreshold() : numOr(state.settings.sleepThreshold, 14),
         ampHalfLife: state.settings.ampHalfLife,
-        caffHalfLife: state.settings.caffHalfLife,
+        caffHalfLife: (typeof getActiveCaffHalfLife === 'function') ? getActiveCaffHalfLife() : numOr(state.settings.caffHalfLife, 5),
         totalAmpDose: getValues(state.medications).reduce((s, m) => s + m.dose, 0),
         totalCaffDose: getValues(state.caffeine).reduce((s, c) => s + c.amount, 0),
-        hasWorkout: !!(state.workoutPlan && state.workoutPlan.applied),
-        hasSauna: !!(state.modifiers && state.modifiers.sauna && state.modifiers.sauna.active),
+        hasWorkout: !!(state.modifiers && state.modifiers.workout && state.modifiers.workout.active),
         hasVitC: !!(state.modifiers && state.modifiers.vitaminC && state.modifiers.vitaminC.active),
         allNighterMode: !!state.allNighterMode
     };

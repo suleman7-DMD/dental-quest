@@ -13,6 +13,9 @@ function buildHistoryEntry(id, date, predictedSleep, autoSaved) {
         predictedSleep: predictedSleep,
         actualSleep: null,
         autoSaved: autoSaved,
+        // Task 8: what bound this prediction ('adderall'|'caffeine'|'workout'|'circadian'|'now').
+        // calibration's caffeine half-life fit trains on nights where this === 'caffeine'.
+        bindingFactor: (typeof lastPredictionBindingFactor !== 'undefined' && lastPredictionBindingFactor) || null,
         predictedAt: new Date().toISOString(),
         lastUpdated: new Date().toISOString(),
         inputs: snapshotPredictionInputs()
@@ -48,6 +51,7 @@ function autoSavePrediction(sleepTimeMinutes) {
         state.history[todayEntry.id].modifiers = JSON.parse(JSON.stringify(state.modifiers));
         state.history[todayEntry.id].lastUpdated = new Date().toISOString();
         state.history[todayEntry.id].inputs = snapshotPredictionInputs();
+        state.history[todayEntry.id].bindingFactor = (typeof lastPredictionBindingFactor !== 'undefined' && lastPredictionBindingFactor) || null;
     } else {
         const id = generateId('hist');
         state.history[id] = buildHistoryEntry(id, today, sleepTimeMinutes, true);
@@ -78,6 +82,7 @@ function saveDay() {
         state.history[existingEntry.id].autoSaved = false;
         state.history[existingEntry.id].lastUpdated = new Date().toISOString();
         state.history[existingEntry.id].inputs = snapshotPredictionInputs();
+        state.history[existingEntry.id].bindingFactor = (typeof lastPredictionBindingFactor !== 'undefined' && lastPredictionBindingFactor) || null;
     } else {
         const id = generateId('hist');
         state.history[id] = buildHistoryEntry(id, today, sleepTime, false);
@@ -92,6 +97,12 @@ function saveDay() {
 
 // Auto-populate feedback from sleep history (wakeTime - hoursSlept = sleep onset)
 function autoPopulateFeedback() {
+    // Bug 15: normalize sleepHistory dual shape (legacy bare-number entries → object)
+    Object.keys(state.sleepHistory || {}).forEach(k => {
+        const v = state.sleepHistory[k];
+        if (typeof v === 'number') state.sleepHistory[k] = { hoursSlept: v, wakeTime: null };
+    });
+
     const historyValues = getValues(state.history);
     let updated = false;
     let yesterdayFeedback = null;
@@ -166,6 +177,8 @@ function autoPopulateFeedback() {
     });
 
     if (updated) {
+        // New/refreshed deltaMinutes entries → let auto-calibration re-fit (once/day, self-guarded).
+        if (typeof runAutoCalibration === 'function') runAutoCalibration();
         saveState();
         if (yesterdayFeedback) {
             const fb = yesterdayFeedback;
@@ -329,7 +342,7 @@ function cleanupHistory() {
     // Prune entries older than 180 days
     const cutoffDate = new Date();
     cutoffDate.setDate(cutoffDate.getDate() - 180);
-    const cutoffStr = cutoffDate.toISOString().split('T')[0];
+    const cutoffStr = getLocalDateString(cutoffDate);
     let pruned = false;
     const remainingValues = getValues(state.history);
     remainingValues.forEach(entry => {
@@ -535,6 +548,11 @@ function setAllNighter() {
 function clearSleepEntry() {
     if (!currentEditingDate) return;
 
+    // Tombstone BEFORE delete so the removal survives cross-device merges
+    if (!state.tombstones) state.tombstones = { meds: {}, caffeine: {}, sleepDays: {} };
+    if (!state.tombstones.sleepDays) state.tombstones.sleepDays = {};
+    state.tombstones.sleepDays[currentEditingDate] = new Date().toISOString();
+
     // Remove the entry entirely (null = unlogged)
     delete state.sleepHistory[currentEditingDate];
     if (state.sleepDailyLogs) delete state.sleepDailyLogs[currentEditingDate];
@@ -569,7 +587,8 @@ function saveSleepEdit() {
     // Save as object with both values
     state.sleepHistory[currentEditingDate] = {
         hoursSlept: hours,
-        wakeTime: wakeTime
+        wakeTime: wakeTime,
+        updatedAt: new Date().toISOString()
     };
 
     // Also update sleepDailyLogs
@@ -611,7 +630,8 @@ function updateTodaySleepHistory() {
     // Preserve wake time if it exists, update hours
     state.sleepHistory[today] = {
         hoursSlept: state.hoursSleptLastNight,
-        wakeTime: existing && typeof existing === 'object' ? existing.wakeTime : state.wakeTime
+        wakeTime: existing && typeof existing === 'object' ? existing.wakeTime : state.wakeTime,
+        updatedAt: new Date().toISOString()
     };
 
     saveSleepDayLog();
@@ -626,7 +646,8 @@ function updateTodayWakeTime() {
 
     state.sleepHistory[today] = {
         hoursSlept: existing && typeof existing === 'object' ? existing.hoursSlept : state.hoursSleptLastNight,
-        wakeTime: state.wakeTime
+        wakeTime: state.wakeTime,
+        updatedAt: new Date().toISOString()
     };
 
     saveSleepDayLog();
@@ -704,7 +725,7 @@ function migrateSleepDailyLogs() {
         // Check modifiers from entry top-level or inputs
         var mods = entry.modifiers || {};
         var hadWorkout = !!(mods.workout && mods.workout.active) || (inp.hasWorkout ?? false);
-        var hadSauna = !!(mods.sauna && mods.sauna.active) || (inp.hasSauna ?? false);
+        var hadSauna = (inp.hasSauna ?? false);
         var hadVitC = !!(mods.vitaminC && mods.vitaminC.active) || (inp.hasVitC ?? false);
 
         state.sleepDailyLogs[dateStr] = {
@@ -907,8 +928,7 @@ function saveSleepDayLog() {
         totalCaffDose: getValues(state.caffeine).reduce(function(s, c) { return s + (c.amount || 0); }, 0),
         medications: JSON.parse(JSON.stringify(getValues(state.medications))),
         caffeine: JSON.parse(JSON.stringify(getValues(state.caffeine))),
-        hadWorkout: !!(state.workoutPlan && state.workoutPlan.applied),
-        hadSauna: !!(state.modifiers && state.modifiers.sauna && state.modifiers.sauna.active),
+        hadWorkout: !!(state.modifiers && state.modifiers.workout && state.modifiers.workout.active),
         hadVitC: !!(state.modifiers && state.modifiers.vitaminC && state.modifiers.vitaminC.active),
         allNighterMode: !!state.allNighterMode,
         predictedSleep: existing.predictedSleep ?? null,
@@ -936,7 +956,8 @@ function saveSleepDayLog() {
     // Keep sleepHistory in sync (backward compat for autoPopulateFeedback)
     state.sleepHistory[today] = {
         hoursSlept: state.hoursSleptLastNight,
-        wakeTime: state.wakeTime
+        wakeTime: state.wakeTime,
+        updatedAt: new Date().toISOString()
     };
 }
 
@@ -1090,9 +1111,9 @@ function renderAccDirectionalBias(stats) {
         body += '<div class="ins-metric-row"><span class="ins-metric-label">Low Dose (<40mg) Bias</span><span class="ins-metric-value">' + (ldBias > 0 ? '+' : '') + ldBias + 'min (' + lowDose.length + ')</span></div>';
     }
 
-    // Recommendation
+    // Recommendation — model v2 handles threshold adjustment automatically.
     if (Math.abs(avgError) > 15) {
-        var rec = avgError > 0 ? 'Consider lowering your Sleep Threshold by ' + Math.round(Math.abs(avgError) / 15) + 'mg' : 'Consider raising your Sleep Threshold by ' + Math.round(Math.abs(avgError) / 15) + 'mg';
+        var rec = 'Auto-calibration is handling this — see the Calibration card.';
         body += '<div style="font-size:0.78em;color:#6B7C5E;margin-top:8px;padding:8px;background:rgba(107,124,94,0.08);border-radius:6px;">' + rec + '</div>';
     }
     el.innerHTML = '<div class="ins-section-hdr" onclick="toggleInsSection(\'accDirectionalBias\')">' +
@@ -1184,19 +1205,18 @@ function renderAccInputVerification() {
     var modifiers = [];
     if (state.modifiers) {
         if (state.modifiers.vitaminC && state.modifiers.vitaminC.active) modifiers.push('VitC');
-        if (state.modifiers.sauna && state.modifiers.sauna.active) modifiers.push('Sauna');
     }
-    if (state.workoutPlan && state.workoutPlan.applied) modifiers.push('Workout');
+    if (state.modifiers && state.modifiers.workout && state.modifiers.workout.active) modifiers.push('Workout');
 
     var rows = [
         ['Current Amp Load', ampLoad + 'mg'],
         ['Current Caff Load', caffLoad + 'mg'],
         ['Effective Threshold', threshold + 'mg (base ' + baseThresh + ' + ' + sleepDebt + ' debt)'],
-        ['Hours Slept Last Night', hoursSlept + 'h'],
-        ['Wake Time', wakeTime],
+        ['Hours Slept Last Night', escapeHtml(hoursSlept) + 'h'],
+        ['Wake Time', escapeHtml(wakeTime)],
         ['All-Nighter Mode', allNighter],
-        ['Medications Today', meds.length > 0 ? meds.map(function(m) { return m.dose + 'mg @ ' + m.time; }).join(', ') : 'None'],
-        ['Caffeine Today', caff.length > 0 ? caff.map(function(c) { return c.amount + 'mg @ ' + c.time; }).join(', ') : 'None'],
+        ['Medications Today', meds.length > 0 ? meds.map(function(m) { return escapeHtml(m.dose + 'mg @ ' + m.time); }).join(', ') : 'None'],
+        ['Caffeine Today', caff.length > 0 ? caff.map(function(c) { return escapeHtml(c.amount + 'mg @ ' + c.time); }).join(', ') : 'None'],
         ['Active Modifiers', modifiers.length > 0 ? modifiers.join(', ') : 'None']
     ];
     var body = '<div style="font-size:0.72em;color:#9C948B;margin-bottom:8px;">This is exactly what the prediction algorithm sees right now.</div>';
@@ -1363,8 +1383,6 @@ function renderSleepPerformance() {
     // Store stats globally for explainer
     window.sleepStats = stats;
 
-    // Render Achievements
-    renderSleepAchievements(data, stats.validData, stats.currentStreak, stats.longestStreak, stats.weekScore, stats.sleepDebt, stats.avg);
 
     // Draw graph
     drawSleepPerformanceGraph(data);
@@ -1554,35 +1572,6 @@ function toggleExplainer(key) {
 // Legacy compat for achievement hover
 function showExplainer(key) { toggleExplainer(key); }
 function hideExplainer() {}
-
-function renderSleepAchievements(data, validData, currentStreak, longestStreak, weekScore, sleepDebt, avg) {
-    const container = document.getElementById('sleepAchievements');
-    if (!container) return;
-
-    const best = validData.length > 0 ? Math.max(...validData.map(d => d.hoursSlept)) : 0;
-
-    const achievements = [
-        { id: 'first_log', icon: '📝', name: 'First Log', unlocked: validData.length >= 1, color: '#5E7A8A' },
-        { id: 'week_warrior', icon: '📅', name: 'Week Warrior', unlocked: validData.length >= 7, color: '#6B7C5E' },
-        { id: 'month_master', icon: '🗓️', name: 'Month Master', unlocked: validData.length >= 30, color: '#C4923A' },
-        { id: 'streak_3', icon: '🔥', name: '3-Day Streak', unlocked: longestStreak >= 3, color: '#B85C5C' },
-        { id: 'streak_7', icon: '⚡', name: 'Week Streak', unlocked: longestStreak >= 7, color: '#C4923A' },
-        { id: 'debt_free', icon: '💎', name: 'Debt Free', unlocked: sleepDebt === 0 && validData.length >= 7, color: '#5E7A8A' },
-        { id: 'perfect_night', icon: '🌟', name: 'Perfect Night', unlocked: best >= 8, color: '#5E8A5E' },
-        { id: 'recovery_king', icon: '👑', name: 'Recovery King', unlocked: best >= 10, color: '#B85C5C' },
-        { id: 'score_80', icon: '🏆', name: 'A+ Student', unlocked: weekScore >= 80, color: '#5E8A5E' },
-        { id: 'consistent', icon: '🎯', name: 'Consistent', unlocked: avg >= 7 && validData.length >= 7, color: '#6B7C5E' }
-    ];
-
-    container.innerHTML = achievements.map(function(a) {
-        return '<div class="si-badge' + (a.unlocked ? '' : ' si-badge--locked') + '" onclick="toggleExplainer(\'' + a.id + '\')" style="' +
-            'background:' + (a.unlocked ? 'rgba(' + hexToRgb(a.color) + ', 0.15)' : '#EFECE6') + ';' +
-            'border-color:' + (a.unlocked ? a.color : 'rgba(0,0,0,0.08)') + ';">' +
-            '<div class="si-badge__icon"' + (a.unlocked ? '' : ' style="filter:grayscale(100%);"') + '>' + a.icon + '</div>' +
-            '<div class="si-badge__name" style="color:' + (a.unlocked ? a.color : '#C4BCB3') + ';">' + a.name + '</div>' +
-        '</div>';
-    }).join('');
-}
 
 function renderSleepHistoryList(data) {
     const container = document.getElementById('sleepHistoryList');
@@ -1896,14 +1885,16 @@ function submitFeedback() {
         state.sleepDailyLogs[recent.date].actualSleep = actualMinutes;
         state.sleepDailyLogs[recent.date].deltaMinutes = state.history[recent.id].deltaMinutes;
         state.sleepDailyLogs[recent.date].absError = state.history[recent.id].absError;
+        state.history[recent.id].lastUpdated = new Date().toISOString();
+        state.sleepDailyLogs[recent.date].lastUpdated = new Date().toISOString();
 
+        // Manual feedback wrote a new deltaMinutes entry → let auto-calibration re-fit
+        // before saving (once/day, self-guarded) so the change persists in this save.
+        if (typeof runAutoCalibration === 'function') runAutoCalibration();
         saveState();
         renderSleepIntelligence();
         closeFeedbackModal();
         showToast('Feedback recorded! This helps calibrate your settings.');
-
-        // Suggest calibration if consistently off
-        suggestCalibration();
     }
 }
 
@@ -1961,114 +1952,56 @@ function calculateAccuracyStats(days) {
 }
 
 function getCalibrationRecommendation() {
-    const allWithFeedback = getValues(state.history).filter(e =>
-        e.actualSleep !== null && e.actualSleep !== undefined && !isNaN(e.actualSleep) &&
-        e.predictedSleep !== null && e.predictedSleep !== undefined && !isNaN(e.predictedSleep)
-    );
-    const entries = allWithFeedback.slice().sort((a, b) => b.date.localeCompare(a.date)).slice(0, 10);
+    // Model v2: mirror the auto-fit math (computeCalibrationFit in calibration.js) so the
+    // Accuracy page reports the same decay-weighted numbers the nightly fit acts on.
+    // Return shape is preserved for any legacy callers: { recommendation, confidence, adjustmentMg, details }.
+    const fit = (typeof computeCalibrationFit === 'function') ? computeCalibrationFit() : { eligible: false, nights: 0, avgDelta: null, suggestedStep: 0 };
+    const active = (typeof getActiveBaseThreshold === 'function') ? getActiveBaseThreshold() : (state.settings.sleepThreshold ?? 14);
 
-    if (entries.length === 0) return {
-        recommendation: 'No feedback data yet. Save a prediction and log actual sleep to start calibrating.',
-        confidence: 'none', adjustmentMg: null, details: null
-    };
-    if (entries.length < 3) return {
-        recommendation: 'Only ' + entries.length + ' data point(s). Need 3+ for calibration advice.',
-        confidence: 'none', adjustmentMg: null, details: null
-    };
+    if (!fit.eligible) {
+        const minNights = (typeof CALIBRATION !== 'undefined') ? CALIBRATION.MIN_NIGHTS : 5;
+        const need = Math.max(0, minNights - fit.nights);
+        return {
+            recommendation: fit.nights === 0
+                ? 'No feedback data yet. Save a prediction and log actual sleep to start calibrating.'
+                : 'Learning — log ' + need + ' more night(s) for a calibration read (need ' + minNights + '+).',
+            confidence: 'none', adjustmentMg: null, details: null
+        };
+    }
 
-    const deltas = entries.map(e => computeSleepDelta(e.predictedSleep, e.actualSleep));
-    const avgDelta = deltas.reduce((s, v) => s + v, 0) / deltas.length;
-    const absErrors = deltas.map(d => Math.abs(d));
-    const avgAbsError = absErrors.reduce((s, v) => s + v, 0) / absErrors.length;
-    const confidence = allWithFeedback.length >= 15 ? 'high' : allWithFeedback.length >= 5 ? 'medium' : 'low';
-    const currentThreshold = state.settings.sleepThreshold;
+    const thMin = (typeof CALIBRATION !== 'undefined') ? CALIBRATION.THRESHOLD_MIN : 8;
+    const thMax = (typeof CALIBRATION !== 'undefined') ? CALIBRATION.THRESHOLD_MAX : 22;
+    const avgDelta = Math.round(fit.avgDelta);
+    const avgAbsError = Math.abs(avgDelta);
+    const confidence = fit.nights >= 15 ? 'high' : fit.nights >= 10 ? 'medium' : 'low';
+    // Positive delta (slept later than predicted) → auto-fit LOWERS the threshold.
+    const suggestedThreshold = Math.round(Math.max(thMin, Math.min(thMax, active - fit.suggestedStep)) * 10) / 10;
+    const adjustmentMg = Math.round((suggestedThreshold - active) * 10) / 10;
 
-    if (avgAbsError <= 30) return {
-        recommendation: 'Predictions are accurate (avg ' + Math.round(avgAbsError) + ' min off). No adjustment needed.',
-        confidence: confidence, adjustmentMg: 0,
-        details: { avgDelta: Math.round(avgDelta), avgAbsError: Math.round(avgAbsError), sampleSize: entries.length, currentThreshold: currentThreshold, suggestedThreshold: currentThreshold }
-    };
-
-    let adjustmentMg = null, recommendation = '';
-    if (avgDelta > 30) {
-        adjustmentMg = avgDelta > 60 ? -2 : -1;
-        const newTh = Math.max(8, currentThreshold + adjustmentMg);
-        recommendation = 'You fall asleep ' + Math.round(avgDelta) + ' min later than predicted. Try lowering Sleep Threshold from ' + currentThreshold + 'mg to ' + newTh + 'mg (you\'re more sensitive than assumed).';
-    } else if (avgDelta < -30) {
-        adjustmentMg = avgDelta < -60 ? 2 : 1;
-        const newTh = Math.min(25, currentThreshold + adjustmentMg);
-        recommendation = 'You fall asleep ' + Math.round(Math.abs(avgDelta)) + ' min earlier than predicted. Try raising Sleep Threshold from ' + currentThreshold + 'mg to ' + newTh + 'mg (you\'re less sensitive than assumed).';
+    let recommendation;
+    if (avgAbsError <= 15) {
+        recommendation = 'Predictions are on target (avg ' + (avgDelta > 0 ? '+' : '') + avgDelta + ' min over ' + fit.nights + ' nights). Auto-calibration is holding the threshold near ' + active.toFixed(1) + 'mg.';
+    } else if (avgDelta > 0) {
+        recommendation = 'You fall asleep ' + avgAbsError + ' min later than predicted on average (' + fit.nights + ' nights). Auto-calibration is lowering the threshold toward ' + suggestedThreshold.toFixed(1) + 'mg.';
     } else {
-        recommendation = 'Predictions vary by ' + Math.round(avgAbsError) + ' min avg without consistent direction. May be due to variable sleep debt or exercise timing. Keep logging.';
+        recommendation = 'You fall asleep ' + avgAbsError + ' min earlier than predicted on average (' + fit.nights + ' nights). Auto-calibration is raising the threshold toward ' + suggestedThreshold.toFixed(1) + 'mg.';
     }
 
     return {
         recommendation: recommendation, confidence: confidence, adjustmentMg: adjustmentMg,
-        details: { avgDelta: Math.round(avgDelta), avgAbsError: Math.round(avgAbsError), sampleSize: entries.length, currentThreshold: currentThreshold, suggestedThreshold: adjustmentMg !== null ? Math.max(8, Math.min(25, currentThreshold + adjustmentMg)) : currentThreshold }
+        details: { avgDelta: avgDelta, avgAbsError: avgAbsError, sampleSize: fit.nights, currentThreshold: active, suggestedThreshold: suggestedThreshold }
     };
 }
 
-// BUG FIX 2: Use computeSleepDelta instead of raw subtraction
-function suggestCalibration() {
-    const withFeedback = getValues(state.history).filter(h => h.actualSleep !== null && h.actualSleep !== undefined && !isNaN(h.actualSleep)).sort((a, b) => b.date.localeCompare(a.date)).slice(0, 5);
-    if (withFeedback.length < 3) return;
-
-    const avgDiff = withFeedback.reduce((sum, h) => sum + computeSleepDelta(h.predictedSleep, h.actualSleep), 0) / withFeedback.length;
-
-    if (avgDiff > 30) {
-        // Consistently sleeping later than predicted - lower threshold
-        showToast('Tip: You seem more sensitive. Try lowering your Sleep Threshold in settings.');
-    } else if (avgDiff < -30) {
-        // Sleeping earlier - raise threshold
-        showToast('Tip: You might be less sensitive. Try raising your Sleep Threshold in settings.');
-    }
-}
+// The old manual calibration-suggestion toast was retired (model v2): threshold tuning
+// is now handled by the auto-calibration engine (runAutoCalibration / computeCalibrationFit
+// in calibration.js).
 
 // ============================================
 // SLEEP INTELLIGENCE TAB SYSTEM
 // ============================================
 
-function switchSITab(tab) {
-    // Bridge to sidebar page navigation when new layout is active
-    if (document.body.classList.contains('has-sc-sidebar') && typeof scNavigate === 'function') {
-        var pageMap = {
-            'insights': 'insights',
-            'accuracy': 'accuracy',
-            'calendar': 'calendar',
-            'overview': 'calendar'  // overview content lives in calendar page
-        };
-        if (pageMap[tab]) {
-            scNavigate(pageMap[tab]);
-            return;  // Let scNavigate handle the rest
-        }
-    }
-
-    currentSITab = tab;
-    var tabs = document.querySelectorAll('#siTabs .si-tab');
-    for (var i = 0; i < tabs.length; i++) {
-        tabs[i].classList.toggle('active', tabs[i].getAttribute('data-tab') === tab);
-    }
-    var panels = ['siTabOverview', 'siTabInsights', 'siTabAccuracy', 'siTabCalendar'];
-    for (var i = 0; i < panels.length; i++) {
-        var el = document.getElementById(panels[i]);
-        if (el) el.style.display = panels[i] === 'siTab' + tab.charAt(0).toUpperCase() + tab.slice(1) ? 'block' : 'none';
-    }
-    // Render content for active tab
-    if (tab === 'overview') {
-        renderSleepCalendar();
-        renderSleepPerformance();
-    } else if (tab === 'insights') {
-        renderInsightsTab();
-    } else if (tab === 'accuracy') {
-        renderAccuracyTab();
-    } else if (tab === 'calendar') {
-        renderSleepCalendarMonth();
-        renderHistory();
-    }
-}
-
 function renderSleepIntelligence() {
-    updateSleepIntelSummary();
     // Render ALL tabs so data is fresh when user switches
     renderSleepCalendar();
     renderSleepPerformance();
@@ -2076,29 +2009,6 @@ function renderSleepIntelligence() {
     renderAccuracyTab();
     renderSleepCalendarMonth();
     renderHistory();
-}
-
-function updateSleepIntelSummary() {
-    var el = document.getElementById('sleepIntelSummary');
-    if (!el) return;
-    var data = getSleepDataForDays(30);
-    var valid = data.filter(function(d) { return d.hoursSlept !== null; });
-    var parts = [];
-    if (valid.length > 0) {
-        var avg = valid.reduce(function(a, d) { return a + d.hoursSlept; }, 0) / valid.length;
-        parts.push(avg.toFixed(1) + 'h avg');
-    }
-    // Show current month days tracked (consistent with calendar + accuracy tabs)
-    var now = new Date();
-    var monthDays = countDaysTrackedInMonth(now.getFullYear(), now.getMonth());
-    if (monthDays > 0) {
-        parts.push(monthDays + ' days tracked');
-    }
-    var accStats = calculateAccuracyStats(30);
-    if (accStats && accStats.entriesWithFeedback >= 3) {
-        parts.push('\u00b1' + accStats.avgAbsError + 'min accuracy');
-    }
-    el.textContent = parts.length > 0 ? parts.join(' \u00b7 ') : '';
 }
 
 // ============================================
@@ -2305,16 +2215,11 @@ function renderInsightsTab() {
     renderInsDoseResponse(days);
     renderInsCaffeineImpact(days);
     renderInsSleepPatterns(days);
-    renderInsModifierImpact(days);
-    renderInsDosingWindows(days);
     renderInsCaffeineTiming(days);
     renderInsSleepEfficiency(days);
-    renderInsPredictionReliability(days);
     renderInsCircadianConsistency(days);
     renderInsStimulantTrends(days);
     renderInsRiskIndicators(days);
-    renderInsPersonalRecords(days);
-    renderInsResearchBenchmarks(days);
 }
 
 // Section 1: Key Metrics
@@ -2515,73 +2420,6 @@ function renderInsSleepPatterns(days) {
         '<div class="ins-section-body">' + body + '</div>';
 }
 
-// Section 5: Modifier Impact
-function renderInsModifierImpact(days) {
-    var el = document.getElementById('insModifierImpact');
-    if (!el) return;
-    var withOnset = days.filter(function(d) { return d.actualSleep != null; });
-    if (withOnset.length < 3) { el.style.display = 'none'; return; }
-    el.style.display = '';
-
-    var modifiers = [
-        { key: 'hadVitC', label: 'Vitamin C', icon: '&#127818;' },
-        { key: 'hadWorkout', label: 'Workout', icon: '&#127947;' },
-        { key: 'hadSauna', label: 'Sauna', icon: '&#128167;' }
-    ];
-    var body = '';
-    modifiers.forEach(function(mod) {
-        var withMod = withOnset.filter(function(d) { return d[mod.key]; });
-        var withoutMod = withOnset.filter(function(d) { return !d[mod.key]; });
-        if (withMod.length < 1 || withoutMod.length < 1) return;
-        var avgWith = Math.round(withMod.reduce(function(s, d) { return s + d.actualSleep; }, 0) / withMod.length);
-        var avgWithout = Math.round(withoutMod.reduce(function(s, d) { return s + d.actualSleep; }, 0) / withoutMod.length);
-        var delta = avgWith - avgWithout;
-        var deltaStr = (delta > 0 ? '+' : '') + delta + 'min';
-        var deltaColor = delta < 0 ? '#5E8A5E' : delta > 30 ? '#B85C5C' : '#C4923A';
-        body += '<div class="ins-metric-row"><span class="ins-metric-label">' + mod.icon + ' ' + mod.label + '</span><span class="ins-metric-value"><span style="color:' + deltaColor + ';">' + deltaStr + '</span> <span style="color:#9C948B;font-size:0.8em;">(' + withMod.length + ' vs ' + withoutMod.length + ')</span></span></div>';
-    });
-    if (!body) { el.style.display = 'none'; return; }
-    el.innerHTML = '<div class="ins-section-hdr" onclick="toggleInsSection(\'insModifierImpact\')">' +
-        '<span class="ins-section-title">&#9881; Modifier Impact</span>' +
-        '<span class="ins-section-arrow">&#9660;</span></div>' +
-        '<div class="ins-section-body">' + body + '<div style="font-size:0.72em;color:#9C948B;margin-top:6px;">Negative = earlier sleep. Based on actual sleep onset.</div></div>';
-}
-
-// Section 6: Dosing Windows
-function renderInsDosingWindows(days) {
-    var el = document.getElementById('insDosingWindows');
-    if (!el) return;
-    var withData = days.filter(function(d) { return d.totalAmpDose > 0 && d.actualSleep != null && d.medications && d.medications.length > 0 && d.wakeTime != null; });
-    if (withData.length < 3) { el.style.display = 'none'; return; }
-    el.style.display = '';
-
-    // Find last dose time for each day relative to wake
-    var buckets = {};
-    withData.forEach(function(d) {
-        var wakeMins = typeof d.wakeTime === 'string' ? timeToMinutes(d.wakeTime) : d.wakeTime;
-        var lastDose = 0;
-        (d.medications || []).forEach(function(m) {
-            var doseTime = typeof m.time === 'string' ? timeToMinutes(m.time) : m.time;
-            if (doseTime > lastDose) lastDose = doseTime;
-        });
-        var hoursAfterWake = Math.round((lastDose - wakeMins) / 60);
-        if (hoursAfterWake < 0) hoursAfterWake = 0;
-        var bucket = hoursAfterWake <= 2 ? '0-2h' : hoursAfterWake <= 4 ? '2-4h' : hoursAfterWake <= 6 ? '4-6h' : '6h+';
-        if (!buckets[bucket]) buckets[bucket] = [];
-        buckets[bucket].push(d.actualSleep);
-    });
-    var body = '';
-    ['0-2h', '2-4h', '4-6h', '6h+'].forEach(function(b) {
-        if (!buckets[b] || buckets[b].length === 0) return;
-        var avg = Math.round(buckets[b].reduce(function(s, v) { return s + v; }, 0) / buckets[b].length);
-        body += '<div class="ins-metric-row"><span class="ins-metric-label">Last dose ' + b + ' after wake</span><span class="ins-metric-value">' + _fmtOnset(avg) + ' <span style="color:#9C948B;font-size:0.8em;">(' + buckets[b].length + ')</span></span></div>';
-    });
-    el.innerHTML = '<div class="ins-section-hdr" onclick="toggleInsSection(\'insDosingWindows\')">' +
-        '<span class="ins-section-title">&#9200; Dosing Windows</span>' +
-        '<span class="ins-section-arrow">&#9660;</span></div>' +
-        '<div class="ins-section-body">' + body + '</div>';
-}
-
 // Section 7: Caffeine Timing
 function renderInsCaffeineTiming(days) {
     var el = document.getElementById('insCaffeineTiming');
@@ -2644,47 +2482,6 @@ function renderInsSleepEfficiency(days) {
 
     el.innerHTML = '<div class="ins-section-hdr" onclick="toggleInsSection(\'insSleepEfficiency\')">' +
         '<span class="ins-section-title">&#128200; Sleep Efficiency</span>' +
-        '<span class="ins-section-arrow">&#9660;</span></div>' +
-        '<div class="ins-section-body">' + body + '</div>';
-}
-
-// Section 9: Prediction Reliability by Context
-function renderInsPredictionReliability(days) {
-    var el = document.getElementById('insPredictionReliability');
-    if (!el) return;
-    var withBoth = days.filter(function(d) { return d.predictedSleep != null && d.actualSleep != null; });
-    if (withBoth.length < 5) { el.style.display = 'none'; return; }
-    el.style.display = '';
-
-    var contexts = [
-        { label: 'High Dose (40mg+)', filter: function(d) { return d.totalAmpDose >= 40; } },
-        { label: 'Low Dose (<30mg)', filter: function(d) { return d.totalAmpDose > 0 && d.totalAmpDose < 30; } },
-        { label: 'With Caffeine', filter: function(d) { return d.totalCaffDose > 0; } },
-        { label: 'No Caffeine', filter: function(d) { return !d.totalCaffDose; } },
-        { label: 'Workout Days', filter: function(d) { return d.hadWorkout; } },
-        { label: 'VitC Days', filter: function(d) { return d.hadVitC; } },
-        { label: 'Low Sleep (<6h)', filter: function(d) { return d.hoursSlept != null && d.hoursSlept < 6; } },
-        { label: 'No Modifiers', filter: function(d) { return !d.hadWorkout && !d.hadSauna && !d.hadVitC; } }
-    ];
-    var body = '';
-    var results = [];
-    contexts.forEach(function(ctx) {
-        var matched = withBoth.filter(ctx.filter);
-        if (matched.length < 2) return;
-        var absErrors = matched.map(function(d) { return Math.abs(computeSleepDelta(d.predictedSleep, d.actualSleep)); });
-        var avgErr = Math.round(absErrors.reduce(function(s, v) { return s + v; }, 0) / absErrors.length);
-        results.push({ label: ctx.label, avgErr: avgErr, count: matched.length });
-    });
-    results.sort(function(a, b) { return a.avgErr - b.avgErr; });
-    results.forEach(function(r) {
-        var color = r.avgErr <= 30 ? '#5E8A5E' : r.avgErr <= 60 ? '#C4923A' : '#B85C5C';
-        body += '<div class="ins-metric-row"><span class="ins-metric-label">' + r.label + ' (' + r.count + ')</span><span class="ins-metric-value" style="color:' + color + ';">&plusmn;' + r.avgErr + 'min</span></div>';
-    });
-    if (results.length > 0) {
-        body += '<div style="font-size:0.72em;color:#9C948B;margin-top:6px;">Sorted by accuracy (best first)</div>';
-    }
-    el.innerHTML = '<div class="ins-section-hdr" onclick="toggleInsSection(\'insPredictionReliability\')">' +
-        '<span class="ins-section-title">&#127919; Prediction Reliability</span>' +
         '<span class="ins-section-arrow">&#9660;</span></div>' +
         '<div class="ins-section-body">' + body + '</div>';
 }
@@ -2832,123 +2629,6 @@ function renderInsRiskIndicators(days) {
     }
     el.innerHTML = '<div class="ins-section-hdr" onclick="toggleInsSection(\'insRiskIndicators\')">' +
         '<span class="ins-section-title">&#9888; Risk Indicators</span>' +
-        '<span class="ins-section-arrow">&#9660;</span></div>' +
-        '<div class="ins-section-body">' + body + '</div>';
-}
-
-// Section 13: Personal Records
-function renderInsPersonalRecords(days) {
-    var el = document.getElementById('insPersonalRecords');
-    if (!el) return;
-    if (days.length < 3) { el.style.display = 'none'; return; }
-    el.style.display = '';
-
-    var records = [];
-    // Earliest sleep
-    var withOnset = days.filter(function(d) { return d.actualSleep != null; });
-    if (withOnset.length > 0) {
-        var earliest = withOnset.reduce(function(best, d) { return d.actualSleep < best.actualSleep ? d : best; });
-        records.push(['Earliest Sleep', _fmtOnset(earliest.actualSleep) + ' (' + parseLocalDate(earliest.date).toLocaleDateString('en-US', {month:'short',day:'numeric'}) + ')']);
-    }
-
-    // Most sleep
-    var withSleep = days.filter(function(d) { return d.hoursSlept != null && d.hoursSlept > 0; });
-    if (withSleep.length > 0) {
-        var mostSleep = withSleep.reduce(function(best, d) { return d.hoursSlept > best.hoursSlept ? d : best; });
-        records.push(['Most Sleep', mostSleep.hoursSlept.toFixed(1) + 'h (' + parseLocalDate(mostSleep.date).toLocaleDateString('en-US', {month:'short',day:'numeric'}) + ')']);
-    }
-
-    // Longest 7h+ streak
-    var sorted = days.slice().sort(function(a, b) { return a.date.localeCompare(b.date); });
-    var streak = 0, maxStreak7 = 0;
-    sorted.forEach(function(d) {
-        if (d.hoursSlept != null && d.hoursSlept >= 7) { streak++; maxStreak7 = Math.max(maxStreak7, streak); }
-        else { streak = 0; }
-    });
-    if (maxStreak7 > 0) records.push(['Longest 7h+ Streak', maxStreak7 + ' days']);
-
-    // Most accurate prediction
-    var withBoth = days.filter(function(d) { return d.predictedSleep != null && d.actualSleep != null; });
-    if (withBoth.length > 0) {
-        var mostAccurate = withBoth.reduce(function(best, d) {
-            var err = Math.abs(computeSleepDelta(d.predictedSleep, d.actualSleep));
-            var bestErr = Math.abs(computeSleepDelta(best.predictedSleep, best.actualSleep));
-            return err < bestErr ? d : best;
-        });
-        var bestErr = Math.abs(computeSleepDelta(mostAccurate.predictedSleep, mostAccurate.actualSleep));
-        records.push(['Most Accurate Prediction', '&plusmn;' + Math.round(bestErr) + 'min (' + parseLocalDate(mostAccurate.date).toLocaleDateString('en-US', {month:'short',day:'numeric'}) + ')']);
-    }
-
-    var body = records.map(function(r) {
-        return '<div class="ins-metric-row"><span class="ins-metric-label">' + r[0] + '</span><span class="ins-metric-value">' + r[1] + '</span></div>';
-    }).join('');
-    el.innerHTML = '<div class="ins-section-hdr" onclick="toggleInsSection(\'insPersonalRecords\')">' +
-        '<span class="ins-section-title">&#127942; Personal Records</span>' +
-        '<span class="ins-section-arrow">&#9660;</span></div>' +
-        '<div class="ins-section-body">' + body + '</div>';
-}
-
-// Section 14: Research Benchmarks
-function renderInsResearchBenchmarks(days) {
-    var el = document.getElementById('insResearchBenchmarks');
-    if (!el) return;
-    var withSleep = days.filter(function(d) { return d.hoursSlept != null && d.hoursSlept > 0; });
-    if (withSleep.length < 3) { el.style.display = 'none'; return; }
-    el.style.display = '';
-
-    var avgHrs = withSleep.reduce(function(s, d) { return s + d.hoursSlept; }, 0) / withSleep.length;
-    var withOnset = days.filter(function(d) { return d.actualSleep != null; });
-    var onsetStd = withOnset.length >= 3 ? Math.round(_stdDev(withOnset.map(function(d) { return d.actualSleep; }))) : null;
-
-    var body = '';
-    // Sleep duration benchmark
-    var durationPct = Math.min(100, Math.round(avgHrs / 9 * 100));
-    var durationColor = avgHrs >= 7 ? '#5E8A5E' : avgHrs >= 6 ? '#C4923A' : '#B85C5C';
-    body += '<div class="ins-benchmark"><div class="ins-benchmark__label">Sleep Duration vs Recommended 7-9h (Hirshkowitz 2015)</div>';
-    body += '<div class="ins-benchmark__bar"><div class="ins-benchmark__fill" style="width:' + Math.round(7/9*100) + '%;background:rgba(94,138,94,0.15);"></div>';
-    body += '<div class="ins-benchmark__marker" style="left:' + durationPct + '%;background:' + durationColor + ';"></div></div>';
-    body += '<div class="ins-benchmark__range"><span>0h</span><span style="color:' + durationColor + ';">You: ' + avgHrs.toFixed(1) + 'h</span><span>9h</span></div></div>';
-
-    // Variability benchmark
-    if (onsetStd !== null) {
-        var varPct = Math.min(100, Math.round(onsetStd / 180 * 100));
-        var varColor = onsetStd <= 60 ? '#5E8A5E' : onsetStd <= 120 ? '#C4923A' : '#B85C5C';
-        body += '<div class="ins-benchmark"><div class="ins-benchmark__label">Sleep Time Variability vs &lt;60min target (Wittmann 2006)</div>';
-        body += '<div class="ins-benchmark__bar"><div class="ins-benchmark__fill" style="width:' + Math.round(60/180*100) + '%;background:rgba(94,138,94,0.15);"></div>';
-        body += '<div class="ins-benchmark__marker" style="left:' + varPct + '%;background:' + varColor + ';"></div></div>';
-        body += '<div class="ins-benchmark__range"><span>0min</span><span style="color:' + varColor + ';">You: &plusmn;' + onsetStd + 'min</span><span>180min</span></div></div>';
-    }
-
-    // Caffeine cutoff benchmark
-    var withCaffData = days.filter(function(d) { return d.totalCaffDose > 0 && d.actualSleep != null && d.caffeine && d.caffeine.length > 0; });
-    if (withCaffData.length >= 2) {
-        var totalGap = 0;
-        withCaffData.forEach(function(d) {
-            var lastCaff = 0;
-            (d.caffeine || []).forEach(function(c) {
-                var ct = typeof c.time === 'string' ? timeToMinutes(c.time) : c.time;
-                if (ct > lastCaff) lastCaff = ct;
-            });
-            var gap = d.actualSleep - lastCaff;
-            if (gap < 0) gap += 1440;
-            totalGap += gap;
-        });
-        var avgGapMins = Math.round(totalGap / withCaffData.length);
-        var gapPct = Math.min(100, Math.round(avgGapMins / 600 * 100));
-        var gapColor = avgGapMins >= 360 ? '#5E8A5E' : avgGapMins >= 240 ? '#C4923A' : '#B85C5C';
-        body += '<div class="ins-benchmark"><div class="ins-benchmark__label">Caffeine-to-Sleep Gap vs 6h minimum (Drake 2013)</div>';
-        body += '<div class="ins-benchmark__bar"><div class="ins-benchmark__fill" style="width:' + Math.round(360/600*100) + '%;background:rgba(94,138,94,0.15);"></div>';
-        body += '<div class="ins-benchmark__marker" style="left:' + gapPct + '%;background:' + gapColor + ';"></div></div>';
-        body += '<div class="ins-benchmark__range"><span>0h</span><span style="color:' + gapColor + ';">You: ' + (avgGapMins/60).toFixed(1) + 'h</span><span>10h</span></div></div>';
-    }
-
-    // Adderall XR context
-    body += '<div style="font-size:0.72em;color:#9C948B;margin-top:10px;padding:8px;background:rgba(0,0,0,0.03);border-radius:6px;">';
-    body += '<strong>Adderall XR Pharmacokinetics:</strong> Terminal half-life ~11h (FDA label). 50% IR at T+0, 50% DR at T+4h. Full clearance varies by dose and individual metabolism.';
-    body += '</div>';
-
-    el.innerHTML = '<div class="ins-section-hdr" onclick="toggleInsSection(\'insResearchBenchmarks\')">' +
-        '<span class="ins-section-title">&#128218; Research Benchmarks</span>' +
         '<span class="ins-section-arrow">&#9660;</span></div>' +
         '<div class="ins-section-body">' + body + '</div>';
 }
