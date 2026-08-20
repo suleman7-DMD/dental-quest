@@ -75,6 +75,15 @@ function getDefaultState() {
             weight: 190,
             sleepTarget: 8
         },
+        calibration: {
+            autoFit: true,             // master switch; false = frozen
+            fittedThreshold: null,     // mg; null = use settings.sleepThreshold
+            lastFitDate: null,         // YYYY-MM-DD of last fit run (once per day)
+            lastAdjustment: 0,         // mg delta applied by last fit (for the card)
+            lastFitNights: 0,          // nights used in last fit
+            manualPauseUntil: null,    // YYYY-MM-DD; manual slider edit pauses auto-fit 7 days
+            fittedCaffHalfLife: null   // hours; null = use settings.caffHalfLife
+        },
         history: {},
         _version: 0,
         sleepHistory: {},

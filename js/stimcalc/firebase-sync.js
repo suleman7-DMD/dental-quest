@@ -146,6 +146,7 @@ function mergeRemoteState(remoteData) {
         history: migrateArrayToObject(remote.history || state.history, 'hist'),
         modifiers: { ...state.modifiers, ...(remote.modifiers || {}) },
         settings: { ...state.settings, ...(remote.settings || {}) },
+        calibration: Object.assign({}, getDefaultState().calibration, state.calibration || {}, (remote.calibration || {})),
         sleepHistory: { ...state.sleepHistory, ...(remote.sleepHistory || {}) },
         sleepDailyLogs: { ...state.sleepDailyLogs, ...(remote.sleepDailyLogs || {}) },
         workoutPlan: { ...state.workoutPlan, ...(remote.workoutPlan || {}) },

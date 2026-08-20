@@ -172,6 +172,8 @@ function autoPopulateFeedback() {
     });
 
     if (updated) {
+        // New/refreshed deltaMinutes entries → let auto-calibration re-fit (once/day, self-guarded).
+        if (typeof runAutoCalibration === 'function') runAutoCalibration();
         saveState();
         if (yesterdayFeedback) {
             const fb = yesterdayFeedback;
@@ -1096,9 +1098,9 @@ function renderAccDirectionalBias(stats) {
         body += '<div class="ins-metric-row"><span class="ins-metric-label">Low Dose (<40mg) Bias</span><span class="ins-metric-value">' + (ldBias > 0 ? '+' : '') + ldBias + 'min (' + lowDose.length + ')</span></div>';
     }
 
-    // Recommendation
+    // Recommendation — model v2 handles threshold adjustment automatically.
     if (Math.abs(avgError) > 15) {
-        var rec = avgError > 0 ? 'Consider lowering your Sleep Threshold by ' + Math.round(Math.abs(avgError) / 15) + 'mg' : 'Consider raising your Sleep Threshold by ' + Math.round(Math.abs(avgError) / 15) + 'mg';
+        var rec = 'Auto-calibration is handling this — see the Calibration card.';
         body += '<div style="font-size:0.78em;color:#6B7C5E;margin-top:8px;padding:8px;background:rgba(107,124,94,0.08);border-radius:6px;">' + rec + '</div>';
     }
     el.innerHTML = '<div class="ins-section-hdr" onclick="toggleInsSection(\'accDirectionalBias\')">' +
@@ -1903,13 +1905,13 @@ function submitFeedback() {
         state.sleepDailyLogs[recent.date].deltaMinutes = state.history[recent.id].deltaMinutes;
         state.sleepDailyLogs[recent.date].absError = state.history[recent.id].absError;
 
+        // Manual feedback wrote a new deltaMinutes entry → let auto-calibration re-fit
+        // before saving (once/day, self-guarded) so the change persists in this save.
+        if (typeof runAutoCalibration === 'function') runAutoCalibration();
         saveState();
         renderSleepIntelligence();
         closeFeedbackModal();
         showToast('Feedback recorded! This helps calibrate your settings.');
-
-        // Suggest calibration if consistently off
-        suggestCalibration();
     }
 }
 
@@ -1967,68 +1969,50 @@ function calculateAccuracyStats(days) {
 }
 
 function getCalibrationRecommendation() {
-    const allWithFeedback = getValues(state.history).filter(e =>
-        e.actualSleep !== null && e.actualSleep !== undefined && !isNaN(e.actualSleep) &&
-        e.predictedSleep !== null && e.predictedSleep !== undefined && !isNaN(e.predictedSleep)
-    );
-    const entries = allWithFeedback.slice().sort((a, b) => b.date.localeCompare(a.date)).slice(0, 10);
+    // Model v2: mirror the auto-fit math (computeCalibrationFit in calibration.js) so the
+    // Accuracy page reports the same decay-weighted numbers the nightly fit acts on.
+    // Return shape is preserved for any legacy callers: { recommendation, confidence, adjustmentMg, details }.
+    const fit = (typeof computeCalibrationFit === 'function') ? computeCalibrationFit() : { eligible: false, nights: 0, avgDelta: null, suggestedStep: 0 };
+    const active = (typeof getActiveBaseThreshold === 'function') ? getActiveBaseThreshold() : (state.settings.sleepThreshold ?? 14);
 
-    if (entries.length === 0) return {
-        recommendation: 'No feedback data yet. Save a prediction and log actual sleep to start calibrating.',
-        confidence: 'none', adjustmentMg: null, details: null
-    };
-    if (entries.length < 3) return {
-        recommendation: 'Only ' + entries.length + ' data point(s). Need 3+ for calibration advice.',
-        confidence: 'none', adjustmentMg: null, details: null
-    };
+    if (!fit.eligible) {
+        const minNights = (typeof CALIBRATION !== 'undefined') ? CALIBRATION.MIN_NIGHTS : 5;
+        const need = Math.max(0, minNights - fit.nights);
+        return {
+            recommendation: fit.nights === 0
+                ? 'No feedback data yet. Save a prediction and log actual sleep to start calibrating.'
+                : 'Learning — log ' + need + ' more night(s) for a calibration read (need ' + minNights + '+).',
+            confidence: 'none', adjustmentMg: null, details: null
+        };
+    }
 
-    const deltas = entries.map(e => computeSleepDelta(e.predictedSleep, e.actualSleep));
-    const avgDelta = deltas.reduce((s, v) => s + v, 0) / deltas.length;
-    const absErrors = deltas.map(d => Math.abs(d));
-    const avgAbsError = absErrors.reduce((s, v) => s + v, 0) / absErrors.length;
-    const confidence = allWithFeedback.length >= 15 ? 'high' : allWithFeedback.length >= 5 ? 'medium' : 'low';
-    const currentThreshold = state.settings.sleepThreshold;
+    const thMin = (typeof CALIBRATION !== 'undefined') ? CALIBRATION.THRESHOLD_MIN : 8;
+    const thMax = (typeof CALIBRATION !== 'undefined') ? CALIBRATION.THRESHOLD_MAX : 22;
+    const avgDelta = Math.round(fit.avgDelta);
+    const avgAbsError = Math.abs(avgDelta);
+    const confidence = fit.nights >= 15 ? 'high' : fit.nights >= 10 ? 'medium' : 'low';
+    // Positive delta (slept later than predicted) → auto-fit LOWERS the threshold.
+    const suggestedThreshold = Math.round(Math.max(thMin, Math.min(thMax, active - fit.suggestedStep)) * 10) / 10;
+    const adjustmentMg = Math.round((suggestedThreshold - active) * 10) / 10;
 
-    if (avgAbsError <= 30) return {
-        recommendation: 'Predictions are accurate (avg ' + Math.round(avgAbsError) + ' min off). No adjustment needed.',
-        confidence: confidence, adjustmentMg: 0,
-        details: { avgDelta: Math.round(avgDelta), avgAbsError: Math.round(avgAbsError), sampleSize: entries.length, currentThreshold: currentThreshold, suggestedThreshold: currentThreshold }
-    };
-
-    let adjustmentMg = null, recommendation = '';
-    if (avgDelta > 30) {
-        adjustmentMg = avgDelta > 60 ? -2 : -1;
-        const newTh = Math.max(8, currentThreshold + adjustmentMg);
-        recommendation = 'You fall asleep ' + Math.round(avgDelta) + ' min later than predicted. Try lowering Sleep Threshold from ' + currentThreshold + 'mg to ' + newTh + 'mg (you\'re more sensitive than assumed).';
-    } else if (avgDelta < -30) {
-        adjustmentMg = avgDelta < -60 ? 2 : 1;
-        const newTh = Math.min(25, currentThreshold + adjustmentMg);
-        recommendation = 'You fall asleep ' + Math.round(Math.abs(avgDelta)) + ' min earlier than predicted. Try raising Sleep Threshold from ' + currentThreshold + 'mg to ' + newTh + 'mg (you\'re less sensitive than assumed).';
+    let recommendation;
+    if (avgAbsError <= 15) {
+        recommendation = 'Predictions are on target (avg ' + (avgDelta > 0 ? '+' : '') + avgDelta + ' min over ' + fit.nights + ' nights). Auto-calibration is holding the threshold near ' + active.toFixed(1) + 'mg.';
+    } else if (avgDelta > 0) {
+        recommendation = 'You fall asleep ' + avgAbsError + ' min later than predicted on average (' + fit.nights + ' nights). Auto-calibration is lowering the threshold toward ' + suggestedThreshold.toFixed(1) + 'mg.';
     } else {
-        recommendation = 'Predictions vary by ' + Math.round(avgAbsError) + ' min avg without consistent direction. May be due to variable sleep debt or exercise timing. Keep logging.';
+        recommendation = 'You fall asleep ' + avgAbsError + ' min earlier than predicted on average (' + fit.nights + ' nights). Auto-calibration is raising the threshold toward ' + suggestedThreshold.toFixed(1) + 'mg.';
     }
 
     return {
         recommendation: recommendation, confidence: confidence, adjustmentMg: adjustmentMg,
-        details: { avgDelta: Math.round(avgDelta), avgAbsError: Math.round(avgAbsError), sampleSize: entries.length, currentThreshold: currentThreshold, suggestedThreshold: adjustmentMg !== null ? Math.max(8, Math.min(25, currentThreshold + adjustmentMg)) : currentThreshold }
+        details: { avgDelta: avgDelta, avgAbsError: avgAbsError, sampleSize: fit.nights, currentThreshold: active, suggestedThreshold: suggestedThreshold }
     };
 }
 
-// BUG FIX 2: Use computeSleepDelta instead of raw subtraction
-function suggestCalibration() {
-    const withFeedback = getValues(state.history).filter(h => h.actualSleep !== null && h.actualSleep !== undefined && !isNaN(h.actualSleep)).sort((a, b) => b.date.localeCompare(a.date)).slice(0, 5);
-    if (withFeedback.length < 3) return;
-
-    const avgDiff = withFeedback.reduce((sum, h) => sum + computeSleepDelta(h.predictedSleep, h.actualSleep), 0) / withFeedback.length;
-
-    if (avgDiff > 30) {
-        // Consistently sleeping later than predicted - lower threshold
-        showToast('Tip: You seem more sensitive. Try lowering your Sleep Threshold in settings.');
-    } else if (avgDiff < -30) {
-        // Sleeping earlier - raise threshold
-        showToast('Tip: You might be less sensitive. Try raising your Sleep Threshold in settings.');
-    }
-}
+// The old manual calibration-suggestion toast was retired (model v2): threshold tuning
+// is now handled by the auto-calibration engine (runAutoCalibration / computeCalibrationFit
+// in calibration.js).
 
 // ============================================
 // SLEEP INTELLIGENCE TAB SYSTEM

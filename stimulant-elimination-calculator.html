@@ -4374,7 +4374,7 @@
                             <div class="sc-card-title" style="margin-top:4px;">Calibration</div>
                             <div class="sc-calibration-inline">
                                 <div class="input-group"><label>Amp t&#189;</label><input type="number" id="ampHalfLife" value="11" min="8" max="15" step="0.5" onchange="recalculate()"></div>
-                                <div class="input-group"><label>Amp Thresh</label><input type="number" id="sleepThreshold" value="14" min="8" max="25" step="1" onchange="recalculate()"></div>
+                                <div class="input-group"><label>Amp Thresh</label><input type="number" id="sleepThreshold" value="14" min="8" max="25" step="1" onchange="calOnThresholdInput(this)"></div>
                                 <div class="input-group"><label>Caff t&#189;</label><input type="number" id="caffHalfLife" value="5" min="3" max="8" step="0.5" onchange="recalculate()"></div>
                                 <div class="input-group"><label>Caff Thresh</label><input type="number" id="caffThreshold" value="25" min="10" max="50" step="5" onchange="recalculate()"></div>
                                 <div class="input-group"><label>Weight</label><input type="number" id="weight" value="190" min="100" max="350" step="1" onchange="recalculate()"></div>
@@ -4817,6 +4817,7 @@
     <script src="js/stimcalc/graph.js?v=20260315"></script>
     <script src="js/stimcalc/med-inventory.js?v=20260316"></script>
     <script src="js/stimcalc/week-glance.js?v=20260321c"></script>
+    <script src="js/stimcalc/calibration.js?v=20260819"></script>
     <script src="js/stimcalc/init.js?v=20260402a"></script>
 </body>
 </html>
