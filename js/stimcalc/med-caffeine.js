@@ -3,6 +3,11 @@
 // ============================================
 
 function addMedEntry(dose = 50, time = null) {
+    dose = Number(dose);
+    if (!Number.isFinite(dose) || dose <= 0 || dose > 200) {
+        showToast('Invalid dose');
+        return;
+    }
     const now = new Date();
     const defaultTime = time || `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
     const today = getLocalDateString(now); // YYYY-MM-DD format
@@ -70,7 +75,9 @@ function updateMedEntry(id, field, value) {
     const med = state.medications ? state.medications[id] : null;
     if (med) {
         if (field === 'dose') {
-            med.dose = parseInt(value);
+            const newDose = parseInt(value, 10);
+            if (!Number.isFinite(newDose) || newDose <= 0) return;
+            med.dose = newDose;
             // Only re-render for dose changes (affects stacking warning display)
             renderMedEntries();
         } else if (field === 'time') {
@@ -207,6 +214,11 @@ function updateStackingWarning() {
 }
 
 function addCaffeine(amount, name) {
+    amount = Number(amount);
+    if (!Number.isFinite(amount) || amount <= 0 || amount > 1000) {
+        showToast('Invalid caffeine amount');
+        return;
+    }
     const now = new Date();
     const time = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
     const today = getLocalDateString(now);
@@ -215,7 +227,7 @@ function addCaffeine(amount, name) {
     if (!state.caffeine || Array.isArray(state.caffeine)) {
         state.caffeine = migrateArrayToObject(state.caffeine, 'caf');
     }
-    state.caffeine[id] = { id, amount, name, time, date: today, updatedAt: now.toISOString() };
+    state.caffeine[id] = { id, amount, name: name || 'Caffeine', time, date: today, updatedAt: now.toISOString() };
     renderCaffeineEntries();
     renderFocusCaffeineList(); // FIX Bug 5: Keep Focus Mode in sync
     recalculate();
@@ -272,7 +284,7 @@ function renderCaffeineEntries() {
             ${dateSelector}
             <span class="caffeine-info">${escapeHtml(caff.name)} (${caff.amount}mg)${sipBadge}</span>
             <input type="time" value="${caff.time}" onchange="updateCaffeineTime('${caff.id}', this.value)"
-                   style="padding: 4px 8px; background: var(--sc-surface-warm, #F5F2ED); border: 1px solid var(--sc-border, rgba(0,0,0,0.12)); border-radius: 6px; color: var(--sc-text, #2C2825); font-size: 0.85em; width: 100px;">
+                   style="padding: 4px 8px; background: var(--sc-surface-warm, #F5F2ED); border: 1px solid var(--sc-border, rgba(0,0,0,0.12)); border-radius: 6px; color: var(--sc-text, #2C2825); font-size: 0.85em; width: 112px;">
             <button class="remove-btn sc-btn sc-btn--ghost" style="width: 24px; height: 24px; font-size: 1em;" onclick="removeCaffeine('${caff.id}')">×</button>
         </div>
     `}).join('');

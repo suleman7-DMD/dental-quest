@@ -1551,6 +1551,25 @@ function loadState() {
         if (!state._stamps) state._stamps = {};
         if (!state._stampSigs) state._stampSigs = {};
 
+        // Drop corrupt dose records (non-finite dose/amount) — one NaN poisons every
+        // load calculation. Tombstone them so the removal survives cross-device merges.
+        Object.keys(state.medications).forEach(id => {
+            const rec = state.medications[id];
+            const d = Number(rec && rec.dose);
+            if (!Number.isFinite(d) || d <= 0) {
+                state.tombstones.meds[String(id)] = new Date().toISOString();
+                delete state.medications[id];
+            }
+        });
+        Object.keys(state.caffeine).forEach(id => {
+            const rec = state.caffeine[id];
+            const a = Number(rec && rec.amount);
+            if (!Number.isFinite(a) || a <= 0) {
+                state.tombstones.caffeine[String(id)] = new Date().toISOString();
+                delete state.caffeine[id];
+            }
+        });
+
         // Clear today's entries (fresh start each day)
         const today = getLocalDateString();
         // Get most recent history entry to check date

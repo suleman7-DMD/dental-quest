@@ -358,7 +358,9 @@ function calculateAmpLoad(atMinutes) {
     // FIX: Use getValues() for object iteration
     getValues(state.medications).forEach(med => {
         const baseDoseTime = timeToMinutes(med.time);
-        const totalDose = med.dose;
+        const totalDose = Number(med.dose);
+        // Corrupt/legacy record with no usable dose — one NaN would poison the whole sum
+        if (!Number.isFinite(totalDose) || totalDose <= 0) return;
         const medDate = med.date || today;
 
         // Calculate days offset from today (positive = past, negative = future)
@@ -421,6 +423,9 @@ function calculateCaffLoad(atMinutes) {
 
     getValues(state.caffeine).forEach(caff => {
         const baseDoseTime = timeToMinutes(caff.time);
+        const amount = Number(caff.amount);
+        // Corrupt/legacy record with no usable amount — one NaN would poison the whole sum
+        if (!Number.isFinite(amount) || amount <= 0) return;
         const caffDate = caff.date || today;
 
         // Calculate days offset from today (positive = past, negative = future)
@@ -446,7 +451,7 @@ function calculateCaffLoad(atMinutes) {
         // Only count if the dose has already occurred
         if (atMinutes >= effectiveDoseTime) {
             const elapsed = atMinutes - effectiveDoseTime;
-            totalLoad += caff.amount * Math.pow(0.5, elapsed / halfLife);
+            totalLoad += amount * Math.pow(0.5, elapsed / halfLife);
         }
     });
 
