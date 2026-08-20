@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>Body Comp Tracker | Suleman Shaikh, DMD</title>
 
     <!-- Firebase SDK - Same as Dental Quest App -->
@@ -44,6 +44,7 @@
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #0f172a 100%);
             min-height: 100vh;
+            min-height: 100dvh;
             padding: 15px;
             color: var(--text-primary);
         }
@@ -194,6 +195,7 @@
             align-items: center;
             justify-content: center;
             z-index: 10000;
+            padding: max(16px, env(safe-area-inset-top)) max(16px, env(safe-area-inset-right)) max(16px, env(safe-area-inset-bottom)) max(16px, env(safe-area-inset-left));
         }
 
         .checkpoint-modal {
@@ -202,6 +204,7 @@
             width: 90%;
             max-width: 600px;
             max-height: 80vh;
+            max-height: 80dvh;
             overflow: hidden;
             display: flex;
             flex-direction: column;
@@ -236,6 +239,8 @@
         .checkpoint-modal-body {
             padding: 20px;
             overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
+            overscroll-behavior: contain;
             flex: 1;
         }
 
@@ -611,13 +616,17 @@
             bottom: 0;
             background: rgba(0, 0, 0, 0.8);
             display: flex;
-            align-items: center;
+            align-items: flex-start;
             justify-content: center;
             z-index: 1000;
             padding: 20px;
+            padding: max(20px, env(safe-area-inset-top)) max(20px, env(safe-area-inset-right)) max(20px, env(safe-area-inset-bottom)) max(20px, env(safe-area-inset-left));
             opacity: 0;
             visibility: hidden;
-            transition: all 0.2s;
+            transition: opacity 0.2s, visibility 0.2s;
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
+            overscroll-behavior: contain;
         }
 
         .modal-overlay.active {
@@ -630,8 +639,12 @@
             border-radius: 16px;
             width: 100%;
             max-width: 400px;
+            margin: auto;
             max-height: 85vh;
+            max-height: 85dvh;
             overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
+            overscroll-behavior: contain;
             border: 1px solid var(--border-color);
         }
 
@@ -1277,6 +1290,28 @@
             background: linear-gradient(90deg, var(--accent-purple), #ec4899);
         }
 
+        .simple-progress-fill.deficit {
+            /* zone color set inline in renderSimpleView (green → amber → orange → red) */
+            background: linear-gradient(90deg, var(--accent-green), #34d399);
+        }
+
+        .deficit-goal-tag {
+            font-size: 0.72em;
+            font-weight: 500;
+            color: var(--text-muted);
+            background: var(--bg-tertiary);
+            padding: 1px 6px;
+            border-radius: 6px;
+            margin-left: 4px;
+            vertical-align: middle;
+        }
+
+        .carb-note {
+            font-size: 0.8em;
+            font-weight: 400;
+            color: var(--text-muted);
+        }
+
         /* Calories Burned Summary (Simple View) */
         .simple-burn-summary {
             background: var(--bg-secondary);
@@ -1680,6 +1715,7 @@
             justify-content: center;
             z-index: 10000;
             padding: 20px;
+            padding: max(20px, env(safe-area-inset-top)) max(20px, env(safe-area-inset-right)) max(20px, env(safe-area-inset-bottom)) max(20px, env(safe-area-inset-left));
         }
 
         .logic-modal-content {
@@ -1689,6 +1725,7 @@
             max-width: 600px;
             width: 100%;
             max-height: 85vh;
+            max-height: 85dvh;
             overflow: hidden;
             display: flex;
             flex-direction: column;
@@ -4844,7 +4881,8 @@
 
             .modal {
                 max-height: 90vh;
-                margin: 10px;
+                max-height: 90dvh;
+                margin: 10px auto;
             }
 
             /* Quick Meal Modal mobile */
@@ -4966,6 +5004,24 @@
 
         /* Touch interaction improvements */
         @media (hover: none) and (pointer: coarse) {
+            /* iOS zooms the page when a focused field is < 16px. Force >= 16px
+               on every focusable input so tapping meal/import fields never zooms. */
+            input[type="text"],
+            input[type="number"],
+            input[type="date"],
+            input[type="time"],
+            input[type="email"],
+            input[type="password"],
+            input[type="search"],
+            input:not([type]),
+            select,
+            textarea,
+            .form-input,
+            .import-textarea,
+            .quick-meal-paste textarea {
+                font-size: 16px;
+            }
+
             .quick-meal-btn:active,
             .action-btn:active,
             .body-comp-tab:active {
@@ -6913,12 +6969,21 @@
                         <div class="simple-progress-fill protein" id="proProgressFill" style="width: 0%;"></div>
                     </div>
                 </div>
+                <div class="progress-row" id="deficitProgressRow">
+                    <div class="progress-label-row">
+                        <span class="progress-name">Deficit <span class="deficit-goal-tag">goal 500</span></span>
+                        <span class="progress-values" id="deficitValues"><span class="carb-note">log a meal to track</span></span>
+                    </div>
+                    <div class="simple-progress-bar">
+                        <div class="simple-progress-fill deficit" id="deficitProgressFill" style="width: 0%;"></div>
+                    </div>
+                </div>
                 <div class="progress-row" id="carbsProgressRow">
                     <div class="progress-label-row">
                         <span class="progress-name">Carbs</span>
-                        <span class="progress-values"><strong id="carbCurrent">0</strong>g / <span id="carbTarget">150</span>g</span>
+                        <span class="progress-values" id="carbValues"><strong>0</strong>g logged</span>
                     </div>
-                    <div class="simple-progress-bar">
+                    <div class="simple-progress-bar" id="carbBarContainer" style="display: none;">
                         <div class="simple-progress-fill carbs" id="carbProgressFill" style="width: 0%; background: linear-gradient(90deg, #f59e0b, #f97316);"></div>
                     </div>
                 </div>
@@ -10742,7 +10807,7 @@
             modal.className = 'modal-overlay active';
             modal.id = 'resolveDaysModal';
             modal.innerHTML = `
-                <div class="modal" style="max-width: 440px; max-height: 85vh; display: flex; flex-direction: column;">
+                <div class="modal" style="max-width: 440px; max-height: 85dvh; display: flex; flex-direction: column;">
                     <div class="modal-header">
                         <span class="modal-title">⚖️ Resolve Untracked Days</span>
                         <button class="modal-close" onclick="closeResolveDaysModal()">×</button>
@@ -11001,17 +11066,60 @@
                 proRemainingEl.style.color = proLeft > 0 ? 'var(--text-muted)' : 'var(--accent-green)';
             }
 
-            // Update carbs progress (always show now)
+            // Carbs: always tracked, but only a *goal* on Brain Days.
+            // Non-brain day → compact info line (no bar). Brain day → real target + bar.
             const carbTarget = targets.carbs ?? 0;
-            const carbPercent = carbTarget > 0 ? Math.min((totals.carbs / carbTarget) * 100, 100) : 0;
-            document.getElementById('carbCurrent').textContent = totals.carbs;
-            document.getElementById('carbTarget').textContent = carbTarget;
-            document.getElementById('carbProgressFill').style.width = `${carbPercent}%`;
+            const carbValuesEl = document.getElementById('carbValues');
+            const carbBarContainer = document.getElementById('carbBarContainer');
+            if (carbTarget > 0) {
+                const carbPercent = Math.min((totals.carbs / carbTarget) * 100, 100);
+                if (carbValuesEl) carbValuesEl.innerHTML = `<strong>${totals.carbs}</strong>g / ${carbTarget}g`;
+                if (carbBarContainer) carbBarContainer.style.display = '';
+                const carbFill = document.getElementById('carbProgressFill');
+                if (carbFill) carbFill.style.width = `${carbPercent}%`;
+            } else {
+                if (carbValuesEl) carbValuesEl.innerHTML = `<strong>${totals.carbs}</strong>g logged <span class="carb-note">· tracked, no goal today</span>`;
+                if (carbBarContainer) carbBarContainer.style.display = 'none';
+            }
 
             // Update burn summary (TDEE / Deficit)
             // FIXED: Use calculateTDEE() which includes activity multiplier (was using bmr + active directly)
             const tdee = calculateTDEE(getWeightForDate(state.today.date || getLocalDateString()), state.profile.height_cm, state.profile.age, state.today.date);
             const deficit = tdee - totals.calories;
+
+            // Deficit progress bar — full green when the 500-cal deficit goal is met,
+            // draining through amber → orange → red as intake climbs toward maintenance (TDEE).
+            (function updateDeficitBar() {
+                const fill = document.getElementById('deficitProgressFill');
+                const valuesEl = document.getElementById('deficitValues');
+                if (!fill || !valuesEl) return;
+                const GOAL_DEFICIT = 500;
+                const noFood = totals.mealCount === 0 && totals.calories === 0 && totals.protein === 0;
+                if (noFood) {
+                    fill.style.width = '0%';
+                    valuesEl.innerHTML = '<span class="carb-note">log a meal to track</span>';
+                    return;
+                }
+                const pct = Math.max(0, Math.min((deficit / GOAL_DEFICIT) * 100, 100));
+                let grad, note, noteColor;
+                if (deficit >= GOAL_DEFICIT) {
+                    grad = 'linear-gradient(90deg, #10b981, #34d399)';
+                    note = '✓ on track'; noteColor = 'var(--accent-green)';
+                } else if (deficit >= 200) {
+                    grad = 'linear-gradient(90deg, #f59e0b, #fbbf24)';
+                    note = 'building deficit'; noteColor = 'var(--accent-yellow)';
+                } else if (deficit > 0) {
+                    grad = 'linear-gradient(90deg, #f97316, #fb923c)';
+                    note = '⚠ near maintenance'; noteColor = 'var(--accent-orange)';
+                } else {
+                    grad = 'linear-gradient(90deg, #ef4444, #f87171)';
+                    note = '⚠ over maintenance'; noteColor = 'var(--accent-red)';
+                }
+                fill.style.width = `${pct}%`;
+                fill.style.background = grad;
+                const sign = deficit >= 0 ? '+' : '';
+                valuesEl.innerHTML = `<strong>${sign}${formatNumber(deficit)}</strong> <span class="carb-note">/ ${GOAL_DEFICIT} goal · <span style="color:${noteColor};">${note}</span></span>`;
+            })();
 
             const simpleTDEE = document.getElementById('simpleTDEE');
             const simpleEaten = document.getElementById('simpleEaten');
@@ -24774,7 +24882,7 @@ TDEE TODAY: ~${formatNumber(calculateTDEE(getWeightForDate(state.today.date || g
             modal.className = 'modal-overlay active';
             modal.id = 'dayDetailModal';
             modal.innerHTML = `
-                <div class="modal" style="max-width: 420px; max-height: 90vh; display: flex; flex-direction: column;">
+                <div class="modal" style="max-width: 420px; max-height: 90dvh; display: flex; flex-direction: column;">
                     <div class="modal-header">
                         <span class="modal-title">${statusEmoji[status]} ${dateDisplay}</span>
                         <button class="modal-close" onclick="closeDayDetailModal()">×</button>
@@ -25633,8 +25741,8 @@ TDEE TODAY: ~${formatNumber(calculateTDEE(getWeightForDate(state.today.date || g
         });
     </script>
     <!-- Sully OS Command Center: shared router + relay glue (loaded last) -->
-    <script src="js/sullyos/router.js?v=20260820d"></script>
-    <script src="js/sullyos/command-center.js?v=20260820d"></script>
+    <script src="js/sullyos/router.js?v=20260820f"></script>
+    <script src="js/sullyos/command-center.js?v=20260820f"></script>
     <script>
         // Register Body Comp with the Sully OS Command Center. Monkey-patches the
         // native Preview/Import handlers so foreign blocks relay to the other apps.
