@@ -920,7 +920,7 @@ function saveSleepDayLog() {
         totalCaffDose: getValues(state.caffeine).reduce(function(s, c) { return s + (c.amount || 0); }, 0),
         medications: JSON.parse(JSON.stringify(getValues(state.medications))),
         caffeine: JSON.parse(JSON.stringify(getValues(state.caffeine))),
-        hadWorkout: !!(state.workoutPlan && state.workoutPlan.applied),
+        hadWorkout: !!(state.modifiers && state.modifiers.workout && state.modifiers.workout.active),
         hadVitC: !!(state.modifiers && state.modifiers.vitaminC && state.modifiers.vitaminC.active),
         allNighterMode: !!state.allNighterMode,
         predictedSleep: existing.predictedSleep ?? null,
@@ -1197,7 +1197,7 @@ function renderAccInputVerification() {
     if (state.modifiers) {
         if (state.modifiers.vitaminC && state.modifiers.vitaminC.active) modifiers.push('VitC');
     }
-    if (state.workoutPlan && state.workoutPlan.applied) modifiers.push('Workout');
+    if (state.modifiers && state.modifiers.workout && state.modifiers.workout.active) modifiers.push('Workout');
 
     var rows = [
         ['Current Amp Load', ampLoad + 'mg'],
