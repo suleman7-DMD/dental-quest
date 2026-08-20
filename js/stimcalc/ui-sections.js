@@ -365,7 +365,7 @@ function getNicotineCooldownTime() {
 
 // Override toggleModifier for unified view checkboxes
 function toggleModifier(checkbox, modifierName) {
-    const KNOWN_MODIFIERS = ['vitaminC', 'heavyLift', 'sauna'];
+    const KNOWN_MODIFIERS = ['vitaminC', 'workout'];
     if (!KNOWN_MODIFIERS.includes(modifierName)) return;
     if (!state.modifiers[modifierName]) {
         state.modifiers[modifierName] = { active: false };
@@ -379,16 +379,57 @@ function toggleModifier(checkbox, modifierName) {
             state.modifiers.vitaminC.date = getLocalDateString();
         }
         updateVitCBadge();
-    } else if (modifierName === 'sauna') {
-        const timeRow = document.getElementById('saunaTimeRow');
+    } else if (modifierName === 'workout') {
+        const timeRow = document.getElementById('workoutTimeRow');
         if (timeRow) timeRow.style.display = checkbox.checked ? 'flex' : 'none';
-        if (checkbox.checked && !state.modifiers.sauna.date) {
-            state.modifiers.sauna.date = getLocalDateString();
+        if (checkbox.checked) {
+            state.modifiers.workout.date = getLocalDateString(new Date());
+            const endEl = document.getElementById('workoutEndTime');
+            if (endEl) state.modifiers.workout.endTime = endEl.value;
+            const intenseEl = document.getElementById('workoutIntense');
+            if (intenseEl) state.modifiers.workout.intense = intenseEl.checked;
         }
     }
 
     recalculate();
     saveState();
+}
+
+// What does this chip actually do to TONIGHT's prediction?
+// Computed by toggling the modifier off in-memory and diffing the two sleep times.
+function getModifierEffectReadout(modName) {
+    const mod = state.modifiers && state.modifiers[modName];
+    if (!mod || !mod.active) return '';
+    if (modName === 'vitaminC') {
+        // getVitaminCStatus() returns a STATUS STRING ('inactive'|'future'|'expired'|'effective'),
+        // not the {expired, hoursAgo} object the original spec assumed. Adapt to the string,
+        // and reconstruct hoursAgo from the same math getVitaminCStatus() uses internally.
+        if (getVitaminCStatus() === 'expired') {
+            const vitCDate = sanitizeModifierDate(mod.date);
+            const dayOffset = Math.round((parseLocalDate(vitCDate) - parseLocalDate(getLocalDateString())) / 86400000);
+            const vitCMin = timeToMinutes(mod.time) + dayOffset * 1440;
+            const hoursAgo = Math.round((getCurrentMinutes() - vitCMin) / 60);
+            return 'expired (taken ' + hoursAgo + 'h ago)';
+        }
+    }
+    const withRes = calculateSleepTime();
+    let withoutRes;
+    mod.active = false;
+    try {
+        withoutRes = calculateSleepTime();
+    } finally {
+        mod.active = true;
+    }
+    const delta = computeSleepDelta(withRes.sleepTime, withoutRes.sleepTime);
+    if (delta === 0) {
+        const bf = withRes.bindingFactor;
+        if (bf && bf !== 'adderall' && modName === 'vitaminC') {
+            return '\u00b10 \u2014 ' + bf + ' is the limiting factor tonight, not Adderall';
+        }
+        return '\u00b10 tonight';
+    }
+    const sign = delta < 0 ? '\u2212' : '+';
+    return 'tonight: ' + sign + Math.abs(delta) + ' min';
 }
 
 function updateModifierTimeInputs() {
@@ -486,10 +527,16 @@ function restoreModifierUI() {
         updateVitCBadge();
     }
 
-    // Restore lift toggle
-    const liftToggle = document.getElementById('liftToggle');
-    if (liftToggle && state.modifiers.heavyLift && state.modifiers.heavyLift.active) {
-        liftToggle.checked = true;
+    // Restore workout toggle
+    const workoutToggle = document.getElementById('workoutToggle');
+    if (workoutToggle && state.modifiers.workout && state.modifiers.workout.active) {
+        workoutToggle.checked = true;
+        const workoutTimeRow = document.getElementById('workoutTimeRow');
+        if (workoutTimeRow) workoutTimeRow.style.display = 'flex';
+        const workoutEndTime = document.getElementById('workoutEndTime');
+        if (workoutEndTime) workoutEndTime.value = state.modifiers.workout.endTime || '18:00';
+        const workoutIntense = document.getElementById('workoutIntense');
+        if (workoutIntense) workoutIntense.checked = !!state.modifiers.workout.intense;
     }
 
     // Restore sauna toggle
@@ -503,8 +550,8 @@ function restoreModifierUI() {
     }
 
     // Sync chip visuals with checkbox states
-    var chipMap = { vitaminC: 'vitCChip', heavyLift: 'liftChip', sauna: 'saunaChip' };
-    var checkboxMap = { vitaminC: 'vitCToggle', heavyLift: 'liftToggle', sauna: 'saunaToggle' };
+    var chipMap = { vitaminC: 'vitCChip', workout: 'workoutChip', sauna: 'saunaChip' };
+    var checkboxMap = { vitaminC: 'vitCToggle', workout: 'workoutToggle', sauna: 'saunaToggle' };
     Object.keys(chipMap).forEach(function(mod) {
         var chip = document.getElementById(chipMap[mod]);
         var cb = document.getElementById(checkboxMap[mod]);

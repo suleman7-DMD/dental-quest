@@ -1814,6 +1814,17 @@
             font-size: 1.1em;
         }
 
+        .sc-modifier-chip .sc-chip-effect {
+            font-size: 0.85em;
+            font-weight: 500;
+            color: var(--fg-tertiary);
+            margin-left: 4px;
+        }
+
+        .sc-modifier-chip .sc-chip-effect:empty {
+            display: none;
+        }
+
         .sc-allnighter-chip {
             display: inline-flex;
             align-items: center;
@@ -4438,10 +4449,10 @@
                             <div class="sc-card-title">Modifiers</div>
                             <div class="sc-modifier-chips">
                                 <button class="sc-modifier-chip" id="vitCChip" onclick="toggleModifierChip('vitaminC')">
-                                    <span class="chip-icon">&#127818;</span> Vitamin C
+                                    <span class="chip-icon">&#127818;</span> Vitamin C<span class="sc-chip-effect" id="vitCEffect"></span>
                                 </button>
-                                <button class="sc-modifier-chip" id="liftChip" onclick="toggleModifierChip('heavyLift')">
-                                    <span class="chip-icon">&#127947;</span> Heavy Lift
+                                <button class="sc-modifier-chip" id="workoutChip" onclick="toggleModifierChip('workout')">
+                                    <span class="chip-icon">&#127947;</span> Worked out today<span class="sc-chip-effect" id="workoutEffect"></span>
                                 </button>
                                 <button class="sc-modifier-chip" id="saunaChip" onclick="toggleModifierChip('sauna')">
                                     <span class="chip-icon">&#9832;</span> Sauna
@@ -4449,7 +4460,7 @@
                             </div>
                             <!-- Hidden checkboxes for backward compat with toggleModifier/restoreModifierUI -->
                             <input type="checkbox" id="vitCToggle" style="display:none;">
-                            <input type="checkbox" id="liftToggle" style="display:none;">
+                            <input type="checkbox" id="workoutToggle" style="display:none;">
                             <input type="checkbox" id="saunaToggle" style="display:none;">
                             <span id="vitCBadge" class="modifier-badge" style="display:none;"></span>
                             <div class="modifier-time" id="vitCTimeRow" style="display:none; margin-top:8px;">
@@ -4458,6 +4469,12 @@
                                     <option value="today">Today</option>
                                     <option value="tomorrow">Tomorrow</option>
                                 </select>
+                            </div>
+                            <div class="modifier-time" id="workoutTimeRow" style="display:none; margin-top:8px; align-items:center; gap:8px;">
+                                <input type="time" id="workoutEndTime" value="18:00" onchange="state.modifiers.workout.endTime = this.value; recalculate(); saveState();">
+                                <label style="display:flex; align-items:center; gap:6px; font-size:0.85em; color:var(--fg-secondary); cursor:pointer;">
+                                    <input type="checkbox" id="workoutIntense" onchange="state.modifiers.workout.intense = this.checked; recalculate(); saveState();"> intense session
+                                </label>
                             </div>
                             <div class="modifier-time" id="saunaTimeRow" style="display:none; margin-top:8px;">
                                 <input type="time" id="saunaTime" value="18:00" onchange="updateModifierTimeInputs(); recalculate();">

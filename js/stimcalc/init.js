@@ -297,6 +297,12 @@ function updateUI(vm) {
     // --- Workout status ---
     updateWorkoutStatus();
 
+    // --- Modifier chip live effect readouts (dashboard only; runs after the currentPage guard) ---
+    var vitCEffectEl = document.getElementById('vitCEffect');
+    if (vitCEffectEl) vitCEffectEl.textContent = getModifierEffectReadout('vitaminC');
+    var workoutEffectEl = document.getElementById('workoutEffect');
+    if (workoutEffectEl) workoutEffectEl.textContent = getModifierEffectReadout('workout');
+
     // --- Bottleneck indicator ---
     var bottleneckEl = document.getElementById('bottleneckIndicator');
     if (bottleneckEl && vm.primaryBottleneck) {
@@ -1128,8 +1134,9 @@ function scToggleCalibration() {
 }
 
 function toggleModifierChip(modName) {
-    var chipMap = { vitaminC: 'vitCChip', heavyLift: 'liftChip', sauna: 'saunaChip' };
-    var checkboxMap = { vitaminC: 'vitCToggle', heavyLift: 'liftToggle', sauna: 'saunaToggle' };
+    var chipMap = { vitaminC: 'vitCChip', workout: 'workoutChip' };
+    var checkboxMap = { vitaminC: 'vitCToggle', workout: 'workoutToggle' };
+    var timeRowMap = { vitaminC: 'vitCTimeRow', workout: 'workoutTimeRow' };
 
     var cb = document.getElementById(checkboxMap[modName]);
     if (cb) {
@@ -1140,13 +1147,8 @@ function toggleModifierChip(modName) {
     var chip = document.getElementById(chipMap[modName]);
     if (chip) chip.classList.toggle('active', cb && cb.checked);
 
-    if (modName === 'vitaminC') {
-        var row = document.getElementById('vitCTimeRow');
-        if (row) row.style.display = (cb && cb.checked) ? 'flex' : 'none';
-    } else if (modName === 'sauna') {
-        var row = document.getElementById('saunaTimeRow');
-        if (row) row.style.display = (cb && cb.checked) ? 'flex' : 'none';
-    }
+    var row = document.getElementById(timeRowMap[modName]);
+    if (row) row.style.display = (cb && cb.checked) ? 'flex' : 'none';
 }
 
 function scNavigate(page) {
