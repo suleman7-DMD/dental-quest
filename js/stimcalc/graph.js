@@ -10,11 +10,16 @@ function drawGraph() {
     // Set canvas size — bail if container not visible (e.g. display:none page)
     const rect = canvas.parentElement.getBoundingClientRect();
     if (rect.width < 10) return;
-    canvas.width = rect.width - 40;
-    canvas.height = rect.height - 40;
-
-    const width = canvas.width;
-    const height = canvas.height;
+    const dpr = window.devicePixelRatio || 1;
+    const cssW = rect.width - 40;
+    const cssH = rect.height - 40;
+    canvas.width = cssW * dpr;
+    canvas.height = cssH * dpr;
+    canvas.style.width = cssW + 'px';
+    canvas.style.height = cssH + 'px';
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    const width = cssW;
+    const height = cssH;
     const padding = { left: 50, right: 20, top: 20, bottom: 30 };
     const graphWidth = width - padding.left - padding.right;
     const graphHeight = height - padding.top - padding.bottom;
@@ -298,14 +303,16 @@ function setupGraphTooltip() {
         const x = e.clientX - rect.left;
         const y = e.clientY - rect.top;
 
-        // Graph dimensions (must match drawGraph)
+        // Graph dimensions (must match drawGraph) — use CSS-pixel dims from
+        // getBoundingClientRect so hit-testing stays consistent with the mouse
+        // coords above after the canvas backing store is DPR-scaled.
         const padding = { left: 50, right: 20, top: 20, bottom: 30 };
-        const graphWidth = canvas.width - padding.left - padding.right;
-        const graphHeight = canvas.height - padding.top - padding.bottom;
+        const graphWidth = rect.width - padding.left - padding.right;
+        const graphHeight = rect.height - padding.top - padding.bottom;
 
         // Check if within graph area
-        if (x < padding.left || x > canvas.width - padding.right ||
-            y < padding.top || y > canvas.height - padding.bottom) {
+        if (x < padding.left || x > rect.width - padding.right ||
+            y < padding.top || y > rect.height - padding.bottom) {
             tooltip.style.display = 'none';
             return;
         }
@@ -562,7 +569,7 @@ function _drawSleepGraphToCanvas(canvasId, data) {
 
     // Collect valid data points for the curve
     const validPoints = [];
-    if (data.length < 2) return;
+    if (!data || !Array.isArray(data) || data.length < 2) return;
     const pointSpacing = graphWidth / (data.length - 1);
 
     data.forEach((d, i) => {

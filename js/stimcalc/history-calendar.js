@@ -92,6 +92,12 @@ function saveDay() {
 
 // Auto-populate feedback from sleep history (wakeTime - hoursSlept = sleep onset)
 function autoPopulateFeedback() {
+    // Bug 15: normalize sleepHistory dual shape (legacy bare-number entries → object)
+    Object.keys(state.sleepHistory || {}).forEach(k => {
+        const v = state.sleepHistory[k];
+        if (typeof v === 'number') state.sleepHistory[k] = { hoursSlept: v, wakeTime: null };
+    });
+
     const historyValues = getValues(state.history);
     let updated = false;
     let yesterdayFeedback = null;
@@ -329,7 +335,7 @@ function cleanupHistory() {
     // Prune entries older than 180 days
     const cutoffDate = new Date();
     cutoffDate.setDate(cutoffDate.getDate() - 180);
-    const cutoffStr = cutoffDate.toISOString().split('T')[0];
+    const cutoffStr = getLocalDateString(cutoffDate);
     let pruned = false;
     const remainingValues = getValues(state.history);
     remainingValues.forEach(entry => {
@@ -1192,11 +1198,11 @@ function renderAccInputVerification() {
         ['Current Amp Load', ampLoad + 'mg'],
         ['Current Caff Load', caffLoad + 'mg'],
         ['Effective Threshold', threshold + 'mg (base ' + baseThresh + ' + ' + sleepDebt + ' debt)'],
-        ['Hours Slept Last Night', hoursSlept + 'h'],
-        ['Wake Time', wakeTime],
+        ['Hours Slept Last Night', escapeHtml(hoursSlept) + 'h'],
+        ['Wake Time', escapeHtml(wakeTime)],
         ['All-Nighter Mode', allNighter],
-        ['Medications Today', meds.length > 0 ? meds.map(function(m) { return m.dose + 'mg @ ' + m.time; }).join(', ') : 'None'],
-        ['Caffeine Today', caff.length > 0 ? caff.map(function(c) { return c.amount + 'mg @ ' + c.time; }).join(', ') : 'None'],
+        ['Medications Today', meds.length > 0 ? meds.map(function(m) { return escapeHtml(m.dose + 'mg @ ' + m.time); }).join(', ') : 'None'],
+        ['Caffeine Today', caff.length > 0 ? caff.map(function(c) { return escapeHtml(c.amount + 'mg @ ' + c.time); }).join(', ') : 'None'],
         ['Active Modifiers', modifiers.length > 0 ? modifiers.join(', ') : 'None']
     ];
     var body = '<div style="font-size:0.72em;color:#9C948B;margin-bottom:8px;">This is exactly what the prediction algorithm sees right now.</div>';
