@@ -212,10 +212,11 @@ function confirmMorningCheckin() {
     state.wakeTime = wake;
     state.hoursSleptLastNight = hrs;
     state.sleepHistory = state.sleepHistory || {};
-    state.sleepHistory[today] = { hoursSlept: hrs, wakeTime: wake };
+    state.sleepHistory[today] = { hoursSlept: hrs, wakeTime: wake, updatedAt: new Date().toISOString() };
     state.sleepDailyLogs = state.sleepDailyLogs || {};
     state.sleepDailyLogs[today] = Object.assign({}, state.sleepDailyLogs[today] || {}, {
-        actualSleep: hrs, wakeTime: wake, checkedIn: true, source: 'checkin'
+        actualSleep: hrs, wakeTime: wake, checkedIn: true, source: 'checkin',
+        lastUpdated: new Date().toISOString()
     });
 
     if (typeof autoPopulateFeedback === 'function') autoPopulateFeedback();

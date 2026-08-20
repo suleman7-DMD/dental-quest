@@ -337,8 +337,6 @@ function renderGhostLoad() {
 // ============================================
 
 // Old workout planner removed (Task 11 needle-test cut). state.workoutPlan kept for schema compat.
-// restoreWorkoutPlanUI() kept as a no-op stub; still referenced by firebase-sync.js.
-function restoreWorkoutPlanUI() {}
 
 function toggleSettings() {
     const content = document.getElementById('settingsContent');

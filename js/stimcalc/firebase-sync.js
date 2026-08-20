@@ -26,6 +26,7 @@ var localChangesSinceLastSync = false;
 var lastSyncTimestamp = null;
 var realtimeSyncEnabled = false;
 var lastKnownTimestamp = null;
+var mergeNeedsPush = false; // set by mergeRemoteState: local data survived that the cloud lacks
 
 // ============================================
 // SYNC STATUS UI
@@ -100,60 +101,229 @@ function scUpdateSidebarSync(status, text) {
 // MERGE UTILITIES
 // ============================================
 
-// Deep merge helper for nested objects
-function deepMerge(target, source) {
-    if (!source) return target;
-    if (!target) return source;
-    const result = { ...target };
-    for (const key in source) {
-        if (source[key] === null || source[key] === undefined) continue;
-        if (Array.isArray(source[key])) {
-            result[key] = source[key];
-        } else if (typeof source[key] === 'object' && typeof target[key] === 'object') {
-            result[key] = deepMerge(target[key], source[key]);
-        } else {
-            result[key] = source[key];
-        }
-    }
-    return result;
-}
-
 // Track local changes for conflict detection
 function markLocalChange() {
     localChangesSinceLastSync = true;
 }
 
 // ============================================
-// CONSOLIDATED MERGE FUNCTION
-// Replaces 4 duplicated merge blocks:
-//   1. loadFromFirebase()
-//   2. setupRealtimeSync() callback
-//   3. visibilitychange "visible" handler
-//   4. applyRemoteState()
+// === SYNC MERGE ENGINE (pure) ===
+// Per-record newer-wins union merge + tombstone deletes + group stamps.
+// Replaces the old whole-snapshot remote-wins rebuild (sync audit RC1/RC6/RC7).
+// Keep this region framework-free: the replay harness
+// (scripts/stimcalc-sync-replay.mjs) extracts everything between the
+// SYNC MERGE ENGINE sentinels and runs it through real merge scenarios.
 // ============================================
+
+// A record's edit stamp. Collections stamp `updatedAt` at CRUD sites;
+// history + sleepDailyLogs predate the engine and carry `lastUpdated`.
+function getRecStamp(rec) {
+    if (!rec || typeof rec !== 'object') return null;
+    return rec.updatedAt || rec.lastUpdated || null;
+}
+
+// Union two tombstone maps (id -> deletion ISO timestamp), newest per key.
+function mergeTombstoneMap(local, remote) {
+    const out = Object.assign({}, local || {});
+    Object.keys(remote || {}).forEach(k => {
+        if (!out[k] || remote[k] > out[k]) out[k] = remote[k];
+    });
+    return out;
+}
+
+// Per-record newer-wins UNION of two collections:
+// - one-sided records are kept (no more whole-collection last-write-wins);
+// - id on both sides: strict-> newer stamp wins, ties/unstamped keep remote
+//   (legacy behavior — prevents ping-pong);
+// - a tombstone purges a record ONLY when strictly newer than the record's
+//   own stamp, so re-add-after-delete survives; unstamped records lose to it.
+// needsPush = the cloud is missing something we kept (local-only record,
+// newer-local copy, or a purge of a record the cloud still holds).
+function mergeCollection(local, remote, tombstones) {
+    const loc = local || {};
+    const rem = remote || {};
+    const tomb = tombstones || {};
+    const merged = {};
+    let needsPush = false;
+
+    Object.keys(rem).forEach(id => {
+        if (rem[id] === null || rem[id] === undefined) return;
+        merged[id] = rem[id];
+    });
+
+    Object.keys(loc).forEach(id => {
+        if (loc[id] === null || loc[id] === undefined) return;
+        if (!(id in merged)) {
+            merged[id] = loc[id];
+            needsPush = true;
+            return;
+        }
+        const ls = getRecStamp(loc[id]);
+        const rs = getRecStamp(merged[id]);
+        if (ls && (!rs || ls > rs)) {
+            merged[id] = loc[id];
+            needsPush = true;
+        }
+    });
+
+    Object.keys(tomb).forEach(id => {
+        if (!(id in merged)) return;
+        const rs = getRecStamp(merged[id]);
+        if (!rs || tomb[id] > rs) {
+            delete merged[id];
+            if (id in rem) needsPush = true; // cloud still holds it — push the purge
+        }
+    });
+
+    return { merged: merged, needsPush: needsPush };
+}
+
+// Stable stringify (sorted keys) so semantically-equal objects hash equal.
+function stableSig(obj) {
+    if (obj === null || obj === undefined) return 'null';
+    if (typeof obj !== 'object') return JSON.stringify(obj);
+    if (Array.isArray(obj)) return '[' + obj.map(stableSig).join(',') + ']';
+    return '{' + Object.keys(obj).sort().map(k => JSON.stringify(k) + ':' + stableSig(obj[k])).join(',') + '}';
+}
+
+// The 6 stamped scalar groups. dayScalars bundles the loose top-level fields.
+function getStampGroups(st) {
+    return {
+        dayScalars: { wakeTime: st.wakeTime, hoursSleptLastNight: st.hoursSleptLastNight, allNighterMode: st.allNighterMode },
+        modifiers: st.modifiers,
+        settings: st.settings,
+        calibration: st.calibration,
+        workoutPlan: st.workoutPlan,
+        nicotine: st.nicotine
+    };
+}
+
+// Called from BOTH save paths after the guards: bump a group's stamp ONLY
+// when its content signature actually changed, so a no-op save can't claim
+// "newer" and revert another device's edit.
+function updateGroupStamps() {
+    if (!state._stamps) state._stamps = {};
+    if (!state._stampSigs) state._stampSigs = {};
+    const groups = getStampGroups(state);
+    const nowIso = new Date().toISOString();
+    Object.keys(groups).forEach(g => {
+        const sig = stableSig(groups[g]);
+        if (state._stampSigs[g] !== sig) {
+            state._stampSigs[g] = sig;
+            state._stamps[g] = nowIso;
+        }
+    });
+}
+
+// After a merge, re-baseline signatures to the merged content so the next
+// save only bumps a group stamp on a REAL local edit.
+function reseedStampSigs() {
+    if (!state._stampSigs) state._stampSigs = {};
+    const groups = getStampGroups(state);
+    Object.keys(groups).forEach(g => {
+        state._stampSigs[g] = stableSig(groups[g]);
+    });
+}
+
+// Retention caps — deliberate, documented limits applied on the merged union
+// so both devices converge to the same caps (no prune-then-push loss, no
+// resurrection ping-pong): history + sleepDailyLogs 180d, sleepHistory 365d,
+// tombstones 60d. Mirrors the loadState() localStorage prunes.
+function applyRetentionCaps(st) {
+    const yearAgo = new Date();
+    yearAgo.setDate(yearAgo.getDate() - 365);
+    const yearCutoff = getLocalDateString(yearAgo);
+    const halfYearAgo = new Date();
+    halfYearAgo.setDate(halfYearAgo.getDate() - 180);
+    const halfYearCutoff = getLocalDateString(halfYearAgo);
+    const tombAgo = new Date();
+    tombAgo.setDate(tombAgo.getDate() - 60);
+    const tombCutoff = tombAgo.toISOString();
+
+    Object.keys(st.sleepHistory || {}).forEach(d => { if (d < yearCutoff) delete st.sleepHistory[d]; });
+    Object.keys(st.sleepDailyLogs || {}).forEach(d => { if (d < halfYearCutoff) delete st.sleepDailyLogs[d]; });
+    Object.keys(st.history || {}).forEach(id => {
+        const e = st.history[id];
+        if (e && e.date && e.date < halfYearCutoff) delete st.history[id];
+    });
+    Object.keys(st.tombstones || {}).forEach(mapName => {
+        const map = st.tombstones[mapName] || {};
+        Object.keys(map).forEach(k => { if (map[k] < tombCutoff) delete map[k]; });
+    });
+}
+
+// Merge a remote snapshot into local state. Used by loadFromFirebase(),
+// setupRealtimeSync(), the visibilitychange 'visible' handler, and
+// forceCloudSync(). Sets mergeNeedsPush when local data survived that the
+// cloud doesn't have — the caller schedules a fully-guarded push of the union.
 function mergeRemoteState(remoteData) {
+    mergeNeedsPush = false;
     if (!remoteData) return;
     const remote = remoteData.state || remoteData;
 
-    // Reconstruct state with Firebase winning for all fields
+    let needsPush = false;
+
+    // Tombstone union first — collection purges below use both sides' deletes
+    const localTombs = state.tombstones || {};
+    const remoteTombs = remote.tombstones || {};
+    const tombstones = {
+        meds: mergeTombstoneMap(localTombs.meds, remoteTombs.meds),
+        caffeine: mergeTombstoneMap(localTombs.caffeine, remoteTombs.caffeine),
+        sleepDays: mergeTombstoneMap(localTombs.sleepDays, remoteTombs.sleepDays)
+    };
+
+    // Collections: per-record strict-> newer-wins union + tombstone purge
+    // (history has no user-facing delete — no tombstone map for it)
+    const meds = mergeCollection(migrateArrayToObject(state.medications || {}, 'med'),
+        migrateArrayToObject(remote.medications || {}, 'med'), tombstones.meds);
+    const caff = mergeCollection(migrateArrayToObject(state.caffeine || {}, 'caf'),
+        migrateArrayToObject(remote.caffeine || {}, 'caf'), tombstones.caffeine);
+    const hist = mergeCollection(migrateArrayToObject(state.history || {}, 'hist'),
+        migrateArrayToObject(remote.history || {}, 'hist'), {});
+    const sleepHist = mergeCollection(state.sleepHistory, remote.sleepHistory, tombstones.sleepDays);
+    const sleepLogs = mergeCollection(state.sleepDailyLogs, remote.sleepDailyLogs, tombstones.sleepDays);
+    needsPush = meds.needsPush || caff.needsPush || hist.needsPush
+        || sleepHist.needsPush || sleepLogs.needsPush;
+
+    // Scalar groups: a strictly-newer local stamp keeps the whole local group;
+    // otherwise remote-wins spread (legacy behavior for unstamped/tied stamps).
+    const localStamps = state._stamps || {};
+    const remoteStamps = remote._stamps || {};
+    const stamps = {};
+    const keepLocal = {};
+    ['dayScalars', 'modifiers', 'settings', 'calibration', 'workoutPlan', 'nicotine'].forEach(g => {
+        const ls = localStamps[g] || null;
+        const rs = remoteStamps[g] || null;
+        keepLocal[g] = !!(ls && (!rs || ls > rs));
+        stamps[g] = keepLocal[g] ? ls : (rs || ls || null);
+        if (keepLocal[g]) needsPush = true; // cloud lacks our newer group
+    });
+
     state = {
-        wakeTime: remote.wakeTime || state.wakeTime,
-        hoursSleptLastNight: remote.hoursSleptLastNight !== undefined ? remote.hoursSleptLastNight : state.hoursSleptLastNight,
-        allNighterMode: remote.allNighterMode !== undefined ? remote.allNighterMode : state.allNighterMode,
+        wakeTime: keepLocal.dayScalars ? state.wakeTime : (remote.wakeTime || state.wakeTime),
+        hoursSleptLastNight: keepLocal.dayScalars ? state.hoursSleptLastNight
+            : (remote.hoursSleptLastNight !== undefined ? remote.hoursSleptLastNight : state.hoursSleptLastNight),
+        allNighterMode: keepLocal.dayScalars ? state.allNighterMode
+            : (remote.allNighterMode !== undefined ? remote.allNighterMode : state.allNighterMode),
         // OBJECTS with ID keys (migrated from arrays to prevent Firebase corruption)
-        medications: migrateArrayToObject(remote.medications || state.medications, 'med'),
-        caffeine: migrateArrayToObject(remote.caffeine || state.caffeine, 'caf'),
-        history: migrateArrayToObject(remote.history || state.history, 'hist'),
-        modifiers: { ...state.modifiers, ...(remote.modifiers || {}) },
-        settings: { ...state.settings, ...(remote.settings || {}) },
-        calibration: Object.assign({}, getDefaultState().calibration, state.calibration || {}, (remote.calibration || {})),
-        sleepHistory: { ...state.sleepHistory, ...(remote.sleepHistory || {}) },
-        sleepDailyLogs: { ...state.sleepDailyLogs, ...(remote.sleepDailyLogs || {}) },
-        workoutPlan: { ...state.workoutPlan, ...(remote.workoutPlan || {}) },
-        nicotine: { ...state.nicotine, ...(remote.nicotine || {}) },
-        _version: (remote._version || 0) + 1,
-        // Bug 3: preserve last-write-wins stamp through field-by-field rebuild
-        _lastModified: remote._lastModified || state._lastModified || null,
+        medications: meds.merged,
+        caffeine: caff.merged,
+        history: hist.merged,
+        modifiers: keepLocal.modifiers ? state.modifiers : { ...state.modifiers, ...(remote.modifiers || {}) },
+        settings: keepLocal.settings ? state.settings : { ...state.settings, ...(remote.settings || {}) },
+        calibration: keepLocal.calibration ? state.calibration
+            : Object.assign({}, getDefaultState().calibration, state.calibration || {}, (remote.calibration || {})),
+        sleepHistory: sleepHist.merged,
+        sleepDailyLogs: sleepLogs.merged,
+        workoutPlan: keepLocal.workoutPlan ? state.workoutPlan : { ...state.workoutPlan, ...(remote.workoutPlan || {}) },
+        nicotine: keepLocal.nicotine ? state.nicotine : { ...state.nicotine, ...(remote.nicotine || {}) },
+        tombstones: tombstones,
+        _stamps: stamps,
+        _stampSigs: state._stampSigs || {},
+        // _version is cosmetic (checkpoint labels) — normalize, don't ratchet off one side
+        _version: Math.max(state._version || 0, remote._version || 0) + 1,
+        _lastModified: (state._lastModified && (!remote._lastModified || state._lastModified > remote._lastModified))
+            ? state._lastModified : (remote._lastModified || null),
         _sleepDailyLogsMigrated: remote._sleepDailyLogsMigrated || state._sleepDailyLogsMigrated || false,
         _sleepDailyLogsMigratedV2: remote._sleepDailyLogsMigratedV2 || state._sleepDailyLogsMigratedV2 || false,
         _sleepDailyLogsMigratedV3: remote._sleepDailyLogsMigratedV3 || state._sleepDailyLogsMigratedV3 || false
@@ -162,53 +332,15 @@ function mergeRemoteState(remoteData) {
     // Legacy modifier migration (runs after remote state is merged in)
     migrateHeavyLiftToWorkout();
 
+    applyRetentionCaps(state);
+    reseedStampSigs();
+
     // CRITICAL: Always preserve _dataLoaded
     state._dataLoaded = true;
+
+    mergeNeedsPush = needsPush;
 }
-
-// ============================================
-// CONFLICT RESOLUTION UI
-// ============================================
-
-function showSyncConflictModal(localData, remoteData, onResolve) {
-    const modal = document.createElement('div');
-    modal.id = 'syncConflictModal';
-    modal.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.35);display:flex;align-items:center;justify-content:center;z-index:10000;';
-
-    const localTime = localData.lastSaved ? new Date(localData.lastSaved).toLocaleTimeString() : 'Unknown';
-    const remoteTime = remoteData.lastSaved ? new Date(remoteData.lastSaved).toLocaleTimeString() : 'Unknown';
-    const localDoses = getCount(localData.doses);
-    const remoteDoses = getCount(remoteData.doses);
-
-    // NOTE: This innerHTML uses only static strings + escaped server data (timestamps, counts) — no user input
-    modal.innerHTML = `
-        <div style="background:#FFFFFF;border-radius:16px;padding:24px;max-width:450px;width:90%;border:1px solid rgba(0,0,0,0.08);box-shadow:0 8px 32px rgba(0,0,0,0.12);">
-            <h3 style="color:#C4923A;margin:0 0 16px 0;font-size:1.2em;">\u26A0\uFE0F Sync Conflict Detected</h3>
-            <p style="color:#6B635B;margin-bottom:20px;">Changes were made on another device. Which version do you want to keep?</p>
-            <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:20px;">
-                <div style="background:#F5F2ED;padding:16px;border-radius:8px;">
-                    <div style="color:#5E7A8A;font-weight:600;margin-bottom:8px;">\u{1F4F1} This Device</div>
-                    <div style="color:#9C948B;font-size:0.85em;">${localDoses} doses<br>Last saved: ${localTime}</div>
-                </div>
-                <div style="background:#F5F2ED;padding:16px;border-radius:8px;">
-                    <div style="color:#6B7C5E;font-weight:600;margin-bottom:8px;">\u2601\uFE0F Cloud</div>
-                    <div style="color:#9C948B;font-size:0.85em;">${remoteDoses} doses<br>Last saved: ${remoteTime}</div>
-                </div>
-            </div>
-            <div style="display:flex;gap:10px;">
-                <button onclick="window.resolveSyncConflict('local')" style="flex:1;padding:12px;background:#5E8A5E;border:none;border-radius:8px;color:white;font-weight:600;cursor:pointer;">Keep This Device</button>
-                <button onclick="window.resolveSyncConflict('remote')" style="flex:1;padding:12px;background:#6B7C5E;border:none;border-radius:8px;color:white;font-weight:600;cursor:pointer;">Keep Cloud</button>
-            </div>
-            <button onclick="window.resolveSyncConflict('merge')" style="width:100%;margin-top:10px;padding:10px;background:#EFECE6;border:1px solid rgba(0,0,0,0.12);border-radius:8px;color:#6B635B;cursor:pointer;">Try to Merge Both</button>
-        </div>
-    `;
-    document.body.appendChild(modal);
-    window.resolveSyncConflict = function(choice) {
-        document.body.removeChild(modal);
-        delete window.resolveSyncConflict;
-        onResolve(choice);
-    };
-}
+// === END SYNC MERGE ENGINE ===
 
 // ============================================
 // FIREBASE INITIALIZATION & AUTH
@@ -389,6 +521,11 @@ function saveToFirebase() {
     const saveTime = new Date().toISOString();
     lastKnownTimestamp = saveTime; // Track our own save to ignore in real-time listener
 
+    // Clear the pending-push flag BEFORE the async write — an edit landing
+    // mid-flight re-sets it (and per-record stamps protect it in any merge).
+    // Restored on failure so the 'hidden'/'visible' retry paths still fire.
+    localChangesSinceLastSync = false;
+
     // Save to Firebase
     database.ref(userPath).set({
         state: state,
@@ -399,6 +536,7 @@ function saveToFirebase() {
     })
     .catch(error => {
         console.error('\u274C Firebase save error:', error);
+        localChangesSinceLastSync = true; // push still pending — hide/visible handlers retry
         // Don't show error status, data is still saved locally
     });
 }
@@ -415,18 +553,11 @@ function loadFromFirebase() {
             const data = snapshot.val();
 
             if (data && data.state) {
-                // Bug 3: last-write-wins — if local was edited more recently than the
-                // cloud copy (e.g. a beforeunload-only save that never reached Firebase),
-                // keep local and push it up instead of clobbering it with stale cloud data.
-                const remoteStamp = (data.state && data.state._lastModified) || null;
-                const localStamp = state._lastModified || null;
-                if (localStamp && remoteStamp && localStamp > remoteStamp && !isEmptyState(state)) {
-                    state._dataLoaded = true;
-                    setTimeout(() => saveToFirebase(), 500);
-                } else {
-                    // REFACTORED: Use mergeRemoteState instead of inline merge block
-                    mergeRemoteState(data.state);
-                }
+                // ALWAYS merge — per-record + group stamps keep any newer local
+                // work inside the union. The old "local newer -> skip cloud" path
+                // clobbered cloud-only records (sync audit RC1).
+                if (data.lastUpdated) lastKnownTimestamp = data.lastUpdated;
+                mergeRemoteState(data.state);
 
                 // Bug 11 (reload half): re-clean stale meds a cloud merge may have
                 // reintroduced (cleanupOldMedications ran in init() before this load).
@@ -455,11 +586,6 @@ function loadFromFirebase() {
                 updateAllNighterUI();
                 renderGhostLoad();
 
-                // Restore workout plan UI if applied
-                if (state.workoutPlan && state.workoutPlan.applied) {
-                    restoreWorkoutPlanUI();
-                }
-
                 recalculate();
 
                 // Also update Focus Mode if active
@@ -472,11 +598,11 @@ function loadFromFirebase() {
             } else {
                 // No Firebase data - check if we have local data
                 const hasLocalData = hasRealData(state);
+                state._dataLoaded = true;  // Allow saves after user starts entering data
                 if (hasLocalData) {
-                    state._dataLoaded = true;
-                } else {
-                    // Fresh start - no data anywhere
-                    state._dataLoaded = true;  // Allow saves after user starts entering data
+                    // Cloud is empty but local has real data — push it up (deferred
+                    // + fully guarded; isInitialLoad flips false below, before this fires)
+                    setTimeout(() => { markLocalChange(); saveToFirebase(); }, 600);
                 }
                 updateSyncStatus('connected', 'Connected');
             }
@@ -495,10 +621,12 @@ function loadFromFirebase() {
             // NOW we can allow saves
             isInitialLoad = false;
 
-            // Load medication inventory from cross-app shared path
-            if (typeof scInvLoadFromFirebase === 'function') scInvLoadFromFirebase();
-            // Load week-at-a-glance from graduationRoadmap cross-app path
-            if (typeof scWeekGlanceLoadFromFirebase === 'function') scWeekGlanceLoadFromFirebase();
+            // Local had records the cloud lacked — push the merged union up
+            // (deferred + fully guarded; strict-> stamps guarantee termination)
+            if (mergeNeedsPush) {
+                mergeNeedsPush = false;
+                setTimeout(() => { markLocalChange(); saveToFirebase(); }, 600);
+            }
         })
         .catch(error => {
             console.error('\u274C Firebase load error:', error);
@@ -565,14 +693,9 @@ function setupRealtimeSync() {
 
             lastKnownTimestamp = data.lastUpdated;
 
-            // Bug 12: our own unpushed edit is newer than this remote copy — skip the
-            // merge and let the debounced save push local up (don't lose local work).
-            if (localChangesSinceLastSync && state._lastModified && data.state && data.state._lastModified
-                && state._lastModified > data.state._lastModified) {
-                return;
-            }
-
-            // REFACTORED: Use mergeRemoteState instead of inline merge block
+            // ALWAYS merge — record/group stamps protect unpushed local edits.
+            // (The old "local newer -> skip" left a deaf window that permanently
+            // dropped remote saves; sync audit RC5.)
             mergeRemoteState(data.state);
 
             // Bug 11 (reload half): drop stale meds a merge may have reintroduced.
@@ -597,12 +720,14 @@ function setupRealtimeSync() {
             updateAllNighterUI();
             renderGhostLoad();
 
-            // Restore workout plan if applied
-            if (state.workoutPlan && state.workoutPlan.applied) {
-                restoreWorkoutPlanUI();
-            }
-
             recalculate();
+
+            // Newer/local-only records survived the merge — push the union up
+            // (deferred + fully guarded; our own save's echo is timestamp-suppressed)
+            if (mergeNeedsPush) {
+                mergeNeedsPush = false;
+                setTimeout(() => { markLocalChange(); saveToFirebase(); }, 600);
+            }
 
             // Also update Focus Mode if active
             if (focusMode) {
@@ -637,35 +762,19 @@ function forceCloudSync() {
                 return;
             }
 
-            const remoteState = data.state;
-            const remoteTimestamp = data.lastUpdated ? new Date(data.lastUpdated).getTime() : 0;
-
-            // Check for conflicts
-            if (localChangesSinceLastSync && lastSyncTimestamp && remoteTimestamp > lastSyncTimestamp) {
-                const localData = { doses: getValues(state.medications), lastSaved: lastSyncTimestamp };
-                const remoteData = { doses: getValues(remoteState.medications), lastSaved: remoteTimestamp };
-
-                showSyncConflictModal(localData, remoteData, (choice) => {
-                    if (choice === 'local') {
-                        saveStateImmediate();
-                        showToast('\u2705 Kept local data, pushed to cloud');
-                    } else if (choice === 'remote') {
-                        applyRemoteState(remoteState);
-                        showToast('\u2705 Synced from cloud');
-                    } else if (choice === 'merge') {
-                        const merged = deepMerge(remoteState, state);
-                        applyRemoteState(merged);
-                        saveStateImmediate();
-                        showToast('\u2705 Merged data from both devices');
-                    }
-                    localChangesSinceLastSync = false;
-                    lastSyncTimestamp = Date.now();
-                });
-                return;
+            // Merge — the stamp/tombstone engine resolves conflicts (the old
+            // conflict-modal path is gone), then push the union and any stuck
+            // pending local edits back up.
+            const hadPendingLocal = localChangesSinceLastSync;
+            if (data.lastUpdated) lastKnownTimestamp = data.lastUpdated;
+            mergeRemoteState(data.state);
+            safeLocalStorageSet('stimulantCalculatorState', JSON.stringify(state));
+            renderAll();
+            if (mergeNeedsPush || hadPendingLocal) {
+                mergeNeedsPush = false;
+                markLocalChange();
+                saveToFirebase();
             }
-
-            applyRemoteState(remoteState);
-            localChangesSinceLastSync = false;
             lastSyncTimestamp = Date.now();
             updateSyncStatus('connected', 'Synced \u2713');
             showToast('\u2705 Synced from cloud');
@@ -1162,73 +1271,8 @@ function renderAll() {
     renderCaffeineEntries();
     renderSleepIntelligence();
 
-    if (state.workoutPlan && state.workoutPlan.applied) {
-        restoreWorkoutPlanUI();
-    }
-
     updateAllNighterUI();
     renderGhostLoad();
-    recalculate();
-    if (typeof scInvLoadFromFirebase === 'function') scInvLoadFromFirebase();
-    if (typeof scWeekGlanceLoadFromFirebase === 'function') scWeekGlanceLoadFromFirebase();
-
-    if (focusMode) {
-        renderFocusMode();
-    }
-}
-
-// ============================================
-// APPLY REMOTE STATE
-// ============================================
-
-function applyRemoteState(firebaseState) {
-    state = deepMerge(state, {
-        wakeTime: firebaseState.wakeTime,
-        hoursSleptLastNight: firebaseState.hoursSleptLastNight,
-        // FIX: Migrate to objects to prevent Firebase corruption
-        medications: migrateArrayToObject(firebaseState.medications, 'med'),
-        caffeine: migrateArrayToObject(firebaseState.caffeine, 'caf'),
-        history: migrateArrayToObject(firebaseState.history, 'hist'),
-        modifiers: firebaseState.modifiers || {},
-        settings: firebaseState.settings || {},
-        sleepHistory: firebaseState.sleepHistory || {},
-        sleepDailyLogs: firebaseState.sleepDailyLogs || {},
-        workoutPlan: firebaseState.workoutPlan || {},
-        nicotine: firebaseState.nicotine || {},
-        _version: (firebaseState._version || state._version || 0) + 1,
-        _sleepDailyLogsMigrated: firebaseState._sleepDailyLogsMigrated || state._sleepDailyLogsMigrated || false,
-        _sleepDailyLogsMigratedV2: firebaseState._sleepDailyLogsMigratedV2 || state._sleepDailyLogsMigratedV2 || false,
-        _sleepDailyLogsMigratedV3: firebaseState._sleepDailyLogsMigratedV3 || state._sleepDailyLogsMigratedV3 || false,
-        _dataLoaded: true
-    });
-
-    // Ensure objects are valid (belt + suspenders)
-    if (!state.medications || Array.isArray(state.medications)) state.medications = migrateArrayToObject(state.medications, 'med');
-    if (!state.caffeine || Array.isArray(state.caffeine)) state.caffeine = migrateArrayToObject(state.caffeine, 'caf');
-    if (!state.history || Array.isArray(state.history)) state.history = migrateArrayToObject(state.history, 'hist');
-
-    // Legacy modifier migration (runs after remote state is merged in)
-    migrateHeavyLiftToWorkout();
-
-    safeLocalStorageSet('stimulantCalculatorState', JSON.stringify(state));
-
-    // Re-render everything
-    document.getElementById('wakeTime').value = state.wakeTime;
-    document.getElementById('hoursSlept').value = state.hoursSleptLastNight;
-    document.getElementById('ampHalfLife').value = state.settings.ampHalfLife;
-    document.getElementById('sleepThreshold').value = state.settings.sleepThreshold;
-    document.getElementById('caffHalfLife').value = state.settings.caffHalfLife;
-    document.getElementById('caffThreshold').value = state.settings.caffThreshold;
-    document.getElementById('weight').value = state.settings.weight;
-
-    renderMedEntries();
-    renderCaffeineEntries();
-    renderSleepIntelligence();
-
-    if (state.workoutPlan && state.workoutPlan.applied) {
-        restoreWorkoutPlanUI();
-    }
-
     recalculate();
 
     if (focusMode) {
@@ -1243,15 +1287,18 @@ function applyRemoteState(firebaseState) {
 // Handle tab visibility changes - save on hide, refresh on show - WITH GUARDS
 document.addEventListener('visibilitychange', function() {
     if (document.visibilityState === 'hidden') {
-        // Tab is being hidden - ensure data is saved immediately
-        // GUARD: Only save if we have real data and passed initial load
+        // Tab is being hidden — flush localStorage unconditionally (guarded),
+        // but only push to Firebase when there are UNPUSHED local changes.
+        // The old unconditional .set() re-uploaded stale full snapshots that
+        // clobbered newer saves from other devices (sync audit RC2 — the killer).
         if (!isInitialLoad && hasLoadedFromCloud && state._dataLoaded && !isEmptyState(state)) {
             safeLocalStorageSet('stimulantCalculatorState', JSON.stringify(state));
-            if (firebaseSyncEnabled && database && userPath) {
-                database.ref(userPath).set({
-                    state: state,
-                    lastUpdated: new Date().toISOString()
-                }).catch(err => console.error('Save on hide failed:', err));
+            if (localChangesSinceLastSync && firebaseSyncEnabled && database && userPath) {
+                if (firebaseSaveTimeout) {
+                    clearTimeout(firebaseSaveTimeout);
+                    firebaseSaveTimeout = null;
+                }
+                saveToFirebase(); // full 5-guard path; clears the pending flag itself
             }
         }
     } else if (document.visibilityState === 'visible') {
@@ -1262,21 +1309,41 @@ document.addEventListener('visibilitychange', function() {
                 .then(snapshot => {
                     const data = snapshot.val();
 
-                    // GUARD: Skip empty cloud data
+                    const hadPendingLocal = localChangesSinceLastSync;
+
+                    // GUARD: Skip empty cloud data (but still retry a stuck push)
                     if (!data || !data.state || isEmptyState(data.state)) {
+                        if (hadPendingLocal) saveToFirebase();
                         return;
                     }
 
-                    if (data && data.state && data.lastUpdated > lastKnownTimestamp) {
+                    if (data.lastUpdated && data.lastUpdated !== lastKnownTimestamp) {
+                        // Non-echo remote copy — merge (record/group stamps protect
+                        // unpushed local work), persist, render, then push the union.
                         lastKnownTimestamp = data.lastUpdated;
-                        // REFACTORED: Use mergeRemoteState instead of inline merge block
                         mergeRemoteState(data.state);
+                        safeLocalStorageSet('stimulantCalculatorState', JSON.stringify(state));
 
+                        setIfNotFocused('wakeTime', state.wakeTime);
+                        setIfNotFocused('hoursSlept', state.hoursSleptLastNight);
                         renderMedEntries();
                         renderCaffeineEntries();
                         renderSleepIntelligence();
+                        restoreModifierUI();
+                        updateAllNighterUI();
+                        renderGhostLoad();
                         recalculate();
                         if (focusMode) renderFocusMode();
+
+                        if (mergeNeedsPush || hadPendingLocal) {
+                            mergeNeedsPush = false;
+                            markLocalChange();
+                            saveToFirebase();
+                        }
+                    } else if (hadPendingLocal) {
+                        // Remote is our own echo but a local push is stuck pending
+                        // (debounced save killed by tab freeze) — retry it now.
+                        saveToFirebase();
                     }
                 })
                 .catch(err => console.error('Refresh on visible failed:', err));
@@ -1334,6 +1401,10 @@ function saveState() {
     // All guards passed — safe to save
     // Mark that local changes exist (for conflict detection)
     markLocalChange();
+
+    // Stamp scalar groups whose content actually changed (signature-based —
+    // a no-op save must not claim "newer" or merges would ping-pong)
+    updateGroupStamps();
 
     // Bug 3: stamp modification time (last-write-wins on load / realtime merge)
     state._lastModified = new Date().toISOString();
@@ -1396,6 +1467,10 @@ function saveStateImmediate() {
     // All guards passed — safe to save
     // Mark that local changes exist (for conflict detection)
     markLocalChange();
+
+    // Stamp scalar groups whose content actually changed (signature-based —
+    // a no-op save must not claim "newer" or merges would ping-pong)
+    updateGroupStamps();
 
     // Bug 3: stamp modification time (last-write-wins on load / realtime merge)
     state._lastModified = new Date().toISOString();
@@ -1468,6 +1543,14 @@ function loadState() {
         state.caffeine = migrateArrayToObject(state.caffeine, 'caf');
         state.history = migrateArrayToObject(state.history, 'hist');
 
+        // Sync-engine field shape guards (pre-upgrade snapshots lack these)
+        if (!state.tombstones) state.tombstones = { meds: {}, caffeine: {}, sleepDays: {} };
+        if (!state.tombstones.meds) state.tombstones.meds = {};
+        if (!state.tombstones.caffeine) state.tombstones.caffeine = {};
+        if (!state.tombstones.sleepDays) state.tombstones.sleepDays = {};
+        if (!state._stamps) state._stamps = {};
+        if (!state._stampSigs) state._stampSigs = {};
+
         // Clear today's entries (fresh start each day)
         const today = getLocalDateString();
         // Get most recent history entry to check date
@@ -1520,7 +1603,7 @@ function loadState() {
             }
         });
 
-        // Prune old sleepDailyLogs entries (keep last 180 days for localStorage, full history in Firebase)
+        // Prune old sleepDailyLogs entries (180-day retention cap — also enforced post-merge in applyRetentionCaps so devices converge)
         if (state.sleepDailyLogs) {
             var sixMonthsAgo = new Date();
             sixMonthsAgo.setDate(sixMonthsAgo.getDate() - 180);
@@ -1529,6 +1612,20 @@ function loadState() {
                 if (dateStr < dailyLogCutoff) {
                     delete state.sleepDailyLogs[dateStr];
                 }
+            });
+        }
+
+        // Prune tombstones older than 60 days (they only need to outlive a
+        // realistic device-offline window; matching records are long pruned)
+        if (state.tombstones) {
+            var tombCutoffDate = new Date();
+            tombCutoffDate.setDate(tombCutoffDate.getDate() - 60);
+            var tombCutoffIso = tombCutoffDate.toISOString();
+            Object.keys(state.tombstones).forEach(function(mapName) {
+                var tombMap = state.tombstones[mapName] || {};
+                Object.keys(tombMap).forEach(function(k) {
+                    if (tombMap[k] < tombCutoffIso) delete tombMap[k];
+                });
             });
         }
 

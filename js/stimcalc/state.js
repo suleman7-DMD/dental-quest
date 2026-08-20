@@ -92,6 +92,9 @@ function getDefaultState() {
         _sleepDailyLogsMigrated: false,
         _sleepDailyLogsMigratedV2: false,
         _sleepDailyLogsMigratedV3: false,
+        tombstones: { meds: {}, caffeine: {}, sleepDays: {} }, // delete markers: id -> ISO deleted-at (sync merge engine)
+        _stamps: {},    // per-group edit stamps for scalar-group newer-wins merge
+        _stampSigs: {}, // content signatures backing _stamps (bump only on real change)
         _dataLoaded: false
     };
 }

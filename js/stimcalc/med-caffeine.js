@@ -9,7 +9,7 @@ function addMedEntry(dose = 50, time = null) {
 
     // FIX: Use object with unique ID key instead of array
     const id = generateId('med');
-    const entry = { id, dose, time: defaultTime, date: today };
+    const entry = { id, dose, time: defaultTime, date: today, updatedAt: now.toISOString() };
     if (!state.medications || Array.isArray(state.medications)) {
         state.medications = migrateArrayToObject(state.medications, 'med');
     }
@@ -54,6 +54,10 @@ function cleanupOldMedications() {
 function removeMedEntry(id) {
     // FIX: Delete from object instead of filter array
     if (state.medications && state.medications[id]) {
+        // Tombstone BEFORE delete so the removal survives cross-device merges
+        if (!state.tombstones) state.tombstones = { meds: {}, caffeine: {}, sleepDays: {} };
+        if (!state.tombstones.meds) state.tombstones.meds = {};
+        state.tombstones.meds[String(id)] = new Date().toISOString();
         delete state.medications[id];
     }
     renderMedEntries();
@@ -79,6 +83,7 @@ function updateMedEntry(id, field, value) {
             renderMedEntries(); // Re-render to update date selector color
             renderGhostLoad(); // Update ghost load display
         }
+        med.updatedAt = new Date().toISOString();
         // Always recalculate and save
         recalculate();
         saveState();
@@ -210,7 +215,7 @@ function addCaffeine(amount, name) {
     if (!state.caffeine || Array.isArray(state.caffeine)) {
         state.caffeine = migrateArrayToObject(state.caffeine, 'caf');
     }
-    state.caffeine[id] = { id, amount, name, time, date: today };
+    state.caffeine[id] = { id, amount, name, time, date: today, updatedAt: now.toISOString() };
     renderCaffeineEntries();
     renderFocusCaffeineList(); // FIX Bug 5: Keep Focus Mode in sync
     recalculate();
@@ -231,6 +236,10 @@ function addCustomCaffeine() {
 function removeCaffeine(id) {
     // FIX: Delete from object instead of filter array
     if (state.caffeine && state.caffeine[id]) {
+        // Tombstone BEFORE delete so the removal survives cross-device merges
+        if (!state.tombstones) state.tombstones = { meds: {}, caffeine: {}, sleepDays: {} };
+        if (!state.tombstones.caffeine) state.tombstones.caffeine = {};
+        state.tombstones.caffeine[String(id)] = new Date().toISOString();
         delete state.caffeine[id];
     }
     renderCaffeineEntries();
@@ -273,6 +282,7 @@ function renderCaffeineEntries() {
 function updateCaffeineTime(id, newTime) {
     if (state.caffeine && state.caffeine[id]) {
         state.caffeine[id].time = newTime;
+        state.caffeine[id].updatedAt = new Date().toISOString();
         recalculate();
         saveState();
 
@@ -289,6 +299,7 @@ function updateCaffeineTime(id, newTime) {
 function updateCaffeineDate(id, newDate) {
     if (state.caffeine && state.caffeine[id]) {
         state.caffeine[id].date = newDate;
+        state.caffeine[id].updatedAt = new Date().toISOString();
         renderCaffeineEntries(); // Re-render to update date selector color
         renderFocusCaffeineList(); // Keep Focus Mode in sync
         renderGhostLoad(); // Update ghost load display

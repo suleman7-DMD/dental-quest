@@ -548,6 +548,11 @@ function setAllNighter() {
 function clearSleepEntry() {
     if (!currentEditingDate) return;
 
+    // Tombstone BEFORE delete so the removal survives cross-device merges
+    if (!state.tombstones) state.tombstones = { meds: {}, caffeine: {}, sleepDays: {} };
+    if (!state.tombstones.sleepDays) state.tombstones.sleepDays = {};
+    state.tombstones.sleepDays[currentEditingDate] = new Date().toISOString();
+
     // Remove the entry entirely (null = unlogged)
     delete state.sleepHistory[currentEditingDate];
     if (state.sleepDailyLogs) delete state.sleepDailyLogs[currentEditingDate];
@@ -582,7 +587,8 @@ function saveSleepEdit() {
     // Save as object with both values
     state.sleepHistory[currentEditingDate] = {
         hoursSlept: hours,
-        wakeTime: wakeTime
+        wakeTime: wakeTime,
+        updatedAt: new Date().toISOString()
     };
 
     // Also update sleepDailyLogs
@@ -624,7 +630,8 @@ function updateTodaySleepHistory() {
     // Preserve wake time if it exists, update hours
     state.sleepHistory[today] = {
         hoursSlept: state.hoursSleptLastNight,
-        wakeTime: existing && typeof existing === 'object' ? existing.wakeTime : state.wakeTime
+        wakeTime: existing && typeof existing === 'object' ? existing.wakeTime : state.wakeTime,
+        updatedAt: new Date().toISOString()
     };
 
     saveSleepDayLog();
@@ -639,7 +646,8 @@ function updateTodayWakeTime() {
 
     state.sleepHistory[today] = {
         hoursSlept: existing && typeof existing === 'object' ? existing.hoursSlept : state.hoursSleptLastNight,
-        wakeTime: state.wakeTime
+        wakeTime: state.wakeTime,
+        updatedAt: new Date().toISOString()
     };
 
     saveSleepDayLog();
@@ -948,7 +956,8 @@ function saveSleepDayLog() {
     // Keep sleepHistory in sync (backward compat for autoPopulateFeedback)
     state.sleepHistory[today] = {
         hoursSlept: state.hoursSleptLastNight,
-        wakeTime: state.wakeTime
+        wakeTime: state.wakeTime,
+        updatedAt: new Date().toISOString()
     };
 }
 
@@ -1876,6 +1885,8 @@ function submitFeedback() {
         state.sleepDailyLogs[recent.date].actualSleep = actualMinutes;
         state.sleepDailyLogs[recent.date].deltaMinutes = state.history[recent.id].deltaMinutes;
         state.sleepDailyLogs[recent.date].absError = state.history[recent.id].absError;
+        state.history[recent.id].lastUpdated = new Date().toISOString();
+        state.sleepDailyLogs[recent.date].lastUpdated = new Date().toISOString();
 
         // Manual feedback wrote a new deltaMinutes entry → let auto-calibration re-fit
         // before saving (once/day, self-guarded) so the change persists in this save.
