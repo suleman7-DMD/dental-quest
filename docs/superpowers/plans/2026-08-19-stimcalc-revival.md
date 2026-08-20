@@ -1429,6 +1429,75 @@ Co-Authored-By: Claude Fable 5 <noreply@anthropic.com>"
 
 ---
 
+## PHASE 3.5 — CROSS-DEVICE SYNC BULLETPROOFING (Tasks 16–18, sequential; runs AFTER Task 13, BEFORE Task 14)
+
+> Added 2026-08-19 by user directive mid-execution. The other three apps (index.html 6d6f76f, graduation-roadmap d3f98fb, body-comp 1fad187) were all fixed for the same class of cross-device data-loss bug. Stim calc is the last unfixed app. The revival is NOT done until the stale-tab pathway is impossible. This phase runs after the Phase 3 cuts so stamps/tombstones/merge cover the FINAL module and collection set, and before the Phase 4 QA gate so the merge to main ships it.
+
+**The killer pathway:** edits made on phone → hours later a stale desktop tab, on tab-hide/unload, unconditionally re-uploads its entire old snapshot → whole-state conflict resolution lets the stale snapshot win → phone edits erased everywhere.
+
+**The 8 root causes to audit stim calc against (every one gets a file:line mapping or a written "not applicable because ..."):**
+1. Whole-state newer-wins conflict resolution (stim calc resolves by `lastUpdated` comparison — exactly this).
+2. Unconditional full Firebase re-upload on tab-hide/unload.
+3. Tab-visible handler dead-ends (pending local change + remote-looks-newer → neither merges nor retries).
+4. Boot-time load skips the other side entirely when one side "looks newer".
+5. Deletions resurrect (no tombstones).
+6. Deaf realtime windows (listener events skipped during echo-suppression/first-load windows are permanently missed).
+7. No per-record timestamps.
+8. ID collisions from non-random ID minting (check `generateId()` for a random suffix).
+
+**The fix architecture (mirror the reference implementations):**
+- Per-record `updatedAt` stamps written by EVERY user-edit CRUD site.
+- One shared merge engine used by ALL cloud-merge sites (boot load, realtime listener, visible/force sync): per-record strict-`>` newer-wins beats the whole-state winner; ties/unstamped fall back to whole-state winner (termination — no ping-pong); union semantics (one-side-only records always survive).
+- Tombstone maps (id → ISO delete time) for every deletable collection, written BEFORE persist at delete time, unioned max-per-key on merge, purged from the result UNLESS the record's own stamp is strictly newer (re-add-after-delete survives).
+- `mergeNeedsPush(stats)`: merge reports whether LOCAL held anything the cloud lacks → deferred GUARDED save pushes the union back.
+- `localChangesSinceLastSync` dirty flag: set on real local save, cleared on successful Firebase push/force-upload/force-pull. Tab-hide Firebase push GATED on it (localStorage flush stays unconditional). Tab-visible ALWAYS merges remote first, then pushes if dirty or merge found local-only data; cloud empty + local real → push.
+- Realtime listener: no first-load swallow, no version-skip — suppress exact echoes (own `lastUpdated` bouncing back) only, merge everything else.
+- Scalar-signature stamping for non-ID-keyed objects (settings, modifiers, calibration, allNighter flags): body-comp's `_computeScalarSigs`/`stampChangedScalars` pattern — JSON-signature minus `lastUpdated` at save time, bump `lastUpdated` only when the signature actually changed.
+- **180-day history prune hazard**: localStorage prunes history to 180 days but the cloud may hold older entries; a full-snapshot push from a pruned device would delete old cloud history. Mirror body-comp's `historyFullyLoaded` gate: full push only when complete history was loaded from cloud this session; otherwise per-record/deep-path writes that never touch unloaded history.
+- ALL 5 existing save guards KEPT — the fix works WITH the guards, not around them.
+
+**Stim-calc-specific constraints:** collections to cover = medications, caffeine, history, sleepHistory, sleepDailyLogs, plus whatever survives Phase 3 (audit decides). Day-boundary: a stale device holding yesterday's meds/caffeine must neither overwrite today's nor lose its own data. Cross-app shape read by body-comp (`projectedSleepTime`, `projectedSleepMinutes`, `allNighterMode`, meds/caffeine read paths) must not change. Firebase path/PIN/config untouchable. Cache-bust every touched module's `<script src>` in the same commit.
+
+### Task 16: Sync audit (read-only)
+
+**Files:** Create `docs/superpowers/audits/2026-08-19-stimcalc/sync-audit.md`. NO code changes.
+
+- [ ] **Step 1**: Read the three reference implementations: `git show 1fad187` (body-comp — closest analog: shared `mergeCloudStateIntoLocal()`, 5 tombstone maps, scalar sigs, mergeNeedsPush, gated hide-push), `git show d3f98fb` (grad-roadmap — getRecordStamp/STAMP consts, overlays in both merge paths, 3 tombstone maps), `git show 6d6f76f` (index — union-merge architecture). Read CLAUDE.md "Sync & Merge Rules" + "Firebase Save Safety".
+- [ ] **Step 2**: Read stim calc's full sync surface post-Phase-3: `firebase-sync.js` (mergeRemoteState, loadFromFirebase, loadState, setupRealtimeSync, visibility/pagehide handlers, force sync fns), `state.js` (generateId, isEmptyState, defaults), every CRUD site in med-caffeine.js / history-calendar.js / calibration.js / ui-sections.js / init.js that mutates a synced collection.
+- [ ] **Step 3**: Write the audit doc: per root cause 1–8, either the exact file:line evidence in stim calc or "not applicable because ...". Plus: inventory of collections needing stamps, deletable collections needing tombstones, scalar objects needing sig-stamping, all merge sites, all push sites, day-boundary code paths, prune code path.
+- [ ] **Step 4**: Commit the audit doc only.
+
+### Task 17: Implement the fix architecture
+
+**Files:** Modify `js/stimcalc/firebase-sync.js`, `js/stimcalc/state.js`, CRUD sites per audit (med-caffeine.js, history-calendar.js, calibration.js, init.js, ui-sections.js), `stimulant-elimination-calculator.html` (cache-bust).
+
+- [ ] **Step 1**: `generateId()` — ensure random suffix (root cause 8).
+- [ ] **Step 2**: Stamps — `updatedAt` on every CRUD write per the audit inventory; scalar-sig stamping for settings/modifiers/calibration.
+- [ ] **Step 3**: Tombstone maps per deletable collection: in `getDefaultState()`, written at delete sites BEFORE persist, handled in `isEmptyState()` the same way body-comp handles its tombstone maps (mirror the reference).
+- [ ] **Step 4**: Shared merge engine in firebase-sync.js: per-record strict-`>` overlays + union + tombstone purge-unless-newer + mergeNeedsPush → deferred guarded save. Wire ALL merge sites through it: boot `loadFromFirebase`, realtime `mergeRemoteState`, visible handler, `forcePullFromCloud`.
+- [ ] **Step 5**: `localChangesSinceLastSync` flag + gated hide-push + visible merge-then-push (no dead ends) + realtime echo-only suppression.
+- [ ] **Step 6**: `historyFullyLoaded` gate for the 180-day prune hazard.
+- [ ] **Step 7**: Day-boundary rule for today's meds/caffeine (stale-day data folds into history/its own day key; never overwrites today, never lost).
+- [ ] **Step 8**: Verify: `node --check` every touched module; 5 guards intact in all three save fns; `_dataLoaded: true` terminal; cross-app fields untouched; cache-bust tags. Commit.
+
+### Task 18: Replay harness (must pass before Phase 4)
+
+**Files:** Create `scripts/stimcalc-sync-replay.mjs` (committed — QA re-runs it).
+
+- [ ] **Step 1**: Harness loads the REAL `state.js` + `firebase-sync.js` sources (stub browser/Firebase globals; eval or vm) — NOT a reimplementation of the merge.
+- [ ] **Step 2**: Scenarios (ALL must pass):
+  1. THE KILLER: stale tab + newer phone edits in cloud → phone edits win per-record; stale tab's local-only data survives; union pushed back.
+  2. Delete propagation via tombstone.
+  3. Re-add-after-delete survives the tombstone.
+  4. Local-newer edit survives despite cloud whole-state win.
+  5. Ping-pong termination: after one union push, next merges on BOTH devices are silent (no further pushes).
+  6. Fresh device with default state adopts cloud fully, pushes nothing.
+  7. Day-boundary: stale device's yesterday log doesn't clobber today and isn't lost.
+  8. Pruned-local-history device does not delete older cloud history.
+- [ ] **Step 3**: `node scripts/stimcalc-sync-replay.mjs` → all scenarios PASS. Fix-forward until green. Commit harness (+ fixes).
+
+---
+
 ## PHASE 4 — QA GATE (sequential; merge only if ALL pass)
 
 ### Task 14: Static QA
@@ -1462,7 +1531,13 @@ grep -c "function numOr" js/stimcalc/state.js js/stimcalc/pharma-engine.js      
 grep -rn "drawSleepPerformanceGraph()" js/stimcalc/ | wc -l                     # 0 (no bare no-arg calls)
 ```
 
-- [ ] **Step 4: Fix anything found, commit fixes**
+- [ ] **Step 4: Sync harness re-run (Phase 3.5 regression)**
+
+```bash
+node scripts/stimcalc-sync-replay.mjs   # all 8 scenarios PASS
+```
+
+- [ ] **Step 5: Fix anything found, commit fixes**
 
 Any failure: fix surgically, re-run the failed check, commit with message `stimcalc P4: static QA fix — <what>` + trailer. Do NOT proceed to Task 15 with failures outstanding.
 
@@ -1502,7 +1577,7 @@ Only when Steps 1–4 all pass:
 
 ```bash
 git checkout main
-git merge --no-ff stimcalc-revival -m "stimcalc revival: 28-bug correctness wave, model v2 (auto-calibration, honest hero, real caffeine cutoff, soft circadian gate), back-to-basics UI (7→5 pages)
+git merge --no-ff stimcalc-revival -m "stimcalc revival: 28-bug correctness wave, model v2 (auto-calibration, honest hero, real caffeine cutoff, soft circadian gate), back-to-basics UI (7→5 pages), cross-device sync bulletproofing (per-record merge, tombstones, gated hide-push)
 
 Co-Authored-By: Claude Fable 5 <noreply@anthropic.com>"
 git push origin main
@@ -1517,6 +1592,7 @@ Then confirm GitHub Pages deploy (~30s) and spot-load the live URL.
 1. Zero console errors on load and on every page switch.
 2. Every visible modifier chip either moves the prediction or displays WHY it doesn't (named binding factor).
 3. Hero shows time ± error band + "Limited by:" line; circadian-gated nights show both the pharma floor and the gate time.
+4. The stale-tab data-loss pathway is impossible: all 8 sync root causes fixed or proven not applicable, and every replay-harness scenario passes (Phase 3.5).
 4. Real computed caffeine cutoff on the Dashboard, reactive to intake and predicted bedtime.
 5. One-tap morning check-in feeds the sleep log AND the auto-calibration fit.
 6. Main-app (index.html) medication data untouched by this app — no cross-app writes remain in loaded modules.
