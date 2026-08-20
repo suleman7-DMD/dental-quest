@@ -1374,8 +1374,6 @@ function renderSleepPerformance() {
     // Store stats globally for explainer
     window.sleepStats = stats;
 
-    // Render Achievements
-    renderSleepAchievements(data, stats.validData, stats.currentStreak, stats.longestStreak, stats.weekScore, stats.sleepDebt, stats.avg);
 
     // Draw graph
     drawSleepPerformanceGraph(data);
@@ -1565,35 +1563,6 @@ function toggleExplainer(key) {
 // Legacy compat for achievement hover
 function showExplainer(key) { toggleExplainer(key); }
 function hideExplainer() {}
-
-function renderSleepAchievements(data, validData, currentStreak, longestStreak, weekScore, sleepDebt, avg) {
-    const container = document.getElementById('sleepAchievements');
-    if (!container) return;
-
-    const best = validData.length > 0 ? Math.max(...validData.map(d => d.hoursSlept)) : 0;
-
-    const achievements = [
-        { id: 'first_log', icon: '📝', name: 'First Log', unlocked: validData.length >= 1, color: '#5E7A8A' },
-        { id: 'week_warrior', icon: '📅', name: 'Week Warrior', unlocked: validData.length >= 7, color: '#6B7C5E' },
-        { id: 'month_master', icon: '🗓️', name: 'Month Master', unlocked: validData.length >= 30, color: '#C4923A' },
-        { id: 'streak_3', icon: '🔥', name: '3-Day Streak', unlocked: longestStreak >= 3, color: '#B85C5C' },
-        { id: 'streak_7', icon: '⚡', name: 'Week Streak', unlocked: longestStreak >= 7, color: '#C4923A' },
-        { id: 'debt_free', icon: '💎', name: 'Debt Free', unlocked: sleepDebt === 0 && validData.length >= 7, color: '#5E7A8A' },
-        { id: 'perfect_night', icon: '🌟', name: 'Perfect Night', unlocked: best >= 8, color: '#5E8A5E' },
-        { id: 'recovery_king', icon: '👑', name: 'Recovery King', unlocked: best >= 10, color: '#B85C5C' },
-        { id: 'score_80', icon: '🏆', name: 'A+ Student', unlocked: weekScore >= 80, color: '#5E8A5E' },
-        { id: 'consistent', icon: '🎯', name: 'Consistent', unlocked: avg >= 7 && validData.length >= 7, color: '#6B7C5E' }
-    ];
-
-    container.innerHTML = achievements.map(function(a) {
-        return '<div class="si-badge' + (a.unlocked ? '' : ' si-badge--locked') + '" onclick="toggleExplainer(\'' + a.id + '\')" style="' +
-            'background:' + (a.unlocked ? 'rgba(' + hexToRgb(a.color) + ', 0.15)' : '#EFECE6') + ';' +
-            'border-color:' + (a.unlocked ? a.color : 'rgba(0,0,0,0.08)') + ';">' +
-            '<div class="si-badge__icon"' + (a.unlocked ? '' : ' style="filter:grayscale(100%);"') + '>' + a.icon + '</div>' +
-            '<div class="si-badge__name" style="color:' + (a.unlocked ? a.color : '#C4BCB3') + ';">' + a.name + '</div>' +
-        '</div>';
-    }).join('');
-}
 
 function renderSleepHistoryList(data) {
     const container = document.getElementById('sleepHistoryList');
@@ -2021,47 +1990,7 @@ function getCalibrationRecommendation() {
 // SLEEP INTELLIGENCE TAB SYSTEM
 // ============================================
 
-function switchSITab(tab) {
-    // Bridge to sidebar page navigation when new layout is active
-    if (document.body.classList.contains('has-sc-sidebar') && typeof scNavigate === 'function') {
-        var pageMap = {
-            'insights': 'insights',
-            'accuracy': 'accuracy',
-            'calendar': 'calendar',
-            'overview': 'calendar'  // overview content lives in calendar page
-        };
-        if (pageMap[tab]) {
-            scNavigate(pageMap[tab]);
-            return;  // Let scNavigate handle the rest
-        }
-    }
-
-    currentSITab = tab;
-    var tabs = document.querySelectorAll('#siTabs .si-tab');
-    for (var i = 0; i < tabs.length; i++) {
-        tabs[i].classList.toggle('active', tabs[i].getAttribute('data-tab') === tab);
-    }
-    var panels = ['siTabOverview', 'siTabInsights', 'siTabAccuracy', 'siTabCalendar'];
-    for (var i = 0; i < panels.length; i++) {
-        var el = document.getElementById(panels[i]);
-        if (el) el.style.display = panels[i] === 'siTab' + tab.charAt(0).toUpperCase() + tab.slice(1) ? 'block' : 'none';
-    }
-    // Render content for active tab
-    if (tab === 'overview') {
-        renderSleepCalendar();
-        renderSleepPerformance();
-    } else if (tab === 'insights') {
-        renderInsightsTab();
-    } else if (tab === 'accuracy') {
-        renderAccuracyTab();
-    } else if (tab === 'calendar') {
-        renderSleepCalendarMonth();
-        renderHistory();
-    }
-}
-
 function renderSleepIntelligence() {
-    updateSleepIntelSummary();
     // Render ALL tabs so data is fresh when user switches
     renderSleepCalendar();
     renderSleepPerformance();
@@ -2069,29 +1998,6 @@ function renderSleepIntelligence() {
     renderAccuracyTab();
     renderSleepCalendarMonth();
     renderHistory();
-}
-
-function updateSleepIntelSummary() {
-    var el = document.getElementById('sleepIntelSummary');
-    if (!el) return;
-    var data = getSleepDataForDays(30);
-    var valid = data.filter(function(d) { return d.hoursSlept !== null; });
-    var parts = [];
-    if (valid.length > 0) {
-        var avg = valid.reduce(function(a, d) { return a + d.hoursSlept; }, 0) / valid.length;
-        parts.push(avg.toFixed(1) + 'h avg');
-    }
-    // Show current month days tracked (consistent with calendar + accuracy tabs)
-    var now = new Date();
-    var monthDays = countDaysTrackedInMonth(now.getFullYear(), now.getMonth());
-    if (monthDays > 0) {
-        parts.push(monthDays + ' days tracked');
-    }
-    var accStats = calculateAccuracyStats(30);
-    if (accStats && accStats.entriesWithFeedback >= 3) {
-        parts.push('\u00b1' + accStats.avgAbsError + 'min accuracy');
-    }
-    el.textContent = parts.length > 0 ? parts.join(' \u00b7 ') : '';
 }
 
 // ============================================
@@ -2298,16 +2204,11 @@ function renderInsightsTab() {
     renderInsDoseResponse(days);
     renderInsCaffeineImpact(days);
     renderInsSleepPatterns(days);
-    renderInsModifierImpact(days);
-    renderInsDosingWindows(days);
     renderInsCaffeineTiming(days);
     renderInsSleepEfficiency(days);
-    renderInsPredictionReliability(days);
     renderInsCircadianConsistency(days);
     renderInsStimulantTrends(days);
     renderInsRiskIndicators(days);
-    renderInsPersonalRecords(days);
-    renderInsResearchBenchmarks(days);
 }
 
 // Section 1: Key Metrics
@@ -2508,73 +2409,6 @@ function renderInsSleepPatterns(days) {
         '<div class="ins-section-body">' + body + '</div>';
 }
 
-// Section 5: Modifier Impact
-function renderInsModifierImpact(days) {
-    var el = document.getElementById('insModifierImpact');
-    if (!el) return;
-    var withOnset = days.filter(function(d) { return d.actualSleep != null; });
-    if (withOnset.length < 3) { el.style.display = 'none'; return; }
-    el.style.display = '';
-
-    var modifiers = [
-        { key: 'hadVitC', label: 'Vitamin C', icon: '&#127818;' },
-        { key: 'hadWorkout', label: 'Workout', icon: '&#127947;' },
-        { key: 'hadSauna', label: 'Sauna', icon: '&#128167;' }
-    ];
-    var body = '';
-    modifiers.forEach(function(mod) {
-        var withMod = withOnset.filter(function(d) { return d[mod.key]; });
-        var withoutMod = withOnset.filter(function(d) { return !d[mod.key]; });
-        if (withMod.length < 1 || withoutMod.length < 1) return;
-        var avgWith = Math.round(withMod.reduce(function(s, d) { return s + d.actualSleep; }, 0) / withMod.length);
-        var avgWithout = Math.round(withoutMod.reduce(function(s, d) { return s + d.actualSleep; }, 0) / withoutMod.length);
-        var delta = avgWith - avgWithout;
-        var deltaStr = (delta > 0 ? '+' : '') + delta + 'min';
-        var deltaColor = delta < 0 ? '#5E8A5E' : delta > 30 ? '#B85C5C' : '#C4923A';
-        body += '<div class="ins-metric-row"><span class="ins-metric-label">' + mod.icon + ' ' + mod.label + '</span><span class="ins-metric-value"><span style="color:' + deltaColor + ';">' + deltaStr + '</span> <span style="color:#9C948B;font-size:0.8em;">(' + withMod.length + ' vs ' + withoutMod.length + ')</span></span></div>';
-    });
-    if (!body) { el.style.display = 'none'; return; }
-    el.innerHTML = '<div class="ins-section-hdr" onclick="toggleInsSection(\'insModifierImpact\')">' +
-        '<span class="ins-section-title">&#9881; Modifier Impact</span>' +
-        '<span class="ins-section-arrow">&#9660;</span></div>' +
-        '<div class="ins-section-body">' + body + '<div style="font-size:0.72em;color:#9C948B;margin-top:6px;">Negative = earlier sleep. Based on actual sleep onset.</div></div>';
-}
-
-// Section 6: Dosing Windows
-function renderInsDosingWindows(days) {
-    var el = document.getElementById('insDosingWindows');
-    if (!el) return;
-    var withData = days.filter(function(d) { return d.totalAmpDose > 0 && d.actualSleep != null && d.medications && d.medications.length > 0 && d.wakeTime != null; });
-    if (withData.length < 3) { el.style.display = 'none'; return; }
-    el.style.display = '';
-
-    // Find last dose time for each day relative to wake
-    var buckets = {};
-    withData.forEach(function(d) {
-        var wakeMins = typeof d.wakeTime === 'string' ? timeToMinutes(d.wakeTime) : d.wakeTime;
-        var lastDose = 0;
-        (d.medications || []).forEach(function(m) {
-            var doseTime = typeof m.time === 'string' ? timeToMinutes(m.time) : m.time;
-            if (doseTime > lastDose) lastDose = doseTime;
-        });
-        var hoursAfterWake = Math.round((lastDose - wakeMins) / 60);
-        if (hoursAfterWake < 0) hoursAfterWake = 0;
-        var bucket = hoursAfterWake <= 2 ? '0-2h' : hoursAfterWake <= 4 ? '2-4h' : hoursAfterWake <= 6 ? '4-6h' : '6h+';
-        if (!buckets[bucket]) buckets[bucket] = [];
-        buckets[bucket].push(d.actualSleep);
-    });
-    var body = '';
-    ['0-2h', '2-4h', '4-6h', '6h+'].forEach(function(b) {
-        if (!buckets[b] || buckets[b].length === 0) return;
-        var avg = Math.round(buckets[b].reduce(function(s, v) { return s + v; }, 0) / buckets[b].length);
-        body += '<div class="ins-metric-row"><span class="ins-metric-label">Last dose ' + b + ' after wake</span><span class="ins-metric-value">' + _fmtOnset(avg) + ' <span style="color:#9C948B;font-size:0.8em;">(' + buckets[b].length + ')</span></span></div>';
-    });
-    el.innerHTML = '<div class="ins-section-hdr" onclick="toggleInsSection(\'insDosingWindows\')">' +
-        '<span class="ins-section-title">&#9200; Dosing Windows</span>' +
-        '<span class="ins-section-arrow">&#9660;</span></div>' +
-        '<div class="ins-section-body">' + body + '</div>';
-}
-
 // Section 7: Caffeine Timing
 function renderInsCaffeineTiming(days) {
     var el = document.getElementById('insCaffeineTiming');
@@ -2637,47 +2471,6 @@ function renderInsSleepEfficiency(days) {
 
     el.innerHTML = '<div class="ins-section-hdr" onclick="toggleInsSection(\'insSleepEfficiency\')">' +
         '<span class="ins-section-title">&#128200; Sleep Efficiency</span>' +
-        '<span class="ins-section-arrow">&#9660;</span></div>' +
-        '<div class="ins-section-body">' + body + '</div>';
-}
-
-// Section 9: Prediction Reliability by Context
-function renderInsPredictionReliability(days) {
-    var el = document.getElementById('insPredictionReliability');
-    if (!el) return;
-    var withBoth = days.filter(function(d) { return d.predictedSleep != null && d.actualSleep != null; });
-    if (withBoth.length < 5) { el.style.display = 'none'; return; }
-    el.style.display = '';
-
-    var contexts = [
-        { label: 'High Dose (40mg+)', filter: function(d) { return d.totalAmpDose >= 40; } },
-        { label: 'Low Dose (<30mg)', filter: function(d) { return d.totalAmpDose > 0 && d.totalAmpDose < 30; } },
-        { label: 'With Caffeine', filter: function(d) { return d.totalCaffDose > 0; } },
-        { label: 'No Caffeine', filter: function(d) { return !d.totalCaffDose; } },
-        { label: 'Workout Days', filter: function(d) { return d.hadWorkout; } },
-        { label: 'VitC Days', filter: function(d) { return d.hadVitC; } },
-        { label: 'Low Sleep (<6h)', filter: function(d) { return d.hoursSlept != null && d.hoursSlept < 6; } },
-        { label: 'No Modifiers', filter: function(d) { return !d.hadWorkout && !d.hadSauna && !d.hadVitC; } }
-    ];
-    var body = '';
-    var results = [];
-    contexts.forEach(function(ctx) {
-        var matched = withBoth.filter(ctx.filter);
-        if (matched.length < 2) return;
-        var absErrors = matched.map(function(d) { return Math.abs(computeSleepDelta(d.predictedSleep, d.actualSleep)); });
-        var avgErr = Math.round(absErrors.reduce(function(s, v) { return s + v; }, 0) / absErrors.length);
-        results.push({ label: ctx.label, avgErr: avgErr, count: matched.length });
-    });
-    results.sort(function(a, b) { return a.avgErr - b.avgErr; });
-    results.forEach(function(r) {
-        var color = r.avgErr <= 30 ? '#5E8A5E' : r.avgErr <= 60 ? '#C4923A' : '#B85C5C';
-        body += '<div class="ins-metric-row"><span class="ins-metric-label">' + r.label + ' (' + r.count + ')</span><span class="ins-metric-value" style="color:' + color + ';">&plusmn;' + r.avgErr + 'min</span></div>';
-    });
-    if (results.length > 0) {
-        body += '<div style="font-size:0.72em;color:#9C948B;margin-top:6px;">Sorted by accuracy (best first)</div>';
-    }
-    el.innerHTML = '<div class="ins-section-hdr" onclick="toggleInsSection(\'insPredictionReliability\')">' +
-        '<span class="ins-section-title">&#127919; Prediction Reliability</span>' +
         '<span class="ins-section-arrow">&#9660;</span></div>' +
         '<div class="ins-section-body">' + body + '</div>';
 }
@@ -2825,123 +2618,6 @@ function renderInsRiskIndicators(days) {
     }
     el.innerHTML = '<div class="ins-section-hdr" onclick="toggleInsSection(\'insRiskIndicators\')">' +
         '<span class="ins-section-title">&#9888; Risk Indicators</span>' +
-        '<span class="ins-section-arrow">&#9660;</span></div>' +
-        '<div class="ins-section-body">' + body + '</div>';
-}
-
-// Section 13: Personal Records
-function renderInsPersonalRecords(days) {
-    var el = document.getElementById('insPersonalRecords');
-    if (!el) return;
-    if (days.length < 3) { el.style.display = 'none'; return; }
-    el.style.display = '';
-
-    var records = [];
-    // Earliest sleep
-    var withOnset = days.filter(function(d) { return d.actualSleep != null; });
-    if (withOnset.length > 0) {
-        var earliest = withOnset.reduce(function(best, d) { return d.actualSleep < best.actualSleep ? d : best; });
-        records.push(['Earliest Sleep', _fmtOnset(earliest.actualSleep) + ' (' + parseLocalDate(earliest.date).toLocaleDateString('en-US', {month:'short',day:'numeric'}) + ')']);
-    }
-
-    // Most sleep
-    var withSleep = days.filter(function(d) { return d.hoursSlept != null && d.hoursSlept > 0; });
-    if (withSleep.length > 0) {
-        var mostSleep = withSleep.reduce(function(best, d) { return d.hoursSlept > best.hoursSlept ? d : best; });
-        records.push(['Most Sleep', mostSleep.hoursSlept.toFixed(1) + 'h (' + parseLocalDate(mostSleep.date).toLocaleDateString('en-US', {month:'short',day:'numeric'}) + ')']);
-    }
-
-    // Longest 7h+ streak
-    var sorted = days.slice().sort(function(a, b) { return a.date.localeCompare(b.date); });
-    var streak = 0, maxStreak7 = 0;
-    sorted.forEach(function(d) {
-        if (d.hoursSlept != null && d.hoursSlept >= 7) { streak++; maxStreak7 = Math.max(maxStreak7, streak); }
-        else { streak = 0; }
-    });
-    if (maxStreak7 > 0) records.push(['Longest 7h+ Streak', maxStreak7 + ' days']);
-
-    // Most accurate prediction
-    var withBoth = days.filter(function(d) { return d.predictedSleep != null && d.actualSleep != null; });
-    if (withBoth.length > 0) {
-        var mostAccurate = withBoth.reduce(function(best, d) {
-            var err = Math.abs(computeSleepDelta(d.predictedSleep, d.actualSleep));
-            var bestErr = Math.abs(computeSleepDelta(best.predictedSleep, best.actualSleep));
-            return err < bestErr ? d : best;
-        });
-        var bestErr = Math.abs(computeSleepDelta(mostAccurate.predictedSleep, mostAccurate.actualSleep));
-        records.push(['Most Accurate Prediction', '&plusmn;' + Math.round(bestErr) + 'min (' + parseLocalDate(mostAccurate.date).toLocaleDateString('en-US', {month:'short',day:'numeric'}) + ')']);
-    }
-
-    var body = records.map(function(r) {
-        return '<div class="ins-metric-row"><span class="ins-metric-label">' + r[0] + '</span><span class="ins-metric-value">' + r[1] + '</span></div>';
-    }).join('');
-    el.innerHTML = '<div class="ins-section-hdr" onclick="toggleInsSection(\'insPersonalRecords\')">' +
-        '<span class="ins-section-title">&#127942; Personal Records</span>' +
-        '<span class="ins-section-arrow">&#9660;</span></div>' +
-        '<div class="ins-section-body">' + body + '</div>';
-}
-
-// Section 14: Research Benchmarks
-function renderInsResearchBenchmarks(days) {
-    var el = document.getElementById('insResearchBenchmarks');
-    if (!el) return;
-    var withSleep = days.filter(function(d) { return d.hoursSlept != null && d.hoursSlept > 0; });
-    if (withSleep.length < 3) { el.style.display = 'none'; return; }
-    el.style.display = '';
-
-    var avgHrs = withSleep.reduce(function(s, d) { return s + d.hoursSlept; }, 0) / withSleep.length;
-    var withOnset = days.filter(function(d) { return d.actualSleep != null; });
-    var onsetStd = withOnset.length >= 3 ? Math.round(_stdDev(withOnset.map(function(d) { return d.actualSleep; }))) : null;
-
-    var body = '';
-    // Sleep duration benchmark
-    var durationPct = Math.min(100, Math.round(avgHrs / 9 * 100));
-    var durationColor = avgHrs >= 7 ? '#5E8A5E' : avgHrs >= 6 ? '#C4923A' : '#B85C5C';
-    body += '<div class="ins-benchmark"><div class="ins-benchmark__label">Sleep Duration vs Recommended 7-9h (Hirshkowitz 2015)</div>';
-    body += '<div class="ins-benchmark__bar"><div class="ins-benchmark__fill" style="width:' + Math.round(7/9*100) + '%;background:rgba(94,138,94,0.15);"></div>';
-    body += '<div class="ins-benchmark__marker" style="left:' + durationPct + '%;background:' + durationColor + ';"></div></div>';
-    body += '<div class="ins-benchmark__range"><span>0h</span><span style="color:' + durationColor + ';">You: ' + avgHrs.toFixed(1) + 'h</span><span>9h</span></div></div>';
-
-    // Variability benchmark
-    if (onsetStd !== null) {
-        var varPct = Math.min(100, Math.round(onsetStd / 180 * 100));
-        var varColor = onsetStd <= 60 ? '#5E8A5E' : onsetStd <= 120 ? '#C4923A' : '#B85C5C';
-        body += '<div class="ins-benchmark"><div class="ins-benchmark__label">Sleep Time Variability vs &lt;60min target (Wittmann 2006)</div>';
-        body += '<div class="ins-benchmark__bar"><div class="ins-benchmark__fill" style="width:' + Math.round(60/180*100) + '%;background:rgba(94,138,94,0.15);"></div>';
-        body += '<div class="ins-benchmark__marker" style="left:' + varPct + '%;background:' + varColor + ';"></div></div>';
-        body += '<div class="ins-benchmark__range"><span>0min</span><span style="color:' + varColor + ';">You: &plusmn;' + onsetStd + 'min</span><span>180min</span></div></div>';
-    }
-
-    // Caffeine cutoff benchmark
-    var withCaffData = days.filter(function(d) { return d.totalCaffDose > 0 && d.actualSleep != null && d.caffeine && d.caffeine.length > 0; });
-    if (withCaffData.length >= 2) {
-        var totalGap = 0;
-        withCaffData.forEach(function(d) {
-            var lastCaff = 0;
-            (d.caffeine || []).forEach(function(c) {
-                var ct = typeof c.time === 'string' ? timeToMinutes(c.time) : c.time;
-                if (ct > lastCaff) lastCaff = ct;
-            });
-            var gap = d.actualSleep - lastCaff;
-            if (gap < 0) gap += 1440;
-            totalGap += gap;
-        });
-        var avgGapMins = Math.round(totalGap / withCaffData.length);
-        var gapPct = Math.min(100, Math.round(avgGapMins / 600 * 100));
-        var gapColor = avgGapMins >= 360 ? '#5E8A5E' : avgGapMins >= 240 ? '#C4923A' : '#B85C5C';
-        body += '<div class="ins-benchmark"><div class="ins-benchmark__label">Caffeine-to-Sleep Gap vs 6h minimum (Drake 2013)</div>';
-        body += '<div class="ins-benchmark__bar"><div class="ins-benchmark__fill" style="width:' + Math.round(360/600*100) + '%;background:rgba(94,138,94,0.15);"></div>';
-        body += '<div class="ins-benchmark__marker" style="left:' + gapPct + '%;background:' + gapColor + ';"></div></div>';
-        body += '<div class="ins-benchmark__range"><span>0h</span><span style="color:' + gapColor + ';">You: ' + (avgGapMins/60).toFixed(1) + 'h</span><span>10h</span></div></div>';
-    }
-
-    // Adderall XR context
-    body += '<div style="font-size:0.72em;color:#9C948B;margin-top:10px;padding:8px;background:rgba(0,0,0,0.03);border-radius:6px;">';
-    body += '<strong>Adderall XR Pharmacokinetics:</strong> Terminal half-life ~11h (FDA label). 50% IR at T+0, 50% DR at T+4h. Full clearance varies by dose and individual metabolism.';
-    body += '</div>';
-
-    el.innerHTML = '<div class="ins-section-hdr" onclick="toggleInsSection(\'insResearchBenchmarks\')">' +
-        '<span class="ins-section-title">&#128218; Research Benchmarks</span>' +
         '<span class="ins-section-arrow">&#9660;</span></div>' +
         '<div class="ins-section-body">' + body + '</div>';
 }

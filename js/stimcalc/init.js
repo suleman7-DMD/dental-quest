@@ -231,68 +231,6 @@ function updateUI(vm) {
     if (sleepGateTimeEl) sleepGateTimeEl.textContent =
         minutesToTime(vm.sleepGate.start > 24*60 ? vm.sleepGate.start - 24*60 : vm.sleepGate.start) + ' - ' + minutesToTime(vm.sleepGate.end > 24*60 ? vm.sleepGate.end - 24*60 : vm.sleepGate.end);
 
-    // --- Circadian Status ---
-    var circadianStatusEl = document.getElementById('circadianStatus');
-    var circadianIndicatorEl = document.getElementById('circadianIndicator');
-    var circadianItem = document.getElementById('circadianStatusItem');
-
-    if (circadianStatusEl && circadianIndicatorEl && circadianItem) {
-        if (vm.dataPoints >= 2 && vm.avgSleep < 4.5) {
-            circadianStatusEl.textContent = 'CRITICAL DEBT';
-            circadianIndicatorEl.textContent = '\ud83d\udea8';
-            circadianItem.className = 'status-item blocking';
-            circadianItem.style.borderLeftColor = '#B85C5C';
-        } else if (vm.dataPoints >= 2 && vm.avgSleep < 6) {
-            circadianStatusEl.textContent = 'Sleep Debt';
-            circadianIndicatorEl.textContent = '\u26a0\ufe0f';
-            circadianItem.className = 'status-item blocking';
-            circadianItem.style.borderLeftColor = '#C4923A';
-        } else if (vm.circadianAnalysis.phase === 'danger-delayed' || vm.circadianAnalysis.phase === 'delayed') {
-            circadianStatusEl.textContent = vm.circadianAnalysis.label;
-            circadianIndicatorEl.textContent = vm.circadianAnalysis.icon;
-            circadianItem.className = 'status-item blocking';
-            circadianItem.style.borderLeftColor = vm.circadianAnalysis.color;
-        } else if (vm.circadianAnalysis.stdDev > 120 && vm.dataPoints >= 2) {
-            circadianStatusEl.textContent = 'Irregular';
-            circadianIndicatorEl.textContent = '\ud83d\udd00';
-            circadianItem.className = 'status-item blocking';
-            circadianItem.style.borderLeftColor = '#C4923A';
-        } else if (vm.inForbiddenZone) {
-            circadianStatusEl.textContent = 'Forbidden Zone';
-            circadianIndicatorEl.textContent = '\u26a0\ufe0f';
-            circadianItem.className = 'status-item blocking';
-            circadianItem.style.borderLeftColor = '#B85C5C';
-        } else if (vm.inSleepGate) {
-            circadianStatusEl.textContent = 'Sleep Gate Open';
-            circadianIndicatorEl.textContent = '\ud83c\udf19';
-            circadianItem.className = 'status-item ok';
-            circadianItem.style.borderLeftColor = '#5E8A5E';
-        } else if (vm.circadianAnalysis.phase === 'normal' && vm.avgSleep >= 6.5) {
-            circadianStatusEl.textContent = 'Healthy';
-            circadianIndicatorEl.textContent = '\u2713';
-            circadianItem.className = 'status-item ok';
-            circadianItem.style.borderLeftColor = '#5E8A5E';
-        } else {
-            circadianStatusEl.textContent = vm.circadianAnalysis.label || 'Monitoring';
-            circadianIndicatorEl.textContent = vm.circadianAnalysis.icon || '\ud83d\udcca';
-            circadianItem.className = 'status-item ok';
-            circadianItem.style.borderLeftColor = vm.circadianAnalysis.color || '#9C948B';
-        }
-    }
-
-    // --- Current load displays ---
-    var currentAmpLoadEl = document.getElementById('currentAmpLoad');
-    var currentCaffLoadEl = document.getElementById('currentCaffLoad');
-    if (currentAmpLoadEl) currentAmpLoadEl.textContent = vm.currentAmpLoad.toFixed(1) + ' mg';
-    if (currentCaffLoadEl) currentCaffLoadEl.textContent = vm.currentCaffLoad.toFixed(1) + ' mg';
-
-    // --- Status indicators ---
-    updateStatusItem('ampStatus', vm.ampOk, vm.currentAmpLoad, vm.effectiveThreshold);
-    updateStatusItem('caffStatus', vm.caffOk, vm.currentCaffLoad, vm.caffThreshold);
-
-    // --- Workout status ---
-    updateWorkoutStatus();
-
     // --- Modifier chip live effect readouts (dashboard only; runs after the currentPage guard) ---
     var vitCEffectEl = document.getElementById('vitCEffect');
     if (vitCEffectEl) vitCEffectEl.textContent = getModifierEffectReadout('vitaminC');
@@ -380,12 +318,9 @@ function updateUI(vm) {
     updateScenarios();
     renderGhostLoad();
     drawGraph();
-    updateAccordionSummaries();
     updateHeroProgressBar();
-    updateStatusPillColors();
     updateVitCBadge();
     updateForecastLogic();
-    if (typeof scInvRenderDashboard === 'function') scInvRenderDashboard();
     if (typeof renderCaffeineCutoffCard === 'function') renderCaffeineCutoffCard();
     // NOTE: renderDashSleepHistoryFull() intentionally NOT called here.
     // updateUI() runs every 5s via recalculate(). The sleep history render is expensive
@@ -412,69 +347,6 @@ function recalculate() {
     // NOTE: Do NOT call saveState() here directly!
     // recalculate() is called every 5 seconds for live UI updates.
     // autoSavePrediction() handles its own throttling (10 min / 5 min change).
-}
-
-// ============================================
-// STATUS ITEM HELPER
-// ============================================
-
-function updateStatusItem(indicatorId, isOk, current, threshold) {
-    var indicator = document.getElementById(indicatorId);
-    if (!indicator) return;
-
-    var statusItem = indicator.closest('.status-item');
-    if (!statusItem) return;
-
-    indicator.textContent = isOk ? '\u2713' : '\u23f3';
-    statusItem.className = 'status-item ' + (isOk ? 'ok' : 'blocking');
-}
-
-// ============================================
-// WORKOUT STATUS DISPLAY
-// ============================================
-
-function updateWorkoutStatus() {
-    var workoutItem = document.getElementById('workoutStatusItem');
-    var workoutStatusEl = document.getElementById('workoutStatus');
-    var workoutIndicatorEl = document.getElementById('workoutIndicator');
-
-    if (!workoutItem || !workoutStatusEl || !workoutIndicatorEl) return;
-
-    var wp = state.workoutPlan;
-
-    if (wp && wp.applied) {
-        workoutItem.style.display = 'flex';
-
-        // Adenosine bonus converts to threshold: 15 min ~ +1.0mg
-        var thresholdBonus = Math.min(3.0, (wp.adenosineBonus || 0) / 15);
-
-        // Time-based penalties still apply (cortisol, thermal)
-        var timeDelay = (wp.cortisolDelay || 0) + (wp.thermalDelay || 0);
-
-        if (thresholdBonus > 0 && timeDelay === 0) {
-            workoutStatusEl.textContent = '+' + thresholdBonus.toFixed(1) + 'mg threshold';
-            workoutIndicatorEl.textContent = '\u2713';
-            workoutItem.className = 'status-item ok';
-            workoutItem.style.borderLeftColor = '#5E8A5E';
-        } else if (thresholdBonus > 0 && timeDelay > 0) {
-            workoutStatusEl.textContent = '+' + thresholdBonus.toFixed(1) + 'mg, +' + timeDelay + 'min delay';
-            workoutIndicatorEl.textContent = '\u23f3';
-            workoutItem.className = 'status-item ok';
-            workoutItem.style.borderLeftColor = '#C4923A';
-        } else if (timeDelay > 0) {
-            workoutStatusEl.textContent = '+' + timeDelay + ' min delay';
-            workoutIndicatorEl.textContent = '\u26a0\ufe0f';
-            workoutItem.className = 'status-item blocking';
-            workoutItem.style.borderLeftColor = '#C4923A';
-        } else {
-            workoutStatusEl.textContent = 'Neutral';
-            workoutIndicatorEl.textContent = '\u2713';
-            workoutItem.className = 'status-item ok';
-            workoutItem.style.borderLeftColor = '#5E8A5E';
-        }
-    } else {
-        workoutItem.style.display = 'none';
-    }
 }
 
 // ============================================
@@ -901,125 +773,6 @@ function setViewMode() {}
 function renderFocusMode() {}
 function drawFocusGraph() {}
 
-// ============================================
-// ACCORDION MANAGEMENT
-// ============================================
-
-function toggleAccordion(sectionName) {
-    var section = document.querySelector('.accordion-section[data-section="' + sectionName + '"]');
-    if (section) {
-        section.classList.toggle('open');
-        var openSections = JSON.parse(localStorage.getItem('stimCalcAccordions') || '{}');
-        openSections[sectionName] = section.classList.contains('open');
-        safeLocalStorageSet('stimCalcAccordions', JSON.stringify(openSections));
-    }
-}
-
-function restoreAccordionStates() {
-    var openSections = JSON.parse(localStorage.getItem('stimCalcAccordions') || '{}');
-    var defaults = {
-        sleep: true, meds: false, caffeine: false, modifiers: false,
-        circadian: false,
-        sleepIntel: true,
-        recs: false, forecast: false, settings: false
-    };
-    var merged = Object.assign({}, defaults, openSections);
-
-    Object.entries(merged).forEach(function(entry) {
-        var name = entry[0];
-        var isOpen = entry[1];
-        var section = document.querySelector('.accordion-section[data-section="' + name + '"]');
-        if (section) {
-            section.classList.toggle('open', isOpen);
-        }
-    });
-}
-
-function updateAccordionSummaries() {
-    // Sleep summary
-    var sleepSummary = document.getElementById('sleepAccordionSummary');
-    if (sleepSummary) {
-        sleepSummary.textContent = state.hoursSleptLastNight + 'h | Wake ' + formatTime12(state.wakeTime);
-    }
-
-    // Meds summary
-    var medsSummary = document.getElementById('medsAccordionSummary');
-    if (medsSummary) {
-        var medCount = getCount(state.medications);
-        if (medCount === 0) {
-            medsSummary.textContent = 'No meds logged';
-            medsSummary.style.color = '#9C948B';
-        } else {
-            var totalDose = getValues(state.medications).reduce(function(sum, m) { return sum + m.dose; }, 0);
-            medsSummary.textContent = medCount + (medCount === 1 ? ' dose' : ' doses') + ' \u2022 ' + totalDose + 'mg';
-            medsSummary.style.color = '#6B7C5E';
-        }
-    }
-
-    // Caffeine summary
-    var caffSummary = document.getElementById('caffeineAccordionSummary');
-    if (caffSummary) {
-        var caffCount = getCount(state.caffeine);
-        if (caffCount === 0) {
-            caffSummary.textContent = 'No caffeine';
-            caffSummary.style.color = '#9C948B';
-        } else {
-            var totalCaff = getValues(state.caffeine).reduce(function(sum, c) { return sum + c.amount; }, 0);
-            caffSummary.textContent = totalCaff + 'mg' + (caffCount > 1 ? ' \u2022 ' + caffCount + ' drinks' : '');
-            caffSummary.style.color = '#C4923A';
-        }
-    }
-
-    // Modifiers summary
-    var modSummary = document.getElementById('modifiersAccordionSummary');
-    if (modSummary) {
-        var active = [];
-        if (state.modifiers.vitaminC && state.modifiers.vitaminC.active) active.push('VitC');
-        if (state.allNighterMode) active.push('All-Nighter');
-        modSummary.textContent = active.length > 0 ? active.join(', ') : 'None active';
-        modSummary.style.color = active.length > 0 ? '#5E8A5E' : '#9C948B';
-    }
-
-    // Circadian summary
-    var circSummary = document.getElementById('circadianAccordionSummary');
-    if (circSummary) {
-        var now = getCurrentMinutes();
-        if (isInForbiddenZone(now)) {
-            circSummary.textContent = 'Forbidden Zone';
-            circSummary.style.color = '#B85C5C';
-        } else if (isInSleepGate(now)) {
-            circSummary.textContent = 'Sleep Gate Open';
-            circSummary.style.color = '#5E8A5E';
-        } else {
-            circSummary.textContent = 'Normal';
-            circSummary.style.color = '#9C948B';
-        }
-    }
-
-    // Sleep Intelligence summary
-    if (typeof updateSleepIntelSummary === 'function') {
-        updateSleepIntelSummary();
-    }
-
-    // Update has-content indicators on accordion sections
-    var sections = {
-        meds: getCount(state.medications) > 0,
-        caffeine: getCount(state.caffeine) > 0,
-        modifiers: (state.modifiers.vitaminC && state.modifiers.vitaminC.active) ||
-                   state.allNighterMode
-    };
-    Object.keys(sections).forEach(function(key) {
-        var el = document.querySelector('.accordion-section[data-section="' + key + '"]');
-        if (el) {
-            if (sections[key]) {
-                el.classList.add('has-content');
-            } else {
-                el.classList.remove('has-content');
-            }
-        }
-    });
-}
-
 function updateHeroProgressBar() {
     var bar = document.getElementById('heroProgressFill');
     if (!bar) return;
@@ -1033,25 +786,6 @@ function updateHeroProgressBar() {
     var elapsed = normalizedNow - wakeMinutes;
     var progress = totalDay > 0 ? Math.min(100, Math.max(0, (elapsed / totalDay) * 100)) : 0;
     bar.style.width = progress + '%';
-}
-
-function updateStatusPillColors() {
-    var now = getCurrentMinutes();
-    var ampLoad = calculateAmpLoad(now);
-    var caffLoad = calculateCaffLoad(now);
-    var threshold = getEffectiveThreshold();
-    var caffThreshold = state.settings.caffThreshold;
-
-    var ampPill = document.getElementById('ampStatusPill');
-    var caffPill = document.getElementById('caffStatusPill');
-    if (ampPill) {
-        ampPill.classList.toggle('pill-safe', ampLoad < threshold);
-        ampPill.classList.toggle('pill-danger', ampLoad >= threshold);
-    }
-    if (caffPill) {
-        caffPill.classList.toggle('pill-safe', caffLoad < caffThreshold);
-        caffPill.classList.toggle('pill-danger', caffLoad >= caffThreshold);
-    }
 }
 
 function renderRecentNights() {
@@ -1083,10 +817,8 @@ function renderRecentNights() {
 }
 
 function initUnifiedView() {
-    restoreAccordionStates();
     restoreModifierUI();
     renderRecentNights();
-    updateAccordionSummaries();
 }
 
 // ============================================
@@ -1132,8 +864,7 @@ function scNavigate(page) {
             calendar: 'Calendar',
             insights: 'Insights',
             accuracy: 'Accuracy',
-            settings: 'Tools',
-            inventory: 'Medication Inventory'
+            settings: 'Tools'
         };
         bc.textContent = '\u203A ' + (labels[page] || page);
     }
@@ -1168,11 +899,7 @@ function scNavigate(page) {
         if (typeof renderMorningCheckin === 'function') renderMorningCheckin();
         if (typeof drawGraph === 'function') drawGraph();
         if (typeof renderSleepCalendar === 'function') renderSleepCalendar();
-        if (typeof scInvRenderDashboard === 'function') scInvRenderDashboard();
-        if (typeof scWeekGlanceRender === 'function') scWeekGlanceRender();
         if (typeof renderDashSleepHistoryFull === 'function') renderDashSleepHistoryFull();
-    } else if (page === 'inventory') {
-        if (typeof scInvRender === 'function') scInvRender();
     }
 
     // Auto-close mobile sidebar

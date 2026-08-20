@@ -351,15 +351,9 @@ function toggleSettings() {
 // WHAT-IF SCENARIOS
 // ============================================
 
-// BUG FIX 4: Skip when accordion is closed
+// Skip renders when the host page isn't active (runs every 5s via updateUI)
 function updateScenarios() {
-    // In sidebar layout, check if modifiers page is active
-    if (typeof currentPage !== 'undefined' && document.body.classList.contains('has-sc-sidebar')) {
-        if (currentPage !== 'modifiers') return;
-    } else {
-        const section = document.querySelector('.accordion-section[data-section="whatif"]');
-        if (section && !section.classList.contains('open')) return;
-    }
+    if (typeof currentPage !== 'undefined' && currentPage !== 'modifiers') return;
 
     const now = getCurrentMinutes();
     const { sleepTime: baseSleepTime } = calculateSleepTime();
