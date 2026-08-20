@@ -8,6 +8,11 @@
 // ============================================
 var currentPage = 'dashboard';
 
+// Last prediction's binding factor (Task 8) — persisted per night by
+// history-calendar.js buildHistoryEntry() so calibration can train the
+// caffeine half-life fit on caffeine-bound nights.
+var lastPredictionBindingFactor = null;
+
 // ============================================
 // RECALCULATE — Refactored into 3 phases with error isolation
 // Runs every 5 seconds via setInterval. If it throws, app crashes every 5s.
@@ -119,6 +124,7 @@ function runCalculations() {
     var sleepResult = calculateSleepTime();
     vm.sleepTime = sleepResult.sleepTime;
     vm.blockingFactors = sleepResult.blockingFactors;
+    lastPredictionBindingFactor = sleepResult.bindingFactor;
 
     // Display sleep time (normalized)
     vm.displaySleepTime = vm.sleepTime % (24 * 60);

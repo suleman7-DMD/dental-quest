@@ -159,6 +159,9 @@ function mergeRemoteState(remoteData) {
         _sleepDailyLogsMigratedV3: remote._sleepDailyLogsMigratedV3 || state._sleepDailyLogsMigratedV3 || false
     };
 
+    // Legacy modifier migration (runs after remote state is merged in)
+    migrateHeavyLiftToWorkout();
+
     // CRITICAL: Always preserve _dataLoaded
     state._dataLoaded = true;
 }
@@ -1124,6 +1127,9 @@ function forcePullFromCloud() {
             state.caffeine = migrateArrayToObject(state.caffeine, 'caf');
             state.history = migrateArrayToObject(state.history, 'hist');
 
+            // Legacy modifier migration (runs after the shallow spread that can drop workout)
+            migrateHeavyLiftToWorkout();
+
             safeLocalStorageSet('stimulantCalculatorState', JSON.stringify(state));
 
             renderAll();
@@ -1200,6 +1206,9 @@ function applyRemoteState(firebaseState) {
     if (!state.medications || Array.isArray(state.medications)) state.medications = migrateArrayToObject(state.medications, 'med');
     if (!state.caffeine || Array.isArray(state.caffeine)) state.caffeine = migrateArrayToObject(state.caffeine, 'caf');
     if (!state.history || Array.isArray(state.history)) state.history = migrateArrayToObject(state.history, 'hist');
+
+    // Legacy modifier migration (runs after remote state is merged in)
+    migrateHeavyLiftToWorkout();
 
     safeLocalStorageSet('stimulantCalculatorState', JSON.stringify(state));
 
@@ -1404,6 +1413,23 @@ function saveStateImmediate() {
     return true;
 }
 
+// Legacy migration (Task 8, spec D4): the old dual heavyLift/sauna modifiers
+// collapsed into a single `workout` chip. Ensure the workout object exists
+// FIRST (force-pull's shallow { ...defaults, ...firebaseState } spread can drop
+// it when old cloud data lacks the key), THEN fold a still-active legacy
+// heavyLift into it as an intense session. Idempotent — safe on every load path.
+function migrateHeavyLiftToWorkout() {
+    if (state.modifiers && !state.modifiers.workout) {
+        state.modifiers.workout = { active: false, endTime: '18:00', intense: false, date: null };
+    }
+    if (state.modifiers && state.modifiers.heavyLift && state.modifiers.heavyLift.active
+        && state.modifiers.workout && !state.modifiers.workout.active) {
+        state.modifiers.workout.active = true;
+        state.modifiers.workout.intense = true;
+        state.modifiers.heavyLift.active = false;
+    }
+}
+
 function loadState() {
     // First load from localStorage (immediate)
     const saved = localStorage.getItem('stimulantCalculatorState');
@@ -1517,6 +1543,9 @@ function loadState() {
                 delete state.sleepHistory[key];
             }
         });
+
+        // Legacy modifier migration (runs after stored state is merged in)
+        migrateHeavyLiftToWorkout();
     }
 
     // Firebase will load async and override if newer

@@ -13,6 +13,9 @@ function buildHistoryEntry(id, date, predictedSleep, autoSaved) {
         predictedSleep: predictedSleep,
         actualSleep: null,
         autoSaved: autoSaved,
+        // Task 8: what bound this prediction ('adderall'|'caffeine'|'workout'|'circadian'|'now').
+        // calibration's caffeine half-life fit trains on nights where this === 'caffeine'.
+        bindingFactor: (typeof lastPredictionBindingFactor !== 'undefined' && lastPredictionBindingFactor) || null,
         predictedAt: new Date().toISOString(),
         lastUpdated: new Date().toISOString(),
         inputs: snapshotPredictionInputs()
@@ -48,6 +51,7 @@ function autoSavePrediction(sleepTimeMinutes) {
         state.history[todayEntry.id].modifiers = JSON.parse(JSON.stringify(state.modifiers));
         state.history[todayEntry.id].lastUpdated = new Date().toISOString();
         state.history[todayEntry.id].inputs = snapshotPredictionInputs();
+        state.history[todayEntry.id].bindingFactor = (typeof lastPredictionBindingFactor !== 'undefined' && lastPredictionBindingFactor) || null;
     } else {
         const id = generateId('hist');
         state.history[id] = buildHistoryEntry(id, today, sleepTimeMinutes, true);
@@ -78,6 +82,7 @@ function saveDay() {
         state.history[existingEntry.id].autoSaved = false;
         state.history[existingEntry.id].lastUpdated = new Date().toISOString();
         state.history[existingEntry.id].inputs = snapshotPredictionInputs();
+        state.history[existingEntry.id].bindingFactor = (typeof lastPredictionBindingFactor !== 'undefined' && lastPredictionBindingFactor) || null;
     } else {
         const id = generateId('hist');
         state.history[id] = buildHistoryEntry(id, today, sleepTime, false);
