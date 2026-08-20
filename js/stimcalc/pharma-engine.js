@@ -5,6 +5,28 @@
 // ============================================
 
 // ============================================
+// INPUT SANITIZERS
+// ============================================
+// NaN guard: a corrupted/blank settings value would poison every load
+// calculation downstream (NaN propagates silently). Coerce to a sane default.
+function numOr(v, fallback) {
+    const n = Number(v);
+    return Number.isFinite(n) ? n : fallback;
+}
+
+// Legacy states stored 'today'/'tomorrow' literals for modifier dates;
+// parseLocalDate() would NaN on them. Normalize to a real YYYY-MM-DD string.
+function sanitizeModifierDate(dateStr) {
+    if (typeof dateStr === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(dateStr)) return dateStr;
+    const today = new Date();
+    if (dateStr === 'tomorrow') {
+        const t = new Date(today.getFullYear(), today.getMonth(), today.getDate() + 1);
+        return getLocalDateString(t);
+    }
+    return getLocalDateString(today);
+}
+
+// ============================================
 // VITAMIN C MODEL
 // ============================================
 // Vitamin C acidifies urine → increases amphetamine excretion → shorter half-life
@@ -16,13 +38,7 @@ function getVitaminCTimeMinutes() {
     if (!state.modifiers.vitaminC.active) return Infinity;
 
     const today = getLocalDateString();
-    // Guard against stale "today"/"tomorrow" strings in state
-    let vitCDate = state.modifiers.vitaminC.date || today;
-    if (vitCDate === 'today') vitCDate = today;
-    if (vitCDate === 'tomorrow') {
-        const tom = new Date(); tom.setDate(tom.getDate() + 1);
-        vitCDate = getLocalDateString(tom);
-    }
+    const vitCDate = sanitizeModifierDate(state.modifiers.vitaminC.date);
     const baseMinutes = timeToMinutes(state.modifiers.vitaminC.time);
 
     // Calculate day offset from today
@@ -56,13 +72,7 @@ function getRawVitaminCTimeMinutes() {
     if (!state.modifiers.vitaminC.active) return Infinity;
 
     const today = getLocalDateString();
-    // Guard against stale "today"/"tomorrow" strings in state
-    let vitCDate = state.modifiers.vitaminC.date || today;
-    if (vitCDate === 'today') vitCDate = today;
-    if (vitCDate === 'tomorrow') {
-        const tom = new Date(); tom.setDate(tom.getDate() + 1);
-        vitCDate = getLocalDateString(tom);
-    }
+    const vitCDate = sanitizeModifierDate(state.modifiers.vitaminC.date);
     const baseMinutes = timeToMinutes(state.modifiers.vitaminC.time);
 
     const todayDate = parseLocalDate(today);
@@ -88,7 +98,7 @@ function getVitaminCStatus() {
     if (!state.modifiers.vitaminC.active) return 'inactive';
 
     const today = getLocalDateString();
-    const vitCDate = state.modifiers.vitaminC.date || today;
+    const vitCDate = sanitizeModifierDate(state.modifiers.vitaminC.date);
     const baseMinutes = timeToMinutes(state.modifiers.vitaminC.time);
 
     const todayDate = parseLocalDate(today);
@@ -119,7 +129,7 @@ function calculateSleepDebtBonus() {
     let daysWithData = 0;
 
     // Start with today's deficit
-    const sleepTarget = state.settings.sleepTarget ?? 8;
+    const sleepTarget = numOr(state.settings.sleepTarget, 8);
     const todayDeficit = Math.max(0, sleepTarget - state.hoursSleptLastNight);
     totalDeficit += todayDeficit;
     daysWithData++;
@@ -180,7 +190,7 @@ function calculateSleepDebtBonus() {
 function getSleepDebtBreakdown() {
     const today = new Date();
     const breakdown = [];
-    const sleepTarget = state.settings.sleepTarget ?? 8;
+    const sleepTarget = numOr(state.settings.sleepTarget, 8);
 
     // Today
     const todayDeficit = Math.max(0, sleepTarget - state.hoursSleptLastNight);
@@ -245,7 +255,7 @@ function getSleepDebtBreakdown() {
 // This means you can fall asleep with MORE drug in your system.
 
 function getEffectiveThreshold() {
-    const baseThreshold = state.settings.sleepThreshold;
+    const baseThreshold = numOr(state.settings.sleepThreshold, 14);
     let threshold = baseThreshold;
 
     // 1. Sleep Debt Bonus (Process S - Adenosine pressure)
@@ -390,7 +400,7 @@ function calculateDecayWithVitC(initialAmount, doseStartTime, atMinutes,
 // FIXED: VitC 8-hour TTL now properly enforced at each evaluated time point
 function calculateAmpLoad(atMinutes) {
     let totalLoad = 0;
-    const baseHalfLife = state.settings.ampHalfLife * 60; // Convert to minutes
+    const baseHalfLife = numOr(state.settings.ampHalfLife, 11) * 60; // Convert to minutes
     // FIX: Use raw VitC time (no expiration check against current time)
     // Expiration is now handled per-evaluation-point inside calculateDecayWithVitC()
     const vitCTime = getRawVitaminCTimeMinutes();
@@ -456,7 +466,7 @@ function calculateAmpLoad(atMinutes) {
 // UPDATED: Handles arbitrary past dates via days-difference calculation
 function calculateCaffLoad(atMinutes) {
     let totalLoad = 0;
-    const halfLife = state.settings.caffHalfLife * 60; // in minutes
+    const halfLife = numOr(state.settings.caffHalfLife, 5) * 60; // in minutes
     const today = getLocalDateString();
 
     getValues(state.caffeine).forEach(caff => {
@@ -506,8 +516,8 @@ function findAmpClearTime() {
     const maxSearchHours = state.allNighterMode ? 48 : 36;
     const maxTime = now + maxSearchHours * 60;
 
-    // Collect ALL future DR release times (XR releases 50% at T+4h)
-    const drReleaseTimes = [];
+    // Collect ALL future re-spike times: XR delayed-release at T+4h AND future IR onsets
+    const spikeTimes = [];
     const today = getLocalDateString();
     getValues(state.medications).forEach(med => {
         const baseDoseTime = timeToMinutes(med.time);
@@ -519,14 +529,15 @@ function findAmpClearTime() {
         if (daysDiff > 1 && !state.allNighterMode) return;
         const effectiveDoseTime = baseDoseTime - (daysDiff * 24 * 60);
         const drTime = effectiveDoseTime + 240;
-        if (drTime > now) drReleaseTimes.push(drTime);
+        if (drTime > now) spikeTimes.push(drTime);
+        if (effectiveDoseTime > now) spikeTimes.push(effectiveDoseTime); // future IR onset also re-spikes load
     });
-    drReleaseTimes.sort((a, b) => a - b);
+    spikeTimes.sort((a, b) => a - b);
 
     // Check if already below threshold now AND at all future DR release points
     if (calculateAmpLoad(now) < threshold) {
         let allClear = true;
-        for (const drTime of drReleaseTimes) {
+        for (const drTime of spikeTimes) {
             if (calculateAmpLoad(drTime) >= threshold) { allClear = false; break; }
         }
         if (allClear) return now;
@@ -547,7 +558,7 @@ function findAmpClearTime() {
 
         // Verify: no DR spike after clearTime pushes load back above threshold
         let reSpike = false;
-        for (const drTime of drReleaseTimes) {
+        for (const drTime of spikeTimes) {
             if (drTime > clearTime && calculateAmpLoad(drTime) >= threshold) {
                 searchStart = drTime; // Restart search from DR spike
                 reSpike = true;
@@ -561,31 +572,45 @@ function findAmpClearTime() {
 }
 
 // Find when caffeine clears threshold
+// Re-spike aware: a future same-day caffeine dose can push load back over
+// threshold after an initial clearance, so we verify against those spike points.
 function findCaffClearTime() {
-    const threshold = state.settings.caffThreshold;
-
-    if (getCount(state.caffeine) === 0) return null;
-
-    // Extend to 36 hours in all-nighter mode (caffeine half-life ~5h so clears faster)
+    const threshold = numOr(state.settings.caffThreshold, 25);
     const now = getCurrentMinutes();
-    let low = now;
-    const maxSearchHours = state.allNighterMode ? 36 : 24;
-    let high = now + maxSearchHours * 60;
+    const today = getLocalDateString(new Date());
 
-    if (calculateCaffLoad(now) < threshold) {
-        return now;
-    }
+    // Collect future same-day caffeine intake times (re-spike points)
+    const spikeTimes = [];
+    getValues(state.caffeine).forEach(c => {
+        const cDate = c.date || today;
+        if (cDate !== today) return;
+        const t = timeToMinutes(c.time);
+        if (t > now) spikeTimes.push(t);
+    });
+    spikeTimes.sort((a, b) => a - b);
 
-    while (high - low > 1) {
-        const mid = Math.floor((low + high) / 2);
-        if (calculateCaffLoad(mid) > threshold) {
-            low = mid;
-        } else {
-            high = mid;
+    let searchStart = now;
+    for (let iteration = 0; iteration < 10; iteration++) {
+        if (calculateCaffLoad(searchStart) <= threshold) {
+            // Verify no future spike pushes load back over threshold
+            const violator = spikeTimes.find(t => t > searchStart && calculateCaffLoad(t + 1) > threshold);
+            if (!violator) return searchStart === now ? null : searchStart;
+            searchStart = violator + 1;
+            continue;
         }
+        // Binary search for crossing point within 24h of searchStart
+        let lo = searchStart, hi = searchStart + 1440;
+        if (calculateCaffLoad(hi) > threshold) return hi; // still not clear in 24h — cap
+        for (let i = 0; i < 40; i++) {
+            const mid = (lo + hi) / 2;
+            if (calculateCaffLoad(mid) > threshold) lo = mid; else hi = mid;
+        }
+        const candidate = Math.ceil(hi);
+        const violator = spikeTimes.find(t => t > candidate && calculateCaffLoad(t + 1) > threshold);
+        if (!violator) return candidate;
+        searchStart = violator + 1;
     }
-
-    return high;
+    return searchStart; // bounded fallback
 }
 
 // ============================================

@@ -8,10 +8,13 @@ function analyzeCircadianPhase() {
     const todayStr = getLocalDateString(today);
     const wakeTimes = [];
 
-    // ALWAYS include today first with current inputs
+    // ALWAYS include today first with current inputs.
+    // wakeMinutes is null on purpose: today's typed wake is a live input, not
+    // logged history — it must NOT pollute the 7-day circular mean (Bug 7).
+    // hoursSlept is real data and still feeds the sleep-average calculations below.
     wakeTimes.push({
         date: todayStr,
-        wakeMinutes: timeToMinutes(state.wakeTime),
+        wakeMinutes: null,
         hoursSlept: state.hoursSleptLastNight
     });
 
@@ -33,8 +36,9 @@ function analyzeCircadianPhase() {
         }
     }
 
-    // Filter to only entries with wake times for phase calculation
-    const wakeTimesWithData = wakeTimes.filter(w => w.wakeMinutes !== null);
+    // Filter to only entries with valid historical wake times for phase calculation.
+    // Excludes today (wakeMinutes === null) and any corrupted NaN wake values.
+    const wakeTimesWithData = wakeTimes.filter(w => w.wakeMinutes !== null && Number.isFinite(w.wakeMinutes));
 
     // Calculate average sleep from ALL entries (even without wake time)
     const allSleepData = wakeTimes.filter(w => w.hoursSlept > 0);
