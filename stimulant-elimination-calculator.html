@@ -4079,6 +4079,12 @@
             }
         }
 
+        @media (max-width: 420px) {
+            .hero-time { font-size: clamp(2.2rem, 12vw, 3.5rem); }
+            .med-entry, .sc-med-entry { flex-wrap: wrap; }
+            .med-entry input[type="date"], .sc-med-entry input[type="date"] { max-width: 100%; min-width: 0; }
+        }
+
     </style>
 </head>
 <body class="has-sc-sidebar">
@@ -4804,7 +4810,7 @@
     <script src="js/stimcalc/circadian.js?v=20260315"></script>
     <script src="js/stimcalc/pharma-engine.js?v=20260315"></script>
     <script src="js/stimcalc/sleep-prediction.js?v=20260315"></script>
-    <script src="js/stimcalc/firebase-sync.js?v=20260315"></script>
+    <script src="js/stimcalc/firebase-sync.js?v=20260819"></script>
     <script src="js/stimcalc/med-caffeine.js?v=20260315"></script>
     <script src="js/stimcalc/ui-sections.js?v=20260315"></script>
     <script src="js/stimcalc/history-calendar.js?v=20260315"></script>

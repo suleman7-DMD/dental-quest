@@ -365,6 +365,8 @@ function getNicotineCooldownTime() {
 
 // Override toggleModifier for unified view checkboxes
 function toggleModifier(checkbox, modifierName) {
+    const KNOWN_MODIFIERS = ['vitaminC', 'heavyLift', 'sauna'];
+    if (!KNOWN_MODIFIERS.includes(modifierName)) return;
     if (!state.modifiers[modifierName]) {
         state.modifiers[modifierName] = { active: false };
     }

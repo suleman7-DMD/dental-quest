@@ -91,6 +91,8 @@ function renderMedEntries() {
 
     // FIX: Use getValues() to iterate object as array
     const meds = getValues(state.medications);
+    // FIX (bug 11): only TODAY's meds can be "stacked" — a cloud merge can pull in yesterday's doses
+    const todayMedIds = meds.filter(m => (m.date || today) === today).map(m => m.id);
     container.innerHTML = meds.map((med, index) => {
         const medDate = med.date || today;
         const isToday = medDate === today;
@@ -111,7 +113,7 @@ function renderMedEntries() {
                 <option value="70" ${med.dose === 70 ? 'selected' : ''}>70mg XR (30+20+20)</option>
             </select>
             <input type="time" value="${med.time}" onchange="updateMedEntry('${med.id}', 'time', this.value)">
-            ${index > 0 ? '<span class="stacking-warning">⚠️ STACKED</span>' : ''}
+            ${todayMedIds.indexOf(med.id) > 0 ? '<span class="stacking-warning">⚠️ STACKED</span>' : ''}
             <button class="remove-btn sc-btn sc-btn--ghost" onclick="removeMedEntry('${med.id}')">×</button>
         </div>
     `}).join('');
@@ -137,8 +139,9 @@ function updateStackingWarning() {
     const warningEl = document.getElementById('stackingWarning');
     if (!warningEl) return;
 
-    // FIX: Use getValues() and getCount() for object
-    const meds = getValues(state.medications);
+    // FIX (bug 11): only count TODAY's meds — a cloud merge can pull in yesterday's doses
+    const today = getLocalDateString(new Date());
+    const meds = getValues(state.medications).filter(m => (m.date || today) === today);
     const totalDose = meds.reduce((sum, m) => sum + m.dose, 0);
     const numDoses = meds.length;
     const sleepDebt = Math.max(0, 8 - state.hoursSleptLastNight);
@@ -258,7 +261,7 @@ function renderCaffeineEntries() {
         return `
         <div class="caffeine-entry sc-caff-entry" ${isSipPart ? 'style="background: rgba(107, 124, 94, 0.08); border-color: rgba(107, 124, 94, 0.15);"' : ''}>
             ${dateSelector}
-            <span class="caffeine-info">${caff.name} (${caff.amount}mg)${sipBadge}</span>
+            <span class="caffeine-info">${escapeHtml(caff.name)} (${caff.amount}mg)${sipBadge}</span>
             <input type="time" value="${caff.time}" onchange="updateCaffeineTime('${caff.id}', this.value)"
                    style="padding: 4px 8px; background: var(--sc-surface-warm, #F5F2ED); border: 1px solid var(--sc-border, rgba(0,0,0,0.12)); border-radius: 6px; color: var(--sc-text, #2C2825); font-size: 0.85em; width: 100px;">
             <button class="remove-btn sc-btn sc-btn--ghost" style="width: 24px; height: 24px; font-size: 1em;" onclick="removeCaffeine('${caff.id}')">×</button>

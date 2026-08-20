@@ -525,19 +525,6 @@ function updateRecommendations(sleepTime, sleepHours, blockingFactors) {
         });
     }
 
-    // Caffeine cutoff warning
-    if (now < noon && getCount(state.caffeine) === 0) {
-        var timeUntilCutoff = noon - now;
-        var hours = Math.floor(timeUntilCutoff / 60);
-        var mins = timeUntilCutoff % 60;
-        recommendations.push({
-            type: 'info',
-            icon: '\u2615',
-            title: 'Caffeine Window Open',
-            text: 'You have ' + hours + 'h ' + mins + 'm until noon caffeine cutoff. Each coffee after 12pm adds ~3 hours to your sleep window.'
-        });
-    }
-
     // If sleep is late, suggest interventions
     if (sleepHours < 7 && !state.modifiers.vitaminC.active) {
         recommendations.push({
@@ -1189,7 +1176,7 @@ function scNavigate(page) {
     if (page === 'calendar') {
         if (typeof renderSleepCalendarMonth === 'function') renderSleepCalendarMonth();
         if (typeof renderHistory === 'function') renderHistory();
-        if (typeof drawSleepPerformanceGraph === 'function') drawSleepPerformanceGraph();
+        if (typeof renderSleepPerformance === 'function') renderSleepPerformance();
         if (typeof renderSleepCalendar === 'function') renderSleepCalendar();
     } else if (page === 'insights') {
         if (typeof renderInsightsTab === 'function') renderInsightsTab();
