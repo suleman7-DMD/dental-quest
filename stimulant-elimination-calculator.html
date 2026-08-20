@@ -3476,6 +3476,36 @@
                             <button class="sc-btn sc-btn--add" onclick="addMedEntry()">+ Add Medication Dose</button>
                             <div id="stackingWarning" class="stacking-warning" style="display:none;"></div>
                         </div>
+                        <!-- Sully OS Text Import -->
+                        <style>
+                            .sc-imp-row { padding: 5px 8px; border-radius: 6px; margin-top: 4px; font-size: 0.8em; line-height: 1.35; }
+                            .sc-imp-tag { font-weight: 700; font-size: 0.85em; margin-right: 6px; letter-spacing: 0.03em; }
+                            .sc-imp-add { background: rgba(52,199,89,0.12); border: 1px solid rgba(52,199,89,0.45); color: var(--fg-primary); }
+                            .sc-imp-add .sc-imp-tag { color: #34c759; }
+                            .sc-imp-edit { background: rgba(255,159,10,0.12); border: 1px solid rgba(255,159,10,0.45); }
+                            .sc-imp-edit .sc-imp-tag { color: #ff9f0a; }
+                            .sc-imp-del { background: rgba(255,69,58,0.12); border: 1px solid rgba(255,69,58,0.5); }
+                            .sc-imp-del .sc-imp-tag { color: #ff453a; }
+                            .sc-imp-reject { background: rgba(255,69,58,0.10); border: 1px dashed rgba(255,69,58,0.55); }
+                            .sc-imp-reject .sc-imp-tag { color: #ff453a; }
+                            .sc-imp-skip { background: transparent; border: 1px solid var(--border-default); color: var(--fg-tertiary); }
+                            .sc-imp-warn { background: rgba(255,214,10,0.10); border: 1px solid rgba(255,214,10,0.4); }
+                            .sc-imp-warn .sc-imp-tag { color: #ffd60a; }
+                            #scImportText { width: 100%; min-height: 92px; resize: vertical; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 0.78em; background: var(--surface-secondary, rgba(0,0,0,0.15)); color: var(--fg-primary); border: 1px solid var(--border-default); border-radius: 8px; padding: 8px; box-sizing: border-box; }
+                            #scImportStatus { font-size: 0.78em; color: var(--fg-tertiary); margin-top: 6px; min-height: 1.2em; }
+                        </style>
+                        <div class="sc-card" id="scImportCard">
+                            <div class="sc-card-title">Text Import (Sully OS)</div>
+                            <textarea id="scImportText" placeholder="Paste a STIM_DAY block here&#10;STIM_DAY&#10;DATE: 2026-08-20&#10;DOSE: 30 @ 07:15&#10;CAFFEINE: 160 | Celsius | 10:15" oninput="scImportInvalidate()"></textarea>
+                            <div style="display:flex; gap:8px; margin-top:8px;">
+                                <button class="sc-btn" style="flex:1;" onclick="scImportPreview()">Preview</button>
+                                <button class="sc-btn sc-btn--add" style="flex:1;" id="scImportApplyBtn" onclick="scImportApply()" disabled>Apply</button>
+                            </div>
+                            <div id="scImportStatus"></div>
+                            <div id="scImportPreviewList"></div>
+                            <div id="scSullyRouting"></div>
+                            <div id="scSullyReceipts"></div>
+                        </div>
                         <!-- Drug Concentration Graph -->
                         <div class="sc-card" id="scGraphCard">
                             <div class="sc-card-title">Drug Concentration</div>
@@ -3741,12 +3771,38 @@
     <script src="js/stimcalc/circadian.js?v=20260820d"></script>
     <script src="js/stimcalc/pharma-engine.js?v=20260820d"></script>
     <script src="js/stimcalc/sleep-prediction.js?v=20260820d"></script>
-    <script src="js/stimcalc/firebase-sync.js?v=20260820d"></script>
+    <script src="js/stimcalc/firebase-sync.js?v=20260820e"></script>
     <script src="js/stimcalc/med-caffeine.js?v=20260820d"></script>
-    <script src="js/stimcalc/ui-sections.js?v=20260820d"></script>
+    <script src="js/stimcalc/ui-sections.js?v=20260820e"></script>
     <script src="js/stimcalc/history-calendar.js?v=20260820d"></script>
     <script src="js/stimcalc/graph.js?v=20260820d"></script>
     <script src="js/stimcalc/calibration.js?v=20260820d"></script>
     <script src="js/stimcalc/init.js?v=20260820d"></script>
+    <script src="js/stimcalc/importer.js?v=20260820d"></script>
+    <!-- Sully OS Command Center: shared router + relay glue (loaded last) -->
+    <script src="js/sullyos/router.js?v=20260820d"></script>
+    <script src="js/sullyos/command-center.js?v=20260820d"></script>
+    <script>
+        // Register this app with the Sully OS Command Center. Monkey-patches the
+        // native Preview/Apply handlers so foreign blocks relay to the other apps.
+        (function () {
+            if (typeof SullyOS === 'undefined' || !SullyOS.init) return;
+            SullyOS.init({
+                appKey: 'stimCalc',
+                previewName: 'scImportPreview',
+                applyName: 'scImportApply',
+                applyLocal: function (text, opts) { return scImportApplyText(text, opts); },
+                els: {
+                    textarea: 'scImportText', routing: 'scSullyRouting',
+                    receipts: 'scSullyReceipts', status: 'scImportStatus', applyBtn: 'scImportApplyBtn'
+                },
+                getDb: function () { return (typeof database !== 'undefined') ? database : null; },
+                getUserRoot: function () {
+                    return (typeof userPath !== 'undefined' && userPath)
+                        ? userPath.replace(/\/stimulantCalculator$/, '') : null;
+                }
+            });
+        })();
+    </script>
 </body>
 </html>

@@ -417,7 +417,7 @@ function simulateVitaminC() {
     // Restore
     state.modifiers.vitaminC.active = wasActive;
     state.modifiers.vitaminC.time = oldTime;
-    state.modifiers.vitaminC.date = oldDate;
+    state.modifiers.vitaminC.date = oldDate ?? null;  // ?? null: Firebase-loaded vitaminC can lack a date key (null is stripped), making oldDate undefined; restoring undefined here poisons the next .set() and silently kills ALL saves (CLAUDE.md)
 
     return sleepTime;
 }

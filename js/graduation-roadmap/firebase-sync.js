@@ -1873,6 +1873,12 @@ function finishFirebaseLoad(data) {
     } catch (e) {
         console.error('[GRAD-LOAD] Sync setup error:', e);
     }
+
+    // Sully OS: drain relayed Command Center messages + attach the realtime relay
+    // listener (only after load is fully complete, all guards satisfied above).
+    if (typeof SullyOS !== 'undefined' && SullyOS.onLoadComplete) {
+        try { SullyOS.onLoadComplete(); } catch (e) { console.error('SullyOS drain failed:', e); }
+    }
 }
 
 // ==================== REALTIME SYNC ====================
@@ -3235,6 +3241,10 @@ document.addEventListener('visibilitychange', function() {
             }
         }
     } else if (document.visibilityState === 'visible') {
+        // Sully OS: drain relayed Command Center messages on tab focus.
+        if (!isInitialLoad && hasLoadedFromCloud && typeof SullyOS !== 'undefined' && SullyOS.onVisible) {
+            try { SullyOS.onVisible(); } catch (e) { /* non-fatal */ }
+        }
         // Tab is visible again - refresh from Firebase
         // GUARD: Only refresh if we've completed initial load
         // RC5 fix: pending local changes no longer dead-end the refresh (the old

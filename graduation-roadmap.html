@@ -11176,6 +11176,9 @@ NOTES: ...
                     <h4 style="color: #10b981; margin: 0 0 10px 0;">Preview:</h4>
                     <div id="patientImportPreviewList" style="max-height: 250px; overflow-y: auto; background: rgba(16, 185, 129, 0.1); border-radius: 6px; padding: 10px;"></div>
                 </div>
+                <div id="grSullyStatus" style="font-size: 0.8em; color: #94a3b8; margin-top: 8px; min-height: 1em;"></div>
+                <div id="grSullyRouting"></div>
+                <div id="grSullyReceipts"></div>
             </div>
             <div class="mp-modal-footer">
                 <button class="mp-modal-btn cancel" onclick="closePatientImportModal()">Cancel</button>
@@ -11367,10 +11370,10 @@ NOTES: ...
     <div class="toast" id="toast">Saved!</div>
 
     <script src="js/graduation-roadmap/state.js?v=20260819e"></script>
-    <script src="js/graduation-roadmap/firebase-sync.js?v=20260819e"></script>
+    <script src="js/graduation-roadmap/firebase-sync.js?v=20260820d"></script>
     <script src="js/graduation-roadmap/deadlines.js?v=20260819e"></script>
     <script src="js/graduation-roadmap/clinical.js?v=20260819e"></script>
-    <script src="js/graduation-roadmap/patients.js?v=20260819e"></script>
+    <script src="js/graduation-roadmap/patients.js?v=20260820"></script>
     <script src="js/graduation-roadmap/patient-todo-tab.js?v=20260819c"></script>
     <script src="js/graduation-roadmap/general-todo-tab.js?v=20260815"></script>
     <script src="js/graduation-roadmap/import-system.js?v=20260815"></script>
@@ -11378,5 +11381,32 @@ NOTES: ...
     <script src="js/graduation-roadmap/monthly-planner.js?v=20260819e"></script>
     <script src="js/graduation-roadmap/troubleshooting.js?v=20260819c"></script>
     <script src="js/graduation-roadmap/init.js?v=20260819e"></script>
+    <!-- Sully OS Command Center: shared router + relay glue (loaded last) -->
+    <script src="js/sullyos/router.js?v=20260820d"></script>
+    <script src="js/sullyos/command-center.js?v=20260820d"></script>
+    <script>
+        // Register Grad Roadmap with the Sully OS Command Center. Monkey-patches
+        // the native Preview/Import handlers so foreign blocks relay to the other
+        // apps. Relayed roadmap text applies via grApplySullyText (fromRelay=true),
+        // so destructive verbs are held for manual paste, never auto-applied.
+        (function () {
+            if (typeof SullyOS === 'undefined' || !SullyOS.init) return;
+            SullyOS.init({
+                appKey: 'roadmap',
+                previewName: 'previewPatientImport',
+                applyName: 'confirmPatientImport',
+                applyLocal: function (text, opts) { return grApplySullyText(text, opts); },
+                els: {
+                    textarea: 'patientImportText', routing: 'grSullyRouting',
+                    receipts: 'grSullyReceipts', status: 'grSullyStatus', applyBtn: 'patientImportBtn'
+                },
+                getDb: function () { return (typeof database !== 'undefined') ? database : null; },
+                getUserRoot: function () {
+                    return (typeof userPath !== 'undefined' && userPath)
+                        ? userPath.replace(/\/graduationRoadmap$/, '') : null;
+                }
+            });
+        })();
+    </script>
 </body>
 </html>

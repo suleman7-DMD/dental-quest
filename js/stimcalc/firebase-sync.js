@@ -627,6 +627,12 @@ function loadFromFirebase() {
                 mergeNeedsPush = false;
                 setTimeout(() => { markLocalChange(); saveToFirebase(); }, 600);
             }
+
+            // Sully OS: drain any Command Center messages relayed to this app and
+            // attach the realtime listener (runs only after load is complete).
+            if (typeof SullyOS !== 'undefined' && SullyOS.onLoadComplete) {
+                try { SullyOS.onLoadComplete(); } catch (e) { console.error('SullyOS drain failed:', e); }
+            }
         })
         .catch(error => {
             console.error('\u274C Firebase load error:', error);
@@ -1302,6 +1308,10 @@ document.addEventListener('visibilitychange', function() {
             }
         }
     } else if (document.visibilityState === 'visible') {
+        // Sully OS: drain relayed Command Center messages on tab focus.
+        if (!isInitialLoad && hasLoadedFromCloud && typeof SullyOS !== 'undefined' && SullyOS.onVisible) {
+            try { SullyOS.onVisible(); } catch (e) { /* non-fatal */ }
+        }
         // Tab is visible again - refresh from Firebase and MIGRATE to objects
         // GUARD: Only refresh if we've completed initial load
         if (firebaseSyncEnabled && database && userPath && !isInitialLoad) {

@@ -472,6 +472,7 @@ function getPatientRecords() {
     return roadmapData.clinicalData.patientRecords;
 }
 
+// [SULLYOS-CHART-START] — extracted verbatim by tests/sullyos/test-roadmap-verbs.mjs
 // Strip leading zeros from chart numbers for consistent matching
 // "079118" → "79118", "0001" → "1", "0" → "0"
 function normalizeChartNumber(chart) {
@@ -496,6 +497,7 @@ function findByNormalizedChart(records, rawChart) {
     }
     return null;
 }
+// [SULLYOS-CHART-END]
 
 // Post-CIS-v2: Single canonical store. Alias to getPatientRecords().
 // The old two-store merge logic is no longer needed — migrateToUnifiedPatientStore()
@@ -1573,11 +1575,13 @@ function closePatientImportModal() {
 }
 
 function parsePatientImportText(text) {
-    var result = { records: [], updates: [], reqMatches: [], dashboardUpdate: null, appointments: [], missingNotes: null, todoList: null };
+    var result = { records: [], updates: [], reqMatches: [], dashboardUpdate: null, appointments: [], missingNotes: null, todoList: null, verbOps: [], unrecognizedHeaders: [] };
     if (!text || !text.trim()) return result;
 
     // Normalize line endings (iPhone/Windows clipboard may have \r\n or \r)
     text = text.replace(/\r\n?/g, '\n');
+    // SULLYOS-1 grammar banners are content-free — drop "SYNTAX: SULLYOS-n" and standalone @APP lines
+    text = text.replace(/^SYNTAX:\s*SULLYOS-\d+\s*$/gim, '').replace(/^@[A-Z][A-Z_-]*\s*$/gm, '');
 
     // Split by --- delimiter lines
     var blocks = text.split(/^---\s*$/m);
@@ -1599,6 +1603,7 @@ function parsePatientImportText(text) {
         else if (firstLine.indexOf('MISSING_NOTES') !== -1) header = 'MISSING_NOTES';
         else if (firstLine.indexOf('TODO_LIST') !== -1) header = 'TODO_LIST';
         else if (firstLine.indexOf('REQUIREMENTS_STATUS') !== -1) header = 'REQUIREMENTS_STATUS'; // retired Aug 2026 — counted so preview/confirm can warn instead of silently dropping
+        else if (svIsVerbHeader(firstLine)) header = svIsVerbHeader(firstLine); // SULLYOS-1 verb blocks (Aug 2026)
         else if (firstLine.indexOf('APPOINTMENTS') !== -1 && firstLine.indexOf('ATTENDED') === -1) header = 'APPOINTMENTS';
 
         // If this block is ONLY a header (no meaningful body content), save as pending for next block
@@ -1657,6 +1662,9 @@ function parsePatientImportText(text) {
             // Retired format (Aug 2026): competency counts are manual-only. Count it so the
             // preview/confirm UI can warn the user instead of silently discarding the block.
             result.retiredStatusBlocks = (result.retiredStatusBlocks || 0) + 1;
+        } else if (effectiveHeader && SV_VERBS[effectiveHeader]) {
+            var vOp = svParseVerbBlock(effectiveHeader, bodyText);
+            if (vOp) result.verbOps.push(vOp);
         } else if (effectiveHeader === 'APPOINTMENTS') {
             // APPOINTMENTS header detected — subsequent blocks will be appointment blocks
             // This block itself might be empty (just the header), handled by pendingHeader above
@@ -1683,6 +1691,14 @@ function parsePatientImportText(text) {
             if (block.indexOf('ATTENDED:') !== -1 && block.indexOf('TOTAL_COMPLETED:') !== -1) {
                 var autoDash = parseDashboardUpdate(block);
                 if (autoDash) result.dashboardUpdate = autoDash;
+            }
+            // SULLYOS: surface unrecognized ALL-CAPS block headers so nothing is silently dropped
+            var svTok = block.split('\n')[0].trim();
+            if (/^[A-Z][A-Z0-9_]{2,}:?$/.test(svTok)
+                && block.indexOf('PATIENT:') === -1 && block.indexOf('NAME:') === -1
+                && block.indexOf('CHART:') === -1 && block.indexOf('ATTENDED:') === -1
+                && result.unrecognizedHeaders.indexOf(svTok) === -1) {
+                result.unrecognizedHeaders.push(svTok);
             }
         }
     });
@@ -2055,6 +2071,545 @@ function parseImportAppointmentBlock(text) {
     return apt;
 }
 
+// ==================== SULLY OS VERB LAYER (Aug 2026) ====================
+// SULLYOS-1 grammar: MOVE/DONE/CLEAR/ARCHIVE/DELETE verbs for the grad roadmap
+// dialect. Parse + resolve are PURE (Node-testable via sentinel extraction);
+// the appliers below the sentinel mutate roadmapData through the same cascade,
+// tombstone, and stamp paths as manual entry. Competency counts, notes, and
+// lastVerified are NEVER touched by any verb — counts are manual-only.
+// [SULLYOS-VERBS-START] — extracted verbatim by tests/sullyos/test-roadmap-verbs.mjs
+
+var SV_VERBS = {
+    APPOINTMENT_MOVE: 1, APPOINTMENT_DELETE: 1,
+    TODO_DONE: 1, TODO_DELETE: 1,
+    NOTE_CLEARED: 1, PROCEDURE_DELETE: 1,
+    PATIENT_ARCHIVE: 1, PATIENT_DELETE: 1
+};
+
+// Longest-token-first so e.g. APPOINTMENT_DELETE can never be shadowed by a shorter token
+var SV_VERB_ORDER = [
+    'APPOINTMENT_DELETE', 'APPOINTMENT_MOVE', 'PROCEDURE_DELETE',
+    'PATIENT_ARCHIVE', 'PATIENT_DELETE', 'NOTE_CLEARED',
+    'TODO_DELETE', 'TODO_DONE'
+];
+
+// Destructive verbs: preview renders red, relay NEVER auto-applies them
+var SV_DESTRUCTIVE_VERBS = { APPOINTMENT_DELETE: 1, TODO_DELETE: 1, PROCEDURE_DELETE: 1, PATIENT_DELETE: 1 };
+
+function svIsVerbHeader(firstLineUpper) {
+    for (var i = 0; i < SV_VERB_ORDER.length; i++) {
+        if (firstLineUpper.indexOf(SV_VERB_ORDER[i]) !== -1) return SV_VERB_ORDER[i];
+    }
+    return null;
+}
+
+// 12h/24h-tolerant time normalizer: "9:00 AM" / "09:00" / "1 PM" / "12:15am" → "HH:MM" 24h, or null
+function svNormalizeTime(str) {
+    if (!str) return null;
+    var s = String(str).trim().toUpperCase().replace(/\./g, ''); // "9 A.M." → "9 AM"
+    var m = s.match(/^(\d{1,2})(?::(\d{2}))?\s*(AM|PM)?$/);
+    if (!m) return null;
+    var h = parseInt(m[1], 10);
+    var min = m[2] ? parseInt(m[2], 10) : 0;
+    var period = m[3] || null;
+    if (period === 'PM' && h < 12) h += 12;
+    if (period === 'AM' && h === 12) h = 0;
+    if (h > 23 || min > 59) return null;
+    return String(h).padStart(2, '0') + ':' + String(min).padStart(2, '0');
+}
+
+// Regex-only date normalizer: "YYYY-M-D" | "M/D/YYYY" | "M/D/YY" → "YYYY-MM-DD", or null.
+// Never constructs a Date — new Date('YYYY-MM-DD') is the classic EST off-by-one trap.
+function svParseDateToken(str) {
+    if (!str) return null;
+    var s = String(str).trim();
+    var iso = s.match(/^(\d{4})-(\d{1,2})-(\d{1,2})$/);
+    if (iso) return iso[1] + '-' + iso[2].padStart(2, '0') + '-' + iso[3].padStart(2, '0');
+    var us = s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{2}|\d{4})$/);
+    if (us) {
+        var yr = us[3].length === 2 ? '20' + us[3] : us[3];
+        return yr + '-' + us[1].padStart(2, '0') + '-' + us[2].padStart(2, '0');
+    }
+    return null;
+}
+
+// "2026-08-21 09:00" / "08/21/2026 9:00 AM" / date-only / time-only → { date, time } (either may be null)
+function svParseDateTimeToken(str) {
+    var out = { date: null, time: null };
+    if (!str) return out;
+    var s = String(str).trim();
+    var dm = s.match(/\d{4}-\d{1,2}-\d{1,2}|\d{1,2}\/\d{1,2}\/(?:\d{4}|\d{2})/);
+    if (dm) {
+        out.date = svParseDateToken(dm[0]);
+        s = (s.slice(0, dm.index) + s.slice(dm.index + dm[0].length)).trim();
+    }
+    if (s) out.time = svNormalizeTime(s);
+    return out;
+}
+
+// fieldMap extraction with for+break (prefix-collision-safe) + continuation-line joining
+function svExtractFields(bodyText, fieldMap) {
+    var out = {};
+    var lines = String(bodyText || '').split('\n');
+    var currentKey = null;
+    var fmKeys = Object.keys(fieldMap);
+    for (var li = 0; li < lines.length; li++) {
+        var line = lines[li];
+        var upper = line.trimStart().toUpperCase();
+        var matched = false;
+        for (var ki = 0; ki < fmKeys.length; ki++) {
+            if (upper.indexOf(fmKeys[ki] + ':') === 0) {
+                currentKey = fieldMap[fmKeys[ki]];
+                out[currentKey] = line.substring(line.indexOf(':') + 1).trim();
+                matched = true;
+                break;
+            }
+        }
+        if (!matched && currentKey && line.trim()) {
+            out[currentKey] = (out[currentKey] || '') + '\n' + line.trim();
+        }
+    }
+    return out;
+}
+
+// DOM id for the PATIENT_DELETE confirmation checkbox (NEVER default-checked)
+function svCheckboxKey(targetId) {
+    return 'svPtDelChk_' + String(targetId).replace(/[^a-zA-Z0-9_-]/g, '');
+}
+
+// Parse one verb block body → op object. Missing/invalid required fields set
+// op.parseError so the resolver rejects loudly instead of guessing.
+function svParseVerbBlock(verb, bodyText) {
+    var op = { verb: verb, parseError: null };
+    var f;
+    function need(cond, msg) { if (!cond && !op.parseError) op.parseError = msg; }
+    function stripIdChars(id) { return String(id || '').replace(/['"\\]/g, ''); }
+
+    if (verb === 'APPOINTMENT_MOVE') {
+        f = svExtractFields(bodyText, { 'CHART': 'chart', 'PATIENT': 'patient', 'FROM': 'from', 'TO': 'to', 'PROCEDURE': 'procedure' });
+        op.chart = (f.chart || '').trim();
+        op.patient = (f.patient || '').trim();
+        op.procedure = (f.procedure || '').trim();
+        var fromDT = svParseDateTimeToken(f.from);
+        var toDT = svParseDateTimeToken(f.to);
+        op.fromDate = fromDT.date; op.fromTime = fromDT.time;
+        op.toDate = toDT.date; op.toTime = toDT.time;
+        need(op.chart || op.patient, 'APPOINTMENT_MOVE needs CHART: or PATIENT:');
+        need(op.fromDate && op.fromTime, 'APPOINTMENT_MOVE needs FROM: <date> <time>');
+        need(op.toDate || op.toTime, 'APPOINTMENT_MOVE needs TO: with a new date and/or time');
+    } else if (verb === 'APPOINTMENT_DELETE') {
+        f = svExtractFields(bodyText, { 'CHART': 'chart', 'PATIENT': 'patient', 'DATE': 'date', 'TIME': 'time' });
+        op.chart = (f.chart || '').trim();
+        op.patient = (f.patient || '').trim();
+        op.date = svParseDateToken(f.date);
+        op.time = svNormalizeTime(f.time);
+        need(op.chart || op.patient, 'APPOINTMENT_DELETE needs CHART: or PATIENT:');
+        need(op.date, 'APPOINTMENT_DELETE needs DATE: (YYYY-MM-DD or MM/DD/YYYY)');
+        need(op.time, 'APPOINTMENT_DELETE needs TIME:');
+    } else if (verb === 'TODO_DONE' || verb === 'TODO_DELETE') {
+        f = svExtractFields(bodyText, { 'ID': 'id', 'MATCH': 'match' });
+        op.id = stripIdChars((f.id || '').trim());
+        op.match = (f.match || '').trim();
+        need(op.id || op.match, verb + ' needs ID: or MATCH:');
+    } else if (verb === 'NOTE_CLEARED') {
+        f = svExtractFields(bodyText, { 'ID': 'id', 'CHART': 'chart', 'DATE': 'date' });
+        op.id = stripIdChars((f.id || '').trim());
+        op.chart = (f.chart || '').trim();
+        op.date = (f.date || '').trim(); // raw — note dates are free-format from imports
+        need(op.id || (op.chart && op.date), 'NOTE_CLEARED needs ID: or CHART: + DATE:');
+    } else if (verb === 'PROCEDURE_DELETE') {
+        f = svExtractFields(bodyText, { 'CHART': 'chart', 'PATIENT': 'patient', 'DATE': 'date', 'PROCEDURE': 'procedure' });
+        op.chart = (f.chart || '').trim();
+        op.patient = (f.patient || '').trim();
+        op.date = svParseDateToken(f.date);
+        op.procedure = (f.procedure || '').trim();
+        need(op.chart || op.patient, 'PROCEDURE_DELETE needs CHART: or PATIENT:');
+        need(op.date, 'PROCEDURE_DELETE needs DATE:');
+        need(op.procedure, 'PROCEDURE_DELETE needs PROCEDURE: text to match');
+    } else if (verb === 'PATIENT_ARCHIVE') {
+        f = svExtractFields(bodyText, { 'CHART': 'chart', 'PATIENT': 'patient', 'ARCHIVED': 'archived' });
+        op.chart = (f.chart || '').trim();
+        op.patient = (f.patient || '').trim();
+        var av = (f.archived == null ? 'yes' : String(f.archived)).trim().toLowerCase();
+        op.archived = !(av === 'no' || av === 'false' || av === '0');
+        need(op.chart || op.patient, 'PATIENT_ARCHIVE needs CHART: or PATIENT:');
+    } else if (verb === 'PATIENT_DELETE') {
+        f = svExtractFields(bodyText, { 'CHART': 'chart', 'CONFIRM_NAME': 'confirmName' });
+        op.chart = (f.chart || '').trim();
+        op.confirmName = (f.confirmName || '').trim();
+        need(op.chart, 'PATIENT_DELETE needs CHART:');
+        need(op.confirmName, 'PATIENT_DELETE needs CONFIRM_NAME: (must match the record name exactly)');
+    } else {
+        return null;
+    }
+    return op;
+}
+
+// Canonical name form for matching: lowercase, trimmed, "Last, First" flipped to
+// "first last" — so PATIENT: Smith, John finds a record named "John Smith" and vice versa.
+function svCanonName(name) {
+    var s = String(name || '').toLowerCase().trim();
+    var comma = s.indexOf(',');
+    if (comma !== -1) {
+        s = (s.slice(comma + 1).trim() + ' ' + s.slice(0, comma).trim()).trim();
+    }
+    return s.replace(/\s+/g, ' ');
+}
+
+// Patient lookup: chart (normalized) first, then exact case-insensitive name
+// (comma-flipped tolerated via svCanonName).
+// Returns { id } | { error: 'notfound' } | { error: 'ambiguous', matches: [ids] }.
+// Archived records still match — verbs may target them (e.g. un-archive).
+function svFindPatient(records, chart, name) {
+    if (chart) {
+        var byChart = findByNormalizedChart(records, chart);
+        if (byChart) return { id: byChart };
+    }
+    if (name) {
+        var nameCanon = svCanonName(name);
+        var hits = [];
+        var ids = Object.keys(records || {});
+        for (var i = 0; i < ids.length; i++) {
+            var rec = records[ids[i]];
+            if (rec && svCanonName(rec.name) === nameCanon) hits.push(ids[i]);
+        }
+        if (hits.length === 1) return { id: hits[0] };
+        if (hits.length > 1) return { error: 'ambiguous', matches: hits };
+    }
+    return { error: 'notfound' };
+}
+
+// Resolve parsed verb ops against a plain-data state snapshot (see svBuildVerbContext).
+// PURE — no roadmapData/DOM access. status: 'ok' (will apply) | 'skip' (idempotent
+// no-op, safe on re-paste) | 'reject' (loud refusal — ambiguous or not found; never guess).
+function svResolveVerbOps(verbOps, ctx) {
+    var out = [];
+    (verbOps || []).forEach(function(op) {
+        var res = { op: op, verb: op.verb, status: 'reject', reason: '', targetId: null, label: '' };
+        out.push(res);
+        if (op.parseError) { res.reason = op.parseError; return; }
+
+        function resolvePatient() {
+            var found = svFindPatient(ctx.records, op.chart, op.patient);
+            if (found.error === 'ambiguous') { res.reason = 'Multiple patients named "' + op.patient + '" — use CHART: instead'; return null; }
+            if (found.error) { res.reason = 'No patient found for ' + (op.chart ? 'chart #' + op.chart : '"' + op.patient + '"'); return null; }
+            return found.id;
+        }
+
+        if (op.verb === 'APPOINTMENT_MOVE' || op.verb === 'APPOINTMENT_DELETE') {
+            var pid = resolvePatient();
+            if (!pid) return;
+            var rec = ctx.records[pid] || {};
+            var wantDate = op.verb === 'APPOINTMENT_MOVE' ? op.fromDate : op.date;
+            var wantTime = op.verb === 'APPOINTMENT_MOVE' ? op.fromTime : op.time;
+            res.label = (rec.name || pid) + ' @ ' + wantDate + ' ' + wantTime;
+            var hits = (ctx.appointments || []).filter(function(a) {
+                return a && a.patientId === pid && a.date === wantDate && svNormalizeTime(a.time) === wantTime;
+            });
+            if (op.verb === 'APPOINTMENT_MOVE') {
+                var destDate = op.toDate || wantDate;
+                var destTime = op.toTime || wantTime;
+                res.dest = { date: destDate, time: destTime };
+                if (hits.length === 0) {
+                    var already = (ctx.appointments || []).some(function(a) {
+                        return a && a.patientId === pid && a.date === destDate && svNormalizeTime(a.time) === destTime;
+                    });
+                    if (already) { res.status = 'skip'; res.reason = 'Already at destination slot (re-paste safe)'; }
+                    else res.reason = 'No appointment for ' + (rec.name || pid) + ' at ' + wantDate + ' ' + wantTime;
+                    return;
+                }
+                if (hits.length > 1) { res.reason = hits.length + ' appointments match that slot — resolve manually'; return; }
+                var destTaken = (ctx.appointments || []).some(function(a) {
+                    return a && a.patientId === pid && a.id !== hits[0].id && a.date === destDate && svNormalizeTime(a.time) === destTime;
+                });
+                if (destTaken) { res.reason = 'Destination slot ' + destDate + ' ' + destTime + ' already has an appointment for this patient — would duplicate'; return; }
+                res.status = 'ok';
+                res.targetId = hits[0].id;
+                res.label = (rec.name || pid) + ': ' + wantDate + ' ' + wantTime + ' → ' + destDate + ' ' + destTime;
+            } else {
+                if (hits.length === 0) { res.status = 'skip'; res.reason = 'No appointment at that slot — nothing to delete (already deleted?)'; return; }
+                if (hits.length > 1) { res.reason = hits.length + ' appointments match that slot — resolve manually'; return; }
+                res.status = 'ok';
+                res.targetId = hits[0].id;
+                res.label = (rec.name || pid) + ': ' + wantDate + ' ' + wantTime + ' — ' + (hits[0].procedures || 'appointment');
+            }
+            return;
+        }
+
+        if (op.verb === 'TODO_DONE' || op.verb === 'TODO_DELETE') {
+            var items = ctx.todoItems || {};
+            var key = null;
+            if (op.id) {
+                res.label = op.id;
+                if (items[op.id]) key = op.id;
+                else if ((ctx.deletedTodoIds || {})[op.id]) {
+                    res.status = 'skip';
+                    res.reason = op.verb === 'TODO_DELETE' ? 'Already deleted (tombstoned)' : 'Item was deleted — nothing to mark done';
+                    return;
+                } else { res.reason = 'No to-do with ID ' + op.id; return; }
+            } else {
+                res.label = op.match;
+                var needle = op.match.toLowerCase();
+                var hitIds = Object.keys(items).filter(function(id) {
+                    return ((items[id] || {}).description || '').toLowerCase().indexOf(needle) !== -1;
+                });
+                if (op.verb === 'TODO_DONE') {
+                    var pendingIds = hitIds.filter(function(id) { return items[id].status !== 'completed'; });
+                    if (pendingIds.length === 0 && hitIds.length > 0) {
+                        res.status = 'skip'; res.reason = 'Already done';
+                        res.label = items[hitIds[0]].description || op.match;
+                        return;
+                    }
+                    hitIds = pendingIds;
+                }
+                if (hitIds.length === 0) {
+                    if (op.verb === 'TODO_DELETE') { res.status = 'skip'; res.reason = 'No matching to-do — nothing to delete'; }
+                    else res.reason = 'No to-do matches "' + op.match + '"';
+                    return;
+                }
+                if (hitIds.length > 1) {
+                    res.reason = hitIds.length + ' to-dos match "' + op.match + '" — be more specific. Matches: '
+                        + hitIds.slice(0, 3).map(function(id) { return '"' + ((items[id].description || '').slice(0, 40)) + '"'; }).join(', ');
+                    return;
+                }
+                key = hitIds[0];
+            }
+            var item = items[key];
+            res.label = item.description || key;
+            if (op.verb === 'TODO_DONE' && item.status === 'completed') { res.status = 'skip'; res.reason = 'Already done'; return; }
+            res.status = 'ok';
+            res.targetId = key;
+            return;
+        }
+
+        if (op.verb === 'NOTE_CLEARED') {
+            var notes = ctx.missingNotes || {};
+            var nKey = null;
+            if (op.id && notes[op.id]) nKey = op.id;
+            if (!nKey && op.chart && op.date) {
+                var normC = normalizeChartNumber(op.chart);
+                var wantD = svParseDateToken(op.date);
+                var nHits = Object.keys(notes).filter(function(k) {
+                    var n = notes[k] || {};
+                    var chartOk = normalizeChartNumber(n.chartNumber || '') === normC;
+                    var dateOk = String(n.date || '').trim() === op.date || (wantD && svParseDateToken(n.date) === wantD);
+                    return chartOk && dateOk;
+                });
+                if (nHits.length > 1) { res.reason = nHits.length + ' missing notes match chart+date — use ID:'; res.label = op.chart + ' ' + op.date; return; }
+                if (nHits.length === 1) nKey = nHits[0];
+            }
+            if (!nKey) {
+                res.reason = 'No missing note found for ' + (op.id || ('chart #' + op.chart + ' on ' + op.date));
+                res.label = op.id || op.chart;
+                return;
+            }
+            var note = notes[nKey];
+            res.label = (note.patientName || '?') + ' — ' + (note.date || '?');
+            if (note.status === 'completed') { res.status = 'skip'; res.reason = 'Already cleared'; return; }
+            res.status = 'ok';
+            res.targetId = nKey;
+            return;
+        }
+
+        if (op.verb === 'PROCEDURE_DELETE') {
+            var ppid = resolvePatient();
+            if (!ppid) return;
+            var prec = ctx.records[ppid] || {};
+            res.label = (prec.name || ppid) + ': ' + op.date + ' — ' + op.procedure;
+            var pNeedle = op.procedure.toLowerCase();
+            var pHits = (ctx.procedures || []).filter(function(p) {
+                if (!p || p.date !== op.date) return false;
+                var pidOk = p.patientId === ppid
+                    || (!p.patientId && (p.patientName || '').toLowerCase().trim() === (prec.name || '').toLowerCase().trim());
+                if (!pidOk) return false;
+                return ((p.procedure || '') + ' ' + (p.procedureType || '')).toLowerCase().indexOf(pNeedle) !== -1;
+            });
+            if (pHits.length === 0) { res.status = 'skip'; res.reason = 'No matching procedure record — nothing to delete'; return; }
+            if (pHits.length > 1) { res.reason = pHits.length + ' procedure records match — be more specific with PROCEDURE:'; return; }
+            res.status = 'ok';
+            res.targetId = pHits[0].id;
+            res.label = (prec.name || ppid) + ': ' + op.date + ' — ' + (pHits[0].procedure || op.procedure);
+            return;
+        }
+
+        if (op.verb === 'PATIENT_ARCHIVE') {
+            var apid = resolvePatient();
+            if (!apid) return;
+            var arec = ctx.records[apid] || {};
+            res.label = (arec.name || apid) + (op.archived ? ' → archived' : ' → restored to active');
+            if (!!arec.archived === op.archived) {
+                res.status = 'skip';
+                res.reason = op.archived ? 'Already archived' : 'Already active';
+                return;
+            }
+            res.status = 'ok';
+            res.targetId = apid;
+            return;
+        }
+
+        if (op.verb === 'PATIENT_DELETE') {
+            var found = svFindPatient(ctx.records, op.chart, null);
+            if (found.error) {
+                if ((ctx.deletedPatientRecordIds || {})['pt_' + op.chart]
+                    || (ctx.deletedPatientRecordIds || {})['pt_' + normalizeChartNumber(op.chart)]) {
+                    res.status = 'skip'; res.reason = 'Already deleted (tombstoned)'; res.label = 'chart #' + op.chart;
+                    return;
+                }
+                res.reason = 'No patient found for chart #' + op.chart;
+                res.label = 'chart #' + op.chart;
+                return;
+            }
+            var drec = ctx.records[found.id] || {};
+            res.label = (drec.name || '?') + ' (Chart #' + (drec.chartNumber || op.chart) + ')';
+            var want = op.confirmName.toLowerCase().trim();
+            var have = (drec.name || '').toLowerCase().trim();
+            if (!have || want !== have) {
+                res.reason = 'CONFIRM_NAME "' + op.confirmName + '" does not match record name "' + (drec.name || '(none)') + '" — delete refused';
+                return;
+            }
+            res.status = 'ok';
+            res.targetId = found.id;
+            res.requiresCheckbox = true;
+            return;
+        }
+
+        res.reason = 'Unknown verb ' + op.verb;
+    });
+    return out;
+}
+// [SULLYOS-VERBS-END]
+
+// Snapshot live state into the plain-data shape svResolveVerbOps needs.
+// getValues() everywhere — Firebase can corrupt object stores into sparse arrays.
+function svBuildVerbContext() {
+    var cd = roadmapData.clinicalData || {};
+    var todoItems = {};
+    getValues(roadmapData.todoList && roadmapData.todoList.items).forEach(function(t) { if (t && t.id) todoItems[t.id] = t; });
+    var missingNotes = {};
+    getValues(cd.missingNotes).forEach(function(n) { if (n && n.id) missingNotes[n.id] = n; });
+    return {
+        records: (typeof getAllPatientRecords === 'function' ? getAllPatientRecords() : (cd.patientRecords || {})),
+        appointments: getValues(cd.appointments),
+        procedures: getValues(cd.completedProcedures),
+        todoItems: todoItems,
+        missingNotes: missingNotes,
+        deletedTodoIds: roadmapData.deletedTodoIds || {},
+        deletedPatientRecordIds: cd.deletedPatientRecordIds || {}
+    };
+}
+
+// Apply resolved verb ops. Caller (confirmUnifiedImport) owns clinicalDataDirty,
+// the pre-batch checkpoint, persistence, and the single propagateClinicalChanges
+// at the end (cascadeDeletePatient propagates internally per its documented contract).
+// fromRelay: destructive verbs are NEVER auto-applied from the Command Center relay.
+function svApplyVerbOps(resolutions, opts) {
+    var fromRelay = !!(opts && opts.fromRelay);
+    var summary = { applied: 0, skipped: 0, rejected: 0, destructivePending: 0, notes: [] };
+    // Deterministic order: state changes before deletes; patient delete last (broadest cascade)
+    var ORDER = { PATIENT_ARCHIVE: 0, APPOINTMENT_MOVE: 1, TODO_DONE: 2, NOTE_CLEARED: 3, PROCEDURE_DELETE: 4, APPOINTMENT_DELETE: 5, TODO_DELETE: 6, PATIENT_DELETE: 7 };
+    var sorted = resolutions.slice().sort(function(a, b) { return (ORDER[a.verb] ?? 99) - (ORDER[b.verb] ?? 99); });
+
+    sorted.forEach(function(res) {
+        if (res.status === 'reject') { summary.rejected++; summary.notes.push('REJECTED ' + res.verb + ': ' + res.reason); return; }
+        if (res.status === 'skip') { summary.skipped++; return; }
+        if (fromRelay && SV_DESTRUCTIVE_VERBS[res.verb]) { summary.destructivePending++; return; }
+        var op = res.op;
+        var nowISO = new Date().toISOString();
+
+        if (res.verb === 'PATIENT_ARCHIVE') {
+            var rec = roadmapData.clinicalData.patientRecords[res.targetId];
+            if (!rec) { summary.skipped++; return; }
+            // Mirrors setPatientArchived: archivedAt newer-wins is the cross-device merge key
+            rec.archived = !!op.archived;
+            rec.archivedAt = nowISO;
+            rec.lastUpdated = nowISO;
+            summary.applied++;
+        } else if (res.verb === 'APPOINTMENT_MOVE') {
+            var apt = roadmapData.clinicalData.appointments[res.targetId];
+            if (!apt) { summary.skipped++; return; }
+            apt.date = res.dest.date;
+            apt.time = res.dest.time;
+            if (op.procedure) apt.procedures = op.procedure;
+            apt.lastUpdated = nowISO; // STAMP_APPT — newer-wins overlay in both merge sites
+            // Mirrors saveAppointment: linked deadline follows the appointment
+            if (roadmapData.customDeadlines) {
+                var mvPatient = roadmapData.clinicalData.patientRecords[apt.patientId];
+                var mvName = (mvPatient && mvPatient.name) || 'Patient';
+                Object.keys(roadmapData.customDeadlines).forEach(function(dlId) {
+                    var dl = roadmapData.customDeadlines[dlId];
+                    if (dl && dl.clinicalAptId === apt.id) {
+                        dl.date = apt.date;
+                        dl.what = '🏥 ' + mvName + ' - ' + (apt.procedures || 'Clinic Apt');
+                        dl.updatedAt = nowISO;
+                    }
+                });
+            }
+            if (apt.status === 'completed' && apt.patientId && typeof recalculatePatientLastVisit === 'function') {
+                recalculatePatientLastVisit(apt.patientId);
+            }
+            summary.applied++;
+        } else if (res.verb === 'TODO_DONE') {
+            var tItem = roadmapData.todoList && roadmapData.todoList.items && roadmapData.todoList.items[res.targetId];
+            if (!tItem || tItem.status === 'completed') { summary.skipped++; return; }
+            // Mirrors toggleTodoStatus done-branch (batch-safe: caller persists once)
+            tItem.status = 'completed';
+            tItem.completedAt = nowISO;
+            tItem.updatedAt = nowISO;
+            roadmapData.todoList.lastUpdated = nowISO;
+            summary.applied++;
+        } else if (res.verb === 'NOTE_CLEARED') {
+            var note = roadmapData.clinicalData.missingNotes && roadmapData.clinicalData.missingNotes[res.targetId];
+            if (!note || note.status === 'completed') { summary.skipped++; return; }
+            // Mirrors toggleMissingNoteStatus completed-branch
+            note.status = 'completed';
+            note.completedAt = nowISO;
+            note.updatedAt = nowISO;
+            summary.applied++;
+        } else if (res.verb === 'PROCEDURE_DELETE') {
+            if (!roadmapData.clinicalData.completedProcedures || !roadmapData.clinicalData.completedProcedures[res.targetId]) { summary.skipped++; return; }
+            // Tombstone BEFORE removal (cascadeDeleteProcedure minus its per-call propagation)
+            if (!roadmapData.clinicalData.deletedProcedureIds) roadmapData.clinicalData.deletedProcedureIds = {};
+            roadmapData.clinicalData.deletedProcedureIds[res.targetId] = nowISO;
+            delete roadmapData.clinicalData.completedProcedures[res.targetId];
+            summary.applied++;
+        } else if (res.verb === 'APPOINTMENT_DELETE') {
+            if (!roadmapData.clinicalData.appointments[res.targetId]) { summary.skipped++; return; }
+            cascadeDeleteAppointment(res.targetId, { skipPropagation: true });
+            summary.applied++;
+        } else if (res.verb === 'TODO_DELETE') {
+            var tItems = roadmapData.todoList && roadmapData.todoList.items;
+            if (!tItems || !tItems[res.targetId]) { summary.skipped++; return; }
+            if (!roadmapData.deletedTodoIds) roadmapData.deletedTodoIds = {};
+            roadmapData.deletedTodoIds[res.targetId] = nowISO;
+            delete tItems[res.targetId];
+            roadmapData.todoList.lastUpdated = nowISO;
+            summary.applied++;
+        } else if (res.verb === 'PATIENT_DELETE') {
+            if (!fromRelay) {
+                var chk = document.getElementById(svCheckboxKey(res.targetId));
+                if (!chk || !chk.checked) {
+                    summary.skipped++;
+                    summary.notes.push('PATIENT_DELETE ' + res.label + ' skipped — confirmation box not checked');
+                    return;
+                }
+            }
+            if (!roadmapData.clinicalData.patientRecords[res.targetId]) { summary.skipped++; return; }
+            cascadeDeletePatient(res.targetId);
+            summary.applied++;
+        }
+    });
+    return summary;
+}
+
+// Programmatic Sully OS entry for the Command Center relay (Task 5 consumer).
+// Runs the pasted text through confirmUnifiedImport's exact internals. Destructive
+// verbs (APPOINTMENT_DELETE / TODO_DELETE / PROCEDURE_DELETE / PATIENT_DELETE) are
+// NEVER auto-applied — they come back counted in destructivePending for manual paste.
+function grApplySullyText(text, options) {
+    var result = confirmUnifiedImport(String(text == null ? '' : text));
+    return result || { applied: 0, skipped: 0, rejected: 0, destructivePending: 0 };
+}
+
 function previewPatientImport() {
     var textarea = document.getElementById('patientImportText');
     var preview = document.getElementById('patientImportPreview');
@@ -2205,6 +2760,57 @@ function previewPatientImport() {
         html += '</div>';
     }
 
+    // SULLYOS verb ops — resolved against live state NOW so the preview shows exactly what will happen
+    if (parsed.verbOps && parsed.verbOps.length > 0) {
+        var svResolved = svResolveVerbOps(parsed.verbOps, svBuildVerbContext());
+        var svActionable = false;
+        svResolved.forEach(function(res) {
+            var svLabel = escapeHtml(res.label || '');
+            if (res.status === 'reject') {
+                html += '<div style="padding:8px; margin-bottom:6px; background:#450a0a; border-radius:6px; border-left:3px solid #ef4444;">'
+                    + '<div style="color:#f87171; font-weight:600; font-size:0.9em;">✋ ' + escapeHtml(res.verb) + ' REJECTED</div>'
+                    + '<div style="color:#fca5a5; font-size:0.8em; margin-top:2px;">' + escapeHtml(res.reason) + '</div>'
+                    + '</div>';
+                return;
+            }
+            if (res.status === 'skip') {
+                svActionable = true;
+                html += '<div style="padding:8px; margin-bottom:6px; background:#1f2937; border-radius:6px; border-left:3px solid #6b7280;">'
+                    + '<div style="color:#9ca3af; font-weight:600; font-size:0.9em;">' + escapeHtml(res.verb) + ' — SKIP</div>'
+                    + '<div style="color:#9ca3af; font-size:0.8em; margin-top:2px;">' + svLabel + (res.reason ? ' — ' + escapeHtml(res.reason) : '') + '</div>'
+                    + '</div>';
+                return;
+            }
+            // status === 'ok'
+            svActionable = true;
+            if (res.verb === 'PATIENT_DELETE') {
+                // Destructive-mode checkbox: NEVER default-checked
+                html += '<div style="padding:10px; margin-bottom:6px; background:#450a0a; border-radius:6px; border:1px solid #ef4444;">'
+                    + '<div style="color:#f87171; font-weight:700; font-size:0.9em;">🗑️ PATIENT_DELETE: ' + svLabel + '</div>'
+                    + '<div style="color:#fca5a5; font-size:0.8em; margin-top:2px;">Deletes the patient AND all their appointments, procedures, notes, and to-dos (a checkpoint is taken first).</div>'
+                    + '<label style="display:flex; align-items:center; gap:6px; margin-top:6px; color:#fecaca; font-size:0.85em; cursor:pointer;">'
+                    + '<input type="checkbox" id="' + svCheckboxKey(res.targetId) + '"> Yes, permanently delete ' + svLabel
+                    + '</label></div>';
+                return;
+            }
+            var svDestr = !!SV_DESTRUCTIVE_VERBS[res.verb];
+            var svExtra = res.verb === 'APPOINTMENT_MOVE' ? ' (replaces in place — no duplicate)' : '';
+            html += '<div style="padding:8px; margin-bottom:6px; background:' + (svDestr ? '#450a0a' : '#422006') + '; border-radius:6px; border-left:3px solid ' + (svDestr ? '#ef4444' : '#f59e0b') + ';">'
+                + '<div style="color:' + (svDestr ? '#f87171' : '#fbbf24') + '; font-weight:600; font-size:0.9em;">' + escapeHtml(res.verb) + svExtra + '</div>'
+                + '<div style="color:#e2e8f0; font-size:0.8em; margin-top:2px;">' + svLabel + '</div>'
+                + '</div>';
+        });
+        if (svActionable) hasContent = true;
+    }
+
+    // Unrecognized block headers — listed so nothing is silently dropped (does NOT enable import)
+    if (parsed.unrecognizedHeaders && parsed.unrecognizedHeaders.length > 0) {
+        html += '<div style="padding:8px; margin-bottom:6px; background:#1f2937; border-radius:6px; border-left:3px solid #6b7280;">'
+            + '<div style="color:#9ca3af; font-weight:600; font-size:0.9em;">Unrecognized block header(s) — ignored</div>'
+            + '<div style="color:#9ca3af; font-size:0.8em; margin-top:2px;">' + parsed.unrecognizedHeaders.map(function(h) { return escapeHtml(h); }).join(', ') + '</div>'
+            + '</div>';
+    }
+
     // Retired Format D warning — shown alongside whatever else parsed (does NOT enable import by itself)
     if (parsed.retiredStatusBlocks) {
         html += '<div style="padding:10px; margin-bottom:6px; background:#451a03; border-radius:6px; border-left:3px solid #f59e0b;">'
@@ -2216,6 +2822,9 @@ function previewPatientImport() {
     if (!hasContent) {
         if (parsed.retiredStatusBlocks) {
             html += '<div style="color:#f87171; padding:12px; text-align:center;">Nothing importable in this paste — REQUIREMENTS_STATUS is retired.</div>';
+        } else if (html) {
+            // Reject-only verb paste / unrecognized headers: keep the reason cards visible
+            html += '<div style="color:#f87171; padding:12px; text-align:center;">Nothing will be imported — fix the rejected block(s) above and re-paste.</div>';
         } else {
             html = '<div style="color:#f87171; padding:16px; text-align:center;">No parseable content found. Make sure the text uses the correct format with --- delimiters.</div>';
         }
@@ -2232,27 +2841,34 @@ function previewPatientImport() {
     window._patientImportParsed = parsed;
 }
 
-function confirmUnifiedImport() {
+function confirmUnifiedImport(relayText) {
+    // SULLYOS: a string argument means a programmatic relay apply (grApplySullyText).
+    // The modal button calls with no args — its behavior is unchanged.
+    var fromRelay = typeof relayText === 'string';
+    var svZero = { applied: 0, skipped: 0, rejected: 0, destructivePending: 0 };
     // Re-parse current textarea to avoid stale cache if user edited after preview
     var textarea = document.getElementById('patientImportText');
     var parsed;
     try {
-        parsed = textarea ? parsePatientImportText(textarea.value) : window._patientImportParsed;
+        parsed = fromRelay ? parsePatientImportText(relayText)
+            : (textarea ? parsePatientImportText(textarea.value) : window._patientImportParsed);
     } catch (err) {
         console.error('[IMPORT] Parse failed:', err);
         showToast('Import failed: could not parse text — nothing was changed', 'error');
-        return;
+        return svZero;
     }
-    if (!parsed) return;
+    if (!parsed) return svZero;
 
     // No-op guard: an empty/unrecognized paste must not toast success or trigger a save
+    var hasVerbOps = !!(parsed.verbOps && parsed.verbOps.length > 0);
     var hasAnyBlock = parsed.records.length > 0 || parsed.updates.length > 0
         || parsed.reqMatches.length > 0 || parsed.appointments.length > 0
         || !!parsed.dashboardUpdate
-        || !!parsed.missingNotes || !!parsed.todoList;
+        || !!parsed.missingNotes || !!parsed.todoList
+        || hasVerbOps;
     if (!hasAnyBlock) {
         showToast('Nothing to import — no recognizable blocks found in paste', 'error');
-        return;
+        return svZero;
     }
 
     // Ensure the record store is ATTACHED to roadmapData before mutating — getPatientRecords()
@@ -2266,6 +2882,12 @@ function confirmUnifiedImport() {
 
     // Set dirty flag BEFORE any state mutations so syncClinicalToMonthlyPlanner works
     clinicalDataDirty = true;
+
+    // SULLYOS: verb pastes can move/delete real data — checkpoint BEFORE any mutation.
+    // createCheckpoint has its own 60s dedup, so re-pastes don't spam checkpoints.
+    if (hasVerbOps && typeof createCheckpoint === 'function') {
+        try { createCheckpoint('pre-paste-verbs'); } catch (cpErr) { console.error('[SULLYOS] pre-verb checkpoint failed:', cpErr); }
+    }
 
     // Apply records (create or update)
     parsed.records.forEach(function(rec) {
@@ -2571,6 +3193,25 @@ function confirmUnifiedImport() {
         roadmapData.todoList.lastUpdated = new Date().toISOString();
     }
 
+    // SULLYOS: verb ops resolve FRESH here (after the additive blocks above) so one paste
+    // can import a record and then act on it. Destructive verbs never auto-apply from relay.
+    var verbSummary = null;
+    if (hasVerbOps) {
+        var verbResolutions = svResolveVerbOps(parsed.verbOps, svBuildVerbContext());
+        verbSummary = svApplyVerbOps(verbResolutions, { fromRelay: fromRelay });
+        if (verbSummary.notes.length > 0) console.warn('[SULLYOS] verb notes:', verbSummary.notes);
+    }
+
+    // Verbs-only paste where nothing applied (all skipped/rejected/held): nothing changed — no save
+    var additiveChanges = created + updated + aptsCreated + notesImported + todosImported
+        + completedItems.length + parsed.reqMatches.length + (parsed.dashboardUpdate ? 1 : 0);
+    if (verbSummary && additiveChanges === 0 && verbSummary.applied === 0) {
+        var svNothingMsg = 'Nothing changed — ' + verbSummary.skipped + ' skipped, ' + verbSummary.rejected + ' rejected'
+            + (verbSummary.destructivePending > 0 ? ', ' + verbSummary.destructivePending + ' destructive op(s) held (paste manually to apply)' : '');
+        showToast(svNothingMsg, verbSummary.rejected > 0 ? 'error' : 'info');
+        return { applied: 0, skipped: verbSummary.skipped, rejected: verbSummary.rejected, destructivePending: verbSummary.destructivePending };
+    }
+
     // CRITICAL: Persist to localStorage BEFORE saveData() in case guards block
     clinicalDataDirty = true;
     safeLocalStorageSet(STORAGE_KEY, JSON.stringify(roadmapData));
@@ -2578,12 +3219,12 @@ function confirmUnifiedImport() {
 
     // Re-render with blur suppression to prevent stale onblur handlers from overwriting imported data
     _suppressBlurSave = true;
-    closePatientImportModal();
+    if (!fromRelay) closePatientImportModal();
     renderCountdownRadar();
     renderPatientsSidebar();
 
-    // Auto-select the first imported/updated patient
-    if (lastImportedId && records[lastImportedId]) {
+    // Auto-select the first imported/updated patient (modal path only — relay must not steal focus)
+    if (!fromRelay && lastImportedId && records[lastImportedId]) {
         selectPatient(lastImportedId);
     } else if (activePatientId && records[activePatientId]) {
         renderPatientRecord(activePatientId);
@@ -2618,13 +3259,28 @@ function confirmUnifiedImport() {
     if (totalRemoved > 0) msg += totalRemoved + ' obsolete requirement ID(s) skipped. ';
     if (allUnmatched.length > 0) msg += allUnmatched.length + ' unrecognized ID(s): ' + allUnmatched.join(', ') + '. ';
     if (parsed.retiredStatusBlocks) msg += parsed.retiredStatusBlocks + ' REQUIREMENTS_STATUS block(s) IGNORED (retired format — counts are manual-only). ';
-    var hasWarnings = skipped > 0 || totalRemoved > 0 || allUnmatched.length > 0 || !!parsed.retiredStatusBlocks;
+    if (verbSummary) {
+        if (verbSummary.applied > 0) msg += verbSummary.applied + ' verb op(s) applied. ';
+        if (verbSummary.skipped > 0) msg += verbSummary.skipped + ' verb op(s) skipped (already applied / not confirmed). ';
+        if (verbSummary.rejected > 0) msg += verbSummary.rejected + ' verb op(s) REJECTED — re-run preview for reasons. ';
+        if (verbSummary.destructivePending > 0) msg += verbSummary.destructivePending + ' destructive op(s) held — paste manually to apply. ';
+    }
+    var hasWarnings = skipped > 0 || totalRemoved > 0 || allUnmatched.length > 0 || !!parsed.retiredStatusBlocks
+        || !!(verbSummary && (verbSummary.rejected > 0 || verbSummary.destructivePending > 0 || verbSummary.skipped > 0));
     showToast(msg || 'Import complete', hasWarnings ? 'warning' : undefined);
 
     // Post-import integrity check (console-only)
     if (typeof runPostMergeIntegrityChecks === 'function') {
         setTimeout(function() { runPostMergeIntegrityChecks('confirmUnifiedImport'); }, 200);
     }
+
+    // SULLYOS: summary consumed by grApplySullyText / the Command Center relay
+    return {
+        applied: additiveChanges + (verbSummary ? verbSummary.applied : 0),
+        skipped: skipped + (verbSummary ? verbSummary.skipped : 0),
+        rejected: verbSummary ? verbSummary.rejected : 0,
+        destructivePending: verbSummary ? verbSummary.destructivePending : 0
+    };
 }
 // Backward-compat alias for any HTML onclick references
 var confirmPatientImport = confirmUnifiedImport;

@@ -7967,6 +7967,9 @@
                         <button class="import-btn preview" onclick="previewImportData()">👁️ Preview</button>
                         <button class="import-btn import" id="importConfirmBtn" onclick="confirmImportData()" disabled>✓ Import All</button>
                     </div>
+                    <div id="bcSullyStatus" style="font-size:0.8em; color:#94a3b8; margin-top:6px; min-height:1em;"></div>
+                    <div id="bcSullyRouting"></div>
+                    <div id="bcSullyReceipts"></div>
                 </div>
             </div>
         </div>
@@ -14120,6 +14123,7 @@
         // ============================================
         // SHARED IMPORT VALIDATION (paste + import tab)
         // ============================================
+        // [SULLYOS-PARSER-START]
         // The app's real workout types — the 8 buttons in the workout modal.
         const IMPORT_WORKOUT_TYPES = ['Lift', 'Run', 'Cardio', 'Walk', 'HIIT', 'Bike', 'Swim', 'Other'];
 
@@ -14161,6 +14165,169 @@
             return m[3] ? (h >= 1 && h <= 12) : (h <= 23);
         }
 
+        // --- Sully OS verb-layer helpers (pure — no state/DOM access) ---
+
+        // Flexible time: "14:30", "2:30 PM", "2:30pm" → canonical 24h "HH:MM".
+        // Returns null on anything malformed (caller rejects the line).
+        function parseTimeFlexible(raw) {
+            const m = /^(\d{1,2}):(\d{2})\s*(AM|PM)?$/i.exec((raw || '').trim());
+            if (!m) return null;
+            let h = parseInt(m[1], 10);
+            const min = parseInt(m[2], 10);
+            if (min > 59) return null;
+            if (m[3]) {
+                if (h < 1 || h > 12) return null;
+                h = (h % 12) + (m[3].toUpperCase() === 'PM' ? 12 : 0);
+            } else if (h > 23) {
+                return null;
+            }
+            return String(h).padStart(2, '0') + ':' + String(min).padStart(2, '0');
+        }
+
+        // key=value tail for *_EDIT lines → { kv } or { err }.
+        // Bare or duplicate keys reject — never guess what a malformed field meant.
+        function parseKvTail(parts, startIdx) {
+            const kv = Object.create(null);
+            for (let i = startIdx; i < parts.length; i++) {
+                const seg = parts[i];
+                if (!seg) continue;
+                const eq = seg.indexOf('=');
+                if (eq <= 0) return { err: 'bad field "' + seg + '" (use key=value)' };
+                const key = seg.slice(0, eq).trim().toLowerCase();
+                const val = seg.slice(eq + 1).trim();
+                if (key in kv) return { err: 'duplicate field "' + key + '"' };
+                kv[key] = val;
+            }
+            return { kv };
+        }
+
+        // MEAL_EDIT kv → validated changes object (app field names).
+        // today = 'YYYY-MM-DD' fence for date= moves.
+        function convertMealEditFields(kv, today) {
+            const changes = {};
+            for (const key of Object.keys(kv)) {
+                const val = kv[key];
+                if (key === 'name') {
+                    if (!val) return { err: 'name= cannot be empty' };
+                    changes.name = val;
+                } else if (key === 'cal' || key === 'calories') {
+                    const n = parseImportNumber(val);
+                    if (n === null || Number.isNaN(n)) return { err: 'bad calories "' + val + '"' };
+                    changes.calories = n;
+                } else if (key === 'protein' || key === 'carbs' || key === 'fat') {
+                    const n = parseImportNumber(val);
+                    if (n === null || Number.isNaN(n)) return { err: 'bad ' + key + ' "' + val + '"' };
+                    changes[key] = n;
+                } else if (key === 'time') {
+                    const t = parseTimeFlexible(val);
+                    if (!t) return { err: 'bad time "' + val + '" (use HH:MM or H:MM AM/PM)' };
+                    changes.time = t;
+                } else if (key === 'date') {
+                    if (!isValidImportDate(val)) return { err: 'bad date "' + val + '" (use YYYY-MM-DD)' };
+                    if (val > today) return { err: 'future date "' + val + '"' };
+                    changes.date = val;
+                } else {
+                    return { err: 'unknown field "' + key + '"' };
+                }
+            }
+            if (Object.keys(changes).length === 0) return { err: 'no changes given' };
+            return { changes };
+        }
+
+        // WORKOUT_EDIT kv → validated changes object.
+        function convertWorkoutEditFields(kv, today) {
+            const changes = {};
+            for (const key of Object.keys(kv)) {
+                const val = kv[key];
+                if (key === 'type') {
+                    const t = normalizeImportWorkoutType(val);
+                    if (!t) return { err: 'unknown workout type "' + val + '" (use ' + IMPORT_WORKOUT_TYPES.join('/') + ')' };
+                    changes.type = t;
+                } else if (key === 'duration') {
+                    const n = parseImportNumber(val);
+                    if (n === null || Number.isNaN(n) || n <= 0) return { err: 'bad duration "' + val + '"' };
+                    changes.duration = n;
+                } else if (key === 'cal' || key === 'calories') {
+                    const n = parseImportNumber(val);
+                    if (n === null || Number.isNaN(n)) return { err: 'bad calories "' + val + '"' };
+                    changes.calories = n;
+                } else if (key === 'time') {
+                    const t = parseTimeFlexible(val);
+                    if (!t) return { err: 'bad time "' + val + '" (use HH:MM or H:MM AM/PM)' };
+                    changes.time = t;
+                } else if (key === 'date') {
+                    if (!isValidImportDate(val)) return { err: 'bad date "' + val + '" (use YYYY-MM-DD)' };
+                    if (val > today) return { err: 'future date "' + val + '"' };
+                    changes.date = val;
+                } else {
+                    return { err: 'unknown field "' + key + '"' };
+                }
+            }
+            if (Object.keys(changes).length === 0) return { err: 'no changes given' };
+            return { changes };
+        }
+
+        // WEIGHIN_EDIT kv → validated changes object. Same range fences as
+        // the WEIGHIN| add path (weight 100-400, bf 0-70 exclusive).
+        function convertWeighInEditFields(kv, today) {
+            const changes = {};
+            for (const key of Object.keys(kv)) {
+                const val = kv[key];
+                if (key === 'weight') {
+                    const n = parseImportNumber(val, { float: true });
+                    if (n === null || Number.isNaN(n)) return { err: 'bad weight "' + val + '"' };
+                    if (n < 100 || n > 400) return { err: 'weight ' + n + ' out of range (100-400 lbs)' };
+                    changes.weight = n;
+                } else if (key === 'bf' || key === 'bodyfat') {
+                    const n = parseImportNumber(val, { float: true });
+                    if (n === null || Number.isNaN(n) || n <= 0 || n >= 70) return { err: 'bad body fat % "' + val + '"' };
+                    changes.bodyFat = n;
+                } else if (key === 'date') {
+                    if (!isValidImportDate(val)) return { err: 'bad date "' + val + '" (use YYYY-MM-DD)' };
+                    if (val > today) return { err: 'future date "' + val + '"' };
+                    changes.date = val;
+                } else {
+                    return { err: 'unknown field "' + key + '"' };
+                }
+            }
+            if (Object.keys(changes).length === 0) return { err: 'no changes given' };
+            return { changes };
+        }
+
+        // --- Sully OS match resolution (pure — callers pass the container) ---
+        // [key, record] pairs regardless of container shape. Legacy array
+        // containers use the record id as key (apply paths convert arrays to
+        // objects via ensure*Object before mutating, so keys stay valid).
+        function sullyEntries(container) {
+            if (!container) return [];
+            if (Array.isArray(container)) return container.filter(Boolean).map(r => [r.id, r]);
+            return Object.entries(container).filter(pair => pair[1]);
+        }
+
+        // Human match keys mirror the app's own duplicate predicates:
+        // meals by name (+calories when given), workouts by type
+        // (+duration when given), weigh-ins by date (+weight when given).
+        // 0 matches → not found; >1 → ambiguous; caller rejects both loudly.
+        function sullyMatchMeals(entries, name, calories) {
+            const key = (name || '').trim().toLowerCase();
+            return entries.filter(pair =>
+                ((pair[1].name || '').trim().toLowerCase() === key) &&
+                (calories == null || (pair[1].calories ?? 0) === calories));
+        }
+
+        function sullyMatchWorkouts(entries, type, duration) {
+            const key = (type || '').trim().toLowerCase();
+            return entries.filter(pair =>
+                ((pair[1].type || '').trim().toLowerCase() === key) &&
+                (duration == null || (pair[1].duration ?? 0) === duration));
+        }
+
+        function sullyMatchWeighIns(entries, date, weight) {
+            return entries.filter(pair =>
+                pair[1].date === date && (weight == null || pair[1].weight === weight));
+        }
+        // [SULLYOS-PARSER-END]
+
         function getExistingMealsForDate(date) {
             const src = date === getLocalDateString()
                 ? state.today.meals
@@ -14173,6 +14340,22 @@
                 ? state.today.workouts
                 : (state.dailyLogs[date] && state.dailyLogs[date].workouts);
             return getValues(src || {});
+        }
+
+        // Entry ([key, record]) variants — verb apply paths need the
+        // container key to delete/edit, not just the value.
+        function getMealEntriesForDate(date) {
+            const src = date === getLocalDateString()
+                ? state.today.meals
+                : (state.dailyLogs[date] && state.dailyLogs[date].meals);
+            return sullyEntries(src);
+        }
+
+        function getWorkoutEntriesForDate(date) {
+            const src = date === getLocalDateString()
+                ? state.today.workouts
+                : (state.dailyLogs[date] && state.dailyLogs[date].workouts);
+            return sullyEntries(src);
         }
 
         // Duplicate policy: confirm, never silent, never auto-delete.
@@ -16936,6 +17119,7 @@ TDEE TODAY: ~${formatNumber(calculateTDEE(getWeightForDate(state.today.date || g
             rejectedImportLines = [];
         }
 
+        // [SULLYOS-PARSER-START]
         // Shared by preview AND confirm — confirm re-parses from the live
         // textarea so an edit made after previewing can't import stale data.
         function parseImportText(input) {
@@ -16943,8 +17127,11 @@ TDEE TODAY: ~${formatNumber(calculateTDEE(getWeightForDate(state.today.date || g
             const items = [];
             const rejected = [];
             for (const line of lines) {
+                // Cosmetic app banners from the webchat output are skipped.
+                if (/^@(BODYCOMP|STIMCALC|ROADMAP)\b/i.test(line)) continue;
                 const res = parseImportLine(line);
                 if (res && res.ok) {
+                    res.item._line = line;
                     items.push(res.item);
                 } else {
                     rejected.push({ line, reason: (res && res.reason) || 'unrecognized format' });
@@ -16952,6 +17139,7 @@ TDEE TODAY: ~${formatNumber(calculateTDEE(getWeightForDate(state.today.date || g
             }
             return { items, rejected };
         }
+        // [SULLYOS-PARSER-END]
 
         function previewImportData() {
             const input = document.getElementById('importClaudeInput').value.trim();
@@ -16975,6 +17163,7 @@ TDEE TODAY: ~${formatNumber(calculateTDEE(getWeightForDate(state.today.date || g
             document.getElementById('importConfirmBtn').disabled = parsedImportData.length === 0;
         }
 
+        // [SULLYOS-PARSER-START]
         // Default date for import lines that omit their own date: the Log modal's
         // stepper date when the Import tab is active, else today.
         function logImportDefaultDate() {
@@ -17013,8 +17202,9 @@ TDEE TODAY: ~${formatNumber(calculateTDEE(getWeightForDate(state.today.date || g
                 if (Number.isNaN(protein) || Number.isNaN(carbs) || Number.isNaN(fat)) {
                     return { ok: false, reason: 'bad macro number' };
                 }
-                const time = parts[6] || '';
-                if (time && !isValidImportTime(time)) return { ok: false, reason: 'bad time (use HH:MM)' };
+                const timeRaw = parts[6] || '';
+                const time = timeRaw ? parseTimeFlexible(timeRaw) : '';
+                if (timeRaw && !time) return { ok: false, reason: 'bad time (use HH:MM or H:MM AM/PM)' };
                 const d = checkDate(parts[7]);
                 if (d.err) return { ok: false, reason: d.err };
                 return {
@@ -17038,8 +17228,9 @@ TDEE TODAY: ~${formatNumber(calculateTDEE(getWeightForDate(state.today.date || g
                 if (duration === null || Number.isNaN(duration) || duration <= 0) return { ok: false, reason: 'bad duration' };
                 const calories = parseImportNumber(parts[3]);
                 if (calories === null || Number.isNaN(calories)) return { ok: false, reason: 'bad calories' };
-                const time = parts[4] || '';
-                if (time && !isValidImportTime(time)) return { ok: false, reason: 'bad time (use HH:MM)' };
+                const timeRaw = parts[4] || '';
+                const time = timeRaw ? parseTimeFlexible(timeRaw) : '';
+                if (timeRaw && !time) return { ok: false, reason: 'bad time (use HH:MM or H:MM AM/PM)' };
                 const d = checkDate(parts[5]);
                 if (d.err) return { ok: false, reason: d.err };
                 return {
@@ -17069,10 +17260,115 @@ TDEE TODAY: ~${formatNumber(calculateTDEE(getWeightForDate(state.today.date || g
                     ok: true,
                     item: { type: 'weighin', weight, bodyFat, date: d.date }
                 };
+            } else if (type === 'FOOD') {
+                // FOOD|Name|Calories|Protein|Carbs|Fat — frequent-foods library
+                // upsert (same name.toLowerCase dedupe rule as saveFrequentFood)
+                const name = parts[1] || '';
+                if (!name) return { ok: false, reason: 'missing name' };
+                const calories = parseImportNumber(parts[2]);
+                if (calories === null || Number.isNaN(calories)) return { ok: false, reason: 'bad calories' };
+                const protein = parseImportNumber(parts[3]);
+                const carbs = parseImportNumber(parts[4]);
+                const fat = parseImportNumber(parts[5]);
+                if (Number.isNaN(protein) || Number.isNaN(carbs) || Number.isNaN(fat)) {
+                    return { ok: false, reason: 'bad macro number' };
+                }
+                if (parts.slice(6).some(p => p)) return { ok: false, reason: 'too many fields (FOOD|Name|Cal|Protein|Carbs|Fat)' };
+                return {
+                    ok: true,
+                    item: {
+                        type: 'food',
+                        name,
+                        calories,
+                        protein: protein ?? 0,
+                        carbs: carbs ?? 0,
+                        fat: fat ?? 0
+                    }
+                };
+            } else if (type === 'MEAL_EDIT') {
+                // MEAL_EDIT|Name|Date|key=value… — date may be omitted when the
+                // third field is already key=value (defaults like ADD lines).
+                // date= inside the tail MOVES the meal to that date.
+                const name = parts[1] || '';
+                if (!name) return { ok: false, reason: 'missing name' };
+                let kvStart = 3;
+                let dateRaw = parts[2] || '';
+                if (dateRaw.includes('=')) { dateRaw = ''; kvStart = 2; }
+                const d = checkDate(dateRaw);
+                if (d.err) return { ok: false, reason: d.err };
+                const tail = parseKvTail(parts, kvStart);
+                if (tail.err) return { ok: false, reason: tail.err };
+                const conv = convertMealEditFields(tail.kv, today);
+                if (conv.err) return { ok: false, reason: conv.err };
+                return { ok: true, item: { type: 'meal_edit', matchName: name, date: d.date, changes: conv.changes } };
+            } else if (type === 'WORKOUT_EDIT') {
+                // WORKOUT_EDIT|Type|Date|key=value…
+                const matchType = normalizeImportWorkoutType(parts[1]);
+                if (!matchType) return { ok: false, reason: 'unknown type (use Lift/Run/Cardio/Walk/HIIT/Bike/Swim/Other)' };
+                let kvStart = 3;
+                let dateRaw = parts[2] || '';
+                if (dateRaw.includes('=')) { dateRaw = ''; kvStart = 2; }
+                const d = checkDate(dateRaw);
+                if (d.err) return { ok: false, reason: d.err };
+                const tail = parseKvTail(parts, kvStart);
+                if (tail.err) return { ok: false, reason: tail.err };
+                const conv = convertWorkoutEditFields(tail.kv, today);
+                if (conv.err) return { ok: false, reason: conv.err };
+                return { ok: true, item: { type: 'workout_edit', matchType, date: d.date, changes: conv.changes } };
+            } else if (type === 'WEIGHIN_EDIT') {
+                // WEIGHIN_EDIT|Date|weight=…|bf=… — Date is the match key
+                let kvStart = 2;
+                let dateRaw = parts[1] || '';
+                if (dateRaw.includes('=')) { dateRaw = ''; kvStart = 1; }
+                const d = checkDate(dateRaw);
+                if (d.err) return { ok: false, reason: d.err };
+                const tail = parseKvTail(parts, kvStart);
+                if (tail.err) return { ok: false, reason: tail.err };
+                const conv = convertWeighInEditFields(tail.kv, today);
+                if (conv.err) return { ok: false, reason: conv.err };
+                return { ok: true, item: { type: 'weighin_edit', date: d.date, changes: conv.changes } };
+            } else if (type === 'MEAL_DELETE') {
+                // MEAL_DELETE|Name|Date[|Cal] — Cal disambiguates same-name meals
+                const name = parts[1] || '';
+                if (!name) return { ok: false, reason: 'missing name' };
+                const d = checkDate(parts[2]);
+                if (d.err) return { ok: false, reason: d.err };
+                let matchCal = null;
+                if (parts[3]) {
+                    matchCal = parseImportNumber(parts[3]);
+                    if (matchCal === null || Number.isNaN(matchCal)) return { ok: false, reason: 'bad calories disambiguator' };
+                }
+                if (parts.slice(4).some(p => p)) return { ok: false, reason: 'too many fields (MEAL_DELETE|Name|Date|Cal)' };
+                return { ok: true, item: { type: 'meal_delete', matchName: name, date: d.date, matchCal } };
+            } else if (type === 'WORKOUT_DELETE') {
+                // WORKOUT_DELETE|Type|Date[|Duration]
+                const matchType = normalizeImportWorkoutType(parts[1]);
+                if (!matchType) return { ok: false, reason: 'unknown type (use Lift/Run/Cardio/Walk/HIIT/Bike/Swim/Other)' };
+                const d = checkDate(parts[2]);
+                if (d.err) return { ok: false, reason: d.err };
+                let matchDuration = null;
+                if (parts[3]) {
+                    matchDuration = parseImportNumber(parts[3]);
+                    if (matchDuration === null || Number.isNaN(matchDuration) || matchDuration <= 0) return { ok: false, reason: 'bad duration disambiguator' };
+                }
+                if (parts.slice(4).some(p => p)) return { ok: false, reason: 'too many fields (WORKOUT_DELETE|Type|Date|Duration)' };
+                return { ok: true, item: { type: 'workout_delete', matchType, date: d.date, matchDuration } };
+            } else if (type === 'WEIGHIN_DELETE') {
+                // WEIGHIN_DELETE|Date[|Weight]
+                const d = checkDate(parts[1]);
+                if (d.err) return { ok: false, reason: d.err };
+                let matchWeight = null;
+                if (parts[2]) {
+                    matchWeight = parseImportNumber(parts[2], { float: true });
+                    if (matchWeight === null || Number.isNaN(matchWeight)) return { ok: false, reason: 'bad weight disambiguator' };
+                }
+                if (parts.slice(3).some(p => p)) return { ok: false, reason: 'too many fields (WEIGHIN_DELETE|Date|Weight)' };
+                return { ok: true, item: { type: 'weighin_delete', date: d.date, matchWeight } };
             }
 
-            return { ok: false, reason: 'unknown line type (use MEAL / WORKOUT / WEIGHIN)' };
+            return { ok: false, reason: 'unknown line type (use MEAL / WORKOUT / WEIGHIN / FOOD / MEAL_EDIT / MEAL_DELETE / WORKOUT_EDIT / WORKOUT_DELETE / WEIGHIN_EDIT / WEIGHIN_DELETE)' };
         }
+        // [SULLYOS-PARSER-END]
 
         function renderImportPreview() {
             const list = document.getElementById('importPreviewList');
@@ -17082,29 +17378,60 @@ TDEE TODAY: ~${formatNumber(calculateTDEE(getWeightForDate(state.today.date || g
                 (rejectedImportLines.length ? `, ${rejectedImportLines.length} rejected` : '');
 
             const itemsHtml = parsedImportData.map(item => {
-                let icon, details;
+                let icon, details, accent = '', note = '';
+                const changesText = item.changes
+                    ? Object.keys(item.changes).map(k => `${k}=${item.changes[k]}`).join(', ')
+                    : '';
                 if (item.type === 'meal') {
                     icon = '🍽️';
-                    details = `${item.calories} cal • ${item.protein}g P`;
+                    details = `${item.calories} cal • ${item.protein}g P • ${formatTimeET(item.time)}`;
                 } else if (item.type === 'workout') {
                     icon = '💪';
-                    details = `${item.duration}min • ${item.calories} cal`;
+                    details = `${item.duration}min • ${item.calories} cal • ${formatTimeET(item.time)}`;
                 } else if (item.type === 'weighin') {
                     icon = '⚖️';
                     details = `${item.weight} lbs${item.bodyFat ? ` • ${item.bodyFat}% BF` : ''}`;
+                } else if (item.type === 'food') {
+                    icon = '⭐';
+                    details = `${item.calories} cal • ${item.protein}g P • food library upsert`;
+                    accent = '#a78bfa';
+                } else if (item.type === 'meal_edit' || item.type === 'workout_edit' || item.type === 'weighin_edit') {
+                    icon = '✏️';
+                    details = `EDIT → ${changesText}`;
+                    accent = '#f59e0b';
+                } else if (item.type === 'meal_delete' || item.type === 'workout_delete' || item.type === 'weighin_delete') {
+                    icon = '🗑️';
+                    details = 'DELETE';
+                    accent = 'var(--accent-red)';
                 }
 
-                const name = item.name || item.workoutType || 'Weigh-in';
-                const dateDisplay = item.date === getLocalDateString() ? 'Today' :
+                // Verb targets resolve for the preview too (read-only) — a
+                // not-found or ambiguous line shows RED before the user confirms.
+                if (item.changes || item.type.endsWith('_delete')) {
+                    const res = resolveVerbTarget(item);
+                    if (!res.ok) {
+                        accent = 'var(--accent-red)';
+                        note = `✗ ${res.reason} — will be rejected`;
+                    } else if (item.type.endsWith('_delete')) {
+                        note = '⚠ will be permanently deleted';
+                    }
+                } else if (isExactDuplicateImport(item)) {
+                    accent = '#f59e0b';
+                    note = 'already logged — will be skipped';
+                }
+
+                const name = item.name || item.matchName || item.workoutType || item.matchType ||
+                    (item.type.indexOf('weighin') === 0 ? 'Weigh-in' : 'Item');
+                const dateDisplay = !item.date ? '' : item.date === getLocalDateString() ? 'Today' :
                     new Date(item.date + 'T12:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
 
                 return `
-                    <div class="import-preview-item">
+                    <div class="import-preview-item"${accent ? ` style="border-left: 3px solid ${accent}; padding-left: 8px;"` : ''}>
                         <div class="import-item-type">
                             <span class="import-item-icon ${item.type}">${icon}</span>
                             <span class="import-item-name">${escapeHtml(name)}</span>
                         </div>
-                        <div class="import-item-details">${details} • ${dateDisplay}</div>
+                        <div class="import-item-details">${escapeHtml(details)}${dateDisplay ? ' • ' + dateDisplay : ''}${note ? `<div style="color: ${accent}; font-weight: 600; margin-top: 2px;">${escapeHtml(note)}</div>` : ''}</div>
                     </div>
                 `;
             }).join('');
@@ -17127,6 +17454,512 @@ TDEE TODAY: ~${formatNumber(calculateTDEE(getWeightForDate(state.today.date || g
             list.innerHTML = itemsHtml + rejectedHtml;
         }
 
+        // ============================================
+        // SULLY OS APPLY ENGINE (shared: Import tab + relay)
+        // Mirrors the manual CRUD paths exactly: tombstone before removal,
+        // stamp updatedAt on every touch, same recalc ripple entry points.
+        // ============================================
+
+        function describeImportItem(it) {
+            switch (it.type) {
+                case 'meal': return `${it.name} (${it.calories} cal, ${it.date})`;
+                case 'workout': return `${it.workoutType} ${it.duration}min (${it.date})`;
+                case 'weighin': return `Weigh-in ${it.weight} lbs (${it.date})`;
+                case 'food': return `Food: ${it.name} (${it.calories} cal)`;
+                case 'meal_edit': return `Edit meal "${it.matchName}" (${it.date})`;
+                case 'workout_edit': return `Edit workout ${it.matchType} (${it.date})`;
+                case 'weighin_edit': return `Edit weigh-in (${it.date})`;
+                case 'meal_delete': return `Delete meal "${it.matchName}" (${it.date})`;
+                case 'workout_delete': return `Delete workout ${it.matchType} (${it.date})`;
+                case 'weighin_delete': return `Delete weigh-in (${it.date})`;
+                default: return it.type;
+            }
+        }
+
+        // Advisory near-duplicate: same human key already in the log
+        // (looser than exact — same name+cal with different macros still flags)
+        function importItemExistsInLog(it) {
+            if (it.type === 'meal') {
+                return getExistingMealsForDate(it.date).some(ex =>
+                    (ex.name || '').toLowerCase() === it.name.toLowerCase() &&
+                    (ex.calories ?? 0) === it.calories);
+            }
+            if (it.type === 'workout') {
+                return getExistingWorkoutsForDate(it.date).some(ex =>
+                    (ex.type || '').toLowerCase() === it.workoutType.toLowerCase() &&
+                    (ex.duration ?? 0) === it.duration &&
+                    (ex.calories ?? 0) === it.calories);
+            }
+            if (it.type === 'weighin') {
+                return getValues(state.weighIns || {}).some(ex =>
+                    ex.date === it.date && ex.weight === it.weight);
+            }
+            return false;
+        }
+
+        // EXACT duplicate: every payload field equal → auto-skip, no dialog.
+        // Time is excluded for meals (an omitted time defaults to "now", so
+        // including it would make re-paste dedup useless).
+        function isExactDuplicateImport(it) {
+            if (it.type === 'meal') {
+                return getExistingMealsForDate(it.date).some(ex =>
+                    (ex.name || '').toLowerCase() === it.name.toLowerCase() &&
+                    (ex.calories ?? 0) === it.calories &&
+                    (ex.protein ?? 0) === it.protein &&
+                    (ex.carbs ?? 0) === it.carbs &&
+                    (ex.fat ?? 0) === it.fat);
+            }
+            if (it.type === 'workout') {
+                return getExistingWorkoutsForDate(it.date).some(ex =>
+                    (ex.type || '').toLowerCase() === it.workoutType.toLowerCase() &&
+                    (ex.duration ?? 0) === it.duration &&
+                    (ex.calories ?? 0) === it.calories);
+            }
+            if (it.type === 'weighin') {
+                return getValues(state.weighIns || {}).some(ex =>
+                    ex.date === it.date && ex.weight === it.weight &&
+                    (ex.bodyFat ?? null) === (it.bodyFat ?? null));
+            }
+            if (it.type === 'food') {
+                return getValues(state.frequentFoods || {}).some(ex =>
+                    (ex.name || '').toLowerCase() === it.name.toLowerCase() &&
+                    (ex.calories ?? 0) === it.calories &&
+                    (ex.protein ?? 0) === it.protein &&
+                    (ex.carbs ?? 0) === it.carbs &&
+                    (ex.fat ?? 0) === it.fat);
+            }
+            return false;
+        }
+
+        // Resolves a verb line to exactly ONE existing record. Read-only —
+        // safe to call from the preview. 0 matches → not found; >1 →
+        // ambiguous with candidates listed (never silently picks the first).
+        function resolveVerbTarget(item) {
+            let matches, describeRec;
+            if (item.type === 'meal_edit' || item.type === 'meal_delete') {
+                matches = sullyMatchMeals(getMealEntriesForDate(item.date), item.matchName,
+                    item.type === 'meal_delete' ? item.matchCal : null);
+                describeRec = m => `${m.name} (${m.calories ?? 0} cal${m.time ? ', ' + formatTimeET(m.time) : ''})`;
+            } else if (item.type === 'workout_edit' || item.type === 'workout_delete') {
+                matches = sullyMatchWorkouts(getWorkoutEntriesForDate(item.date), item.matchType,
+                    item.type === 'workout_delete' ? item.matchDuration : null);
+                describeRec = w => `${w.type} ${w.duration ?? 0}min (${w.calories ?? 0} cal)`;
+            } else if (item.type === 'weighin_edit' || item.type === 'weighin_delete') {
+                matches = sullyMatchWeighIns(sullyEntries(state.weighIns), item.date,
+                    item.type === 'weighin_delete' ? item.matchWeight : null);
+                describeRec = w => `${w.weight} lbs${w.bodyFat ? ' / ' + w.bodyFat + '% BF' : ''}`;
+            } else {
+                return { ok: false, reason: 'not a verb line' };
+            }
+            if (matches.length === 0) return { ok: false, reason: `no match on ${item.date}` };
+            if (matches.length > 1) {
+                const list = matches.slice(0, 4).map(pair => describeRec(pair[1])).join('; ');
+                return { ok: false, reason: `ambiguous — ${matches.length} matches on ${item.date}: ${list}. Add a disambiguator` };
+            }
+            return { ok: true, key: matches[0][0], rec: matches[0][1] };
+        }
+
+        // Applies parsed import items through the SAME mutations the manual
+        // UI performs. opts.allowDeletes=false routes *_delete lines into
+        // destructiveSkipped untouched (the relay path never auto-deletes).
+        function applyImportItems(items, opts = {}) {
+            const allowDeletes = opts.allowDeletes === true;
+            const today = getLocalDateString();
+            const nowIso = () => new Date().toISOString();
+
+            const summary = {
+                mealsAdded: 0, workoutsAdded: 0, weighInsAdded: 0, foodsUpserted: 0,
+                edited: 0, deleted: 0, todayMealsAdded: 0,
+                skippedExact: [], applyRejected: [], destructiveSkipped: [],
+                appliedDescriptions: [],
+                touchedHistorical: false, weighInsTouched: false
+            };
+            const touchedHistoricalDates = new Set();
+            const weighInDatesToRecalc = new Set();
+            let earliestImportedWeighIn = null;
+            let refreshTodayNeeded = false;
+            let anythingApplied = false;
+
+            const rejectLine = (item, reason) => {
+                summary.applyRejected.push({ line: item._line || describeImportItem(item), reason });
+            };
+            const applied = (item) => {
+                summary.appliedDescriptions.push(describeImportItem(item));
+                anythingApplied = true;
+            };
+            const touchDate = (d) => {
+                if (d !== today) touchedHistoricalDates.add(d);
+            };
+            const ensureLogContainers = (date, kind) => {
+                if (date === today) {
+                    if (kind === 'meal' && (!state.today.meals || Array.isArray(state.today.meals))) {
+                        state.today.meals = migrateArrayToObject(state.today.meals, 'meal');
+                    }
+                    if (kind === 'workout' && (!state.today.workouts || Array.isArray(state.today.workouts))) {
+                        state.today.workouts = migrateArrayToObject(state.today.workouts, 'workout');
+                    }
+                    return;
+                }
+                if (!state.dailyLogs[date]) {
+                    state.dailyLogs[date] = { date, meals: {}, workouts: {} };
+                }
+                if (kind === 'meal') ensureMealsObject(date);
+                else ensureWorkoutsObject(date);
+            };
+            const removeMealAt = (date, key) => {
+                // Tombstone BEFORE removal — the merge purge needs the marker
+                addTombstone('deletedMealIds', date + '::' + key);
+                if (date === today) {
+                    delete state.today.meals[key];
+                } else {
+                    delete state.dailyLogs[date].meals[key];
+                }
+            };
+            const removeWorkoutAt = (date, key, rec) => {
+                addTombstone('deletedWorkoutIds', date + '::' + key);
+                if (date === today) {
+                    state.today.activeCalories = Math.max(0, (state.today.activeCalories || 0) - (rec.calories || 0));
+                    delete state.today.workouts[key];
+                    state.today.workedOut = getCount(state.today.workouts) > 0;
+                    refreshTodayNeeded = true;
+                } else {
+                    delete state.dailyLogs[date].workouts[key];
+                    state.dailyLogs[date].workedOut = getCount(state.dailyLogs[date].workouts) > 0;
+                }
+            };
+
+            for (const item of items) {
+                if (item.type !== 'food' && (!item.date || item.date > today)) {
+                    rejectLine(item, 'future/invalid date');
+                    continue;
+                }
+                if ((item.type === 'meal' || item.type === 'workout' || item.type === 'weighin' || item.type === 'food') &&
+                    isExactDuplicateImport(item)) {
+                    summary.skippedExact.push(describeImportItem(item));
+                    continue;
+                }
+
+                if (item.type === 'meal') {
+                    ensureLogContainers(item.date, 'meal');
+                    const mealId = generateId('meal');
+                    const meal = {
+                        id: mealId,
+                        name: item.name,
+                        calories: item.calories,
+                        protein: item.protein,
+                        carbs: item.carbs,
+                        fat: item.fat,
+                        time: item.time,  // Store raw time string (HH:MM), format only on display
+                        date: item.date,
+                        fromImport: true,
+                        updatedAt: nowIso()
+                    };
+                    if (item.date === today) {
+                        state.today.meals[mealId] = meal;
+                        summary.todayMealsAdded++;
+                    } else {
+                        state.dailyLogs[item.date].meals[mealId] = meal;
+                        touchDate(item.date);
+                    }
+                    summary.mealsAdded++;
+                    bumpFrequentFoodUsage(item.name);
+                    applied(item);
+
+                } else if (item.type === 'workout') {
+                    ensureLogContainers(item.date, 'workout');
+                    const workoutId = generateId('workout');
+                    const workout = {
+                        id: workoutId,
+                        type: item.workoutType,
+                        duration: item.duration,
+                        calories: item.calories,
+                        time: item.time,  // Store raw time string (HH:MM), format only on display
+                        date: item.date,
+                        updatedAt: nowIso()
+                    };
+                    if (item.date === today) {
+                        state.today.workouts[workoutId] = workout;
+                        state.today.workedOut = true;
+                        state.today.activeCalories = (state.today.activeCalories || 0) + workout.calories;
+                        refreshTodayNeeded = true;
+                    } else {
+                        state.dailyLogs[item.date].workouts[workoutId] = workout;
+                        state.dailyLogs[item.date].workedOut = true;
+                        touchDate(item.date);
+                    }
+                    summary.workoutsAdded++;
+                    applied(item);
+
+                } else if (item.type === 'weighin') {
+                    if (item.weight < 100 || item.weight > 400) {
+                        rejectLine(item, 'weight out of range (100-400 lbs)');
+                        continue;
+                    }
+                    if (!state.weighIns || Array.isArray(state.weighIns)) {
+                        state.weighIns = migrateArrayToObject(state.weighIns, 'weighin');
+                    }
+                    const wiId = generateId('weighin');
+                    state.weighIns[wiId] = {
+                        id: wiId,
+                        date: item.date,
+                        weight: item.weight,
+                        bodyFat: item.bodyFat ?? null,
+                        leanMass: item.bodyFat ? Math.round((item.weight * (1 - item.bodyFat / 100)) * 10) / 10 : null,
+                        fatMass: item.bodyFat ? Math.round((item.weight * (item.bodyFat / 100)) * 10) / 10 : null,
+                        updatedAt: nowIso()
+                    };
+                    if (item.date < today && (!earliestImportedWeighIn || item.date < earliestImportedWeighIn)) {
+                        earliestImportedWeighIn = item.date;
+                    }
+                    if (item.date === today) {
+                        state.profile.currentWeight_lbs = item.weight;
+                        if (item.bodyFat) state.profile.currentBodyFat = item.bodyFat;
+                    }
+                    summary.weighInsAdded++;
+                    summary.weighInsTouched = true;
+                    applied(item);
+
+                } else if (item.type === 'food') {
+                    // Frequent-foods upsert — same name.toLowerCase dedupe rule
+                    // as saveFrequentFood (updates macros, keeps stored casing)
+                    if (!state.frequentFoods || Array.isArray(state.frequentFoods)) {
+                        state.frequentFoods = migrateArrayToObject(state.frequentFoods, 'ff');
+                    }
+                    const existingFF = getValues(state.frequentFoods).find(f =>
+                        (f.name || '').toLowerCase() === item.name.toLowerCase());
+                    if (existingFF) {
+                        existingFF.calories = item.calories;
+                        existingFF.protein = item.protein;
+                        existingFF.carbs = item.carbs;
+                        existingFF.fat = item.fat;
+                        existingFF.updatedAt = nowIso();
+                    } else {
+                        const ffId = generateId('ff');
+                        state.frequentFoods[ffId] = {
+                            id: ffId,
+                            name: item.name,
+                            calories: item.calories,
+                            protein: item.protein,
+                            carbs: item.carbs,
+                            fat: item.fat,
+                            uses: 0,
+                            updatedAt: nowIso()
+                        };
+                    }
+                    summary.foodsUpserted++;
+                    applied(item);
+
+                } else if (item.type === 'meal_edit') {
+                    const res = resolveVerbTarget(item);
+                    if (!res.ok) { rejectLine(item, res.reason); continue; }
+                    ensureLogContainers(item.date, 'meal');
+                    const c = item.changes;
+                    const newDate = c.date && c.date !== item.date ? c.date : null;
+                    const fieldChanges = { ...c };
+                    delete fieldChanges.date;
+                    const updated = {
+                        ...res.rec,
+                        ...fieldChanges,
+                        date: newDate || item.date,
+                        _editedAt: nowIso(),
+                        updatedAt: nowIso()
+                    };
+                    if (newDate) {
+                        // MOVE: tombstone the ORIGINAL container, re-add under
+                        // the new date with the SAME id (fresh updatedAt wins
+                        // over the tombstone in the merge purge)
+                        removeMealAt(item.date, res.key);
+                        touchDate(item.date);
+                        ensureLogContainers(newDate, 'meal');
+                        if (newDate === today) {
+                            state.today.meals[res.key] = updated;
+                            refreshTodayNeeded = true;
+                        } else {
+                            state.dailyLogs[newDate].meals[res.key] = updated;
+                            touchDate(newDate);
+                        }
+                    } else if (item.date === today) {
+                        state.today.meals[res.key] = updated;
+                        refreshTodayNeeded = true;
+                    } else {
+                        state.dailyLogs[item.date].meals[res.key] = updated;
+                        touchDate(item.date);
+                    }
+                    summary.edited++;
+                    applied(item);
+
+                } else if (item.type === 'workout_edit') {
+                    const res = resolveVerbTarget(item);
+                    if (!res.ok) { rejectLine(item, res.reason); continue; }
+                    ensureLogContainers(item.date, 'workout');
+                    const c = item.changes;
+                    const newDate = c.date && c.date !== item.date ? c.date : null;
+                    const fieldChanges = { ...c };
+                    delete fieldChanges.date;
+                    const updated = {
+                        ...res.rec,
+                        ...fieldChanges,
+                        date: newDate || item.date,
+                        _editedAt: nowIso(),
+                        updatedAt: nowIso()
+                    };
+                    if (newDate) {
+                        removeWorkoutAt(item.date, res.key, res.rec);
+                        touchDate(item.date);
+                        ensureLogContainers(newDate, 'workout');
+                        if (newDate === today) {
+                            state.today.workouts[res.key] = updated;
+                            state.today.workedOut = true;
+                            state.today.activeCalories = (state.today.activeCalories || 0) + (updated.calories || 0);
+                            refreshTodayNeeded = true;
+                        } else {
+                            state.dailyLogs[newDate].workouts[res.key] = updated;
+                            state.dailyLogs[newDate].workedOut = true;
+                            touchDate(newDate);
+                        }
+                    } else if (item.date === today) {
+                        const calDiff = (updated.calories || 0) - (res.rec.calories || 0);
+                        state.today.workouts[res.key] = updated;
+                        state.today.activeCalories = Math.max(0, (state.today.activeCalories || 0) + calDiff);
+                        refreshTodayNeeded = true;
+                    } else {
+                        state.dailyLogs[item.date].workouts[res.key] = updated;
+                        touchDate(item.date);
+                    }
+                    summary.edited++;
+                    applied(item);
+
+                } else if (item.type === 'weighin_edit') {
+                    if (!state.weighIns || Array.isArray(state.weighIns)) {
+                        state.weighIns = migrateArrayToObject(state.weighIns, 'weighin');
+                    }
+                    const res = resolveVerbTarget(item);
+                    if (!res.ok) { rejectLine(item, res.reason); continue; }
+                    const c = item.changes;
+                    const newWeight = c.weight ?? res.rec.weight;
+                    const newBf = c.bodyFat ?? (res.rec.bodyFat ?? null);
+                    const newDate = c.date || res.rec.date;
+                    state.weighIns[res.key] = {
+                        ...res.rec,
+                        date: newDate,
+                        weight: newWeight,
+                        bodyFat: newBf,
+                        leanMass: newBf ? Math.round((newWeight * (1 - newBf / 100)) * 10) / 10 : null,
+                        fatMass: newBf ? Math.round((newWeight * (newBf / 100)) * 10) / 10 : null,
+                        updatedAt: nowIso()
+                    };
+                    // Profile follows the most recent weigh-in (same rule as
+                    // the manual edit modal)
+                    const mostRecent = getValues(state.weighIns).sort((a, b) => b.date.localeCompare(a.date))[0];
+                    if (mostRecent && (mostRecent.id || '') === (res.rec.id || res.key)) {
+                        state.profile.currentWeight_lbs = newWeight;
+                        if (newBf) state.profile.currentBodyFat = newBf;
+                    }
+                    weighInDatesToRecalc.add(newDate);
+                    if (res.rec.date && res.rec.date !== newDate) weighInDatesToRecalc.add(res.rec.date);
+                    summary.edited++;
+                    summary.weighInsTouched = true;
+                    applied(item);
+
+                } else if (item.type === 'meal_delete' || item.type === 'workout_delete' || item.type === 'weighin_delete') {
+                    const res = resolveVerbTarget(item);
+                    if (!res.ok) { rejectLine(item, res.reason); continue; }
+                    if (!allowDeletes) {
+                        summary.destructiveSkipped.push({ item, description: describeImportItem(item) });
+                        continue;
+                    }
+                    if (item.type === 'meal_delete') {
+                        ensureLogContainers(item.date, 'meal');
+                        removeMealAt(item.date, res.key);
+                        touchDate(item.date);
+                    } else if (item.type === 'workout_delete') {
+                        ensureLogContainers(item.date, 'workout');
+                        removeWorkoutAt(item.date, res.key, res.rec);
+                        touchDate(item.date);
+                    } else {
+                        if (!state.weighIns || Array.isArray(state.weighIns)) {
+                            state.weighIns = migrateArrayToObject(state.weighIns, 'weighin');
+                        }
+                        // Weigh-in tombstones use the plain id (deleteWeighIn parity)
+                        addTombstone('deletedWeighInIds', String(res.key));
+                        delete state.weighIns[res.key];
+                        const remaining = getValues(state.weighIns);
+                        if (remaining.length > 0) {
+                            const mostRecent = remaining.sort((a, b) => b.date.localeCompare(a.date))[0];
+                            state.profile.currentWeight_lbs = mostRecent.weight;
+                        }
+                        weighInDatesToRecalc.add(item.date);
+                        summary.weighInsTouched = true;
+                    }
+                    summary.deleted++;
+                    applied(item);
+
+                } else {
+                    rejectLine(item, 'unknown item type');
+                }
+            }
+
+            // Recalculate targets when workouts were added anywhere (legacy
+            // import behavior) — today-touching edits set the flag directly
+            if (summary.workoutsAdded > 0) refreshTodayNeeded = true;
+
+            // Imported historical nutrition/workouts use the same TDEE ripple
+            // path as every other backadd entry point.
+            summary.touchedHistorical = touchedHistoricalDates.size > 0;
+            [...touchedHistoricalDates].sort().forEach(dateStr => recalcDateAndDependents(dateStr));
+
+            if (summary.weighInsAdded > 0) {
+                const latest = getValues(state.weighIns).sort((a, b) => b.date.localeCompare(a.date))[0];
+                if (latest) {
+                    state.profile.currentWeight_lbs = latest.weight;
+                    if (latest.bodyFat != null) state.profile.currentBodyFat = latest.bodyFat;
+                }
+                if (earliestImportedWeighIn) {
+                    const affectedDays = Math.max(0, Math.round(
+                        (parseLocalDate(today) - parseLocalDate(earliestImportedWeighIn)) / 86400000) - 1);
+                    recalcDateAndDependents(earliestImportedWeighIn, affectedDays);
+                }
+            }
+            // Weigh-in edits/deletes recompute their affected spans the same
+            // way the manual modal does
+            [...weighInDatesToRecalc].sort().forEach(d => recalcAfterWeighInChange(d));
+            if (weighInDatesToRecalc.size > 0) refreshTodayNeeded = true;
+
+            if (refreshTodayNeeded) refreshTodayTargets();
+
+            if (anythingApplied) {
+                saveState();
+                saveDayLog();
+                // XP parity with the paste path: today's meals earn the same
+                // 10 XP each. Historical imports earn nothing (backfill ≠ habit).
+                if (summary.todayMealsAdded > 0) awardXP(10 * summary.todayMealsAdded, 'Logged meals');
+            }
+            return summary;
+        }
+
+        function renderAfterImportApply(summary) {
+            try {
+                renderSimpleView();
+                renderMealsList();
+                renderWorkoutsList();
+                // Historical/weigh-in changes touch past cells — keep the calendar in sync
+                if ((summary.touchedHistorical || summary.weighInsTouched) && typeof renderCalendarHeatmap === 'function') {
+                    renderCalendarHeatmap();
+                }
+                if (summary.weighInsTouched) {
+                    if (typeof renderWeighInHistory === 'function') renderWeighInHistory();
+                    if (typeof renderWeightTrend === 'function') renderWeightTrend();
+                    if (typeof renderProgressTab === 'function') renderProgressTab();
+                }
+                if (summary.foodsUpserted > 0 && typeof renderFrequentFoodsList === 'function') {
+                    renderFrequentFoodsList();
+                }
+                if (typeof renderDashboard === 'function') renderDashboard();
+            } catch (e) {
+                console.error('Post-import render error (data already saved):', e);
+            }
+        }
+
         function confirmImportData() {
             // Re-parse from the live textarea — the user may have edited the
             // paste after previewing, and stale preview data must never import
@@ -17142,200 +17975,125 @@ TDEE TODAY: ~${formatNumber(calculateTDEE(getWeightForDate(state.today.date || g
                 return;
             }
 
-            const today = getLocalDateString();
+            // Exact duplicates auto-skip BEFORE the advisory dialog — they
+            // were never going to change anything, so they shouldn't nag
+            const exactSkipped = [];
+            let toImport = parsedImportData.filter(it => {
+                if ((it.type === 'meal' || it.type === 'workout' || it.type === 'weighin' || it.type === 'food') &&
+                    isExactDuplicateImport(it)) {
+                    exactSkipped.push(describeImportItem(it));
+                    return false;
+                }
+                return true;
+            });
 
-            // Duplicate policy: confirm, never silent
-            parsedImportData = confirmImportDuplicates(
-                parsedImportData,
+            // Duplicate policy for remaining ADD lines: confirm, never silent.
+            // Verb lines (edit/delete/food) bypass the advisory — they target
+            // existing records by design.
+            const isAdd = it => it.type === 'meal' || it.type === 'workout' || it.type === 'weighin';
+            const keptAdds = new Set(confirmImportDuplicates(
+                toImport.filter(isAdd),
                 it => it.type + '|' + it.date + '|' + (
                     it.type === 'meal' ? it.name.toLowerCase() + '|' + it.calories :
                     it.type === 'workout' ? it.workoutType.toLowerCase() + '|' + it.duration + '|' + it.calories :
                     it.weight
                 ),
-                it => it.type === 'meal' ? `${it.name} (${it.calories} cal, ${it.date})` :
-                     it.type === 'workout' ? `${it.workoutType} ${it.duration}min (${it.date})` :
-                     `Weigh-in ${it.weight} lbs (${it.date})`,
-                it => {
-                    if (it.type === 'meal') {
-                        return getExistingMealsForDate(it.date).some(ex =>
-                            (ex.name || '').toLowerCase() === it.name.toLowerCase() &&
-                            (ex.calories ?? 0) === it.calories);
-                    }
-                    if (it.type === 'workout') {
-                        return getExistingWorkoutsForDate(it.date).some(ex =>
-                            (ex.type || '').toLowerCase() === it.workoutType.toLowerCase() &&
-                            (ex.duration ?? 0) === it.duration &&
-                            (ex.calories ?? 0) === it.calories);
-                    }
-                    if (it.type === 'weighin') {
-                        return getValues(state.weighIns || {}).some(ex =>
-                            ex.date === it.date && ex.weight === it.weight);
-                    }
-                    return false;
-                }
-            );
-            if (parsedImportData.length === 0) {
+                describeImportItem,
+                importItemExistsInLog
+            ));
+            toImport = toImport.filter(it => !isAdd(it) || keptAdds.has(it));
+
+            if (toImport.length === 0 && exactSkipped.length === 0) {
                 showToast('Nothing imported — all flagged duplicates skipped');
                 resetImportTab();
                 return;
             }
 
-            let mealsAdded = 0, workoutsAdded = 0, weighInsAdded = 0;
-            let todayMealsAdded = 0;
-            const touchedHistoricalDates = new Set();
-            let earliestImportedWeighIn = null;
+            const summary = applyImportItems(toImport, { allowDeletes: true });
+            summary.skippedExact.push(...exactSkipped);
 
-            for (const item of parsedImportData) {
-                if (!item.date || item.date > today) {
-                    console.warn('Skipped imported future/invalid date:', item.date);
-                    continue;
-                }
-                if (item.type === 'meal') {
-                    const mealId = generateId('meal');
-                    const meal = {
-                        id: mealId,
-                        name: item.name,
-                        calories: item.calories,
-                        protein: item.protein,
-                        carbs: item.carbs,
-                        fat: item.fat,
-                        time: item.time,  // Store raw time string (HH:MM), format only on display
-                        date: item.date,
-                        fromImport: true,
-                        updatedAt: new Date().toISOString()
-                    };
-
-                    if (item.date === today) {
-                        if (!state.today.meals || Array.isArray(state.today.meals)) {
-                            state.today.meals = migrateArrayToObject(state.today.meals, 'meal');
-                        }
-                        state.today.meals[mealId] = meal;
-                        todayMealsAdded++;
-                    } else {
-                        // Add to historical dailyLogs
-                        if (!state.dailyLogs[item.date]) {
-                            state.dailyLogs[item.date] = { date: item.date, meals: {}, workouts: {} };
-                        }
-                        if (!state.dailyLogs[item.date].meals) state.dailyLogs[item.date].meals = {};
-                        state.dailyLogs[item.date].meals[mealId] = meal;
-                        touchedHistoricalDates.add(item.date);
-                    }
-                    mealsAdded++;
-                    bumpFrequentFoodUsage(item.name);
-
-                } else if (item.type === 'workout') {
-                    const workoutId = generateId('workout');
-                    const workout = {
-                        id: workoutId,
-                        type: item.workoutType,
-                        duration: item.duration,
-                        calories: item.calories,
-                        time: item.time,  // Store raw time string (HH:MM), format only on display
-                        date: item.date,
-                        updatedAt: new Date().toISOString()
-                    };
-
-                    if (item.date === today) {
-                        if (!state.today.workouts || Array.isArray(state.today.workouts)) {
-                            state.today.workouts = migrateArrayToObject(state.today.workouts, 'workout');
-                        }
-                        state.today.workouts[workoutId] = workout;
-                        state.today.workedOut = true;
-                        state.today.activeCalories = (state.today.activeCalories || 0) + workout.calories;
-                    } else {
-                        if (!state.dailyLogs[item.date]) {
-                            state.dailyLogs[item.date] = { date: item.date, meals: {}, workouts: {} };
-                        }
-                        if (!state.dailyLogs[item.date].workouts) state.dailyLogs[item.date].workouts = {};
-                        state.dailyLogs[item.date].workouts[workoutId] = workout;
-                        state.dailyLogs[item.date].workedOut = true;
-                        touchedHistoricalDates.add(item.date);
-                    }
-                    workoutsAdded++;
-
-                } else if (item.type === 'weighin') {
-                    if (item.weight < 100 || item.weight > 400) continue;
-
-                    const wiId = generateId('weighin');
-                    const weighIn = {
-                        id: wiId,
-                        date: item.date,
-                        weight: item.weight,
-                        bodyFat: item.bodyFat,
-                        leanMass: item.bodyFat ? Math.round((item.weight * (1 - item.bodyFat / 100)) * 10) / 10 : null,
-                        fatMass: item.bodyFat ? Math.round((item.weight * (item.bodyFat / 100)) * 10) / 10 : null,
-                        updatedAt: new Date().toISOString()
-                    };
-
-                    if (!state.weighIns || Array.isArray(state.weighIns)) {
-                        state.weighIns = migrateArrayToObject(state.weighIns, 'weighin');
-                    }
-                    state.weighIns[wiId] = weighIn;
-                    if (item.date < today && (!earliestImportedWeighIn || item.date < earliestImportedWeighIn)) {
-                        earliestImportedWeighIn = item.date;
-                    }
-
-                    // Update profile if today's weigh-in
-                    if (item.date === today) {
-                        state.profile.currentWeight_lbs = item.weight;
-                        if (item.bodyFat) state.profile.currentBodyFat = item.bodyFat;
-                    }
-                    weighInsAdded++;
-                }
-            }
-
-            // Recalculate targets if workouts were added today
-            if (workoutsAdded > 0) {
-                refreshTodayTargets();
-            }
-
-            // Imported historical nutrition/workouts use the same TDEE ripple
-            // path as every other backadd entry point.
-            [...touchedHistoricalDates].sort().forEach(dateStr => recalcDateAndDependents(dateStr));
-
-            if (weighInsAdded > 0) {
-                const latest = getValues(state.weighIns).sort((a, b) => b.date.localeCompare(a.date))[0];
-                if (latest) {
-                    state.profile.currentWeight_lbs = latest.weight;
-                    if (latest.bodyFat != null) state.profile.currentBodyFat = latest.bodyFat;
-                }
-                if (earliestImportedWeighIn) {
-                    const affectedDays = Math.max(0, Math.round(
-                        (parseLocalDate(today) - parseLocalDate(earliestImportedWeighIn)) / 86400000) - 1);
-                    recalcDateAndDependents(earliestImportedWeighIn, affectedDays);
-                }
-            }
-
-            saveState();
-            saveDayLog();
             closeImportClaudeModal();
             // Snapshot BEFORE reset — resetImportTab clears rejectedImportLines
             // and the result toast below still needs them
-            const rejectedAtImport = rejectedImportLines;
+            const rejectedAtImport = rejectedImportLines.concat(summary.applyRejected);
             resetImportTab();  // clear paste + preview so a stale re-open can't double-import
-            renderSimpleView();
-            renderMealsList();
-            renderWorkoutsList();
-            // Historical/weigh-in imports change past cells — keep the calendar in sync
-            // (day-details no longer auto-reopens after a day-scoped import).
-            if ((touchedHistoricalDates.size > 0 || weighInsAdded > 0) && typeof renderCalendarHeatmap === 'function') {
-                renderCalendarHeatmap();
-            }
-
-            // XP parity with the paste path: today's meals earn the same
-            // 10 XP each. Historical imports earn nothing (backfill ≠ habit).
-            if (todayMealsAdded > 0) awardXP(10 * todayMealsAdded, 'Logged meals');
+            renderAfterImportApply(summary);
 
             const parts = [];
-            if (mealsAdded > 0) parts.push(`${mealsAdded} meal${mealsAdded !== 1 ? 's' : ''}`);
-            if (workoutsAdded > 0) parts.push(`${workoutsAdded} workout${workoutsAdded !== 1 ? 's' : ''}`);
-            if (weighInsAdded > 0) parts.push(`${weighInsAdded} weigh-in${weighInsAdded !== 1 ? 's' : ''}`);
+            if (summary.mealsAdded > 0) parts.push(`${summary.mealsAdded} meal${summary.mealsAdded !== 1 ? 's' : ''}`);
+            if (summary.workoutsAdded > 0) parts.push(`${summary.workoutsAdded} workout${summary.workoutsAdded !== 1 ? 's' : ''}`);
+            if (summary.weighInsAdded > 0) parts.push(`${summary.weighInsAdded} weigh-in${summary.weighInsAdded !== 1 ? 's' : ''}`);
+            if (summary.foodsUpserted > 0) parts.push(`${summary.foodsUpserted} food${summary.foodsUpserted !== 1 ? 's' : ''}`);
+            if (summary.edited > 0) parts.push(`${summary.edited} edited`);
+            if (summary.deleted > 0) parts.push(`${summary.deleted} deleted`);
+            if (summary.skippedExact.length > 0) parts.push(`${summary.skippedExact.length} already logged (skipped)`);
 
             showImportResultToast(
-                parts.length ? `✓ Imported: ${parts.join(', ')}` : '',
+                parts.length ? `✓ Import: ${parts.join(', ')}` : '',
                 rejectedAtImport
             );
         }
+
+        // ============================================
+        // SULLY OS RELAY ENTRY POINT
+        // bcApplySullyText(text, { autoApply }) — programmatic paste
+        // application for the Command Center relay. DELETE lines are NEVER
+        // auto-applied here; they come back in destructivePending for the
+        // user to run through the Import tab (which previews them in red).
+        // ============================================
+        function bcApplySullyText(text, options = {}) {
+            const autoApply = options.autoApply !== false;
+            const result = { applied: [], skipped: [], rejected: [], destructivePending: [] };
+
+            if (typeof state === 'undefined' || !state || !state._dataLoaded ||
+                (typeof isInitialLoad !== 'undefined' && isInitialLoad) ||
+                (typeof hasLoadedFromCloud !== 'undefined' && !hasLoadedFromCloud)) {
+                result.rejected.push({ line: '(all)', reason: 'app not ready — data still loading, nothing was changed' });
+                return result;
+            }
+
+            const parsed = parseImportText(text || '');
+            for (const r of parsed.rejected) result.rejected.push(r);
+
+            const toApply = [];
+            for (const item of parsed.items) {
+                const isAdd = item.type === 'meal' || item.type === 'workout' || item.type === 'weighin';
+                if ((isAdd || item.type === 'food') && isExactDuplicateImport(item)) {
+                    result.skipped.push({ line: item._line || describeImportItem(item), reason: 'already logged (exact duplicate)' });
+                    continue;
+                }
+                // Near-duplicates would pop a blocking confirm() in the Import
+                // tab; the relay can't ask, so it refuses and defers to manual
+                if (isAdd && importItemExistsInLog(item)) {
+                    result.rejected.push({ line: item._line || describeImportItem(item), reason: 'possible duplicate — apply manually via the Import tab' });
+                    continue;
+                }
+                toApply.push(item);
+            }
+
+            if (!autoApply) {
+                // Dry run: report what WOULD happen without touching state
+                for (const item of toApply) {
+                    if (item.type.endsWith('_delete')) {
+                        result.destructivePending.push({ line: item._line || '', description: describeImportItem(item) });
+                    } else {
+                        result.applied.push('[dry run] ' + describeImportItem(item));
+                    }
+                }
+                result.dryRun = true;
+                return result;
+            }
+
+            const summary = applyImportItems(toApply, { allowDeletes: options.allowDeletes === true });
+            result.applied.push(...summary.appliedDescriptions);
+            result.skipped.push(...summary.skippedExact.map(d => ({ line: d, reason: 'already logged (exact duplicate)' })));
+            result.rejected.push(...summary.applyRejected);
+            result.destructivePending.push(...summary.destructiveSkipped.map(s => ({ line: s.item._line || '', description: s.description })));
+
+            renderAfterImportApply(summary);
+            return result;
+        }
+        window.bcApplySullyText = bcApplySullyText;
 
         // --- Weigh-in Edit/Delete (Phase 2A) ---
         let editingWeighInId = null;
@@ -18692,6 +19450,12 @@ TDEE TODAY: ~${formatNumber(calculateTDEE(getWeightForDate(state.today.date || g
                         console.error('initializeUI failed after load:', initErr);
                     }
                     setupRealtimeSync();
+
+                    // Sully OS: drain relayed Command Center messages + attach the
+                    // realtime relay listener (only after load is fully complete).
+                    if (typeof SullyOS !== 'undefined' && SullyOS.onLoadComplete) {
+                        try { SullyOS.onLoadComplete(); } catch (e) { console.error('SullyOS drain failed:', e); }
+                    }
                 })
                 .catch(error => {
                     loadSettled = true;
@@ -24462,6 +25226,10 @@ TDEE TODAY: ~${formatNumber(calculateTDEE(getWeightForDate(state.today.date || g
                 if (firebaseSyncEnabled && !isInitialLoad) {
                     forceCloudSync();
                 }
+                // Sully OS: drain relayed Command Center messages on tab focus.
+                if (!isInitialLoad && hasLoadedFromCloud && typeof SullyOS !== 'undefined' && SullyOS.onVisible) {
+                    try { SullyOS.onVisible(); } catch (e) { /* non-fatal */ }
+                }
             }
         });
 
@@ -24863,6 +25631,31 @@ TDEE TODAY: ~${formatNumber(calculateTDEE(getWeightForDate(state.today.date || g
                 auditRecentDailyLogs();
             }, 3000);
         });
+    </script>
+    <!-- Sully OS Command Center: shared router + relay glue (loaded last) -->
+    <script src="js/sullyos/router.js?v=20260820d"></script>
+    <script src="js/sullyos/command-center.js?v=20260820d"></script>
+    <script>
+        // Register Body Comp with the Sully OS Command Center. Monkey-patches the
+        // native Preview/Import handlers so foreign blocks relay to the other apps.
+        (function () {
+            if (typeof SullyOS === 'undefined' || !SullyOS.init) return;
+            SullyOS.init({
+                appKey: 'bodyComp',
+                previewName: 'previewImportData',
+                applyName: 'confirmImportData',
+                applyLocal: function (text, opts) { return bcApplySullyText(text, opts); },
+                els: {
+                    textarea: 'importClaudeInput', routing: 'bcSullyRouting',
+                    receipts: 'bcSullyReceipts', status: 'bcSullyStatus', applyBtn: 'importConfirmBtn'
+                },
+                getDb: function () { return (typeof database !== 'undefined') ? database : null; },
+                getUserRoot: function () {
+                    return (typeof userPath !== 'undefined' && userPath)
+                        ? userPath.replace(/\/bodyCompTracker$/, '') : null;
+                }
+            });
+        })();
     </script>
 </body>
 </html>
