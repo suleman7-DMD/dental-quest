@@ -46,7 +46,8 @@ function getDefaultState() {
         modifiers: {
             vitaminC: { active: false, time: '17:00', date: null },
             heavyLift: { active: false },
-            sauna: { active: false, time: '18:00', date: null }
+            sauna: { active: false, time: '18:00', date: null },
+            workout: { active: false, endTime: '18:00', intense: false, date: null }
         },
         nicotine: {
             active: false,
@@ -73,7 +74,8 @@ function getDefaultState() {
             caffHalfLife: 5,
             caffThreshold: 25,
             weight: 190,
-            sleepTarget: 8
+            sleepTarget: 8,
+            vitcHighDose: false
         },
         calibration: {
             autoFit: true,             // master switch; false = frozen

@@ -245,102 +245,52 @@ function getSleepDebtBreakdown() {
 }
 
 // ============================================
-// EFFECTIVE THRESHOLD CALCULATION
+// EFFECTIVE THRESHOLD CALCULATION (v2, spec D2)
 // ============================================
 // Scientific basis: Modifiers don't make drugs leave faster.
-// They change your TOLERANCE via different mechanisms:
-// - Sleep debt → Adenosine accumulation → Higher tolerance
-// - Heavy lifting → Adenosine flood → Higher tolerance
-// - Sauna → Parasympathetic drive → Higher tolerance
+// They change your TOLERANCE via adenosine pressure → Higher tolerance:
+// - Sleep debt → Adenosine accumulation (time-invariant within a day)
+// - Workout → Adenosine flood, then decays back over ~6h
 // This means you can fall asleep with MORE drug in your system.
+// v2: the threshold is TIME-VARYING. The workout bonus is evaluated at the
+// requested minute so the clearance search actually sees its decay (fixes the
+// old "frozen at now" bug). The three legacy exercise/heat bonuses are gone —
+// a single time-decayed `workout` modifier replaces all of them.
 
-function getEffectiveThreshold() {
-    const baseThreshold = numOr(state.settings.sleepThreshold, 14);
+function getEffectiveThresholdAt(atMinutes) {
+    // calibration-aware base (Task 6); typeof guard covers script load order
+    // (calibration.js loads after pharma-engine.js).
+    let baseThreshold = (typeof getActiveBaseThreshold === 'function')
+        ? getActiveBaseThreshold()
+        : numOr(state.settings.sleepThreshold, 14);
     let threshold = baseThreshold;
 
-    // 1. Sleep Debt Bonus (Process S - Adenosine pressure)
+    // Sleep Debt Bonus (Process S - Adenosine pressure) — time-invariant within a day
     threshold += calculateSleepDebtBonus();
 
-    // 2. Exercise Bonus (Adenosine from muscle breakdown)
-    // Heavy lifting floods the brain with adenosine, which can override
-    // the dopaminergic arousal from amphetamines
-    if (state.workoutPlan && state.workoutPlan.applied) {
-        // Workout plan provides adenosine bonus
-        if (state.workoutPlan.adenosineBonus > 0) {
-            // Convert time bonus to threshold bonus
-            // ~15 min adenosine bonus ≈ +1.0mg threshold
-            const thresholdBonus = Math.min(3.0, state.workoutPlan.adenosineBonus / 15);
-            threshold += thresholdBonus;
-        }
-    } else if (state.modifiers.heavyLift && state.modifiers.heavyLift.active) {
-        // Legacy heavy lift modifier
-        threshold += 2.0;
-    }
-
-    // 3. Sauna Bonus (Parasympathetic activation)
-    // Sauna triggers heat shock proteins and subsequent parasympathetic
-    // rebound, increasing sleep drive independent of adenosine
-    // FIX: Now uses date tracking like Vitamin C for cross-midnight accuracy
-    if (state.modifiers.sauna && state.modifiers.sauna.active) {
-        const saunaTime = timeToMinutes(state.modifiers.sauna.time);
-        const now = getCurrentMinutes();
-        const fivePM = 17 * 60;
-        const today = getLocalDateString();
-        const saunaDate = state.modifiers.sauna.date || today;
-
-        // Calculate if sauna has been taken (date-aware)
-        let saunaTaken = false;
-
-        // Parse dates to compare
-        const todayDate = parseLocalDate(today);
-        const saunaSetDate = parseLocalDate(saunaDate);
-        const daysDiff = Math.round((todayDate - saunaSetDate) / (1000 * 60 * 60 * 24));
-
-        if (daysDiff === 0) {
-            // Sauna set for today - check if time has passed
-            saunaTaken = now >= saunaTime;
-        } else if (daysDiff === 1) {
-            // Sauna was set yesterday
-            // Effect lasts until wake time of next day (~12 hours max)
-            // If it's early morning (before 6 AM), yesterday's evening sauna still counts
-            if (now < 6 * 60 && saunaTime >= 17 * 60) {
-                saunaTaken = true;
-            } else {
-                saunaTaken = false; // Stale from yesterday
-            }
-        } else {
-            // Sauna set 2+ days ago - definitely stale
-            saunaTaken = false;
-        }
-
-        if (saunaTaken) {
-            // Calculate hours since sauna for time-based decay
-            // Parasympathetic rebound peaks ~1-2h post-sauna, decays over ~4h
-            let hoursSinceSauna;
-            if (daysDiff === 0) {
-                hoursSinceSauna = (now - saunaTime) / 60;
-            } else {
-                // Cross-midnight: sauna was yesterday
-                hoursSinceSauna = ((24 * 60 - saunaTime) + now) / 60;
-            }
-
-            // Peak for first 2 hours, then linear decay over next 4 hours (6h total)
-            const peakDuration = 2;
-            const decayDuration = 4;
-            let decayFactor = 1.0;
-            if (hoursSinceSauna > peakDuration) {
-                decayFactor = Math.max(0, 1.0 - (hoursSinceSauna - peakDuration) / decayDuration);
-            }
-
-            const baseBonus = saunaTime >= fivePM ? 2.0 : 1.0;
-            threshold += baseBonus * decayFactor;
+    // Workout bonus (single chip, spec D4): peak +2.0mg (+1.0 more if intense),
+    // holds until endTime+120min, then linear decay to 0 by endTime+360min.
+    // Evaluated AT atMinutes so the clearance search sees the decay.
+    const w = state.modifiers && state.modifiers.workout;
+    if (w && w.active) {
+        const today = getLocalDateString(new Date());
+        if ((w.date || today) === today) {
+            const endMin = timeToMinutes(w.endTime || '18:00');
+            const peak = w.intense ? 3.0 : 2.0;
+            const rel = atMinutes - endMin;   // minutes after workout end at evaluated time
+            if (rel >= 0 && rel <= 120) threshold += peak;
+            else if (rel > 120 && rel <= 360) threshold += peak * (1 - (rel - 120) / 240);
+            // before end or >6h after: no bonus
         }
     }
 
     // Cap the total threshold to prevent unrealistic values
-    // Max effective threshold = base + 8mg (extreme sleep debt + all modifiers)
-    const maxThreshold = baseThreshold + 8;
-    return Math.min(threshold, maxThreshold);
+    // Max effective threshold = base + 8mg (extreme sleep debt + workout)
+    return Math.min(threshold, baseThreshold + 8);
+}
+
+function getEffectiveThreshold() {
+    return getEffectiveThresholdAt(getCurrentMinutes());
 }
 
 function isHyperarousalMode() {
@@ -404,7 +354,9 @@ function calculateAmpLoad(atMinutes) {
     // FIX: Use raw VitC time (no expiration check against current time)
     // Expiration is now handled per-evaluation-point inside calculateDecayWithVitC()
     const vitCTime = getRawVitaminCTimeMinutes();
-    const reducedHalfLife = baseHalfLife * 0.7; // 30% reduction
+    // VitC honesty (spec D3): standard dose ~10% faster clearance; the 30% figure
+    // only holds under the high-dose acidification protocol (state.settings.vitcHighDose).
+    const reducedHalfLife = baseHalfLife * (state.settings.vitcHighDose ? 0.7 : 0.9);
     const vitCExpireTime = vitCTime + (VITAMIN_C_EFFECT_HOURS * 60); // 8-hour TTL
     const today = getLocalDateString();
 
@@ -466,7 +418,10 @@ function calculateAmpLoad(atMinutes) {
 // UPDATED: Handles arbitrary past dates via days-difference calculation
 function calculateCaffLoad(atMinutes) {
     let totalLoad = 0;
-    const halfLife = numOr(state.settings.caffHalfLife, 5) * 60; // in minutes
+    // Fitted caffeine half-life (Task 6); typeof guard covers script load order.
+    const halfLife = ((typeof getActiveCaffHalfLife === 'function')
+        ? getActiveCaffHalfLife()
+        : numOr(state.settings.caffHalfLife, 5.5)) * 60; // in minutes
     const today = getLocalDateString();
 
     getValues(state.caffeine).forEach(caff => {
@@ -508,8 +463,8 @@ function calculateCaffLoad(atMinutes) {
 // but XR delayed-release at T+4h creates non-monotonic spikes.
 // After finding initial clearance, verify load stays below threshold at ALL future DR release times.
 function findAmpClearTime() {
-    const threshold = getEffectiveThreshold();
-
+    // Threshold is TIME-VARYING (workout decay) — compare load against
+    // getEffectiveThresholdAt(t) at every evaluated point, not a frozen value.
     if (getCount(state.medications) === 0) return null;
 
     const now = getCurrentMinutes();
@@ -535,10 +490,10 @@ function findAmpClearTime() {
     spikeTimes.sort((a, b) => a - b);
 
     // Check if already below threshold now AND at all future DR release points
-    if (calculateAmpLoad(now) < threshold) {
+    if (calculateAmpLoad(now) < getEffectiveThresholdAt(now)) {
         let allClear = true;
         for (const drTime of spikeTimes) {
-            if (calculateAmpLoad(drTime) >= threshold) { allClear = false; break; }
+            if (calculateAmpLoad(drTime) >= getEffectiveThresholdAt(drTime)) { allClear = false; break; }
         }
         if (allClear) return now;
     }
@@ -552,14 +507,14 @@ function findAmpClearTime() {
         let high = maxTime;
         while (high - low > 1) {
             const mid = Math.floor((low + high) / 2);
-            if (calculateAmpLoad(mid) > threshold) { low = mid; } else { high = mid; }
+            if (calculateAmpLoad(mid) > getEffectiveThresholdAt(mid)) { low = mid; } else { high = mid; }
         }
         clearTime = high;
 
         // Verify: no DR spike after clearTime pushes load back above threshold
         let reSpike = false;
         for (const drTime of spikeTimes) {
-            if (drTime > clearTime && calculateAmpLoad(drTime) >= threshold) {
+            if (drTime > clearTime && calculateAmpLoad(drTime) >= getEffectiveThresholdAt(drTime)) {
                 searchStart = drTime; // Restart search from DR spike
                 reSpike = true;
                 break;
@@ -568,7 +523,24 @@ function findAmpClearTime() {
         if (!reSpike) break;
     }
 
-    return (calculateAmpLoad(clearTime) >= threshold) ? maxTime : clearTime;
+    // Threshold now varies with time (workout decay) — sweep forward to catch
+    // a later re-crossing the binary search can't see.
+    let sweepGuard = 0;
+    let t = clearTime;
+    while (sweepGuard < 5) {
+        let violated = null;
+        for (let m = t; m <= t + 360; m += 15) {
+            if (calculateAmpLoad(m) > getEffectiveThresholdAt(m)) { violated = m; break; }
+        }
+        if (violated === null) break;
+        // restart search from just past the violation
+        t = violated + 1;
+        while (t < violated + 1440 && calculateAmpLoad(t) > getEffectiveThresholdAt(t)) t += 5;
+        sweepGuard++;
+    }
+    clearTime = t;
+
+    return (calculateAmpLoad(clearTime) >= getEffectiveThresholdAt(clearTime)) ? maxTime : clearTime;
 }
 
 // Find when caffeine clears threshold

@@ -531,7 +531,7 @@ function updateRecommendations(sleepTime, sleepHours, blockingFactors) {
             type: 'warning',
             icon: '\ud83c\udf4a',
             title: 'Consider Vitamin C Flush',
-            text: 'Taking 1000mg Vitamin C at 5-6pm could reduce your half-life by 30%, potentially moving sleep ~45-60 min earlier.'
+            text: 'Taking 1000mg Vitamin C at 5-6pm gives ~10% faster clearance (more with the high-dose protocol — see Settings), potentially moving sleep earlier.'
         });
     }
 
@@ -816,6 +816,8 @@ function init() {
     safeSetValue('caffThreshold', state.settings.caffThreshold);
     safeSetValue('weight', state.settings.weight);
     safeSetValue('sleepTarget', state.settings.sleepTarget ?? 8);
+    const vitcHDEl = document.getElementById('vitcHighDose');
+    if (vitcHDEl) vitcHDEl.checked = !!state.settings.vitcHighDose;
     safeSetValue('vitaminCTime', state.modifiers.vitaminC.time || '17:00');
     safeSetValue('saunaTime', state.modifiers.sauna.time || '18:00');
 

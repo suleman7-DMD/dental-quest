@@ -4380,6 +4380,10 @@
                                 <div class="input-group"><label>Weight</label><input type="number" id="weight" value="190" min="100" max="350" step="1" onchange="recalculate()"></div>
                                 <div class="input-group"><label>Sleep Goal</label><input type="number" id="sleepTarget" value="8" min="5" max="10" step="0.5" onchange="state.settings.sleepTarget=parseFloat(this.value)||8; recalculate(); renderSleepIntelligence();"></div>
                             </div>
+                            <label style="display:flex; align-items:center; gap:6px; margin-top:8px; font-size:12px; cursor:pointer;">
+                                <input type="checkbox" id="vitcHighDose" onchange="state.settings.vitcHighDose = this.checked; recalculate(); saveState();">
+                                High-dose vitamin C acidification protocol (2g+ with food)
+                            </label>
                         </div>
                         <!-- Caffeine -->
                         <div class="sc-card" id="scCaffeineCard">
@@ -4806,9 +4810,9 @@
     </div>
 
     <!-- Scripts (unchanged order) -->
-    <script src="js/stimcalc/state.js?v=20260402a"></script>
+    <script src="js/stimcalc/state.js?v=20260819"></script>
     <script src="js/stimcalc/circadian.js?v=20260315"></script>
-    <script src="js/stimcalc/pharma-engine.js?v=20260315"></script>
+    <script src="js/stimcalc/pharma-engine.js?v=20260819"></script>
     <script src="js/stimcalc/sleep-prediction.js?v=20260315"></script>
     <script src="js/stimcalc/firebase-sync.js?v=20260819"></script>
     <script src="js/stimcalc/med-caffeine.js?v=20260315"></script>
@@ -4818,6 +4822,6 @@
     <script src="js/stimcalc/med-inventory.js?v=20260316"></script>
     <script src="js/stimcalc/week-glance.js?v=20260321c"></script>
     <script src="js/stimcalc/calibration.js?v=20260819"></script>
-    <script src="js/stimcalc/init.js?v=20260402a"></script>
+    <script src="js/stimcalc/init.js?v=20260819"></script>
 </body>
 </html>
