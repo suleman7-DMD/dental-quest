@@ -65,6 +65,37 @@ eq(R.sullyBlockIsDestructive('STIM_DAY\nDATE: 2026-08-20\nDOSE_DELETE: 07:15'), 
 eq(R.sullyBlockIsDestructive('STIM_DAY\nDATE: 2026-08-20\nDOSE: 30 @ 07:15'), false, 'plain stim not destructive');
 eq(R.sullyBlockIsDestructive('MEAL|Chicken Bowl|650|45|60|18'), false, 'meal add not destructive');
 
+// --- STIM_DAY split-shape reassembly (reference-doc / webchat bug) ---
+// A `---` placed between STIM_DAY and its own fields used to make the router
+// relay an empty header and drop the fields as "unrecognized". Must reassemble.
+const split = R.sullyRouteBlocks(`SYNTAX: SULLYOS-1
+STIM_DAY
+---
+DATE: 2026-08-19
+WOKE: 07:15
+---
+STIM_DAY
+---
+DATE: 2026-08-20
+FELL_ASLEEP: 03:15
+WOKE: 07:30`);
+eq(split.byApp.stimCalc.length, 2, 'split shape → 2 stim blocks (not header-only)');
+eq(split.unknown.length, 0, 'no orphan field blocks left unrecognized');
+eq(split.byApp.stimCalc[0].includes('DATE: 2026-08-19') && split.byApp.stimCalc[0].includes('WOKE: 07:15'), true, 'day 1 header carries its fields');
+eq(split.byApp.stimCalc[1].includes('FELL_ASLEEP: 03:15'), true, 'day 2 header carries its fields');
+
+// split shape MIXED with other apps: orphan fields fold, MEAL still routes alone
+const splitMixed = R.sullyRouteBlocks(`STIM_DAY
+---
+DATE: 2026-08-20
+DOSE: 30 @ 07:05
+---
+MEAL|Yogurt|310|21|41|8|07:50|2026-08-20`);
+eq(splitMixed.byApp.stimCalc.length, 1, 'mixed: one stim day');
+eq(splitMixed.byApp.stimCalc[0].includes('DOSE: 30 @ 07:05'), true, 'mixed: dose folded into stim day');
+eq(splitMixed.byApp.bodyComp.length, 1, 'mixed: meal still its own bodycomp block');
+eq(splitMixed.unknown.length, 0, 'mixed: nothing dropped');
+
 // --- summary ---
 const summary = R.sullyRoutingSummary(routed, 'stimCalc');
 eq(summary.includes('this app'), true, 'summary marks local');

@@ -36,6 +36,49 @@ var SULLYOS_BANNERS = {
 // Destructive roadmap headers never auto-apply from relay
 var SULLYOS_DESTRUCTIVE_HEADERS = ['APPOINTMENT_DELETE', 'TODO_DELETE', 'PROCEDURE_DELETE', 'PATIENT_DELETE'];
 
+// STIM_DAY field lines (colon form) — used to detect orphan field blocks that a
+// stray `---` split away from their STIM_DAY header.
+var SULLYOS_STIM_FIELD_RE = /^(DATE|WOKE|FELL_ASLEEP|SLEPT|DOSE|CAFFEINE|WORKOUT|VITC|ALL_NIGHTER|PLAN_SLEEP|DOSE_MOVE|CAFF_MOVE|DOSE_DELETE|CAFF_DELETE|SLEEP_DELETE)\s*:/i;
+
+// First non-blank, non-banner, non-SYNTAX line of a block (trimmed), or ''.
+function sullyFirstMeaningful(block) {
+    var lines = String(block == null ? '' : block).split('\n');
+    for (var i = 0; i < lines.length; i++) {
+        var l = lines[i].trim();
+        if (!l) continue;
+        if (SULLYOS_BANNERS[l.toUpperCase()]) continue;
+        if (l.toUpperCase().indexOf('SYNTAX:') === 0) continue;
+        return l;
+    }
+    return '';
+}
+
+// Fold orphan STIM-field blocks back onto the preceding STIM_DAY header block so
+// a `STIM_DAY⏎---⏎DATE:/WOKE:...` shape (which the reference doc's own examples
+// emit) reassembles into ONE block — otherwise the router relays the empty
+// STIM_DAY header and drops the field block as "unrecognized". Runs before the
+// block split/classify. A non-stim block closes the absorb window.
+function sullyReassembleStimDay(text) {
+    var t = String(text == null ? '' : text);
+    if (t.indexOf('---') === -1) return t;
+    var blocks = t.split(/^---\s*$/m);
+    var out = [];
+    var lastStimIdx = -1;
+    for (var i = 0; i < blocks.length; i++) {
+        var b = blocks[i];
+        var first = sullyFirstMeaningful(b);
+        if (!first) { out.push(b); continue; }
+        if (first.toUpperCase() === 'STIM_DAY') {
+            out.push(b); lastStimIdx = out.length - 1;
+        } else if (SULLYOS_STIM_FIELD_RE.test(first) && lastStimIdx >= 0) {
+            out[lastStimIdx] = out[lastStimIdx].replace(/\s+$/, '') + '\n' + b.replace(/^\s+/, '');
+        } else {
+            out.push(b); lastStimIdx = -1;
+        }
+    }
+    return out.join('\n---\n');
+}
+
 function sullyClassifyBlock(blockText) {
     var lines = String(blockText).split('\n');
     var banner = null;
@@ -70,6 +113,8 @@ function sullyRouteBlocks(rawText) {
         }
         text = text.replace(/^\s*SYNTAX:\s*\S+\s*$/mi, '');
     }
+    // Reassemble STIM_DAY headers split from their fields by a stray --- .
+    text = sullyReassembleStimDay(text);
     var blocks = text.split(/^---\s*$/m);
     var result = { byApp: { bodyComp: [], stimCalc: [], roadmap: [] }, unknown: [], syntaxWarning: syntaxWarning };
     for (var i = 0; i < blocks.length; i++) {
@@ -251,6 +296,7 @@ function sullyRelayReceipts(db, userRoot, fromAppKey) {
 if (typeof module !== 'undefined' && module.exports) {
     module.exports = {
         sullyRouteBlocks: sullyRouteBlocks,
+        sullyReassembleStimDay: sullyReassembleStimDay,
         sullyClassifyBlock: sullyClassifyBlock,
         sullyBlockIsDestructive: sullyBlockIsDestructive,
         sullyRoutingSummary: sullyRoutingSummary,

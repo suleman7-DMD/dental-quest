@@ -75,6 +75,43 @@ PLAN_SLEEP: 23:00`, OPTS);
     ok(d.planSleep === '23:00', 'plan sleep');
 }
 
+// ---------- parse: split-shape reassembly (reference-doc / webchat bug) ----------
+// The reference doc's own examples put a `---` BETWEEN the STIM_DAY header and
+// its DATE:/WOKE:... fields. That must reassemble into one day, not orphan the
+// fields. This is the EXACT block a real webchat export produced.
+section('parse: STIM_DAY split from fields by stray ---');
+{
+    const p = scParseImportText(`SYNTAX: SULLYOS-1
+STIM_DAY
+---
+DATE: 2026-08-19
+WOKE: 07:15
+---
+STIM_DAY
+---
+DATE: 2026-08-20
+FELL_ASLEEP: 03:15
+WOKE: 07:30`, OPTS);
+    ok(p.unrecognized.length === 0, 'no orphan/unrecognized field blocks', p.unrecognized);
+    ok(p.days.length === 2, 'reassembled into 2 days', p.days.length);
+    ok(p.days[0].date === '2026-08-19' && p.days[0].woke === '07:15', 'day 1 keeps its fields');
+    ok(p.days[1].date === '2026-08-20' && p.days[1].fellAsleep === '03:15' && p.days[1].woke === '07:30', 'day 2 keeps its fields');
+    // and it actually applies (dry run) — not "Applied 0"
+    const ops = scBuildImportOps(p, OPTS);
+    ok(ops.some(o => o.kind && o.kind.indexOf('reject') !== 0), 'produces real ops, not all-reject', ops.map(o => o.kind));
+}
+// single day, banner-only block between header and fields still reassembles
+{
+    const p = scParseImportText('STIM_DAY\n---\n@STIMCALC\nDATE: 2026-08-20\nWOKE: 06:45', OPTS);
+    ok(p.days.length === 1 && p.days[0].woke === '06:45', 'banner+fields fold onto header', p.days.length);
+    ok(p.unrecognized.length === 0, 'no unrecognized with banner in the fold', p.unrecognized);
+}
+// canonical (no stray ---) still works unchanged
+{
+    const p = scParseImportText('STIM_DAY\nDATE: 2026-08-20\nWOKE: 06:45\n---\nSTIM_DAY\nDATE: 2026-08-19\nWOKE: 07:00', OPTS);
+    ok(p.days.length === 2 && p.days[0].date === '2026-08-20' && p.days[1].date === '2026-08-19', 'canonical multi-day unaffected');
+}
+
 // ---------- parse: SLEPT wins over FELL_ASLEEP ----------
 section('parse: SLEPT precedence');
 {
