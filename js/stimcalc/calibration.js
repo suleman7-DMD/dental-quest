@@ -229,3 +229,40 @@ function confirmMorningCheckin() {
     saveState();
     showToast('Checked in — calibration updated');
 }
+
+// ---- Real caffeine cutoff (Dashboard; spec D6) ----
+// "If I want ONE more dose of caffeine today, when's the last moment it can
+// land and still be under the caffeine threshold by tonight's predicted onset?"
+// Closed-form: solve doseMg * (1/2)^(minutesBefore / (hl*60)) = allowance.
+function computeCaffeineCutoff(doseMg) {
+    const pred = calculateSleepTime();
+    const wakeMin = timeToMinutes(state.wakeTime || '08:00');
+    const norm = t => (t < wakeMin ? t + 1440 : t);       // wake-normalized ordering
+    const bed = norm(pred.sleepTime);
+    const caffThresh = numOr(state.settings.caffThreshold, 25);
+    const hl = getActiveCaffHalfLife();
+    const loadAtBed = calculateCaffLoad(pred.sleepTime);
+    const allowance = caffThresh - loadAtBed;
+    if (allowance <= 0) return { status: 'closed' };          // existing caffeine already fills budget
+    if (doseMg <= allowance) return { status: 'anytime' };    // dose fits even taken at bedtime
+    const minutesBefore = hl * 60 * Math.log2(doseMg / allowance);
+    const cutoffNorm = bed - minutesBefore;
+    const cutoff = ((cutoffNorm % 1440) + 1440) % 1440;
+    if (cutoffNorm <= norm(getCurrentMinutes())) return { status: 'passed', cutoff: cutoff };
+    return { status: 'open', cutoff: cutoff, minutesLeft: Math.round(cutoffNorm - norm(getCurrentMinutes())) };
+}
+
+function renderCaffeineCutoffCard() {
+    const el = document.getElementById('caffeineCutoffCard');
+    if (!el) return;
+    const rows = [{ mg: 95, label: 'Full coffee (95mg)' }, { mg: 45, label: 'Half cup / soda (45mg)' }];
+    el.innerHTML = rows.map(r => {
+        const c = computeCaffeineCutoff(r.mg);
+        let txt;
+        if (c.status === 'closed') txt = 'budget already spent — no more today';
+        else if (c.status === 'anytime') txt = 'fine anytime before bed';
+        else if (c.status === 'passed') txt = 'cutoff passed (' + minutesToTime(c.cutoff) + ')';
+        else txt = 'last call ' + minutesToTime(c.cutoff) + ' (' + Math.floor(c.minutesLeft / 60) + 'h ' + (c.minutesLeft % 60) + 'm left)';
+        return '<div class="sc-cutoff-row"><span>' + r.label + '</span><span class="sc-cutoff-val sc-cutoff-' + c.status + '">' + txt + '</span></div>';
+    }).join('');
+}

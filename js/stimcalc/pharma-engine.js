@@ -7,12 +7,7 @@
 // ============================================
 // INPUT SANITIZERS
 // ============================================
-// NaN guard: a corrupted/blank settings value would poison every load
-// calculation downstream (NaN propagates silently). Coerce to a sane default.
-function numOr(v, fallback) {
-    const n = Number(v);
-    return Number.isFinite(n) ? n : fallback;
-}
+// numOr() moved to state.js (single definition, loaded before this module).
 
 // Legacy states stored 'today'/'tomorrow' literals for modifier dates;
 // parseLocalDate() would NaN on them. Normalize to a real YYYY-MM-DD string.

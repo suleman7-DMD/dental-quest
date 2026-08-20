@@ -3478,6 +3478,99 @@
             margin-bottom: 10px;
         }
 
+        /* --- Honest hero window band + binding caption (spec D5) --- */
+        .unified-hero .hero-window {
+            display: inline-block;
+            font-size: 0.72em;
+            font-weight: 600;
+            color: var(--fg-tertiary);
+            letter-spacing: 0.02em;
+            margin: -2px 0 6px;
+        }
+        .unified-hero .hero-binding {
+            font-size: 0.8em;
+            color: var(--fg-secondary);
+            line-height: 1.35;
+            margin-bottom: 8px;
+        }
+
+        /* --- Morning check-in strip (spec D7) --- */
+        .sc-checkin-card { padding: 12px 16px; }
+        .sc-checkin-row {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.85em;
+            color: var(--fg-secondary);
+        }
+        .sc-checkin-label { font-weight: 600; color: var(--fg-primary); }
+        .sc-checkin-row input[type="time"],
+        .sc-checkin-row input[type="number"] {
+            padding: 4px 6px;
+            border: 1px solid var(--border-default);
+            border-radius: 6px;
+            background: var(--surface-primary);
+            color: var(--fg-primary);
+            font-size: 0.95em;
+        }
+        .sc-checkin-row input[type="number"] { width: 56px; }
+        .sc-checkin-done { font-size: 0.85em; font-weight: 600; color: var(--success); }
+
+        /* --- Small button (check-in + calibration cards) --- */
+        .sc-btn-sm {
+            padding: 5px 12px;
+            border: 1px solid var(--border-default);
+            border-radius: 6px;
+            background: var(--accent);
+            color: #fff;
+            font-size: 0.82em;
+            font-weight: 600;
+            cursor: pointer;
+        }
+        .sc-btn-sm:hover { opacity: 0.9; }
+
+        /* --- Calibration card (Accuracy page; spec D1) --- */
+        .sc-cal-value { font-size: 0.95em; color: var(--fg-primary); margin-bottom: 4px; }
+        .sc-cal-tag {
+            font-size: 0.72em;
+            font-weight: 600;
+            color: var(--success);
+            background: var(--success-light);
+            border-radius: 10px;
+            padding: 1px 8px;
+            margin-left: 4px;
+        }
+        .sc-cal-status { font-size: 0.82em; color: var(--fg-secondary); margin-bottom: 4px; }
+        .sc-cal-last, .sc-cal-caff { font-size: 0.78em; color: var(--fg-tertiary); margin-bottom: 4px; }
+        .sc-cal-actions {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex-wrap: wrap;
+            margin-top: 8px;
+            font-size: 0.82em;
+            color: var(--fg-secondary);
+        }
+        .sc-cal-actions label { display: flex; align-items: center; gap: 6px; cursor: pointer; }
+
+        /* --- Caffeine cutoff card (spec D6) --- */
+        .sc-cutoff-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+            gap: 10px;
+            padding: 5px 0;
+            font-size: 0.85em;
+            color: var(--fg-secondary);
+            border-bottom: 1px solid var(--border-default);
+        }
+        .sc-cutoff-row:last-child { border-bottom: none; }
+        .sc-cutoff-val { font-weight: 600; text-align: right; }
+        .sc-cutoff-open, .sc-cutoff-anytime { color: var(--success); }
+        .sc-cutoff-passed { color: var(--warning); }
+        .sc-cutoff-closed { color: var(--destructive); }
+
         .hero-progress-bar {
             height: 4px;
             background: var(--canvas-inset);
@@ -4320,6 +4413,7 @@
 
                 <!-- ==================== DASHBOARD PAGE ==================== -->
                 <div class="sc-page active" id="scPageDashboard">
+                    <div class="sc-card sc-checkin-card" id="morningCheckin"></div>
                     <div class="sc-dashboard-grid">
                         <div class="sc-dash-col sc-dash-col--main">
                         <!-- Column 1: Hero, Meds, Graph -->
@@ -4327,7 +4421,9 @@
                             <div class="unified-hero">
                                 <div class="hero-label">Projected Sleep Window</div>
                                 <div class="hero-time green" id="sleepTime">--:-- PM</div>
+                                <span class="hero-window" id="heroWindowBand"></span>
                                 <div class="hero-countdown" id="timeRemaining">Calculating...</div>
+                                <div class="hero-binding" id="heroBindingLine"></div>
                                 <div class="hero-quality green" id="sleepQuality"></div>
                                 <div id="bottleneckIndicator" style="display:none; margin-top:4px;"></div>
                                 <div id="accuracyHeroHint" class="accuracy-hero-hint" style="display:none;"></div>
@@ -4409,6 +4505,11 @@
                             <button class="sc-btn sc-btn--add" onclick="addCustomCaffeine()">+ Custom Amount</button>
                             <div id="caffeineEntries"></div>
                             <div id="coffeeStatus" style="font-size:0.82em; color:var(--fg-tertiary); margin-top:4px;"></div>
+                        </div>
+                        <!-- Caffeine cutoff — tonight (spec D6) -->
+                        <div class="sc-card" id="scCaffeineCutoffCard">
+                            <div class="sc-card-title">Caffeine cutoff — tonight</div>
+                            <div id="caffeineCutoffCard"></div>
                         </div>
                         <!-- Sleep Intelligence -->
                         <div class="sc-card sc-intel-card">
@@ -4637,6 +4738,10 @@
 
                 <!-- ==================== ACCURACY PAGE ==================== -->
                 <div class="sc-page" id="scPageAccuracy">
+                    <div class="sc-card" id="scCalibrationCard" style="margin-bottom:20px;">
+                        <div class="sc-card-title">Auto-calibration</div>
+                        <div id="calibrationCard"></div>
+                    </div>
                     <div id="accuracyContent" class="sc-card" style="padding:24px;">
                         <div id="accOverallGrade"></div>
                         <div id="accMethodology" class="ins-section"></div>

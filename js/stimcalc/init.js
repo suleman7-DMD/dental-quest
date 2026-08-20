@@ -126,6 +126,13 @@ function runCalculations() {
     vm.blockingFactors = sleepResult.blockingFactors;
     lastPredictionBindingFactor = sleepResult.bindingFactor;
 
+    // v2 (spec D5): honest hero window + named binding factor
+    vm.bindingFactor = sleepResult.bindingFactor;
+    vm.pharmaFloor = sleepResult.pharmacokineticFloor;
+    vm.gateTime = sleepResult.gateTime;
+    var acc = (typeof calculateAccuracyStats === 'function') ? calculateAccuracyStats(14) : null;
+    vm.windowBand = (acc && Number.isFinite(acc.avgAbsError) && acc.avgAbsError > 0) ? Math.round(acc.avgAbsError) : 45;
+
     // Display sleep time (normalized)
     vm.displaySleepTime = vm.sleepTime % (24 * 60);
     if (vm.displaySleepTime < 0) vm.displaySleepTime += 24 * 60;
@@ -334,6 +341,19 @@ function updateUI(vm) {
         sleepQualityEl.textContent = vm.qualityText;
     }
 
+    // --- Honest hero window band + binding-factor caption (spec D5) ---
+    var bandEl = document.getElementById('heroWindowBand');
+    if (bandEl) bandEl.textContent = '\u00b1 ' + vm.windowBand + ' min';
+    var bindEl = document.getElementById('heroBindingLine');
+    if (bindEl) {
+        var bindingNames = { adderall: 'Adderall', caffeine: 'Caffeine', workout: 'Workout cooldown', circadian: 'Circadian rhythm', now: 'Nothing \u2014 you can sleep now' };
+        var bindingLine = 'Limited by: ' + (bindingNames[vm.bindingFactor] || vm.bindingFactor);
+        if (vm.bindingFactor === 'circadian' && vm.gateTime !== null) {
+            bindingLine = 'Drugs clear ' + minutesToTime(vm.pharmaFloor) + ' \u2014 circadian gate holds sleep to ~' + minutesToTime(vm.gateTime);
+        }
+        bindEl.textContent = bindingLine;
+    }
+
     // --- Blocking factors ---
     var blockingContainer = document.getElementById('blockingFactors');
     var blockingList = document.getElementById('blockingList');
@@ -379,6 +399,7 @@ function updateUI(vm) {
     updateVitCBadge();
     updateForecastLogic();
     if (typeof scInvRenderDashboard === 'function') scInvRenderDashboard();
+    if (typeof renderCaffeineCutoffCard === 'function') renderCaffeineCutoffCard();
     // NOTE: renderDashSleepHistoryFull() intentionally NOT called here.
     // updateUI() runs every 5s via recalculate(). The sleep history render is expensive
     // (recalculates ALL data from first day, re-renders canvas + stat chips).
@@ -855,6 +876,10 @@ function init() {
     // Initial calculation
     recalculate();
 
+    // Model v2: mount the morning check-in strip + calibration card (spec D5, D7)
+    if (typeof renderMorningCheckin === 'function') renderMorningCheckin();
+    if (typeof renderCalibrationCard === 'function') renderCalibrationCard();
+
     // Render dashboard sleep history once on initial load
     // (Not in updateUI() which runs every 5s — too expensive for that interval)
     if (typeof renderDashSleepHistoryFull === 'function') renderDashSleepHistoryFull();
@@ -1198,8 +1223,10 @@ function scNavigate(page) {
         }
     } else if (page === 'accuracy') {
         if (typeof renderAccuracyTab === 'function') renderAccuracyTab();
+        if (typeof renderCalibrationCard === 'function') renderCalibrationCard();
     } else if (page === 'dashboard') {
         recalculate();
+        if (typeof renderMorningCheckin === 'function') renderMorningCheckin();
         if (typeof drawGraph === 'function') drawGraph();
         if (typeof renderSleepCalendar === 'function') renderSleepCalendar();
         if (typeof scInvRenderDashboard === 'function') scInvRenderDashboard();

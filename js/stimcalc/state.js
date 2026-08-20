@@ -297,6 +297,14 @@ function getLocalDateString(date = new Date()) {
     return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
 }
 
+// NaN guard: a corrupted/blank settings value would poison every load
+// calculation downstream (NaN propagates silently). Coerce to a sane default.
+// (Single definition — lives here in state.js so all later modules share it.)
+function numOr(v, fallback) {
+    const n = Number(v);
+    return Number.isFinite(n) ? n : fallback;
+}
+
 // Helper to parse YYYY-MM-DD as local date (avoids UTC timezone issues)
 function parseLocalDate(dateStr) {
     if (!dateStr) return null;
@@ -355,9 +363,9 @@ function snapshotPredictionInputs() {
         caffLoadAtPrediction: parseFloat(calculateCaffLoad(now).toFixed(1)),
         effectiveThreshold: parseFloat(getEffectiveThreshold().toFixed(1)),
         sleepDebtBonus: parseFloat(calculateSleepDebtBonus().toFixed(1)),
-        baseThreshold: state.settings.sleepThreshold,
+        baseThreshold: (typeof getActiveBaseThreshold === 'function') ? getActiveBaseThreshold() : numOr(state.settings.sleepThreshold, 14),
         ampHalfLife: state.settings.ampHalfLife,
-        caffHalfLife: state.settings.caffHalfLife,
+        caffHalfLife: (typeof getActiveCaffHalfLife === 'function') ? getActiveCaffHalfLife() : numOr(state.settings.caffHalfLife, 5),
         totalAmpDose: getValues(state.medications).reduce((s, m) => s + m.dose, 0),
         totalCaffDose: getValues(state.caffeine).reduce((s, c) => s + c.amount, 0),
         hasWorkout: !!(state.workoutPlan && state.workoutPlan.applied),
