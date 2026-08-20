@@ -151,6 +151,8 @@ function mergeRemoteState(remoteData) {
         workoutPlan: { ...state.workoutPlan, ...(remote.workoutPlan || {}) },
         nicotine: { ...state.nicotine, ...(remote.nicotine || {}) },
         _version: (remote._version || 0) + 1,
+        // Bug 3: preserve last-write-wins stamp through field-by-field rebuild
+        _lastModified: remote._lastModified || state._lastModified || null,
         _sleepDailyLogsMigrated: remote._sleepDailyLogsMigrated || state._sleepDailyLogsMigrated || false,
         _sleepDailyLogsMigratedV2: remote._sleepDailyLogsMigratedV2 || state._sleepDailyLogsMigratedV2 || false,
         _sleepDailyLogsMigratedV3: remote._sleepDailyLogsMigratedV3 || state._sleepDailyLogsMigratedV3 || false
@@ -358,6 +360,11 @@ function saveToFirebase() {
     // ============================================
     // SYNC PROTECTION GUARDS - PREVENTS DATA WIPE
     // ============================================
+    // Bug 14: full 5-guard set (was missing pinValidated + _dataLoaded)
+    if (!pinValidated) {
+        console.warn('\u26A0\uFE0F BLOCKED: Firebase save attempted before PIN validation');
+        return false;
+    }
     if (isInitialLoad) {
         console.warn('\u26A0\uFE0F BLOCKED: Firebase save attempted during initial load');
         return;
@@ -369,6 +376,10 @@ function saveToFirebase() {
     if (isEmptyState(state)) {
         console.warn('\u26A0\uFE0F BLOCKED: Refusing to save empty state to Firebase');
         return;
+    }
+    if (!state._dataLoaded) {
+        console.warn('\u26A0\uFE0F BLOCKED: Firebase save attempted before data loaded');
+        return false;
     }
 
     const saveTime = new Date().toISOString();
@@ -400,8 +411,22 @@ function loadFromFirebase() {
             const data = snapshot.val();
 
             if (data && data.state) {
-                // REFACTORED: Use mergeRemoteState instead of inline merge block
-                mergeRemoteState(data.state);
+                // Bug 3: last-write-wins — if local was edited more recently than the
+                // cloud copy (e.g. a beforeunload-only save that never reached Firebase),
+                // keep local and push it up instead of clobbering it with stale cloud data.
+                const remoteStamp = (data.state && data.state._lastModified) || null;
+                const localStamp = state._lastModified || null;
+                if (localStamp && remoteStamp && localStamp > remoteStamp && !isEmptyState(state)) {
+                    state._dataLoaded = true;
+                    setTimeout(() => saveToFirebase(), 500);
+                } else {
+                    // REFACTORED: Use mergeRemoteState instead of inline merge block
+                    mergeRemoteState(data.state);
+                }
+
+                // Bug 11 (reload half): re-clean stale meds a cloud merge may have
+                // reintroduced (cleanupOldMedications ran in init() before this load).
+                if (typeof cleanupOldMedications === 'function') cleanupOldMedications();
 
                 // Save merged state to localStorage
                 safeLocalStorageSet('stimulantCalculatorState', JSON.stringify(state));
@@ -455,6 +480,11 @@ function loadFromFirebase() {
             // Mark that we've loaded from cloud (even if empty)
             hasLoadedFromCloud = true;
 
+            // Bug 13: seed the conflict-check baseline so forceCloudSync()'s
+            // (localChangesSinceLastSync && lastSyncTimestamp) check is live.
+            lastSyncTimestamp = Date.now();
+            localChangesSinceLastSync = false;
+
             // Set up real-time listener for changes from other devices
             setupRealtimeSync();
 
@@ -483,6 +513,15 @@ function loadFromFirebase() {
 // ============================================
 // REALTIME SYNC
 // ============================================
+
+// Bug 12: write a field only when the user isn't actively typing in it, so a
+// remote realtime update can't clobber an input mid-edit.
+function setIfNotFocused(id, val) {
+    const el = document.getElementById(id);
+    if (!el) return;
+    if (document.activeElement === el) return; // user is typing here — don't clobber
+    el.value = val;
+}
 
 function setupRealtimeSync() {
     if (realtimeSyncEnabled || !database || !userPath) return;
@@ -522,17 +561,28 @@ function setupRealtimeSync() {
 
             lastKnownTimestamp = data.lastUpdated;
 
+            // Bug 12: our own unpushed edit is newer than this remote copy — skip the
+            // merge and let the debounced save push local up (don't lose local work).
+            if (localChangesSinceLastSync && state._lastModified && data.state && data.state._lastModified
+                && state._lastModified > data.state._lastModified) {
+                return;
+            }
+
             // REFACTORED: Use mergeRemoteState instead of inline merge block
             mergeRemoteState(data.state);
+
+            // Bug 11 (reload half): drop stale meds a merge may have reintroduced.
+            if (typeof cleanupOldMedications === 'function') cleanupOldMedications();
 
             // Update localStorage
             safeLocalStorageSet('stimulantCalculatorState', JSON.stringify(state));
 
-            // Re-render both Full View and Focus Mode lists
-            document.getElementById('wakeTime').value = state.wakeTime;
-            document.getElementById('hoursSlept').value = state.hoursSleptLastNight;
-            renderMedEntries();
-            renderCaffeineEntries();
+            // Re-render both Full View and Focus Mode lists (Bug 12: don't clobber focused inputs)
+            setIfNotFocused('wakeTime', state.wakeTime);
+            setIfNotFocused('hoursSlept', state.hoursSleptLastNight);
+            const active = document.activeElement;
+            const editingEntries = active && active.closest && (active.closest('#medEntries') || active.closest('#caffeineEntries'));
+            if (!editingEntries) { renderMedEntries(); renderCaffeineEntries(); }
             renderFocusCaffeineList(); // FIX: Also sync Focus Mode caffeine list
             renderSleepIntelligence();
 
@@ -743,7 +793,8 @@ function restoreCheckpoint(index) {
 
     // Restore state
     state = JSON.parse(JSON.stringify(checkpoint.state));
-    state._version = Date.now();
+    // Bug 23: monotonic increment, not wall-clock (Date.now() looks "newest forever")
+    state._version = (state._version || 0) + 1;
     state._dataLoaded = true;
 
     // Save to localStorage and Firebase
@@ -963,7 +1014,8 @@ function importAndRestoreDirectly() {
             state = {
                 ...getDefaultState(),
                 ...data,
-                _version: Date.now(),
+                // Bug 23: monotonic increment, not wall-clock
+                _version: (data._version || 0) + 1,
                 _lastModified: new Date().toISOString(),
                 _dataLoaded: true
             };
@@ -1011,7 +1063,8 @@ function forceUploadToCloud() {
 
     updateSyncStatus('syncing', 'Uploading...');
 
-    state._version = Date.now();
+    // Bug 23: monotonic increment, not wall-clock
+    state._version = (state._version || 0) + 1;
     state._lastModified = new Date().toISOString();
 
     database.ref(userPath).set({
@@ -1272,6 +1325,9 @@ function saveState() {
     // Mark that local changes exist (for conflict detection)
     markLocalChange();
 
+    // Bug 3: stamp modification time (last-write-wins on load / realtime merge)
+    state._lastModified = new Date().toISOString();
+
     // Always save to localStorage immediately (but not too often)
     const now = Date.now();
     if (now - lastLocalSave > 500) { // Max twice per second for localStorage
@@ -1330,6 +1386,9 @@ function saveStateImmediate() {
     // All guards passed — safe to save
     // Mark that local changes exist (for conflict detection)
     markLocalChange();
+
+    // Bug 3: stamp modification time (last-write-wins on load / realtime merge)
+    state._lastModified = new Date().toISOString();
 
     safeLocalStorageSet('stimulantCalculatorState', JSON.stringify(state));
 
