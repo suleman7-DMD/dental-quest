@@ -99,6 +99,8 @@ try {
                 await page.locator('#qtySelectorModal .submit-btn').click();
                 assert.equal(await page.evaluate(() => getValues(state.dailyLogs[window.testMealDate].meals)[0].calories), 150);
                 assert.equal(await page.evaluate(() => getValues(state.today.meals).length), 1);
+                await page.locator('#dayDetailModal').waitFor({ state: 'visible' });
+                await page.evaluate(() => closeDayDetailModal());
                 await page.evaluate(() => {
                     const date = parseLocalDate(getLocalDateString());
                     for (const [offset, log] of [[2, { calories: 2500, deficit: -200 }], [3, { nutritionStatus: 'assumed', assumedDeficit: 100 }], [4, { workouts: { walk: { calories: 90 } } }], [5, { calories: 2000, deficit: 0 }], [6, { tdee: 2000, meals: { old: { calories: 1700 } } }]]) {
@@ -114,6 +116,111 @@ try {
                 await page.waitForFunction(() => getComputedStyle(document.getElementById('qtySelectorModal')).visibility === 'hidden');
                 await page.locator('#recentProgressList').scrollIntoViewIfNeeded();
                 await page.screenshot({ path: `/tmp/bodycomp-${engine.name()}-${viewport.width}.png` });
+                const exportCheck = await page.evaluate(() => {
+                    const today = parseLocalDate(getLocalDateString());
+                    const start = new Date(today.getFullYear(), today.getMonth(), today.getDate() - 6);
+                    const end = new Date(today.getFullYear(), today.getMonth(), today.getDate() - 1);
+                    const before = JSON.stringify(state);
+                    const report = generateProgressExport(getLocalDateString(start), getLocalDateString(end));
+                    if (JSON.stringify(state) !== before) throw new Error('Export mutated state');
+                    for (const row of report.rows) {
+                        const canonical = getDisplayDeficitForDate(row.date);
+                        if (row.deficit !== (canonical === null ? null : Math.round(canonical))) throw new Error('Balance differs from Calendar');
+                    }
+                    return report;
+                });
+                assert.equal(exportCheck.summary.days, 6);
+                assert.equal(exportCheck.summary.deficit, 700);
+                assert.equal(exportCheck.summary.balanceDays, 5);
+                assert.equal(exportCheck.summary.intake, 6350);
+                assert.equal(exportCheck.summary.exercise, 410);
+                assert.equal(exportCheck.summary.deficit, exportCheck.rows.reduce((sum, row) => sum + (row.deficit ?? 0), 0));
+                assert(exportCheck.text.includes('Average daily balance — Deficit: 140 kcal/day'));
+                assert(exportCheck.text.includes('Surplus: 200 kcal'));
+                const missingChecks = await page.evaluate(() => {
+                    const date = '2024-02-29';
+                    const previous = state.dailyLogs[date];
+                    try {
+                        delete state.dailyLogs[date];
+                        const missing = generateProgressExport(date, date);
+                        state.dailyLogs[date] = { meals: [{ calories: 0 }], deficit: 0, workouts: [{ calories: 0 }] };
+                        const zero = generateProgressExport(date, date);
+                        state.dailyLogs[date] = { workouts: [{ calories: 80 }, { type: 'Walk' }] };
+                        const partial = generateProgressExport(date, date);
+                        return { missing, zero, partial };
+                    } finally {
+                        if (previous) state.dailyLogs[date] = previous;
+                        else delete state.dailyLogs[date];
+                    }
+                });
+                assert.equal(missingChecks.missing.summary.deficit, null);
+                assert.equal(missingChecks.missing.summary.exercise, null);
+                assert.equal(missingChecks.missing.summary.intake, null);
+                assert.equal(missingChecks.zero.rows[0].intake, 0);
+                assert.equal(missingChecks.zero.rows[0].exercise, 0);
+                assert.equal(missingChecks.zero.rows[0].deficit, 0);
+                assert.equal(missingChecks.partial.rows[0].exercise, 80);
+                assert(missingChecks.partial.text.includes('80 kcal (incomplete)'));
+                assert.deepEqual(await page.evaluate(() => getProgressExportRange('7', '2026-03-10')), { start: '2026-03-04', end: '2026-03-10' });
+                assert.deepEqual(await page.evaluate(() => getProgressExportRange('month', '2024-02-29')), { start: '2024-02-01', end: '2024-02-29' });
+                assert.deepEqual(await page.evaluate(() => getProgressExportRange('week', '2026-09-20')), { start: '2026-09-14', end: '2026-09-20' });
+                await page.evaluate(() => closeDayDetailModal());
+                await page.locator('.progress-export-open').click();
+                await fits(page, '#progressExportModal .modal');
+                await fits(page, '#progressExportCopy');
+                for (const [preset, days] of [['today', 1], ['yesterday', 1], ['7', 7], ['30', 30], ['90', 90]]) {
+                    await page.locator(`[data-progress-range="${preset}"]`).click();
+                    assert.equal(await page.evaluate(() => progressExportReport.rows.length), days);
+                    assert.equal(await page.locator('#progressExportPreview').evaluate(element => element.scrollWidth <= element.clientWidth), true);
+                }
+                await page.waitForFunction(() => getComputedStyle(document.getElementById('progressExportModal')).opacity === '1');
+                await fits(page, '#progressExportPreview');
+                await page.screenshot({ path: `/tmp/progress-export-${engine.name()}-${viewport.width}.png` });
+                if (engine.name() === 'chromium') {
+                    await context.grantPermissions(['clipboard-read', 'clipboard-write']);
+                    await page.locator('#progressExportCopy').click();
+                    assert.equal(await page.evaluate(() => navigator.clipboard.readText()), await page.evaluate(() => progressExportReport.text));
+                }
+                await page.evaluate(() => {
+                    Object.defineProperty(navigator, 'clipboard', { configurable: true, value: { writeText: async text => { window.copiedProgress = text; } } });
+                });
+                await page.locator('#progressExportCopy').click();
+                assert.equal(await page.locator('#progressExportCopy').innerText(), '✓ Copied');
+                assert.equal(await page.evaluate(() => window.copiedProgress === progressExportReport.text), true);
+                await page.evaluate(() => {
+                    navigator.clipboard.writeText = async () => { throw new Error('Clipboard denied'); };
+                    document.execCommand = () => false;
+                });
+                await page.locator('#progressExportCopy').click();
+                assert((await page.locator('#progressExportStatus').innerText()).includes('Press and hold'));
+                assert.equal(await page.evaluate(() => window.getSelection().toString() === progressExportReport.text), true);
+                await page.locator('[data-progress-range="custom"]').click();
+                await page.evaluate(() => {
+                    const date = getProgressExportRange('yesterday').start;
+                    document.getElementById('progressExport-start').value = date;
+                    document.getElementById('progressExport-end').value = date;
+                });
+                await page.locator('#progressExportCopy').click();
+                assert.equal(await page.evaluate(() => progressExportReport.rows.length), 1);
+                await page.locator('#progressExport-start').fill('2026-09-15');
+                await page.locator('#progressExport-end').fill('2026-09-01');
+                await page.locator('#progressExport-end').blur();
+                assert.equal(await page.locator('#progressExportCopy').isDisabled(), true);
+                await page.locator('[data-progress-range="7"]').click();
+                assert.equal(await page.locator('#progressExportCopy').isEnabled(), true);
+                if (viewport.width < 600) {
+                    await page.locator('[data-progress-range="custom"]').click();
+                    await page.setViewportSize({ width: viewport.width, height: 330 });
+                    await page.waitForFunction(() => parseFloat(document.documentElement.style.getPropertyValue('--modal-viewport-height')) === 330);
+                    await fits(page, '#progressExportCopy');
+                    await page.setViewportSize(viewport);
+                }
+                await page.locator('#progressExportModal .modal-close').click();
+                assert.equal(await page.evaluate(() => document.body.style.overflow), '');
+                assert.equal(await page.evaluate(() => document.activeElement.classList.contains('progress-export-open')), true);
+                await page.locator('.progress-export-open').click();
+                await page.keyboard.press('Escape');
+                assert.equal(await page.evaluate(() => document.body.style.overflow), '');
                 await page.close();
 
                 const dental = await load(context, 'index.html');
@@ -143,7 +250,7 @@ try {
                 await dental.evaluate(() => openTaskEditModal('test'));
                 await dental.screenshot({ path: `/tmp/task-edit-${engine.name()}-${viewport.width}.png` });
                 await context.close();
-                console.log(`PASS ${engine.name()} ${viewport.width}×${viewport.height}: picker, logging, history, task edit, shared prompt`);
+                console.log(`PASS ${engine.name()} ${viewport.width}×${viewport.height}: picker, logging, history, progress export, task edit, shared prompt`);
             }
         } finally { await browser.close(); }
     }

@@ -10,7 +10,8 @@ Both engines cover 320×568, 390×750, 844×390, and 1280×900 viewports:
 - Long food names fit, mobile inputs remain 16px, and food selection logs correct calories to today or a historical date and localStorage.
 - Recent progress uses canonical deficit/workout helpers, covers deficit, surplus, maintenance, assumed, legacy, and workout-only days, and does not mutate state while rendering.
 - Task editing persists its text, keeps Save Changes within the viewport, and survives a reduced viewport height. Shared long-message prompts also submit correctly.
+- Progress export covers all rolling ranges, custom validation, week/month and daylight-saving boundaries, matching canonical daily balances, independently checked six-day totals, preview overflow, successful copy, denied-clipboard fallback, and modal focus/scroll restoration.
 
-Screenshots are written to `/tmp/food-picker-*.png`, `/tmp/bodycomp-*.png`, and `/tmp/task-edit-*.png`.
+Screenshots are written to `/tmp/food-picker-*.png`, `/tmp/bodycomp-*.png`, `/tmp/progress-export-*.png`, and `/tmp/task-edit-*.png`.
 
 WebKit and viewport resizing provide automated mobile coverage; they do not reproduce a physical iPhone's browser chrome or native keyboard.
