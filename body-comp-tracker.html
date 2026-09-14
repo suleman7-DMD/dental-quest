@@ -6865,7 +6865,36 @@
                 font-size: 0.85em !important;
             }
         }
+        .recent-progress { margin: 16px 0; padding: 14px; background: var(--bg-secondary); border: 1px solid var(--border-color); border-radius: 12px; }
+        .recent-progress h3 { margin: 0 0 10px; font-size: 1rem; }
+        #recentProgressList { max-height: 260px; overflow-y: auto; overscroll-behavior: contain; }
+        .recent-progress-row { display: flex; justify-content: space-between; gap: 12px; width: 100%; padding: 12px 0; background: transparent; border: 0; border-bottom: 1px solid var(--border-color); color: var(--text-primary); text-align: left; font: inherit; font-size: 0.85rem; cursor: pointer; }
+        .recent-progress-row > span { min-width: 0; overflow-wrap: anywhere; }
+        .recent-progress-row > span:last-child { text-align: right; }
+        .recent-progress-row small { display: block; margin-top: 4px; color: var(--text-muted); font-size: 0.75rem; }
+        #logModal .modal { display: flex; flex-direction: column; overflow: hidden; }
+        #logModal .modal-header { flex-shrink: 0; }
+        #logModal .modal-body { min-height: 0; overflow-y: auto; overscroll-behavior: contain; }
+        #frequentFoodsGrid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+        #frequentFoodsGrid .frequent-food-btn { min-width: 0; }
+        @media (max-width: 600px), (max-height: 500px) {
+            .modal-overlay { top: var(--modal-viewport-top, 0px); bottom: auto; height: var(--modal-viewport-height, 100dvh); padding: max(8px, env(safe-area-inset-top)) max(8px, env(safe-area-inset-right)) max(8px, env(safe-area-inset-bottom)) max(8px, env(safe-area-inset-left)); }
+            .modal-overlay .modal { max-height: 100%; min-width: 0; margin: auto; }
+            #logModal .modal-header, #logModal .modal-body { padding: 12px; }
+            #logModal .modal-close { width: 44px; height: 44px; }
+            #logModal .log-tabs { flex-wrap: wrap; overflow: visible; }
+            #logModal .log-tab { flex: 1 1 auto; min-height: 44px; }
+            #logModal input, #logModal textarea, #logModal select, #qtySelectorModal input { min-width: 0; max-width: 100%; font-size: 16px; }
+            #logModal .form-group, #logModal .log-date-center { min-width: 0; }
+            #frequentFoodsGrid { grid-template-columns: minmax(0, 1fr); max-height: none; overflow: visible; }
+            #frequentFoodsGrid .frequent-food-btn { padding-right: 52px; min-height: 64px; }
+            #frequentFoodsGrid .ff-name { white-space: normal; overflow-wrap: anywhere; }
+            #frequentFoodsGrid .ff-macros { white-space: normal; overflow-wrap: anywhere; }
+            #frequentFoodsGrid .ff-pin-btn { width: 44px; height: 44px; }
+            .ff-view-btn { min-height: 44px; }
+        }
     </style>
+    <script src="js/modal-viewport.js?v=20260914"></script>
 </head>
 <body>
     <!-- Cross-App Navigation -->
@@ -7151,6 +7180,11 @@
                 <span>💪</span>
                 <span id="simpleWorkoutText">No workouts today</span>
             </div>
+
+            <section class="recent-progress" aria-labelledby="recentProgressTitle">
+                <h3 id="recentProgressTitle">Recent progress</h3>
+                <div id="recentProgressList" tabindex="0" aria-label="Previous days, newest first"></div>
+            </section>
 
             <!-- Quick Tab Access Bar (Task 2c) -->
             <div class="quick-tab-bar">
@@ -11296,6 +11330,7 @@
             renderSimpleMealList();
             renderQuickStats();
             renderSimpleWorkoutSummary();
+            renderRecentProgress();
 
             // Restore context details collapsed/expanded state
             restoreContextDetailsState();
@@ -11304,6 +11339,25 @@
         // ============================================
         // SIMPLE VIEW ENHANCEMENTS (Task 2)
         // ============================================
+
+        function renderRecentProgress() {
+            const container = document.getElementById('recentProgressList');
+            if (!container) return;
+            const today = getLocalDateString();
+            const dates = getSortedLogDates().filter(date => date < today).reverse();
+            container.innerHTML = dates.length ? dates.map(date => {
+                const log = state.dailyLogs[date];
+                const deficit = getDisplayDeficitForDate(date);
+                const balance = deficit == null ? null : -Math.round(deficit);
+                const exercise = getWorkoutTotalsForDate(date).totalCalories;
+                const label = parseLocalDate(date).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
+                const result = balance == null ? 'Untracked' : `${balance > 0 ? '+' : balance < 0 ? '−' : ''}${formatNumber(Math.abs(balance))} cal ${balance > 0 ? 'surplus' : balance < 0 ? 'deficit' : 'maintenance'}`;
+                return `<button type="button" class="recent-progress-row" onclick="showDayDetails('${date}')">
+                    <span>${label}<small>${exercise > 0 ? `${formatNumber(exercise)} cal exercise` : 'No exercise logged'}</small></span>
+                    <span style="color:var(${balance == null || balance === 0 ? '--text-secondary' : balance < 0 ? '--accent-green' : '--accent-red'})">${result}${log.nutritionStatus === 'assumed' ? '<small>Assumed</small>' : ''}</span>
+                </button>`;
+            }).join('') : '<p>No previous days logged yet.</p>';
+        }
 
         // 2a. Render inline meal list in Simple View
         function renderSimpleMealList() {
@@ -12816,12 +12870,17 @@
             } else if (ffPickerView === 'all') {
                 foods = [...all].sort(ffSortByName);
             } else {
-                foods = all.filter(f => f.pinned || (f.uses || 0) > 0).sort(ffSortByRelevance);
-                if (foods.length === 0 && all.length > 0) {
-                    // Fresh library: nothing pinned or logged yet — don't show a dead tab
-                    foods = [...all].sort(ffSortByName);
-                    noteText = 'Nothing pinned or logged yet — showing the full library.';
-                }
+                const historyUses = new Map();
+                const recordMeals = meals => getValues(meals).forEach(meal => {
+                    const key = (meal.name || '').trim().toLowerCase();
+                    historyUses.set(key, (historyUses.get(key) || 0) + 1);
+                    if (meal.libraryId) historyUses.set(meal.libraryId, (historyUses.get(meal.libraryId) || 0) + 1);
+                });
+                recordMeals(state.today?.meals);
+                getSortedLogDates().filter(date => date !== state.today?.date).forEach(date => recordMeals(state.dailyLogs[date].meals));
+                const usage = food => Math.max(food.uses || 0, historyUses.get(food.id) || 0, historyUses.get((food.name || '').trim().toLowerCase()) || 0);
+                foods = [...all].sort((first, second) => Number(!!second.pinned) - Number(!!first.pinned) || usage(second) - usage(first) || ffSortByName(first, second));
+                noteText = 'All foods shown · pinned and commonly logged first.';
             }
 
             if (noteEl) {
@@ -12896,6 +12955,8 @@
             if (modal) modal.classList.add('active');
             logSwitchTab(tab || 'meal');
             logSetDate(logCurrentDate);
+            const body = modal?.querySelector('.modal-body');
+            if (body) body.scrollTop = 0;
         }
 
         function closeLogModal() {
@@ -24724,7 +24785,7 @@ TDEE TODAY: ~${formatNumber(calculateTDEE(getWeightForDate(state.today.date || g
             let calories = log.calories;
             let protein = log.protein;
             let carbs = log.carbs;
-            let deficit = getEffectiveDeficit(log);
+            const deficit = getDisplayDeficitForDate(dateStr);
             let tdee = log.tdee;
 
             // If calories is 0 or undefined but meals exist, recompute for DISPLAY
@@ -24738,7 +24799,6 @@ TDEE TODAY: ~${formatNumber(calculateTDEE(getWeightForDate(state.today.date || g
                 protein = totals.protein;
                 carbs = totals.carbs;
                 tdee = getTDEEForDate(dateStr);
-                deficit = tdee - calories;
             }
 
             const status = log.status || (log.perfect ? 'perfect' : deficit > 0 ? 'partial' : 'missed');
