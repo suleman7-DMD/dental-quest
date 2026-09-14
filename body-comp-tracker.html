@@ -714,7 +714,7 @@
             color: var(--text-secondary); font-size: 0.72em; font-weight: 700;
         }
         .log-today-chip:hover { color: var(--text-primary); }
-        .log-today-chip.hidden { visibility: hidden; }
+        .log-today-chip.hidden { display: none; }
         .log-tabs {
             display: flex; gap: 6px; margin-bottom: 16px;
             overflow-x: auto; -webkit-overflow-scrolling: touch; padding-bottom: 2px;
@@ -6906,8 +6906,30 @@
         #logModal .modal { display: flex; flex-direction: column; overflow: hidden; }
         #logModal .modal-header { flex-shrink: 0; }
         #logModal .modal-body { min-height: 0; overflow-y: auto; overscroll-behavior: contain; }
-        #frequentFoodsGrid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-        #frequentFoodsGrid .frequent-food-btn { min-width: 0; }
+        #frequentFoodsGrid { grid-template-columns: repeat(2, minmax(0, 1fr)); max-height: none; overflow: visible; }
+        #frequentFoodsGrid .frequent-food-btn { min-width: 0; padding-right: 76px; }
+        #frequentFoodsGrid .ff-pin-btn { width: 64px; height: 44px; opacity: 1; filter: none; color: var(--text-secondary); border: 1px solid var(--border-color); }
+        #frequentFoodsGrid .ff-pin-btn.pinned { color: var(--accent-green); border-color: var(--accent-green); }
+        .ff-select-btn { display: block; width: 100%; padding: 0; min-height: 44px; border: 0; background: transparent; text-align: left; font: inherit; cursor: pointer; }
+        .ff-select-btn .ff-name, .ff-select-btn .ff-macros { display: block; }
+        .ff-empty { grid-column: 1 / -1; padding: 16px 8px; color: var(--text-secondary); line-height: 1.5; }
+        .ff-empty p { margin: 8px 0 12px; }
+        #mealLibrarySection .ff-picker-header { position: sticky; top: -12px; z-index: 2; padding: 8px 0; background: var(--bg-secondary); }
+        #mealLibrarySection .frequent-foods-label { display: none; }
+        #mealLibrarySection .ff-view-toggle { display: flex; width: 100%; }
+        #mealLibrarySection .ff-view-btn { flex: 1; min-height: 44px; font-size: 0.85rem; }
+        .meal-action-footer { flex-shrink: 0; padding: 12px; border-top: 1px solid var(--border-color); background: var(--bg-secondary); }
+        .toast { pointer-events: none; }
+        body:has(#logModal.active) #toast, body:has(#qtySelectorModal.active) #toast { bottom: auto; top: calc(var(--modal-viewport-top, 0px) + max(8px, env(safe-area-inset-top))); width: max-content; max-width: calc(100vw - 24px); overflow-wrap: anywhere; }
+        .meal-action-footer .submit-btn { margin: 8px 0 0; min-height: 48px; }
+        .meal-entry-nav { display: flex; gap: 6px; }
+        .meal-entry-nav button { flex: 1; min-width: 0; min-height: 44px; padding: 6px; background: var(--bg-primary); border: 1px solid var(--border-color); border-radius: 8px; color: var(--text-secondary); font: inherit; font-size: 0.8rem; cursor: pointer; }
+        .meal-entry-nav button[aria-pressed="true"] { border-color: var(--accent-green); color: var(--accent-green); background: var(--accent-green-dim); }
+        #mealLibraryHint { margin-top: 8px; font-size: 0.78rem; color: var(--text-muted); text-align: center; }
+        #logModal [hidden] { display: none !important; }
+        #qtySelectorModal .modal { display: flex; flex-direction: column; overflow: hidden; }
+        #qtySelectorModal .modal-header { flex-shrink: 0; }
+        #qtySelectorModal .modal-body { min-height: 0; overflow-y: auto; overscroll-behavior: contain; }
         @media (max-width: 600px), (max-height: 500px) {
             .modal-overlay { top: var(--modal-viewport-top, 0px); bottom: auto; height: var(--modal-viewport-height, 100dvh); padding: max(8px, env(safe-area-inset-top)) max(8px, env(safe-area-inset-right)) max(8px, env(safe-area-inset-bottom)) max(8px, env(safe-area-inset-left)); }
             .modal-overlay .modal { max-height: 100%; min-width: 0; margin: auto; }
@@ -6915,13 +6937,15 @@
             #logModal .modal-close { width: 44px; height: 44px; }
             #logModal .log-tabs { flex-wrap: wrap; overflow: visible; }
             #logModal .log-tab { flex: 1 1 auto; min-height: 44px; }
+            #logModal[data-active-tab="meal"] .log-tabs { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); }
+            #logModal[data-active-tab="meal"] .log-tab { white-space: normal; padding: 6px 4px; font-size: 0.8em; }
             #logModal input, #logModal textarea, #logModal select, #qtySelectorModal input { min-width: 0; max-width: 100%; font-size: 16px; }
             #logModal .form-group, #logModal .log-date-center { min-width: 0; }
             #frequentFoodsGrid { grid-template-columns: minmax(0, 1fr); max-height: none; overflow: visible; }
-            #frequentFoodsGrid .frequent-food-btn { padding-right: 52px; min-height: 64px; }
+            #frequentFoodsGrid .frequent-food-btn { padding-right: 76px; min-height: 64px; }
             #frequentFoodsGrid .ff-name { white-space: normal; overflow-wrap: anywhere; }
             #frequentFoodsGrid .ff-macros { white-space: normal; overflow-wrap: anywhere; }
-            #frequentFoodsGrid .ff-pin-btn { width: 44px; height: 44px; }
+            #frequentFoodsGrid .ff-pin-btn { width: 64px; height: 44px; }
             .ff-view-btn { min-height: 44px; }
         }
     </style>
@@ -7896,17 +7920,16 @@
                     <input type="date" id="mealDateInput" style="display:none;">
                     <input type="date" id="quickMealDateInput" style="display:none;">
 
-                    <div class="form-group">
+                    <div class="form-group" id="mealEntryTimeGroup">
                         <label class="form-label">Time</label>
                         <input type="time" id="mealTimeInput" class="form-input">
                     </div>
 
-                    <!-- Food library picker (U1r): Frequents ⇄ All Foods, search spans both -->
-                    <div class="frequent-foods-section">
+                    <div class="frequent-foods-section" id="mealLibrarySection">
                         <div class="ff-picker-header">
                             <div class="frequent-foods-label">Food library (tap to add)</div>
                             <div class="ff-view-toggle">
-                                <button type="button" class="ff-view-btn active" id="ffViewBtnFrequents" onclick="setFfPickerView('frequents')">⭐ Frequents</button>
+                                <button type="button" class="ff-view-btn active" id="ffViewBtnFrequents" onclick="setFfPickerView('pinned')">Pinned</button>
                                 <button type="button" class="ff-view-btn" id="ffViewBtnAll" onclick="setFfPickerView('all')">📚 All Foods</button>
                             </div>
                         </div>
@@ -7918,15 +7941,16 @@
                         <button type="button" onclick="openFrequentFoodsModal()" style="width: 100%; margin-top: 10px; padding: 8px; background: var(--bg-tertiary); border: 1px dashed var(--border-color); border-radius: 8px; color: var(--text-muted); cursor: pointer; font-size: 0.85em;">⚙️ Manage Food Library</button>
                     </div>
 
+                    <div id="mealPasteSection" hidden>
                     <!-- Paste from Claude (folds Quick Log into the Meal tab) -->
                     <div class="quick-meal-divider">Paste from Claude</div>
                     <div class="quick-meal-paste">
                         <textarea id="quickMealPaste" placeholder="MEAL|Name|Calories|Protein|Carbs|Fat"></textarea>
                         <div class="quick-meal-paste-hint">Multiple lines OK • one meal per line</div>
                     </div>
-                    <button type="button" class="parse-btn" style="width:100%; margin-bottom: 14px;" onclick="parseQuickMealPaste()">Add Pasted</button>
+                    </div>
 
-                    <div class="divider">OR enter manually</div>
+                    <div id="mealManualSection" hidden>
 
                     <!-- Custom Entry -->
                     <div class="form-group">
@@ -7963,7 +7987,7 @@
                         </label>
                     </div>
 
-                    <button class="submit-btn" id="logMealSubmitBtn" onclick="addCustomMeal()">Add Meal</button>
+                    </div>
                 </div>
                 <div class="log-panel" id="logPanel-workout" data-tab="workout">
                     <input type="hidden" id="workoutDateInput">
@@ -8138,6 +8162,16 @@
                     <div id="bcSullyRouting"></div>
                     <div id="bcSullyReceipts"></div>
                 </div>
+            </div>
+            <div class="meal-action-footer" id="mealActionFooter">
+                <div class="meal-entry-nav" role="group" aria-label="Meal entry method">
+                    <button type="button" data-meal-entry="library" onclick="setMealEntryMode('library')">Foods</button>
+                    <button type="button" data-meal-entry="manual" onclick="setMealEntryMode('manual')">Enter manually</button>
+                    <button type="button" data-meal-entry="paste" onclick="setMealEntryMode('paste')">Paste meals</button>
+                </div>
+                <div id="mealLibraryHint">Tap a food to choose servings and add it.</div>
+                <button class="submit-btn" id="logMealSubmitBtn" onclick="addCustomMeal()" hidden>Add Meal</button>
+                <button class="submit-btn" id="logMealPasteSubmitBtn" onclick="parseQuickMealPaste()" hidden>Add Pasted Meals</button>
             </div>
         </div>
     </div>
@@ -12898,7 +12932,7 @@
         }
 
         // U1r picker state — session-only UI, never persisted
-        let ffPickerView = 'frequents'; // 'frequents' | 'all'
+        let ffPickerView = 'pinned';
 
         // Pinned first (regardless of usage), then most-used, then A→Z
         function ffSortByRelevance(a, b) {
@@ -12913,12 +12947,43 @@
                 (a.name || '').localeCompare(b.name || '');
         }
 
+        function setMealEntryMode(mode) {
+            document.getElementById('mealEntryTimeGroup').hidden = mode === 'library';
+            const sections = { library: 'mealLibrarySection', manual: 'mealManualSection', paste: 'mealPasteSection' };
+            Object.entries(sections).forEach(([entry, id]) => {
+                document.getElementById(id).hidden = entry !== mode;
+            });
+            document.querySelectorAll('[data-meal-entry]').forEach(button => {
+                button.setAttribute('aria-pressed', String(button.dataset.mealEntry === mode));
+            });
+            document.getElementById('logMealSubmitBtn').hidden = mode !== 'manual';
+            document.getElementById('logMealPasteSubmitBtn').hidden = mode !== 'paste';
+            document.getElementById('mealLibraryHint').hidden = mode !== 'library';
+            const body = document.querySelector('#logModal .modal-body');
+            if (body) body.scrollTop = 0;
+        }
+
         function setFfPickerView(view) {
-            ffPickerView = view === 'all' ? 'all' : 'frequents';
+            ffPickerView = view === 'all' ? 'all' : 'pinned';
             const fBtn = document.getElementById('ffViewBtnFrequents');
             const aBtn = document.getElementById('ffViewBtnAll');
-            if (fBtn) fBtn.classList.toggle('active', ffPickerView === 'frequents');
-            if (aBtn) aBtn.classList.toggle('active', ffPickerView === 'all');
+            if (fBtn) {
+                fBtn.classList.toggle('active', ffPickerView === 'pinned');
+                fBtn.setAttribute('aria-pressed', String(ffPickerView === 'pinned'));
+            }
+            if (aBtn) {
+                aBtn.classList.toggle('active', ffPickerView === 'all');
+                aBtn.setAttribute('aria-pressed', String(ffPickerView === 'all'));
+            }
+            const search = document.getElementById('ffPickerSearch');
+            if (search) {
+                search.value = '';
+                search.hidden = ffPickerView === 'pinned';
+                search.placeholder = ffPickerView === 'all' ? 'Search all foods…' : 'Search pinned foods…';
+                search.setAttribute('aria-label', search.placeholder);
+            }
+            const body = document.querySelector('#logModal .modal-body');
+            if (body) body.scrollTop = 0;
             renderFrequentFoods();
         }
 
@@ -12926,44 +12991,32 @@
             const grid = document.getElementById('frequentFoodsGrid');
             if (!grid) return;
             const noteEl = document.getElementById('ffPickerNote');
-            const query = (document.getElementById('ffPickerSearch')?.value || '').trim().toLowerCase();
+            const query = ffPickerView === 'all' ? (document.getElementById('ffPickerSearch')?.value || '').trim().toLowerCase() : '';
             const all = getValues(state.frequentFoods || {});
 
-            let foods;
-            let noteText = '';
-            if (query) {
-                // Search spans the WHOLE library no matter which view is active
-                foods = all.filter(f => (f.name || '').toLowerCase().includes(query)).sort(ffSortByRelevance);
-                if (foods.length === 0) noteText = 'No foods match your search.';
-            } else if (ffPickerView === 'all') {
-                foods = [...all].sort(ffSortByName);
-            } else {
-                const historyUses = new Map();
-                const recordMeals = meals => getValues(meals).forEach(meal => {
-                    const key = (meal.name || '').trim().toLowerCase();
-                    historyUses.set(key, (historyUses.get(key) || 0) + 1);
-                    if (meal.libraryId) historyUses.set(meal.libraryId, (historyUses.get(meal.libraryId) || 0) + 1);
-                });
-                recordMeals(state.today?.meals);
-                getSortedLogDates().filter(date => date !== state.today?.date).forEach(date => recordMeals(state.dailyLogs[date].meals));
-                const usage = food => Math.max(food.uses || 0, historyUses.get(food.id) || 0, historyUses.get((food.name || '').trim().toLowerCase()) || 0);
-                foods = [...all].sort((first, second) => Number(!!second.pinned) - Number(!!first.pinned) || usage(second) - usage(first) || ffSortByName(first, second));
-                noteText = 'All foods shown · pinned and commonly logged first.';
-            }
+            const source = ffPickerView === 'all' ? all : all.filter(food => food.pinned === true);
+            const foods = source.filter(food => (food.name || '').toLowerCase().includes(query)).sort(ffSortByName);
+            const noteText = query && source.length && !foods.length ? 'No foods match your search.' : '';
 
             if (noteEl) {
                 noteEl.textContent = noteText;
                 noteEl.style.display = noteText ? 'block' : 'none';
             }
 
-            // Tiles are divs (not <button>) so the pin control can nest inside
             grid.innerHTML = foods.map(food => `
-                <div class="frequent-food-btn" role="button" tabindex="0" onclick="openQtySelector('${food.id}')" onkeydown="if(event.key==='Enter'){openQtySelector('${food.id}')}">
-                    <button type="button" class="ff-pin-btn${food.pinned ? ' pinned' : ''}" onclick="toggleFrequentFoodPin('${food.id}', event)" title="${food.pinned ? 'Unpin' : 'Pin to Frequents'}" aria-label="${food.pinned ? 'Unpin' : 'Pin'} ${escapeHtml(food.name)}">📌</button>
-                    <div class="ff-name">${escapeHtml(food.name)}</div>
-                    <div class="ff-macros">${food.calories} cal • ${food.protein}g P${food.carbs ? ` • ${food.carbs}g C` : ''}${food.fat ? ` • ${food.fat}g F` : ''}</div>
+                <div class="frequent-food-btn">
+                    <button type="button" class="ff-select-btn" onclick="openQtySelector('${food.id}')">
+                        <span class="ff-name">${escapeHtml(food.name)}</span>
+                        <span class="ff-macros">${food.calories} cal • ${food.protein}g P${food.carbs ? ` • ${food.carbs}g C` : ''}${food.fat ? ` • ${food.fat}g F` : ''}</span>
+                    </button>
+                    <button type="button" class="ff-pin-btn${food.pinned ? ' pinned' : ''}" onclick="toggleFrequentFoodPin('${food.id}', event)" aria-pressed="${!!food.pinned}" aria-label="${food.pinned ? 'Unpin' : 'Pin'} ${escapeHtml(food.name)}">${food.pinned ? 'Unpin' : 'Pin'}</button>
                 </div>
             `).join('');
+            if (!source.length) {
+                grid.innerHTML = ffPickerView === 'pinned'
+                    ? '<div class="ff-empty"><strong>No pinned foods yet.</strong><p>Go to All Foods and pin the foods you use most.</p><button type="button" class="ff-view-btn active" onclick="setFfPickerView(\'all\')">Browse All Foods</button></div>'
+                    : '<div class="ff-empty">Your food library is empty. Enter a meal manually and save it to your library.</div>';
+            }
         }
 
         function toggleFrequentFoodPin(id, ev) {
@@ -13034,6 +13087,8 @@
 
         function logSwitchTab(tab) {
             logActiveTab = tab;
+            document.getElementById('logModal').dataset.activeTab = tab;
+            document.getElementById('mealActionFooter').hidden = tab !== 'meal';
             document.querySelectorAll('#logTabs .log-tab').forEach(btn => {
                 btn.classList.toggle('active', btn.dataset.tab === tab);
             });
@@ -13155,7 +13210,8 @@
             // Fresh picker state — a stale search query would hide the quick list
             const ffSearch = document.getElementById('ffPickerSearch');
             if (ffSearch) ffSearch.value = '';
-            setFfPickerView('frequents');
+            setFfPickerView('pinned');
+            setMealEntryMode('library');
             openLogModal('meal', initialDate);
 
             // Clear any stale "+ Another" banner + fields for a clean entry
@@ -13239,6 +13295,8 @@
             openAddMealModal(meal.date || getLocalDateString());
 
             editingMealId = mealId;
+
+            setMealEntryMode('manual');
 
             // Pre-fill the form with this meal's values (override the reset blanks)
             document.getElementById('mealNameInput').value = meal.name;
@@ -14865,10 +14923,12 @@
                                 </div>
                             </div>
 
-                            <button class="submit-btn" onclick="confirmQtyAdd()">
-                                Add ${currentQty} serving${currentQty !== 1 ? 's' : ''} (${totalCals} cal)
-                            </button>
                         </div>
+                    </div>
+                    <div class="meal-action-footer">
+                        <button class="submit-btn" onclick="confirmQtyAdd()">
+                            Add ${currentQty} serving${currentQty !== 1 ? 's' : ''} (${totalCals} cal)
+                        </button>
                     </div>
                 </div>
             `;

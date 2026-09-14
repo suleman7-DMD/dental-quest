@@ -6,7 +6,8 @@ The harness serves the actual HTML, CSS, and JavaScript locally. It uses isolate
 
 Both engines cover 320×568, 390×750, 844×390, and 1280×900 viewports:
 
-- All 45 library foods appear immediately, including a history favorite with no usage counter; search and clearing preserve the complete list.
+- Add Meal opens to explicitly pinned foods only, with an actionable empty state and no search clutter. All Foods contains all 45 fixture foods and searches the complete library. Pin/unpin never logs or deletes a food, and pin state survives a real page reload through localStorage.
+- Manual entry, meal editing, paste submission, and serving confirmation retain their existing save paths with footers outside the scrolling content.
 - Long food names fit, mobile inputs remain 16px, and food selection logs correct calories to today or a historical date and localStorage.
 - Recent progress uses canonical deficit/workout helpers, covers deficit, surplus, maintenance, assumed, legacy, and workout-only days, and does not mutate state while rendering.
 - Task editing persists its text, keeps Save Changes within the viewport, and survives a reduced viewport height. Shared long-message prompts also submit correctly.
