@@ -19,6 +19,11 @@ function getProgressExportRange(preset, today = getLocalDateString()) {
 }
 
 function generateProgressExport(start, end) {
+    // Every existing field keeps its original (raw-model) meaning; the
+    // personal TDEE calibration appears only as a separate labeled line.
+    if (typeof withRawDeficits === 'function' && _rawDeficitScope === 0) {
+        return withRawDeficits(() => generateProgressExport(start, end));
+    }
     if (!isValidImportDate(start) || !isValidImportDate(end) || start > end || end > getLocalDateString()) {
         throw new Error('Choose valid dates, with the start on or before the end and no future days.');
     }
@@ -48,11 +53,16 @@ function generateProgressExport(start, end) {
         });
         cursor.setDate(cursor.getDate() + 1);
     }
-    const knownBalances = rows.filter(row => row.deficit !== null);
-    const knownIntakes = rows.filter(row => row.intake !== null);
-    const knownExercise = rows.filter(row => row.exercise !== null);
+    // The in-progress day is listed but never totaled — a half-logged day
+    // would understate intake and overstate the balance.
+    const completedRows = rows.filter(row => !row.partial);
+    const knownBalances = completedRows.filter(row => row.deficit !== null);
+    const knownIntakes = completedRows.filter(row => row.intake !== null);
+    const knownExercise = completedRows.filter(row => row.exercise !== null);
     const summary = {
         days: rows.length,
+        completedDays: completedRows.length,
+        inProgressDays: rows.length - completedRows.length,
         balanceDays: knownBalances.length,
         intakeDays: knownIntakes.length,
         exerciseDays: knownExercise.length,
@@ -64,6 +74,18 @@ function generateProgressExport(start, end) {
         surplusDays: knownBalances.filter(row => row.deficit < 0).length,
         maintenanceDays: knownBalances.filter(row => row.deficit === 0).length
     };
+    // Optional labeled calibration line (absent when off or not in force)
+    let calibrationLine = null;
+    if (typeof getActiveCalibrationAdjustment === 'function') {
+        const calDays = knownBalances.filter(row => !row.assumed);
+        const adjTotal = calDays.reduce((sum, row) => sum + getActiveCalibrationAdjustment(row.date), 0);
+        const liveAdj = getActiveCalibrationAdjustment(state.today?.date || getLocalDateString());
+        if (adjTotal !== 0 || liveAdj !== 0) {
+            summary.calibrationAdjustmentTotal = adjTotal;
+            const sign = value => `${value > 0 ? '+' : value < 0 ? '−' : ''}${Math.abs(Math.round(value)).toLocaleString('en-US')}`;
+            calibrationLine = `Personal TDEE calibration (estimate, not included above): ${sign(liveAdj)} kcal/day in force now; applied to this period's food-logged days it would change the net balance by ${sign(adjTotal)} kcal.`;
+        }
+    }
     const number = value => value.toLocaleString('en-US', { maximumFractionDigits: 1 });
     const balance = (value, unit = 'kcal') => value === null ? 'Unknown' : `${value > 0 ? 'Deficit' : value < 0 ? 'Surplus' : 'Maintenance'}: ${number(Math.abs(value))} ${unit}`;
     const text = [
@@ -74,14 +96,16 @@ function generateProgressExport(start, end) {
         `Net balance — ${balance(summary.deficit)}`,
         `Average daily balance — ${balance(summary.balanceDays ? summary.deficit / summary.balanceDays : null, 'kcal/day')} (${summary.balanceDays} known days; ${summary.assumedDays} assumed)`,
         `Average logged intake: ${summary.intakeDays ? number(summary.intake / summary.intakeDays) + ' kcal/day' : 'Unknown'} (${summary.intakeDays} days with intake)`,
-        `Recorded exercise: ${summary.exercise === null ? 'Unknown' : number(summary.exercise) + ' kcal total'} | Average: ${summary.exercise === null ? 'Unknown' : number(summary.exercise / summary.days) + ' kcal/day over ' + summary.days + ' calendar days'}`,
-        `Exercise calories recorded: ${summary.exerciseDays}/${summary.days} days; ${rows.filter(row => row.exerciseIncomplete).length} incomplete. Other days not inferred as rest.`,
-        `Deficit days: ${summary.deficitDays} | Surplus days: ${summary.surplusDays} | Maintenance: ${summary.maintenanceDays} | Unknown balance: ${summary.days - summary.balanceDays}`,
+        `Recorded exercise: ${summary.exercise === null ? 'Unknown' : number(summary.exercise) + ' kcal total'} | Average: ${summary.exercise === null ? 'Unknown' : number(summary.exercise / summary.completedDays) + ' kcal/day over ' + summary.completedDays + ' calendar days'}`,
+        `Exercise calories recorded: ${summary.exerciseDays}/${summary.completedDays} days; ${completedRows.filter(row => row.exerciseIncomplete).length} incomplete. Other days not inferred as rest.`,
+        `Deficit days: ${summary.deficitDays} | Surplus days: ${summary.surplusDays} | Maintenance: ${summary.maintenanceDays} | Unknown balance: ${summary.completedDays - summary.balanceDays}`,
+        ...(summary.inProgressDays ? [`In progress: ${rows.filter(row => row.partial).map(row => row.date).join(', ')} — listed below, not included in totals until complete.`] : []),
+        ...(calibrationLine ? [calibrationLine] : []),
         '',
         'DAILY DATA',
         ...rows.map(row => `${row.date} | Intake: ${row.intake === null ? 'Not logged' : number(row.intake) + ' kcal'} | ${balance(row.deficit)}${row.assumed ? ' (assumed)' : ''} | Exercise: ${row.exercise === null ? (row.exerciseIncomplete ? 'Incomplete calorie data' : 'Not logged') : number(row.exercise) + ' kcal' + (row.exerciseIncomplete ? ' (incomplete)' : '')}${row.partial ? ' | In progress' : ''}`),
         '',
-        'Notes: Intake is logged food, not proof of complete intake. Unknown balances/intakes are excluded from their averages. Assumed balances are included and labeled. Today/live day is in progress. Exercise is reported separately; do not add it again to BodyComp balances. Daily kcal are rounded; totals sum the listed values.'
+        'Notes: Intake is logged food, not proof of complete intake. Unknown balances/intakes are excluded from their averages. Assumed balances are included and labeled. Today/live day is in progress and not totaled. Balances use the original TDEE model. Exercise is reported separately; do not add it again to BodyComp balances. Daily kcal are rounded; totals sum the listed completed-day values.'
     ].join('\n');
     return { text, rows, summary };
 }
