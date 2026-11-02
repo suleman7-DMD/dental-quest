@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="theme-color" content="#f8fafd">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-title" content="Calendar">
+    <meta name="description" content="Sully Calendar — events, deadlines, tasks and patient appointments, synced across the Dental Quest suite.">
+    <title>Sully Calendar</title>
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect x='6' y='10' width='52' height='48' rx='8' fill='%23fff' stroke='%231a73e8' stroke-width='4'/%3E%3Crect x='6' y='10' width='52' height='14' rx='6' fill='%231a73e8'/%3E%3Crect x='18' y='4' width='6' height='12' rx='3' fill='%231a73e8'/%3E%3Crect x='40' y='4' width='6' height='12' rx='3' fill='%231a73e8'/%3E%3Ctext x='32' y='51' font-family='Arial,Helvetica,sans-serif' font-size='24' font-weight='700' text-anchor='middle' fill='%231a73e8'%3ES%3C/text%3E%3C/svg%3E">
+    <script>
+        // Apply the per-device theme before first paint (no light→dark flash)
+        (function() {
+            try {
+                var p = JSON.parse(localStorage.getItem('dentalQuestCalendarUI') || '{}') || {};
+                var t = p.theme === 'dark' || p.theme === 'light' ? p.theme
+                    : (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+                if (t === 'dark') document.documentElement.classList.add('dark');
+                document.documentElement.setAttribute('data-theme', t);
+            } catch (e) {}
+        })();
+    </script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&family=Roboto+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,400,0..1,0&icon_names=add,apps,arrow_drop_down,assignment_late,auto_awesome,auto_stories,bedtime,bolt,bookmark_add,calendar_month,calendar_today,celebration,chair,check,check_circle,chevron_left,chevron_right,close,cloud_done,cloud_download,cloud_off,cloud_sync,cloud_upload,content_copy,content_paste,content_paste_go,delete,dentistry,done_all,download,drive_file_move,edit,error,event,event_available,expand_less,expand_more,flag,help,history,keyboard,location_on,medical_services,menu,monitor_weight,more_vert,notes,notifications,palette,person,priority_high,radio_button_unchecked,refresh,restore,rocket_launch,schedule,school,science,search,search_off,select_all,settings,smart_toy,sync,sync_problem,task_alt,tune,undo,upload_file,visibility,warning&display=block" rel="stylesheet">
+    <link rel="stylesheet" href="css/calendar.css?v=20261102">
+    <link rel="stylesheet" href="css/calendar-views.css?v=20261102">
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+</head>
+<body class="gc-sidebar-closed">
+    <header class="gc-header">
+        <div class="gc-header-left">
+            <button class="gc-icon-btn" id="gcMenuBtn" title="Main menu" aria-label="Main menu"><span class="ms" aria-hidden="true">menu</span></button>
+            <a class="gc-brand" href="calendar.html" title="Sully Calendar">
+                <span class="gc-logo" aria-hidden="true">
+                    <svg viewBox="0 0 40 40" width="40" height="40"><rect x="4" y="6" width="32" height="30" rx="5" fill="#fff" stroke="#1a73e8" stroke-width="2.5"/><path d="M4 11a5 5 0 0 1 5-5h22a5 5 0 0 1 5 5v3H4z" fill="#1a73e8"/><rect x="11" y="2.5" width="3.5" height="7" rx="1.75" fill="#1a73e8"/><rect x="25.5" y="2.5" width="3.5" height="7" rx="1.75" fill="#1a73e8"/></svg>
+                    <span class="gc-logo-num" id="gcTodayNum"></span>
+                </span>
+                <span class="gc-brand-name">Calendar</span>
+            </a>
+            <button class="gc-btn outlined gc-today-btn" id="gcTodayBtn">Today</button>
+            <span class="gc-nav-arrows">
+                <button class="gc-icon-btn" id="gcPrevBtn" title="Previous (K)" aria-label="Previous period"><span class="ms" aria-hidden="true">chevron_left</span></button>
+                <button class="gc-icon-btn" id="gcNextBtn" title="Next (J)" aria-label="Next period"><span class="ms" aria-hidden="true">chevron_right</span></button>
+            </span>
+            <button class="gc-period" id="gcPeriodLabel" title="Go to date (G)"></button>
+        </div>
+        <div class="gc-header-right">
+            <div class="gc-search-box" id="gcSearchBox">
+                <span class="ms" aria-hidden="true">search</span>
+                <input type="search" id="gcSearchInput" placeholder="Search events, patients, notes" aria-label="Search" autocomplete="off" spellcheck="false">
+                <button class="gc-icon-btn sm" id="gcSearchClear" title="Clear search" aria-label="Clear search" hidden><span class="ms" aria-hidden="true">close</span></button>
+            </div>
+            <button class="gc-icon-btn gc-search-btn" id="gcSearchBtn" title="Search (/)" aria-label="Search"><span class="ms" aria-hidden="true">search</span></button>
+            <button class="gc-btn tonal sm gc-import-btn" id="gcImportBtn" title="Paste from Claude (I)"><span class="ms" aria-hidden="true">content_paste</span><span class="gc-hide-sm">Import</span></button>
+            <button class="gc-icon-btn gc-sync busy" id="gcSyncBtn" title="Sync" aria-label="Sync status"><span class="ms" id="gcSyncIcon" aria-hidden="true">cloud_sync</span></button>
+            <button class="gc-icon-btn gc-hide-phone" id="gcHelpBtn" title="Keyboard shortcuts (?)" aria-label="Keyboard shortcuts"><span class="ms" aria-hidden="true">help</span></button>
+            <button class="gc-icon-btn gc-hide-phone" id="gcSettingsBtn" title="Settings (S)" aria-label="Settings"><span class="ms" aria-hidden="true">settings</span></button>
+            <button class="gc-btn outlined gc-view-btn" id="gcViewBtn" aria-haspopup="menu" title="Change view"><span id="gcViewLabel">Week</span><span class="ms" aria-hidden="true">arrow_drop_down</span></button>
+            <div class="gc-apps-wrap">
+                <button class="gc-icon-btn" id="gcAppsBtn" title="Dental Quest apps" aria-label="Dental Quest apps" aria-expanded="false"><span class="ms" aria-hidden="true">apps</span></button>
+                <nav class="gc-apps-panel" id="gcAppsPanel" hidden aria-label="Dental Quest apps">
+                    <a class="gc-app" href="index.html"><span class="gc-app-ic" style="background:#7c4dff"><span class="ms" aria-hidden="true">rocket_launch</span></span>Quest</a>
+                    <a class="gc-app" href="graduation-roadmap.html"><span class="gc-app-ic" style="background:#0b8043"><span class="ms" aria-hidden="true">school</span></span>Roadmap</a>
+                    <a class="gc-app" href="stimulant-elimination-calculator.html"><span class="gc-app-ic" style="background:#3f51b5"><span class="ms" aria-hidden="true">bedtime</span></span>Sleep Calc</a>
+                    <a class="gc-app" href="body-comp-tracker.html"><span class="gc-app-ic" style="background:#f4511e"><span class="ms" aria-hidden="true">monitor_weight</span></span>Body Comp</a>
+                    <a class="gc-app" href="lecture-prompt-transformer.html"><span class="gc-app-ic" style="background:#8e24aa"><span class="ms" aria-hidden="true">auto_stories</span></span>Lectures</a>
+                    <a class="gc-app current" href="calendar.html" aria-current="page"><span class="gc-app-ic" style="background:#1a73e8"><span class="ms" aria-hidden="true">calendar_month</span></span>Calendar</a>
+                </nav>
+            </div>
+        </div>
+    </header>
+
+    <div class="gc-body">
+        <aside class="gc-sidebar" id="gcSidebar" aria-label="Calendar sidebar">
+            <div class="gc-side-top">
+                <button class="gc-create" id="gcCreateBtn" aria-haspopup="menu">
+                    <span class="gc-create-plus" aria-hidden="true"><svg viewBox="0 0 36 36" width="32" height="32"><path fill="#34A853" d="M16 16v14h4V20z"/><path fill="#4285F4" d="M30 16H20l-4 4h14z"/><path fill="#FBBC05" d="M6 16v4h10l4-4z"/><path fill="#EA4335" d="M20 16V6h-4v14z"/></svg></span>
+                    <span>Create</span><span class="ms" aria-hidden="true">arrow_drop_down</span>
+                </button>
+            </div>
+            <div class="gc-quick-add">
+                <span class="ms" aria-hidden="true">bolt</span>
+                <input id="gcQuickInput" placeholder="Quick add: Dentist fri 3pm @ BU" aria-label="Quick add event" autocomplete="off" spellcheck="false">
+                <div class="gc-quick-preview" id="gcQuickPreview" hidden></div>
+            </div>
+            <div class="gc-mini" id="gcMiniCal"></div>
+            <div class="gc-upnext" id="gcUpNext"></div>
+            <div class="gc-cal-lists" id="gcCalLists"></div>
+            <div class="gc-side-foot">
+                <div class="gc-side-actions">
+                    <button class="gc-btn text sm" onclick="openImportDialog('paste')"><span class="ms" aria-hidden="true">content_paste</span>Import</button>
+                    <button class="gc-btn text sm" onclick="openSettings()"><span class="ms" aria-hidden="true">settings</span>Settings</button>
+                    <button class="gc-btn text sm" onclick="showCheckpointManager()"><span class="ms" aria-hidden="true">history</span>Backups</button>
+                </div>
+                <div class="gc-sync-detail"><span class="ms" aria-hidden="true">sync</span><span id="gcSyncDetail">Connecting…</span></div>
+                <div class="gc-suite-links">
+                    <a href="index.html">Quest</a><a href="graduation-roadmap.html">Roadmap</a><a href="stimulant-elimination-calculator.html">Sleep Calc</a><a href="body-comp-tracker.html">Body Comp</a>
+                </div>
+            </div>
+        </aside>
+        <div class="gc-scrim" id="gcScrim"></div>
+        <main class="gc-main" id="gcMain" aria-live="off"></main>
+    </div>
+
+    <button class="gc-fab" id="gcFab" aria-label="Create" aria-haspopup="menu"><span class="ms" aria-hidden="true">add</span></button>
+    <div class="gc-toast" id="gcToast" role="status" aria-live="polite"></div>
+    <div id="gcPopoverRoot"></div>
+    <div id="gcModalRoot"></div>
+
+    <script src="js/calendar/state.js?v=20261102"></script>
+    <script src="js/calendar/recurrence.js?v=20261102"></script>
+    <script src="js/calendar/parse.js?v=20261102"></script>
+    <script src="js/calendar/importer.js?v=20261102"></script>
+    <script src="js/calendar/resolve.js?v=20261102"></script>
+    <script src="js/calendar/firebase-sync.js?v=20261102"></script>
+    <script src="js/calendar/events.js?v=20261102"></script>
+    <script src="js/calendar/ui-core.js?v=20261102"></script>
+    <script src="js/calendar/editor.js?v=20261102"></script>
+    <script src="js/calendar/import-ui.js?v=20261102"></script>
+    <script src="js/calendar/render-grid.js?v=20261102"></script>
+    <script src="js/calendar/render-month.js?v=20261102"></script>
+    <script src="js/calendar/render-agenda.js?v=20261102"></script>
+    <script src="js/calendar/dragdrop.js?v=20261102"></script>
+    <script src="js/calendar/sidebar.js?v=20261102"></script>
+    <script src="js/calendar/settings.js?v=20261102"></script>
+    <script src="js/calendar/init.js?v=20261102"></script>
+</body>
+</html>

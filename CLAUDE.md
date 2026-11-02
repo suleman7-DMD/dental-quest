@@ -267,6 +267,7 @@ const date = new Date(year, month - 1, day);
 | `stimulant-elimination-calculator.html` + `js/stimcalc/*.js` (12 modules) | Sleep prediction: pharmacokinetics, circadian, workout planning |
 | `body-comp-tracker.html` (~22,444 lines, single file) | Calorie/protein/workout tracking, cross-app ecosystem |
 | `lecture-prompt-transformer.html` (~2,800 lines) | Lecture notes prompt builder (standalone) |
+| `calendar.html` + `js/calendar/*.js` (17 modules) + `css/calendar*.css` | Sully Calendar (Nov 2026): standalone Google-Calendar clone — events/tasks/deadlines/appointments, SULLYCAL-1 paste import (Grad Roadmap APPOINTMENTS compatible; other apps' blocks skipped). Firebase `sullyCalendar`, localStorage `dentalQuestCalendar*`. Per-record newer-wins merge + tombstones. Webchat grammar: `docs/sully-calendar-webchat-instructions.md` (keep in sync with `CLAUDE_GRAMMAR_TEXT` in import-ui.js). Tests: `node --test tests/calendar/*.test.mjs` |
 
 - **Ground Truth**: `docs/GROUND_TRUTH_REQUIREMENTS.md` — canonical source for graduation requirement IDs, counts, deadlines, completion status.
 - **Brand**: "SULEMAN SHAIKH, DMD". localStorage keys use `dentalQuest*` prefix.
@@ -314,7 +315,8 @@ users/user_[hashedPin]/
 ├── stimulantCalculator/ (state: meds, caffeine, sleep, history, workouts, settings)
 ├── graduationRoadmap/   (grades, deadlines, monthlyPlanner, clinicalData, todoList, graduationPrep, periodicReviews, competencies, patientRecords, dashboardSnapshots, missingNotes)
 ├── d3Roadmap/           (DEAD — migration fallback only)
-└── bodyCompTracker/     (state: profile, today, meals, workouts, weighIns, dailyLogs, gamification)
+├── bodyCompTracker/     (state: profile, today, meals, workouts, weighIns, dailyLogs, gamification)
+└── sullyCalendar/       (state: events, calendars, settings, tombstones, _stamps; lastUpdated)
 ```
 
 ### Sync Pattern (All 4 Apps)
