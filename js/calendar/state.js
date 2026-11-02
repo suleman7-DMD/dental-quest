@@ -617,6 +617,14 @@ function safeLocalStorageSet(key, value) {
                 'bodycomp_backups', 'stimcalc_backups', 'd3RoadmapData',
                 'bodyCompCheckpoints', 'stimCalcCheckpoints', CHECKPOINT_KEY, FIRED_KEY
             ];
+            // Other apps' cloud-backed checkpoint caches (raw PIN → base64 hash, as they key them)
+            var pin = localStorage.getItem('dentalQuestPin');
+            if (pin) {
+                try {
+                    var h = btoa(pin).replace(/[^a-zA-Z0-9]/g, '');
+                    expendable.push('dentalQuest_checkpoints_' + h, 'gradRoadmap_checkpoints_' + h, 'd3roadmap_checkpoints_' + h);
+                } catch (ignore) {}
+            }
             expendable.forEach(function(k) {
                 if (k === key) return;
                 try { localStorage.removeItem(k); } catch (ignore) {}

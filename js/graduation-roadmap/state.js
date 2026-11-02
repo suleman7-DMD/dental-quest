@@ -647,6 +647,8 @@ function safeLocalStorageSet(key, value) {
             ];
             var pinHash = localStorage.getItem('dentalQuestPin');
             if (pinHash) {
+                // Stored value is the raw PIN; checkpoint keys use its base64 hash
+                try { pinHash = btoa(pinHash).replace(/[^a-zA-Z0-9]/g, ''); } catch (ignore) {}
                 expendableKeys.push(
                     'dentalQuest_checkpoints_' + pinHash,
                     'gradRoadmap_checkpoints_' + pinHash,

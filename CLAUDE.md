@@ -53,6 +53,7 @@ const date = new Date(year, month - 1, day);
 - **Firebase array→object corruption**: ALL collection access MUST use `getValues()` for reads. Applies to: `appointments`, `completedProcedures`, `patientRecords`, `completedTasks`, `customTasks`, `customDeadlines`, `dashboardSnapshots`, `briefHistory`, `importedRequirements`, competency `sections`/`items`, any stored collection. NEVER use `Object.values()` on Firebase-stored data.
 - **`showCustomConfirm()` already escapes**: Function calls `escapeHtml(message)` internally. Callers must NOT pre-escape — causes double-encoding (`&` → `&amp;amp;`).
 - **`propagateClinicalChanges()` calls dpSync**: Already calls `dpSyncAppointmentsToTimeline()` internally. Do NOT call dpSync separately after propagation — causes duplicate sync.
+- **Shared localStorage quota (Nov 2026)**: All apps on `suleman7-dmd.github.io` share ~5.24M chars. `dentalQuestPin` holds the RAW PIN — checkpoint keys use `btoa(pin).replace(/[^a-zA-Z0-9]/g,'')`; every `safeLocalStorageSet` cleanup must hash it (was silently never freeing index.html's checkpoint cache). Body-comp checkpoints are full-history copies (~2.4MB for 300 days): cloud node `users/<hash>/bodyCompTrackerCheckpoints` (SIBLING of userPath — the realtime listener reads all of userPath), per-child writes via a serialized queue, list loaded lazily (manager open / first create), localStorage cache capped at `CHECKPOINT_LOCAL_BUDGET` (1.5M chars) and written quietly. `persistStateToLocal()` steps the offline window 90→45→21→7 days before warning (once per session).
 
 ### Sync & Merge Rules
 - **`mergeRemoteState`**: Compare `lastSaved` — if local newer, call `mergeRemoteCollectionsIntoLocal(data)` (NOT skip entirely).
@@ -316,6 +317,7 @@ users/user_[hashedPin]/
 ├── graduationRoadmap/   (grades, deadlines, monthlyPlanner, clinicalData, todoList, graduationPrep, periodicReviews, competencies, patientRecords, dashboardSnapshots, missingNotes)
 ├── d3Roadmap/           (DEAD — migration fallback only)
 ├── bodyCompTracker/     (state: profile, today, meals, workouts, weighIns, dailyLogs, gamification)
+├── bodyCompTrackerCheckpoints/ (list/<cp_key>: full-history checkpoints, newest 5 — never under bodyCompTracker/)
 └── sullyCalendar/       (state: events, calendars, settings, tombstones, _stamps; lastUpdated)
 ```
 

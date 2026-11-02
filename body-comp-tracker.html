@@ -9571,36 +9571,75 @@
         // ============================================
         // SAFE LOCALSTORAGE WRITE (Quota Protection — Cross-App Cleanup)
         // ============================================
-        function safeLocalStorageSet(key, value) {
+        // localStorage (~5MB) is shared by every app on suleman7-dmd.github.io.
+        // Checkpoints are FULL-history state copies — every dailyLog with its
+        // meals, ecosystem snapshot and logic log — so they live in the cloud
+        // (sibling node, see CHECKPOINT STORE) and only a size-capped cache is
+        // kept locally. The cache must never crowd out the live state.
+        const CHECKPOINT_LIMIT = 5;
+        const CHECKPOINT_LOCAL_KEY = 'bodyCompCheckpoints';
+        const CHECKPOINT_LOCAL_BUDGET = 1500000; // chars
+        let storageFullWarned = false;
+
+        // Frees what can go without losing anything: legacy keys, other apps'
+        // backup caches, their cloud-backed checkpoint caches (index.html and
+        // Grad Roadmap keep checkpoints in Firebase), and our own checkpoint
+        // cache (the cloud + in-memory copies survive).
+        function freeSharedLocalStorage(exceptKey) {
+            var keys = [
+                'dentalquest_backups', 'graduationRoadmapBackup', 'd3RoadmapBackup',
+                'bodycomp_backups', 'stimcalc_backups', 'd3RoadmapData',
+                'stimCalcCheckpoints', CHECKPOINT_LOCAL_KEY
+            ];
+            var pin = localStorage.getItem('dentalQuestPin');
+            if (pin) {
+                // The stored value is the raw PIN; checkpoint keys use its base64 hash
+                var h = pin;
+                try { h = btoa(pin).replace(/[^a-zA-Z0-9]/g, ''); } catch (ignore) {}
+                keys.push('dentalQuest_checkpoints_' + h, 'gradRoadmap_checkpoints_' + h, 'd3roadmap_checkpoints_' + h);
+            }
+            keys.forEach(function(k) {
+                if (k === exceptKey) return;
+                try { localStorage.removeItem(k); } catch (ignore) {}
+            });
+        }
+
+        function getLocalStorageUsage() {
+            var rows = [], total = 0;
+            try {
+                for (var i = 0; i < localStorage.length; i++) {
+                    var k = localStorage.key(i);
+                    var n = k.length + (localStorage.getItem(k) || '').length;
+                    total += n;
+                    rows.push({ key: k, size: n });
+                }
+            } catch (ignore) {}
+            rows.sort(function(a, b) { return b.size - a.size; });
+            return { total: total, rows: rows };
+        }
+
+        // quiet: skip the user-facing warning (callers that retry smaller)
+        function safeLocalStorageSet(key, value, quiet) {
             try {
                 localStorage.setItem(key, value);
                 return true;
             } catch (e) {
-                if (e.name === 'QuotaExceededError' || e.code === 22) {
-                    console.warn('localStorage quota exceeded, running cross-app cleanup...');
-                    // Cross-app cleanup: remove ALL known expendable keys from ALL apps
-                    var expendableKeys = [
-                        'dentalquest_backups', 'graduationRoadmapBackup', 'd3RoadmapBackup',
-                        'bodycomp_backups', 'stimcalc_backups', 'd3RoadmapData',
-                        'stimCalcCheckpoints'
-                    ];
-                    var pinHash = localStorage.getItem('dentalQuestPin');
-                    if (pinHash) {
-                        expendableKeys.push(
-                            'dentalQuest_checkpoints_' + pinHash,
-                            'gradRoadmap_checkpoints_' + pinHash,
-                            'd3roadmap_checkpoints_' + pinHash
-                        );
-                    }
-                    expendableKeys.forEach(function(k) {
-                        try { localStorage.removeItem(k); } catch(ignore) {}
-                    });
+                if (e.name === 'QuotaExceededError' || e.code === 22 || e.code === 1014) {
+                    console.warn('localStorage quota exceeded writing ' + key + ', running cross-app cleanup...');
+                    freeSharedLocalStorage(key);
                     try {
                         localStorage.setItem(key, value);
                         return true;
                     } catch (e2) {
-                        console.error('Storage full even after cross-app cleanup');
-                        if (typeof showToast === 'function') showToast('Storage full - saved to cloud only', 'warning');
+                        var usage = getLocalStorageUsage();
+                        console.error('Storage full even after cross-app cleanup — ' + key + ' needs ' + value.length +
+                            ' chars; in use ' + usage.total + ':', usage.rows.slice(0, 8).map(function(r) { return r.key + ' ' + r.size; }).join(', '));
+                        if (!quiet && !storageFullWarned && typeof showToast === 'function') {
+                            storageFullWarned = true;
+                            var cloud = false;
+                            try { cloud = firebaseSyncEnabled; } catch (ignore) {} // declared later in this script
+                            showToast(cloud ? 'Device storage full — saved to cloud only' : 'Device storage full — export a backup', 'warning');
+                        }
                         return false;
                     }
                 }
@@ -20587,15 +20626,28 @@ CALIBRATED DEFICIT (estimate): ${formatSignedKcal(deficit + exportCal.current)} 
         // all 4 apps.
         function persistStateToLocal() {
             const stateForLocal = JSON.parse(JSON.stringify(state));
-            if (firebaseSyncEnabled && stateForLocal.dailyLogs && typeof stateForLocal.dailyLogs === 'object') {
-                const cutoff = new Date();
-                cutoff.setDate(cutoff.getDate() - 90);
-                const cutoffStr = getLocalDateString(cutoff);
-                Object.keys(stateForLocal.dailyLogs).forEach(key => {
-                    if (key < cutoffStr) delete stateForLocal.dailyLogs[key];
-                });
+            const logs = stateForLocal.dailyLogs;
+            if (!firebaseSyncEnabled || !logs || typeof logs !== 'object') {
+                return safeLocalStorageSet('bodyCompTrackerState', JSON.stringify(stateForLocal));
             }
-            return safeLocalStorageSet('bodyCompTrackerState', JSON.stringify(stateForLocal));
+            // If the shared quota is still full at 90 days, keep a shorter
+            // offline window instead of no offline copy at all — cloud-only
+            // days are restored by mergeDailyLogs on the next cloud load.
+            const windows = [90, 45, 21, 7];
+            for (let i = 0; i < windows.length; i++) {
+                const cutoff = new Date();
+                cutoff.setDate(cutoff.getDate() - windows[i]);
+                const cutoffStr = getLocalDateString(cutoff);
+                Object.keys(logs).forEach(key => {
+                    if (key < cutoffStr) delete logs[key];
+                });
+                const lastTry = i === windows.length - 1;
+                if (safeLocalStorageSet('bodyCompTrackerState', JSON.stringify(stateForLocal), !lastTry)) {
+                    if (i > 0) console.warn('bodyCompTrackerState stored with a ' + windows[i] + '-day offline window (device storage full)');
+                    return true;
+                }
+            }
+            return false;
         }
 
         function loadState() {
@@ -21182,6 +21234,86 @@ CALIBRATED DEFICIT (estimate): ${formatSignedKcal(deficit + exportCal.current)} 
         // ============================================
         // CHECKPOINT SYSTEM - MANUAL BACKUP/RESTORE
         // ============================================
+        // CHECKPOINT STORE: the cloud node users/<hash>/bodyCompTrackerCheckpoints
+        // is the source of truth; checkpointCache holds the session's list
+        // (newest first, CHECKPOINT_LIMIT) and localStorage only a best-effort
+        // copy within CHECKPOINT_LOCAL_BUDGET. The cloud node is a SIBLING of
+        // userPath: the realtime listener and every load read all of userPath,
+        // so checkpoints stored under it were re-downloaded on every sync.
+        let checkpointCache = null;
+
+        function checkpointSortKey(cp) {
+            return String((cp && (cp.addedAt || cp.timestamp)) || '');
+        }
+
+        function checkpointCloudKey(cp) {
+            return 'cp_' + checkpointSortKey(cp).replace(/[^0-9A-Za-z]/g, '_');
+        }
+
+        function normalizeCheckpointList(list, limit = CHECKPOINT_LIMIT) {
+            const seen = {};
+            return (Array.isArray(list) ? list : getValues(list))
+                .filter(cp => cp && typeof cp === 'object' && (cp.state || cp.data))
+                .sort((a, b) => checkpointSortKey(b).localeCompare(checkpointSortKey(a)))
+                .filter(cp => {
+                    const k = checkpointSortKey(cp);
+                    if (seen[k]) return false;
+                    seen[k] = true;
+                    return true;
+                })
+                .slice(0, limit);
+        }
+
+        function getCheckpointList() {
+            if (!checkpointCache) {
+                let local = [];
+                try { local = JSON.parse(localStorage.getItem(CHECKPOINT_LOCAL_KEY) || '[]'); } catch (e) { local = []; }
+                checkpointCache = normalizeCheckpointList(local);
+            }
+            return checkpointCache;
+        }
+
+        // Newest first; drops the oldest until the copy fits the budget and the
+        // quota. Plain setItem on purpose — a cache write must never run the
+        // cross-app cleanup or warn the user.
+        function cacheCheckpointsLocally(list) {
+            try { localStorage.removeItem(CHECKPOINT_LOCAL_KEY); } catch (e) {}
+            const keep = list.slice();
+            while (keep.length) {
+                const json = JSON.stringify(keep);
+                if (json.length <= CHECKPOINT_LOCAL_BUDGET) {
+                    try {
+                        localStorage.setItem(CHECKPOINT_LOCAL_KEY, json);
+                        return keep.length;
+                    } catch (e) { /* quota — drop the oldest and retry */ }
+                }
+                keep.pop();
+            }
+            return 0;
+        }
+
+        function setCheckpointList(list) {
+            checkpointCache = normalizeCheckpointList(list);
+            cacheCheckpointsLocally(checkpointCache);
+            return checkpointCache;
+        }
+
+        function getCloudCheckpointRef() {
+            if (!firebaseSyncEnabled || !database || !userPath || !/\/bodyCompTracker$/.test(userPath)) return null;
+            return database.ref(userPath.replace(/\/bodyCompTracker$/, '/bodyCompTrackerCheckpoints'));
+        }
+
+        // Child keys known to be in the cloud node; null until the first load
+        // completes (no trimming before then — we don't know what is there)
+        let cloudCheckpointKeys = null;
+        let checkpointCloudQueue = Promise.resolve();
+
+        // Cloud checkpoint work runs one task at a time, so a boot-time
+        // createCheckpoint and the load/migration never interleave
+        function queueCheckpointCloud(task) {
+            checkpointCloudQueue = checkpointCloudQueue.then(task).catch(err => console.error('Checkpoint sync failed:', err));
+            return checkpointCloudQueue;
+        }
 
         function createCheckpoint(name = null) {
             const timestamp = new Date().toISOString();
@@ -21194,78 +21326,108 @@ CALIBRATED DEFICIT (estimate): ${formatSignedKcal(deficit + exportCal.current)} 
                 source: 'manual'
             };
 
-            // Get existing checkpoints
-            let checkpoints = JSON.parse(localStorage.getItem('bodyCompCheckpoints') || '[]');
-
-            // Add new checkpoint at the beginning
-            checkpoints.unshift(checkpoint);
-
-            // Keep only last 5 checkpoints
-            if (checkpoints.length > 5) {
-                checkpoints = checkpoints.slice(0, 5);
-            }
-
-            safeLocalStorageSet('bodyCompCheckpoints', JSON.stringify(checkpoints));
+            setCheckpointList([checkpoint, ...getCheckpointList()]);
 
             // Also sync to Firebase for cross-device restore
-            saveCheckpointsToFirebase();
+            saveCheckpointsToFirebase({ add: [checkpoint] });
 
             showToast('✅ Checkpoint created: ' + checkpointName);
             return checkpoint;
         }
 
-        // Firebase checkpoint storage for cross-device restore
-        async function saveCheckpointsToFirebase() {
-            if (!firebaseSyncEnabled || !database || !userPath) return;
+        // Firebase checkpoint storage for cross-device restore. Writes one child
+        // per checkpoint and never replaces the whole node, so a device whose
+        // cache could not hold every checkpoint cannot delete the others.
+        // changes: { add: [checkpoints], remove: [checkpoints] }
+        function saveCheckpointsToFirebase(changes = {}) {
+            const ref = getCloudCheckpointRef();
+            if (!ref) return Promise.resolve();
 
-            try {
-                const checkpoints = JSON.parse(localStorage.getItem('bodyCompCheckpoints') || '[]');
-                const checkpointMap = {};
-                checkpoints.forEach((checkpoint, index) => {
-                    const key = 'cp_' + String(checkpoint.timestamp || index).replace(/[^0-9A-Za-z]/g, '_');
-                    checkpointMap[key] = checkpoint;
-                });
-                await database.ref(userPath + '/checkpoints').set({
-                    list: checkpointMap,
-                    lastUpdated: new Date().toISOString()
-                });
-            } catch (err) {
-                console.error('Checkpoint sync failed:', err);
-            }
-        }
-
-        async function loadCheckpointsFromFirebase() {
-            if (!firebaseSyncEnabled || !database || !userPath) return;
-
-            try {
-                const snapshot = await database.ref(userPath + '/checkpoints').once('value');
-                const data = snapshot.val();
-                const cloudCheckpoints = getValues(data?.list);
-                if (cloudCheckpoints.length > 0) {
-                    // Merge with local checkpoints (cloud wins for duplicates by timestamp)
-                    let localCheckpoints = JSON.parse(localStorage.getItem('bodyCompCheckpoints') || '[]');
-                    const merged = [...cloudCheckpoints];
-
-                    // Add local checkpoints not in cloud
-                    localCheckpoints.forEach(local => {
-                        if (!merged.some(cloud => cloud.timestamp === local.timestamp)) {
-                            merged.push(local);
-                        }
-                    });
-
-                    // Sort by timestamp descending, keep last 10
-                    merged.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
-                    const final = merged.slice(0, 10);
-
-                    safeLocalStorageSet('bodyCompCheckpoints', JSON.stringify(final));
+            return queueCheckpointCloud(async () => {
+                for (const cp of (changes.add || [])) {
+                    const key = checkpointCloudKey(cp);
+                    await ref.child('list/' + key).set(makeFirebaseSafe(cp));
+                    if (cloudCheckpointKeys) cloudCheckpointKeys.add(key);
                 }
-            } catch (err) {
-                console.error('Failed to load checkpoints from Firebase:', err);
-            }
+                for (const cp of (changes.remove || [])) {
+                    const key = checkpointCloudKey(cp);
+                    await ref.child('list/' + key).remove();
+                    if (cloudCheckpointKeys) cloudCheckpointKeys.delete(key);
+                }
+                // Trimming needs the cloud's keys — read the list now if this
+                // session hasn't yet (creates are rare: restores, force sync)
+                if (!cloudCheckpointKeys) await loadCheckpointsNow(ref);
+                // Rolling window — keys embed the ISO sort key, so they sort by age
+                const stale = [...cloudCheckpointKeys].sort().reverse().slice(CHECKPOINT_LIMIT);
+                for (const key of stale) {
+                    await ref.child('list/' + key).remove();
+                    cloudCheckpointKeys.delete(key);
+                }
+                await ref.child('lastUpdated').set(new Date().toISOString());
+            });
         }
+
+        // Unqueued body — callers must already hold the checkpoint queue
+        async function loadCheckpointsNow(ref) {
+            const legacyRef = database.ref(userPath + '/checkpoints');
+            const [snapshot, legacySnapshot] = await Promise.all([
+                ref.child('list').once('value'),
+                legacyRef.child('list').once('value')
+            ]);
+            const cloud = snapshot.val() || {};
+            const keys = new Set(Object.keys(cloud));
+            const legacy = getValues(legacySnapshot.val()).filter(cp => cp && typeof cp === 'object' && (cp.state || cp.data));
+            if (legacy.length > 0) {
+                // One-time move out of userPath: copy EVERY legacy checkpoint
+                // first, remove the legacy branch only after all copies landed
+                // (an interrupted move resumes on the next boot). The next
+                // save trims to CHECKPOINT_LIMIT.
+                for (const cp of legacy) {
+                    const key = checkpointCloudKey(cp);
+                    if (keys.has(key)) continue;
+                    await ref.child('list/' + key).set(makeFirebaseSafe(cp));
+                    keys.add(key);
+                }
+                await legacyRef.remove();
+                console.log('📦 Moved ' + legacy.length + ' cloud checkpoints out of the synced app node');
+            }
+            cloudCheckpointKeys = keys;
+            setCheckpointList(getValues(cloud).concat(legacy, getCheckpointList()));
+        }
+
+        function loadCheckpointsFromFirebase() {
+            const ref = getCloudCheckpointRef();
+            if (!ref) return Promise.resolve();
+            return queueCheckpointCloud(() => loadCheckpointsNow(ref));
+        }
+
+        // Boot: only the one-time legacy move. Once it is done this reads an
+        // empty node, so opening the app downloads no checkpoints — the list
+        // is read lazily (checkpoint manager, first create).
+        function migrateLegacyCheckpoints() {
+            const ref = getCloudCheckpointRef();
+            if (!ref) return Promise.resolve();
+            return queueCheckpointCloud(async () => {
+                if (cloudCheckpointKeys) return;
+                const legacy = await database.ref(userPath + '/checkpoints/list').once('value');
+                if (legacy.val()) await loadCheckpointsNow(ref);
+            });
+        }
+
+        let checkpointCloudLoadTried = false;
 
         function showCheckpointManager() {
-            const checkpoints = JSON.parse(localStorage.getItem('bodyCompCheckpoints') || '[]');
+            const checkpoints = getCheckpointList();
+            // First open this session: fetch the cloud list, then re-render once
+            if (!cloudCheckpointKeys && !checkpointCloudLoadTried && getCloudCheckpointRef()) {
+                checkpointCloudLoadTried = true;
+                loadCheckpointsFromFirebase().then(() => {
+                    if (cloudCheckpointKeys && document.getElementById('checkpoint-modal')) {
+                        document.getElementById('checkpoint-modal').remove();
+                        showCheckpointManager();
+                    }
+                });
+            }
 
             let checkpointListHTML = '';
             if (checkpoints.length === 0) {
@@ -21315,6 +21477,8 @@ CALIBRATED DEFICIT (estimate): ${formatSignedKcal(deficit + exportCal.current)} 
                         ${checkpointListHTML}
                     </div>
 
+                    <p style="color: #888; font-size: 0.78em; line-height: 1.5; margin: 8px 0 0;">${storageUsageLine()}</p>
+
                     <div class="force-sync-section">
                         <h3>⚠️ Force Sync (Use with caution)</h3>
                         <div class="force-sync-buttons">
@@ -21333,9 +21497,16 @@ CALIBRATED DEFICIT (estimate): ${formatSignedKcal(deficit + exportCal.current)} 
             document.body.appendChild(modal);
         }
 
+        function storageUsageLine() {
+            const usage = getLocalStorageUsage();
+            const mb = n => (n / 1048576).toFixed(n < 104858 ? 2 : 1);
+            const top = usage.rows.slice(0, 4).map(r => escapeHtml(r.key) + ' ' + mb(r.size) + ' MB').join(' · ');
+            return `💽 Device storage (shared by all suite apps, ~5 MB): ${mb(usage.total)} MB used${top ? ' — ' + top : ''}. ` +
+                `Checkpoints are kept in the cloud${checkpointCloudLoadTried && !cloudCheckpointKeys ? ' — loading…' : ''}.`;
+        }
+
         function restoreCheckpoint(index) {
-            const checkpoints = JSON.parse(localStorage.getItem('bodyCompCheckpoints') || '[]');
-            const checkpoint = checkpoints[index];
+            const checkpoint = getCheckpointList()[index];
 
             if (!checkpoint) {
                 showToast('❌ Checkpoint not found');
@@ -21396,9 +21567,12 @@ CALIBRATED DEFICIT (estimate): ${formatSignedKcal(deficit + exportCal.current)} 
         function deleteCheckpoint(index) {
             if (!confirm('Delete this checkpoint?')) return;
 
-            let checkpoints = JSON.parse(localStorage.getItem('bodyCompCheckpoints') || '[]');
-            checkpoints.splice(index, 1);
-            safeLocalStorageSet('bodyCompCheckpoints', JSON.stringify(checkpoints));
+            const checkpoints = getCheckpointList().slice();
+            const [removed] = checkpoints.splice(index, 1);
+            if (!removed) return;
+            setCheckpointList(checkpoints);
+            // Delete from the cloud too, or the next load would bring it back
+            saveCheckpointsToFirebase({ remove: [removed] });
 
             showToast('🗑️ Checkpoint deleted');
             document.getElementById('checkpoint-modal')?.remove();
@@ -21406,8 +21580,7 @@ CALIBRATED DEFICIT (estimate): ${formatSignedKcal(deficit + exportCal.current)} 
         }
 
         function exportCheckpoint(index) {
-            const checkpoints = JSON.parse(localStorage.getItem('bodyCompCheckpoints') || '[]');
-            const checkpoint = checkpoints[index];
+            const checkpoint = getCheckpointList()[index];
 
             if (!checkpoint) {
                 showToast('❌ Checkpoint not found');
@@ -21428,7 +21601,7 @@ CALIBRATED DEFICIT (estimate): ${formatSignedKcal(deficit + exportCal.current)} 
         }
 
         function exportAllCheckpoints() {
-            const checkpoints = JSON.parse(localStorage.getItem('bodyCompCheckpoints') || '[]');
+            const checkpoints = getCheckpointList();
 
             if (checkpoints.length === 0) {
                 showToast('No checkpoints to export');
@@ -21480,7 +21653,8 @@ CALIBRATED DEFICIT (estimate): ${formatSignedKcal(deficit + exportCal.current)} 
             reader.onload = function(e) {
                 try {
                     const imported = JSON.parse(e.target.result);
-                    let checkpoints = JSON.parse(localStorage.getItem('bodyCompCheckpoints') || '[]');
+                    const existing = new Set(getCheckpointList());
+                    let checkpoints = getCheckpointList().slice();
 
                     // ============================================
                     // FLEXIBLE FORMAT DETECTION
@@ -21541,9 +21715,14 @@ CALIBRATED DEFICIT (estimate): ${formatSignedKcal(deficit + exportCal.current)} 
                         throw new Error('Unrecognized file format. Check console for details.');
                     }
 
-                    // Keep max 20 checkpoints
-                    checkpoints = checkpoints.slice(0, 20);
-                    safeLocalStorageSet('bodyCompCheckpoints', JSON.stringify(checkpoints));
+                    // Imported checkpoints sort as newest (original timestamp kept
+                    // for display) so the CHECKPOINT_LIMIT window keeps them
+                    const now = Date.now();
+                    let n = 0;
+                    const added = checkpoints.filter(cp => !existing.has(cp));
+                    added.forEach(cp => { cp.addedAt = new Date(now - (n++)).toISOString(); });
+                    setCheckpointList(checkpoints);
+                    saveCheckpointsToFirebase({ add: added.filter(cp => getCheckpointList().includes(cp)) });
 
                     document.getElementById('checkpoint-modal')?.remove();
                     showCheckpointManager();
@@ -21893,8 +22072,9 @@ CALIBRATED DEFICIT (estimate): ${formatSignedKcal(deficit + exportCal.current)} 
                 new Promise(resolve => setTimeout(resolve, 5000))
             ]).then(() => {
                 loadFromFirebase();
-                // Load checkpoints from Firebase for cross-device restore
-                loadCheckpointsFromFirebase();
+                // One-time move of cloud checkpoints out of userPath (the list
+                // itself loads lazily — see CHECKPOINT STORE)
+                migrateLegacyCheckpoints();
                 // Start periodic ecosystem refresh (every 60s)
                 startEcosystemRefresh();
                 // Setup realtime listener for stim calc changes
@@ -21902,7 +22082,7 @@ CALIBRATED DEFICIT (estimate): ${formatSignedKcal(deficit + exportCal.current)} 
             }).catch(() => {
                 // Even if ecosystem data fails, still load user data
                 loadFromFirebase();
-                loadCheckpointsFromFirebase();
+                migrateLegacyCheckpoints();
                 startEcosystemRefresh();
                 setupStimulantRealtimeListener();
             });
