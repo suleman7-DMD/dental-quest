@@ -488,6 +488,28 @@ function isUserTypingInline() {
     return !!(a.closest && a.closest('.gc-popover') && (a.tagName === 'INPUT' || a.tagName === 'TEXTAREA'));
 }
 
+// Server-confirmed read. Firebase 9.22 answers once() AND get() on userPath from
+// its LOCAL cache while the realtime listener is attached — after iOS suspends
+// the Home Screen app that cache predates the sleep, and merge + push against it
+// erases other devices' newer edits. A get() of an UNLISTENED path is always a
+// server round trip; the server answers in order (re-listens → queued writes →
+// gets), so once it returns the listener's cache matches the cloud.
+function readCloudFresh(ref, timeoutMs) {
+    return new Promise(function(resolve, reject) {
+        var done = false;
+        var timer = setTimeout(function() { if (!done) { done = true; reject(new Error('cloud did not answer — offline?')); } }, timeoutMs || 15000);
+        var proceed = function() {
+            if (done) return;
+            done = true;
+            clearTimeout(timer);
+            ref.once('value').then(resolve, reject);
+        };
+        // any server reply (even permission_denied) proves the round trip
+        var barrier = database.ref(userRootPath + '/_syncBarrier');
+        (typeof barrier.get === 'function' ? barrier.get() : barrier.once('value')).then(proceed, proceed);
+    });
+}
+
 // Manual "Sync now"
 function forceCloudSync() {
     if (!firebaseSyncEnabled || !database || !userPath) {
@@ -495,7 +517,7 @@ function forceCloudSync() {
         return;
     }
     updateSyncStatus('syncing', 'Syncing…');
-    database.ref(userPath).once('value').then(function(snapshot) {
+    readCloudFresh(database.ref(userPath)).then(function(snapshot) {
         var data = snapshot.val();
         var hadPending = localChangesSinceLastSync;
         if (data && data.state && !isEmptyState(normalizeState(data.state))) {
@@ -521,6 +543,10 @@ function forceCloudSync() {
 // ============================================================================
 // VISIBILITY + UNLOAD
 // ============================================================================
+// Home Screen app layer (js/home-app.js): never auto-reload onto a newer deploy
+// while a change is unpushed or an event's details are open
+window.homeAppBusy = function() { return localChangesSinceLastSync || (typeof activePopover !== 'undefined' && !!activePopover); };
+
 document.addEventListener('visibilitychange', function() {
     if (document.visibilityState === 'hidden') {
         if (!isInitialLoad && hasLoadedFromCloud && state._dataLoaded && !isEmptyState(state)) {
@@ -535,7 +561,7 @@ document.addEventListener('visibilitychange', function() {
     } else if (document.visibilityState === 'visible') {
         if (typeof onAppVisible === 'function') { try { onAppVisible(); } catch (e) {} }
         if (!firebaseSyncEnabled || !database || !userPath || isInitialLoad || !hasLoadedFromCloud) return;
-        database.ref(userPath).once('value').then(function(snapshot) {
+        readCloudFresh(database.ref(userPath)).then(function(snapshot) {
             var data = snapshot.val();
             var hadPending = localChangesSinceLastSync;
             if (!data || !data.state || isEmptyState(normalizeState(data.state))) {
@@ -840,7 +866,7 @@ function forcePullFromCloud() {
         if (!ok) return;
         createCheckpoint('Auto-backup before force pull', true);
         updateSyncStatus('syncing', 'Pulling…');
-        database.ref(userPath).once('value').then(function(snapshot) {
+        readCloudFresh(database.ref(userPath)).then(function(snapshot) {
             var data = snapshot.val();
             if (!data || !data.state) { showToast('No cloud data found'); updateSyncStatus('connected', 'No cloud data'); return; }
             var n = normalizeState(data.state);

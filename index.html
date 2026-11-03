@@ -5,6 +5,16 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>SULEMAN SHAIKH, DMD</title>
 
+    <!-- Home Screen app (iPhone: Share -> Add to Home Screen) -->
+    <link rel="manifest" href="quest.webmanifest">
+    <link rel="apple-touch-icon" href="icons/quest-180.png">
+    <link rel="icon" type="image/png" sizes="192x192" href="icons/quest-192.png">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-title" content="Dental Quest">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="theme-color" content="#FAF8F5">
+
     <!-- Google Fonts: Inter (body) + Source Serif 4 (headings) -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -14081,7 +14091,7 @@ button, a, .sidebar-item, .synchro-card, .kanban-card, .task-item, .cfp, .vtp, .
     </div>
 
     <script src="js/dental-quest/state.js?v=20261102"></script>
-    <script src="js/dental-quest/firebase-sync.js?v=20260819"></script>
+    <script src="js/dental-quest/firebase-sync.js?v=20261103"></script>
     <script src="js/dental-quest/medications.js?v=20260307"></script>
     <script src="js/dental-quest/financials.js?v=20260306b"></script>
     <script src="js/dental-quest/calendar.js?v=20260307"></script>
@@ -14177,5 +14187,6 @@ button, a, .sidebar-item, .synchro-card, .kanban-card, .task-item, .cfp, .vtp, .
         </a>
     </nav>
 
+    <script src="js/home-app.js?v=20261103" data-app="quest" data-name="Dental Quest" data-icon="icons/quest-180.png" data-sw="home-sw.js" data-scope="index.html" data-theme="light"></script>
 </body>
 </html>

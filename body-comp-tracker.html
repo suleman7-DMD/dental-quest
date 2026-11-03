@@ -5,6 +5,17 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>Body Comp Tracker | Suleman Shaikh, DMD</title>
 
+    <!-- Home Screen app (iPhone: Share -> Add to Home Screen). black-translucent:
+         the dark background runs under the status bar; body pads by the safe area. -->
+    <link rel="manifest" href="bodycomp.webmanifest">
+    <link rel="apple-touch-icon" href="icons/bodycomp-180.png">
+    <link rel="icon" type="image/png" sizes="192x192" href="icons/bodycomp-192.png">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-title" content="Body Comp">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="theme-color" content="#0f172a">
+
     <!-- Firebase SDK - Same as Dental Quest App -->
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
@@ -46,6 +57,8 @@
             min-height: 100vh;
             min-height: 100dvh;
             padding: 15px;
+            /* notch / Dynamic Island / home indicator (Home Screen app runs edge to edge) */
+            padding: max(15px, env(safe-area-inset-top)) max(15px, env(safe-area-inset-right)) max(15px, env(safe-area-inset-bottom)) max(15px, env(safe-area-inset-left));
             color: var(--text-primary);
         }
 
@@ -2967,7 +2980,7 @@
         /* Toast Notification */
         .toast {
             position: fixed;
-            bottom: 30px;
+            bottom: calc(30px + env(safe-area-inset-bottom));
             left: 50%;
             transform: translateX(-50%) translateY(100px);
             background: var(--bg-tertiary);
@@ -21156,6 +21169,31 @@ CALIBRATED DEFICIT (estimate): ${formatSignedKcal(deficit + exportCal.current)} 
             });
         }
 
+        // Server-confirmed read. With the realtime listener attached, the SDK
+        // (9.22) answers once()/get() on userPath from its LOCAL cache — after
+        // iOS suspends the Home Screen app that is whatever it held before
+        // sleeping, and merging + pushing against it clobbers other devices.
+        // A get() of an UNLISTENED path always goes to the server, which
+        // answers in order (re-listens → queued writes → gets), so once it
+        // returns the listener's cache matches the cloud.
+        function readCloudFresh(ref, timeoutMs) {
+            return new Promise((resolve, reject) => {
+                let done = false;
+                const timer = setTimeout(() => {
+                    if (!done) { done = true; reject(new Error('Cloud did not answer — offline?')); }
+                }, timeoutMs || 15000);
+                const proceed = () => {
+                    if (done) return;
+                    done = true;
+                    clearTimeout(timer);
+                    ref.once('value').then(resolve, reject);
+                };
+                // any server reply (even permission_denied) proves the round trip
+                const barrier = database.ref(userPath.replace(/\/[^/]+$/, '') + '/_syncBarrier');
+                (typeof barrier.get === 'function' ? barrier.get() : barrier.once('value')).then(proceed, proceed);
+            });
+        }
+
         function forceCloudSync() {
             if (!firebaseSyncEnabled || !database || !userPath) {
                 showToast('❌ Not connected to cloud');
@@ -21165,7 +21203,7 @@ CALIBRATED DEFICIT (estimate): ${formatSignedKcal(deficit + exportCal.current)} 
 
             updateSyncStatus('syncing', 'Fetching...');
 
-            database.ref(userPath).once('value')
+            readCloudFresh(database.ref(userPath))
                 .then(snapshot => {
                     const data = snapshot.val();
                     if (!data || !data.state) {
@@ -21892,7 +21930,7 @@ CALIBRATED DEFICIT (estimate): ${formatSignedKcal(deficit + exportCal.current)} 
 
             updateSyncStatus('syncing', 'Pulling...');
 
-            database.ref(userPath).once('value')
+            readCloudFresh(database.ref(userPath))
                 .then(snapshot => {
                     const data = snapshot.val();
 
@@ -26809,6 +26847,10 @@ CALIBRATED DEFICIT (estimate): ${formatSignedKcal(deficit + exportCal.current)} 
             }
         });
 
+        // Home Screen app layer (js/home-app.js): never auto-reload onto a newer
+        // deploy while this session holds changes the cloud hasn't confirmed
+        window.homeAppBusy = () => localChangesSinceLastSync;
+
         // Save when tab becomes hidden, refresh when visible - WITH GUARDS
         document.addEventListener('visibilitychange', function() {
             if (document.hidden) {
@@ -27267,5 +27309,6 @@ CALIBRATED DEFICIT (estimate): ${formatSignedKcal(deficit + exportCal.current)} 
             });
         })();
     </script>
+    <script src="js/home-app.js?v=20261103" data-app="bodycomp" data-name="Body Comp" data-icon="icons/bodycomp-180.png" data-sw="home-sw.js" data-scope="body-comp-tracker.html" data-theme="dark"></script>
 </body>
 </html>

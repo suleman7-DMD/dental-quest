@@ -1,0 +1,17 @@
+{
+  "name": "Body Comp Tracker",
+  "short_name": "Body Comp",
+  "description": "Calories, protein, workouts and weigh-ins — synced across the Dental Quest suite.",
+  "id": "./body-comp-tracker.html",
+  "start_url": "./body-comp-tracker.html",
+  "scope": "./body-comp-tracker.html",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#0f172a",
+  "theme_color": "#0f172a",
+  "icons": [
+    { "src": "icons/bodycomp-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icons/bodycomp-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "icons/bodycomp-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}

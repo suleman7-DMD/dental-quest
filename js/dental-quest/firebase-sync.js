@@ -405,6 +405,35 @@ function loadData(skipRender) {
 }
 
 // ============================================
+// SERVER-CONFIRMED READ (Nov 2026)
+// ============================================
+// Firebase 9.22 answers get() AND once() from its LOCAL cache whenever the
+// realtime listener is attached to the path (get() only reaches the server
+// for unlistened paths). After iOS suspends the Home Screen app, that cache is
+// whatever it held before sleeping — merging + pushing against it erased other
+// devices' newer saves. A get() of an UNLISTENED path is always a server round
+// trip, and the server answers in order (re-listens -> queued writes -> gets),
+// so once it returns, the listener's cache (and this read) match the cloud.
+function readAppDataFresh(timeoutMs) {
+    const ref = database.ref('users/' + currentUser.uid + '/appData');
+    return new Promise((resolve, reject) => {
+        let done = false;
+        const timer = setTimeout(() => {
+            if (!done) { done = true; reject(new Error('Cloud did not answer - offline?')); }
+        }, timeoutMs || 15000);
+        const proceed = () => {
+            if (done) return;
+            done = true;
+            clearTimeout(timer);
+            ref.once('value').then(resolve, reject);
+        };
+        // any server reply (even permission_denied) proves the round trip
+        const barrier = database.ref('users/' + currentUser.uid + '/_syncBarrier');
+        (typeof barrier.get === 'function' ? barrier.get() : barrier.once('value')).then(proceed, proceed);
+    });
+}
+
+// ============================================
 // SAVE DATA — With 5 Sync Protection Guards
 // ============================================
 
@@ -559,9 +588,7 @@ function saveData() {
             // another device may have saved in the meantime \u2014 pull-merge the
             // server tree first so this write can never erase newer cloud data.
             if (Date.now() - lastCloudContactTs > 300000) {
-                const staleRef = database.ref('users/' + currentUser.uid + '/appData');
-                const staleFetch = (typeof staleRef.get === 'function') ? staleRef.get() : staleRef.once('value');
-                staleFetch.then(snapshot => {
+                readAppDataFresh().then(snapshot => {
                         const remote = snapshot.val();
                         lastCloudContactTs = Date.now();
                         if (remote && !isEmptyState(remote) && Math.abs((remote.lastSaved || 0) - lastKnownSaveTime) > 100) {
@@ -1479,6 +1506,10 @@ function loadDataFromFirebase() {
                 _dataLoaded = true;
                 lastCloudContactTs = Date.now(); // We did reach the server \u2014 tree is just empty
 
+                // Listen here too — without it the first device on an empty tree
+                // never heard another device's saves for the rest of the session
+                setupMainDataRealtimeSync();
+
                 updateSyncStatus('connected', 'No cloud data yet');
                 // Mark load complete after localStorage load
                 markInitialLoadComplete();
@@ -1616,7 +1647,7 @@ function forceCloudSync() {
 
     updateSyncStatus('syncing', 'Fetching from cloud...');
 
-    database.ref('users/' + currentUser.uid + '/appData').once('value')
+    readAppDataFresh()
         .then(snapshot => {
             const remoteData = snapshot.val();
             if (!remoteData) {
@@ -2087,7 +2118,7 @@ function forcePullFromCloud() {
     showCustomConfirm('Force Pull\n\nThis will OVERWRITE all local data with cloud data.\n\nAre you sure?', function() {
         updateSyncStatus('syncing', 'Pulling...');
 
-        database.ref('users/' + currentUser.uid + '/appData').once('value')
+        readAppDataFresh()
             .then(snapshot => {
                 const data = snapshot.val();
 
@@ -2181,6 +2212,7 @@ function setupMainDataRealtimeSync() {
     realtimeSyncListener = database.ref('users/' + currentUser.uid + '/appData').on('value', snapshot => {
         const data = snapshot.val();
         if (!data) {
+            isInitialSetup = false; // empty tree IS the baseline — the next callback is a real change
             return;
         }
 
@@ -2248,9 +2280,9 @@ window.addEventListener('beforeunload', function(e) {
 
 // Handle visibility changes - save when hiding, refresh when showing - WITH GUARDS
 // BULLETPROOF SYNC (Aug 2026): hidden flush shared with pagehide; visible path
-// uses a SERVER-FIRST fetch (.get()) \u2014 the old .once('value') was answered
-// from the SDK's local cache while the realtime listener was attached, so the
-// "refresh" never actually saw newer cloud data (root-cause contributor).
+// pull-merges via readAppDataFresh() (Nov 2026) — .once('value') AND .get()
+// are both answered from the SDK's local cache while the realtime listener is
+// attached, so the "refresh" never actually saw newer cloud data.
 function flushPendingSaveOnHide() {
     if (saveDebounceTimer) {
         clearTimeout(saveDebounceTimer);
@@ -2276,8 +2308,7 @@ document.addEventListener('visibilitychange', function() {
         // Tab is visible again \u2014 pull-MERGE from the server. This tab may have
         // slept through hours of updates from other devices.
         if (firebaseInitialized && currentUser && database && initialLoadComplete) {
-            const ref = database.ref('users/' + currentUser.uid + '/appData');
-            const fetch = (typeof ref.get === 'function') ? ref.get() : ref.once('value');
+            const fetch = readAppDataFresh();
             fetch.then(snapshot => {
                     const data = snapshot.val();
                     if (!data || isEmptyState(data)) return;
@@ -2302,6 +2333,10 @@ document.addEventListener('visibilitychange', function() {
 // is swiped away \u2014 the exact path that stranded the iPhone's morning edits
 window.addEventListener('pagehide', flushPendingSaveOnHide);
 
+// Home Screen app layer (js/home-app.js): never auto-reload onto a newer deploy
+// while a save is queued or owed to the cloud
+window.homeAppBusy = function() { return !!(pendingSaveData || offlineSyncPending); };
+
 // Handle coming back online - MERGE with cloud, then push if we owe changes.
 // BULLETPROOF SYNC (Aug 2026): the old handler blind-`.set()` localStorage
 // over the cloud \u2014 if another device saved while this one was offline, that
@@ -2315,8 +2350,7 @@ window.addEventListener('online', function() {
     if (owedPush) {
         showToast('\ud83d\udce4 Syncing offline changes...', '\ud83d\udd04');
     }
-    const ref = database.ref('users/' + currentUser.uid + '/appData');
-    const fetch = (typeof ref.get === 'function') ? ref.get() : ref.once('value');
+    const fetch = readAppDataFresh();
     fetch.then(snapshot => {
             const data = snapshot.val();
             lastCloudContactTs = Date.now();
@@ -2371,8 +2405,7 @@ setInterval(() => {
         return;
     }
 
-    const ref = database.ref('users/' + currentUser.uid + '/appData');
-    const fetch = (typeof ref.get === 'function') ? ref.get() : ref.once('value');
+    const fetch = readAppDataFresh();
     fetch.then(snapshot => {
             const data = snapshot.val();
             lastCloudContactTs = Date.now();
