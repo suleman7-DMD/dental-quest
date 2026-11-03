@@ -67,7 +67,8 @@ const EXPECT = [
     ['move:ev_john', 'move:ev_mary'],
     ['update:ev_lunch'],
     ['move:ev_john'],
-    ['create:new', 'create:new', 'delete:ev_lunch']
+    ['create:new', 'create:new', 'delete:ev_lunch'],
+    ['skip:ev_jane', 'move:ev_mary', 'create:new', 'delete:ev_john']
 ];
 
 test('every worked example applies cleanly: right items, all ticked, no errors or warnings', () => {
@@ -79,6 +80,7 @@ test('every worked example applies cleanly: right items, all ticked, no errors o
         const got = p.items.map((it) => it.kind + ':' + (it.kind === 'create' ? 'new' : it.targetId));
         assert.deepEqual(got, EXPECT[i], 'example ' + (i + 1));
         p.items.forEach((it) => {
+            if (it.kind === 'skip') return; // "already on your calendar" — nothing to tick
             assert.equal(it.checked, true, 'example ' + (i + 1) + ' item ticked: ' + it.label);
             assert.deepEqual(it.warnings, [], 'example ' + (i + 1) + ' no warnings: ' + it.label);
         });
@@ -106,4 +108,7 @@ test('examples land on the right days and times', () => {
     assert.equal(pick(16)[0].changes.location, 'Cafe Luna');
     assert.equal(pick(17)[0].changes.endTime, '13:00');                  // EXTEND +1 hour
     assert.equal(pick(18)[0].spec.startDate, '2026-11-03');
+    const book = pick(19);                                                // full refresh: Mary rescheduled, 3-hour default
+    assert.deepEqual([book[1].changes.startDate, book[1].changes.startTime, book[1].changes.endTime], ['2026-11-06', '13:00', '16:00']);
+    assert.equal(book[2].spec.endTime, '11:30');
 });

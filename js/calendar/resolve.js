@@ -546,6 +546,83 @@ function diffForUpsert(ev, spec, flags, byId) {
     return ch;
 }
 
+// ---------------------------------------------------------------- patient-book refresh
+// A pasted appointment finds the visit already on the calendar even when it was
+// quick-added loosely: "Moe" under Personal, 8:30–9:30 ≈ Mohammed Ali 8:30 (axiUm).
+var VISIT_STOP = { pt: 1, pts: 1, apt: 1, appt: 1, appointment: 1, patient: 1, with: 1, and: 1, the: 1, for: 1, dr: 1, at: 1, new: 1 };
+function visitTokens(s) {
+    return String(s || '').toLowerCase().replace(/\(.*?\)/g, ' ').replace(/['’`]/g, '')
+        .split(/[^a-z]+/).filter(function(t) { return t.length >= 2 && !VISIT_STOP[t]; });
+}
+// 3 = same person (equal, 3+ letter prefix "Moh"→Mohammed, or a typo) · 1 = same first two letters ("Moe"≈Mohammed) · 0
+function visitNameSim(a, b) {
+    var ta = visitTokens(a), tb = visitTokens(b), best = 0;
+    ta.forEach(function(x) {
+        tb.forEach(function(y) {
+            if (best === 3) return;
+            var sh = x.length <= y.length ? x : y, lg = sh === x ? y : x;
+            var mx = Math.max(x.length, y.length);
+            if (x === y || (sh.length >= 3 && lg.indexOf(sh) === 0) || (Math.min(x.length, y.length) >= 4 && editDistance(x, y) <= (mx >= 8 ? 2 : 1))) best = 3;
+            else if (x.slice(0, 2) === y.slice(0, 2)) best = Math.max(best, 1);
+        });
+    });
+    return best;
+}
+
+// "BOOK: Tue 2026-11-03 to Fri 2026-11-20" → { from, to } (one date → that day)
+function parseBookRange(raw, today) {
+    if (!raw) return null;
+    var parts = String(raw).split(/\s+(?:to|through|thru|until|till)\s+|\s*(?:→|–|—)\s*|\s+-\s+/i);
+    var a = findDateInText(parts[0], today), b = parts.length > 1 ? findDateInText(parts[parts.length - 1], today) : a;
+    if (!a || !b) return { error: 'Could not read BOOK “' + raw + '” — use BOOK: 2026-11-03 to 2026-11-21. Nothing will be removed.' };
+    var from = a.date, to = b.date;
+    if (to < from) { var t = from; from = to; to = t; }
+    var wm = weekdayMismatch(parts[0], today) || (parts.length > 1 ? weekdayMismatch(parts[parts.length - 1], today) : null);
+    return { from: from, to: to, raw: raw, weekdayMismatch: wm };
+}
+
+function visitScore(spec, ev, book) {
+    var sim = visitNameSim(spec.patientName || spec.title, ev.patientName || ev.title);
+    if (!sim) return null;
+    var appt = ev.type === 'appointment' ? 5 : 0;
+    var s0 = timeToMin(spec.startTime), e0 = timeToMin(spec.endTime || spec.startTime);
+    var s1 = timeToMin(ev.startTime), e1 = timeToMin(ev.endTime || ev.startTime);
+    if (ev.startDate === spec.startDate) {
+        var same = s0 === s1, overlap = s0 < Math.max(e1, s1 + 1) && s1 < Math.max(e0, s0 + 1);
+        // a personal event only counts when it sits near the visit (a friend called Sarah at dinner isn't patient Sarah)
+        var near = same || overlap || Math.abs(s0 - s1) <= 120;
+        if (sim === 3 && (appt || near)) return { score: 100 + (same ? 50 : overlap ? 20 : 0) + appt, loose: false };
+        if (sim === 1 && (same || overlap)) return { score: (same ? 60 : 30) + appt, loose: true };
+        return null;
+    }
+    // full refresh: same patient on another booked day = rescheduled
+    if (book && sim === 3 && ev.startDate >= book.from && ev.startDate <= book.to) return { score: 40 + appt, loose: false, moved: true };
+    return null;
+}
+
+// What a book entry changes on the visit it matched (book wins on time, name, procedure)
+function diffForVisit(ev, spec) {
+    var ch = {};
+    if (ev.type !== 'appointment') ch.type = 'appointment';
+    if (ev.title && (ev.type !== 'appointment' || !ev.patientName)) ch.title = '';
+    var cn = canonPersonName(spec.patientName), co = canonPersonName(ev.patientName || '');
+    if (spec.patientName && cn !== co && (!co || cn.split(' ').length >= co.split(' ').length)) ch.patientName = spec.patientName;
+    ['chartNumber', 'procedure', 'chair', 'location'].forEach(function(k) { if (spec[k] && spec[k] !== (ev[k] || '')) ch[k] = spec[k]; });
+    if (spec.startDate !== ev.startDate) { ch.startDate = spec.startDate; ch.endDate = spec.endDate; }
+    if (spec.startTime !== ev.startTime) ch.startTime = spec.startTime;
+    if (spec.endTime && spec.endTime !== ev.endTime) ch.endTime = spec.endTime;
+    if (ch.startDate && !ch.startTime && spec.startTime) ch.startTime = spec.startTime;
+    return ch;
+}
+
+// Old habit before "pt …": a patient quick-added as a plain (often recolored) event
+function looksLikeQuickVisit(ev) {
+    if (ev.type !== 'event' || ev.recurrence || ev.allDay || !ev.startTime) return false;
+    var wd = weekdayOf(ev.startDate);
+    if (wd === 0 || wd === 6 || ev.startTime < '07:00' || ev.startTime > '17:30') return false;
+    return !!ev.color || /^\s*(pt|apt|appt|patient)\b/i.test(ev.title || '');
+}
+
 // ---------------------------------------------------------------- main resolver
 // parsed = parseImportText(...) ; ctx = { events, calendars, settings, today, options: { syncAppointments } }
 function resolveImport(parsed, ctx) {
@@ -556,6 +633,39 @@ function resolveImport(parsed, ctx) {
     var matchedApptIds = {};
     var pastedApptDates = {};
     var newCalendars = {};
+    var book = parseBookRange(parsed.book, today);
+    var bookError = book && book.error ? book.error : null;
+    if (bookError) book = null;
+
+    // Pre-pass: every pasted appointment claims its best existing visit (exact first,
+    // then loose name+time, then — full refresh only — same patient on another day)
+    (function matchVisits() {
+        var appts = [];
+        parsed.ops.forEach(function(op) {
+            if (!CREATE_VERBS[op.verb]) return;
+            var b = buildEventSpec(op, ctx);
+            if (b.errors.length || b.spec.type !== 'appointment' || b.spec.allDay || !b.spec.startTime || b.spec.extKey) return;
+            appts.push({ op: op, spec: b.spec });
+        });
+        if (!appts.length) return;
+        var claimed = {};
+        appts.forEach(function(a) { var d = findDuplicateEvent(ctx, a.spec); if (d) { a.done = true; claimed[d.ev.id] = true; } });
+        var pool = getValues(ctx.events).filter(function(ev) {
+            return !claimed[ev.id] && !ev.recurrence && !ev.allDay && ev.startTime && (ev.type === 'appointment' || ev.type === 'event');
+        });
+        var pairs = [];
+        appts.forEach(function(a) {
+            if (a.done) return;
+            pool.forEach(function(ev) { var sc = visitScore(a.spec, ev, book); if (sc) pairs.push({ a: a, ev: ev, sc: sc }); });
+        });
+        pairs.sort(function(x, y) { return y.sc.score - x.sc.score; });
+        pairs.forEach(function(p) {
+            if (p.a.done || claimed[p.ev.id]) return;
+            p.a.done = true;
+            claimed[p.ev.id] = true;
+            p.a.op._visit = { ev: p.ev, loose: p.sc.loose };
+        });
+    })();
 
     function calInfo(ref, type) {
         if (ref) {
@@ -586,6 +696,26 @@ function resolveImport(parsed, ctx) {
         seen[sig] = true;
         var dup = findDuplicateEvent(ctx, spec);
         var flags = explicitFlags(op);
+        var visit = !dup && op._visit && !matchedApptIds[op._visit.ev.id] ? op._visit : null;
+        if (spec.type === 'appointment' && (visit || (dup && book))) {
+            var vev = visit ? visit.ev : dup.ev;
+            matchedApptIds[vev.id] = true;
+            var vch = diffForVisit(vev, spec);
+            var vbase = buildInstance(vev, null);
+            if (!Object.keys(vch).length) {
+                items.push(mkItem('skip', { label: label, when: fmtWhen(spec, settings, today), reason: 'Already on your calendar', targetId: vev.id, bookRole: 'same', line: op.line }));
+                return;
+            }
+            var was = vev.type !== 'appointment' ? 'your “' + displayTitle(vev) + '” → patient appointment · ' : '';
+            var vdesc = Object.assign({}, vch); delete vdesc.type;
+            var vw = (built.warnings || []).slice();
+            if (visit && visit.loose) vw.push('Loose match: “' + displayTitle(vev) + '” ≈ ' + spec.patientName + ' (same day and time) — untick if it’s a different visit');
+            items.push(mkItem(vch.startDate || vch.startTime ? 'move' : 'update', {
+                label: displayTitle(vev), when: fmtWhen(vbase, settings, today), detail: was + describeChanges(vdesc, vbase, settings, today),
+                targetId: vev.id, occ: null, scope: 'all', changes: vch, seriesChanges: null, warnings: vw, bookRole: 'changed', line: op.line
+            }));
+            return;
+        }
         if (dup) {
             if (dup.ev.type === 'appointment') matchedApptIds[dup.ev.id] = true;
             var ch = diffForUpsert(dup.ev, spec, flags, dup.by === 'id');
@@ -594,7 +724,7 @@ function resolveImport(parsed, ctx) {
                 if (ci.calendarId !== dup.ev.calendarId) { ch.calendarRef = spec.calendarRef; }
             }
             if (!Object.keys(ch).length) {
-                items.push(mkItem('skip', { label: label, when: fmtWhen(spec, settings, today), reason: 'Already on your calendar', line: op.line }));
+                items.push(mkItem('skip', { label: label, when: fmtWhen(spec, settings, today), reason: 'Already on your calendar', targetId: dup.ev.id, line: op.line }));
                 return;
             }
             var base = buildInstance(dup.ev, null);
@@ -613,7 +743,7 @@ function resolveImport(parsed, ctx) {
             label: label, when: fmtWhen(spec, settings, today), detail: detailBits.join(' · '),
             spec: spec, type: spec.type, calendarId: cinfo.calendarId, newCalendarName: cinfo.newCalendarName,
             exdates: op.exdates && op.exdates.length ? op.exdates : null,
-            warnings: built.warnings, line: op.line
+            warnings: built.warnings, bookRole: spec.type === 'appointment' ? 'new' : null, line: op.line
         }));
     }
 
@@ -916,26 +1046,36 @@ function resolveImport(parsed, ctx) {
         }
     });
 
-    // Sync mode: appointments on pasted dates that the paste didn't mention are removed
-    if (options.syncAppointments) {
-        Object.keys(pastedApptDates).forEach(function(date) {
-            getValues(ctx.events).forEach(function(ev) {
-                if (ev.type !== 'appointment' || ev.recurrence || matchedApptIds[ev.id]) return;
-                if (ev.startDate !== date) return;
-                var stillPlanned = items.some(function(it) { return it.targetId === ev.id; });
-                if (stillPlanned) return;
-                var inst = buildInstance(ev, null);
-                items.push(mkItem('delete', {
-                    label: displayTitle(ev), when: fmtWhen(inst, settings, today), detail: 'Not in the pasted schedule for this day (sync mode)',
-                    targetId: ev.id, occ: null, scope: 'all', changes: null, seriesChanges: null, destructive: true, sync: true
-                }));
-            });
+    // Sync mode (pasted days) / full BOOK refresh (its whole date range): booked visits
+    // the paste didn't mention were cancelled. Personal events that look like an
+    // old quick-added patient are offered unticked — never removed on a guess.
+    if (options.syncAppointments || book) {
+        var inWindow = function(d) { return book ? d >= book.from && d <= book.to : !!pastedApptDates[d]; };
+        getValues(ctx.events).forEach(function(ev) {
+            if (ev.recurrence || ev.allDay || matchedApptIds[ev.id] || !inWindow(ev.startDate)) return;
+            if (items.some(function(it) { return it.targetId === ev.id; })) return;
+            var isAppt = ev.type === 'appointment';
+            if (isAppt && ev.done) return;
+            if (!isAppt && !(book && looksLikeQuickVisit(ev))) return;
+            var inst = buildInstance(ev, null);
+            items.push(mkItem('delete', {
+                label: displayTitle(ev), when: fmtWhen(inst, settings, today),
+                detail: isAppt ? (book ? 'Not on your axiUm book anymore — cancelled' : 'Not in the pasted schedule for this day (sync mode)')
+                    : 'Not on your book — tick if this was a patient (left alone otherwise)',
+                targetId: ev.id, occ: null, scope: 'all', changes: null, seriesChanges: null, destructive: true, sync: true,
+                maybe: !isAppt, checked: isAppt && !(book && book.weekdayMismatch), bookRole: isAppt ? 'cancelled' : 'maybe'
+            }));
         });
     }
 
     // Claude's TODAY: line vs this device's date — a mismatch means relative days
     // ("tomorrow", "Friday") may be off, so nothing is pre-ticked.
     var planWarnings = (parsed.warnings || []).slice();
+    if (bookError) planWarnings.unshift({ line: null, msg: bookError });
+    if (book && book.weekdayMismatch) {
+        var bw = book.weekdayMismatch;
+        planWarnings.unshift({ line: null, msg: 'BOOK says ' + DOW[bw.said] + ' but ' + fmtDateMed(bw.date, today) + ' is a ' + DOW[bw.actual] + ' — check the range; cancellations are left unticked.' });
+    }
     var todayMismatch = null;
     if (parsed.claudeToday) {
         var ct = findDateInText(parsed.claudeToday, today);
@@ -953,7 +1093,18 @@ function resolveImport(parsed, ctx) {
 
     var counts = { create: 0, update: 0, move: 0, delete: 0, done: 0, calendar: 0, skip: 0, reject: 0 };
     items.forEach(function(it) { counts[it.kind] = (counts[it.kind] || 0) + 1; });
-    return { items: items, counts: counts, foreign: parsed.foreign || {}, warnings: planWarnings, newCalendars: newCalendars, todayMismatch: todayMismatch };
+    var bookSum = null;
+    if (book) {
+        bookSum = { from: book.from, to: book.to, same: 0, changed: 0, added: 0, cancelled: 0, maybe: 0 };
+        items.forEach(function(it) {
+            if (it.bookRole === 'same') bookSum.same++;
+            else if (it.bookRole === 'changed') bookSum.changed++;
+            else if (it.bookRole === 'new') bookSum.added++;
+            else if (it.bookRole === 'cancelled') bookSum.cancelled++;
+            else if (it.bookRole === 'maybe') bookSum.maybe++;
+        });
+    }
+    return { items: items, counts: counts, foreign: parsed.foreign || {}, warnings: planWarnings, newCalendars: newCalendars, todayMismatch: todayMismatch, book: bookSum };
 }
 
 // Problems in a plan, phrased for the Claude project to fix: errors, deletes

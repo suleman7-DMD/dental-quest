@@ -214,6 +214,9 @@ function applyImportPlan(plan) {
                 var serCh = it.seriesChanges ? Object.assign({}, it.seriesChanges) : null;
                 [occCh, serCh].forEach(function(c) {
                     if (c && c.calendarRef) { c.calendarId = resolveCalRef(c.calendarRef, ev.type); delete c.calendarRef; }
+                    // a type change carries the item to that type's calendar (Personal → Clinic), unless it lives on a custom one
+                    if (c && c.type && c.type !== ev.type && !('calendarId' in c) && ev.calendarId === getCalendarForType(ev.type).id) c.calendarId = getCalendarForType(c.type).id;
+                    if (c && c.type === 'appointment' && ev.type !== 'appointment' && c.patientName && !('title' in c)) c.title = '';
                     if (c && c.notesAppend) delete c.notesAppend;
                 });
                 if (serCh && Object.keys(serCh).length) updateInstance(inst, serCh, 'all');
@@ -344,12 +347,17 @@ function openImportDialog(initialTab, prefillText) {
         });
         var foreign = Object.keys(importPlan.foreign || {}).map(function(app) { return importPlan.foreign[app] + ' ' + app + ' block' + (importPlan.foreign[app] === 1 ? '' : 's'); });
         var issueN = importIssues(importPlan).length;
-        var actionableItems = importPlan.items.filter(function(it) { return it.kind !== 'skip' && it.kind !== 'reject'; });
+        var actionableItems = importPlan.items.filter(function(it) { return it.kind !== 'skip' && it.kind !== 'reject' && !it.maybe; });
+        var bk = importPlan.book;
+        var bookNote = bk ? '<div class="gc-import-note book">' + icon('event_available') + '<span><b>Full refresh of your patient book</b> ' + escapeHtml(fmtDateMed(bk.from, today) + ' – ' + fmtDateMed(bk.to, today)) + ': ' +
+            [[bk.same, 'unchanged'], [bk.changed, 'changed'], [bk.added, 'new'], [bk.cancelled, 'cancelled']].filter(function(x) { return x[0]; }).map(function(x) { return x[0] + ' ' + x[1]; }).join(' · ') +
+            (bk.maybe ? '. ' + bk.maybe + ' personal event' + (bk.maybe === 1 ? '' : 's') + ' in these dates may have been patients — tick to remove.' : '') + '</span></div>' : '';
         var tickedN = actionableItems.filter(function(it) { return it.checked; }).length;
         var unticked = actionableItems.length - tickedN;
         sum.innerHTML = '<div class="gc-pill-row">' + (chips.join('') || '<span class="gc-muted">No calendar changes found</span>') +
             (unticked > 1 ? '<button class="gc-btn text sm" data-act="tickall">Tick all ' + (unticked + tickedN) + '</button>' : '') +
             (issueN ? '<button class="gc-btn tonal sm gc-issues-btn" data-act="copyissues" title="Copies the problems + the blocks that caused them — paste into your Claude project chat and it replies with fixes">' + icon('content_copy') + ' Copy ' + issueN + ' issue' + (issueN === 1 ? '' : 's') + ' for Claude</button>' : '') + '</div>' +
+            bookNote +
             (importPlan.quickFallback ? '<div class="gc-import-note">' + icon('bolt') + ' No blocks found — read as quick-add text.</div>' : '') +
             (foreign.length ? '<div class="gc-import-note">' + icon('apps') + ' Skipped ' + escapeHtml(foreign.join(', ')) + ' — paste those in their own app.</div>' : '') +
             (importPlan.warnings || []).map(function(w) { return '<div class="gc-import-note warn">' + icon('warning') + (w.line ? 'Line ' + w.line + ': ' : '') + escapeHtml(w.msg) + '</div>'; }).join('');

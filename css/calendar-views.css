@@ -395,6 +395,7 @@ html.dark .gc-pill.cal { background: rgba(253, 214, 99, .16); color: #fdd663; }
 html.dark .gc-pill.skip { background: rgba(232, 234, 237, .1); color: #bdc1c6; }
 .gc-import-note { display: flex; align-items: flex-start; gap: 6px; padding: 7px 10px; border-radius: 8px; background: var(--surface-2); font-size: 12.5px; color: var(--text-2); }
 html.dark .gc-import-note { background: var(--surface-3); }
+.gc-import-note.book { background: var(--primary-c); color: var(--text); }
 .gc-import-note .ms { font-size: 16px; margin-top: 1px; color: var(--primary); }
 .gc-import-note.warn, .gc-import-note.warn .ms { color: var(--warn); }
 .gc-import-item {

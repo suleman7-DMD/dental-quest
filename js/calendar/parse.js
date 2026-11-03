@@ -510,7 +510,7 @@ function parseTypeValue(v) {
     if (/^(event|events|meeting|class|lecture|exam|social)$/.test(s)) return 'event';
     if (/^(task|tasks|todo|to-do|to do|reminder|chore)$/.test(s)) return 'task';
     if (/^(deadline|deadlines|due|assignment|submission)$/.test(s)) return 'deadline';
-    if (/^(appointment|appointments|appt|appts|patient|clinic|pt)$/.test(s)) return 'appointment';
+    if (/^(appointment|appointments|appt|appts|apt|apts|patient|clinic|pt)$/.test(s)) return 'appointment';
     return null;
 }
 
@@ -646,8 +646,9 @@ function parseQuickAdd(text, today, opts) {
     s = s.replace(/([^.])\.+\s*$/, '$1 ');
     // bare "sat"/"sun" are ordinary words for the date scanner — here, next to a time or at the end, they're days
     s = s.replace(/\b(sat|sun)\b(?=\s+(?:\d|all[\s-]?day|morning|afternoon|evening|night|noon|midnight)|[\s,]*$)/gi, function(w) { return w.toLowerCase() === 'sat' ? 'saturday' : 'sunday'; });
-    var m = s.match(/^\s*(task|todo|to-do|deadline|due|appt|appointment|event|reminder)\s*[:\-–]\s*/i) ||
-        s.match(/^\s*(task|todo|to-do|deadline|reminder)\s+(?=\S)/i);
+    // "pt Moe 8:30" / "apt Sarah K 4pm" → patient appointment (clinic length, e.g. 3 h)
+    var m = s.match(/^\s*(task|todo|to-do|deadline|due|appt|apt|pt|patient|appointment|event|reminder)\s*[:\-–]\s*/i) ||
+        s.match(/^\s*(task|todo|to-do|deadline|reminder|pt|apt|appt|patient)\s+(?=\S)/i);
     if (m) {
         out.type = parseTypeValue(m[1]) || 'task';
         s = ' ' + s.slice(m[0].length);

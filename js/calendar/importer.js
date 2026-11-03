@@ -367,10 +367,26 @@ function extractClaudeToday(text) {
     return { text: lines.join('\n'), today: found };
 }
 
-// Full paste → { ops, foreign: {app: count}, warnings: [{line, msg}], blockCount, claudeToday }
+// "BOOK: 2026-11-03 to 2026-11-21" — the APPOINTMENTS that follow are the WHOLE
+// patient book for those dates (an axiUm screenshot). resolve.js reconciles it:
+// same / changed / new / cancelled. Blanked like TODAY so line numbers hold.
+var BOOK_LINE_RE = /^\s*(?:[-*•]\s*)?(?:\*\*)?(?:BOOK|FULL_BOOK|BOOK_RANGE)(?:\*\*)?\s*[:=]\s*(.+?)\s*$/i;
+function extractBookLine(text) {
+    var found = null;
+    var lines = String(text || '').split('\n').map(function(l) {
+        var m = l.match(BOOK_LINE_RE);
+        if (!m) return l;
+        if (found === null) found = m[1].replace(/\*\*/g, '').trim();
+        return '';
+    });
+    return { text: lines.join('\n'), book: found };
+}
+
+// Full paste → { ops, foreign: {app: count}, warnings: [{line, msg}], blockCount, claudeToday, book }
 function parseImportText(text) {
     var td = extractClaudeToday(text);
-    text = td.text;
+    var bk = extractBookLine(td.text);
+    text = bk.text;
     var blocks = splitImportBlocks(text);
     var ops = [], foreign = {}, warnings = [];
     var sticky = null, pending = null, pendingHint = null, skipNextFor = null;
@@ -440,7 +456,7 @@ function parseImportText(text) {
             ops.push({ verb: v, fields: rec.fields, quick: rec.quick, checked: !!rec.checked, line: rec.line, stray: rec.stray || '', typeHint: typeHint, raw: raw });
         });
     });
-    return { ops: ops, foreign: foreign, warnings: warnings, blockCount: blocks.length, claudeToday: td.today };
+    return { ops: ops, foreign: foreign, warnings: warnings, blockCount: blocks.length, claudeToday: td.today, book: bk.book };
 }
 
 // ---------------------------------------------------------------- spec building
@@ -475,6 +491,8 @@ function buildEventSpec(op, ctx) {
         spec.notes = q.notes || '';
         if (q.reminder !== null && q.reminder !== undefined) spec.reminders = q.reminder < 0 ? {} : normalizeReminders([q.reminder]);
         spec.done = !!op.checked;
+        // a quick patient visit is named by the patient ("pt Moe 8:30" → patient Moe)
+        if (spec.type === 'appointment' && spec.title && !spec.patientName) { spec.patientName = spec.title; spec.title = ''; }
         return finishTiming(spec, {
             date: q.date, endDate: q.endDate, start: q.start, end: q.end, allDay: q.allDay,
             duration: q.durationMin, repeat: q.repeat
