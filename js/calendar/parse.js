@@ -728,14 +728,23 @@ function parseQuickAdd(text, today, opts) {
             s = s.slice(0, um.index) + ' ' + tail.slice(ud.index + ud.length);
         }
     }
+    // …and so does a detached "for 6 weeks" / "10 times" ("weekdays 7am for 6 weeks")
+    if (out.repeat && out.repeat.rec && !out.repeat.rec.until && !out.repeat.rec.count && !out.repeat.forSpan) {
+        m = s.match(/\s(?:for\s+)?(\d{1,3})\s*(?:times|sessions|occurrences)(?![a-z])/i);
+        if (m) { out.repeat.rec.count = Math.min(999, Math.max(1, +m[1])); cutAt(m.index, m[0].length); }
+        else if ((m = s.match(/\sfor\s+(\d{1,3}|an?|one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve)\s+(days?|weeks?|months?|years?)\b/i))) {
+            out.repeat.forSpan = { n: wordNumber(m[1].toLowerCase()), unit: m[2].toLowerCase().replace(/s$/, '') };
+            cutAt(m.index, m[0].length);
+        }
+    }
     if (/\bdue\b/i.test(s)) {
         if (!out.type) out.type = 'deadline';
         s = s.replace(/\bdue(?:\s+(?:on|by|at))?\b/i, ' ');
     }
     if (/\ball[\s-]?day\b/i.test(s)) { out.allDay = true; s = s.replace(/\ball[\s-]?day\b/ig, ' '); }
-    m = s.match(/\bfor\s+((?:\d+(?:\.\d+)?|an?|one|half an?)\s*(?:h|hrs?|hours?|m|mins?|minutes?)(?:\s*(?:and\s+)?\d+\s*(?:m|mins?|minutes?))?)(?![a-z])/i);
+    m = s.match(/\bfor\s+((?:\d+(?:\.\d+)?|an?|one|two|three|four|five|six|seven|eight|nine|ten|half an?)\s*(?:h|hrs?|hours?|m|mins?|minutes?)(?:\s*(?:and\s+)?\d+\s*(?:m|mins?|minutes?))?)(?![a-z])/i);
     if (m) {
-        var dur = parseDuration(m[1].replace(/^(an?|one)\s*/i, '1 ').replace(/^half an?\s*/i, '0.5 '));
+        var dur = parseDuration(m[1].replace(/^half an?\s*/i, '0.5 ').replace(/^([a-z]+)\s*/i, function(w, n) { return wordNumber(n) + ' '; }));
         if (typeof dur === 'number' && dur > 0) { out.durationMin = dur; cutAt(m.index, m[0].length); }
     }
     var d = findDateInText(s, today);

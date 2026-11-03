@@ -172,10 +172,12 @@ function openQuickAddSheet(prefill) {
         addBtn.disabled = !built;
         if (built) { prev.innerHTML = quickAddCardHtml(built); return; }
         prev.innerHTML = '<div class="gc-qa-examples"><div class="gc-qa-ex-head">Say it the way you\'d text it — date, time, repeat, color, place, reminder:</div>' +
-            QUICK_EXAMPLES.map(function(x) { return '<button type="button" class="gc-qa-ex">' + escapeHtml(x) + '</button>'; }).join('') + '</div>';
+            QUICK_EXAMPLES.map(function(x) { return '<button type="button" class="gc-qa-ex">' + escapeHtml(x) + '</button>'; }).join('') +
+            '<button type="button" class="gc-btn text sm gc-qa-tips">' + icon('help') + 'Everything quick add understands</button></div>';
         prev.querySelectorAll('.gc-qa-ex').forEach(function(b) {
             b.addEventListener('click', function() { input.value = b.textContent; refresh(); input.focus(); });
         });
+        prev.querySelector('.gc-qa-tips').addEventListener('click', function() { close(); openHelp('quick'); });
     }
     function close() {
         document.body.classList.remove('gc-qa-open');

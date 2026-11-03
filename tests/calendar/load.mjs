@@ -12,6 +12,7 @@ const SECTIONS = [
     ['importer.js', 'CAL-IMPORT'],
     ['resolve.js', 'CAL-RESOLVE'],
     ['claude-instructions.js', 'CAL-INSTR'],
+    ['help.js', 'CAL-HELP'],
     ['firebase-sync.js', 'CAL-MERGE']
 ];
 

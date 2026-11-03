@@ -309,7 +309,7 @@ function onGlobalKeydown(e) {
         g: openGoToDate,
         s: openSettings,
         '/': function() { openSearch(); },
-        '?': openShortcutsHelp
+        '?': function() { openHelp(); }
     };
     var fn = map[k];
     if (!fn && !e.shiftKey && k && k.length === 1) fn = map[k.toLowerCase()]; // caps lock
@@ -340,7 +340,7 @@ function wireHeader() {
         if (typeof firebaseSyncEnabled !== 'undefined' && firebaseSyncEnabled) forceCloudSync();
         else promptForPin();
     });
-    on('gcHelpBtn', 'click', openShortcutsHelp);
+    on('gcHelpBtn', 'click', function() { openHelp(); });
     on('gcAppsBtn', 'click', function(e) {
         e.stopPropagation();
         var p = $('gcAppsPanel');

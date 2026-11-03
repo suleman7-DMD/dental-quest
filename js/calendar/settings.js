@@ -70,6 +70,7 @@ function openSettings() {
         '</div></section>' +
         '<section><h3>' + icon('install_mobile') + ' Home Screen app</h3>' + installSectionHtml() + '</section>' +
         '<section><h3>Help</h3><div class="gc-set-actions">' +
+        '<button class="gc-btn outlined sm" data-act="help">' + icon('help') + ' Help &amp; tips</button>' +
         '<button class="gc-btn outlined sm" data-act="keys">' + icon('keyboard') + ' Keyboard shortcuts</button>' +
         '<button class="gc-btn outlined sm" data-act="guide">' + icon('smart_toy') + ' Claude paste format</button>' +
         '</div><p class="gc-muted gc-about">Sully Calendar · part of the Dental Quest suite · ' + getCount(state.events) + ' events in ' + getCount(state.calendars) + ' calendars</p></section>' +
@@ -98,23 +99,9 @@ function openSettings() {
     act('backups', function() { closeModal(box); showCheckpointManager(); });
     act('import', function() { closeModal(box); openImportDialog('paste'); });
     act('ics', function() { downloadFile('sully-calendar-' + getLocalDateString() + '.ics', buildICS(state.events, state.calendars), 'text/calendar'); });
-    act('keys', function() { openShortcutsHelp(); });
+    act('help', function() { closeModal(box); openHelp(); });
+    act('keys', function() { closeModal(box); openHelp('keys'); });
     act('guide', function() { closeModal(box); openImportDialog('guide'); });
-}
-
-var SHORTCUTS = [
-    ['Navigation', [['t', 'Today'], ['j / n', 'Next period'], ['k / p', 'Previous period'], ['g', 'Go to date'], ['/', 'Search']]],
-    ['Views', [['d or 1', 'Day'], ['x or 2', '4 days'], ['w or 3', 'Week'], ['m or 4', 'Month'], ['y or 5', 'Year'], ['a or 6', 'Schedule']]],
-    ['Actions', [['c', 'Create event'], ['q', 'Quick add'], ['i', 'Import / paste from Claude'], ['e', 'Edit open event'], ['Delete', 'Delete open event'], ['Ctrl/⌘ + Z', 'Undo'], ['s', 'Settings'], ['Esc', 'Close']]]
-];
-
-function openShortcutsHelp() {
-    var html = '<div class="gc-dialog gc-keys"><h2 class="gc-dialog-title">Keyboard shortcuts</h2><div class="gc-dialog-body gc-keys-grid">' +
-        SHORTCUTS.map(function(g) {
-            return '<div><h3>' + g[0] + '</h3>' + g[1].map(function(k) { return '<div class="gc-key-row"><kbd>' + escapeHtml(k[0]) + '</kbd><span>' + escapeHtml(k[1]) + '</span></div>'; }).join('') + '</div>';
-        }).join('') + '<p class="gc-muted">Tip: paste anywhere on the page (Ctrl/⌘ + V) to open the import preview.</p></div>' +
-        '<div class="gc-dialog-actions"><button class="gc-btn filled" data-close>Got it</button></div></div>';
-    openModal(html, { label: 'Keyboard shortcuts' });
 }
 
 function openGoToDate() {
