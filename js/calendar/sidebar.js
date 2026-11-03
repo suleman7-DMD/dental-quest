@@ -30,42 +30,65 @@ function openCreateMenu(anchor) {
     ]);
 }
 
+// ---------------------------------------------------------------- quick add (shared by the sidebar box + phone sheet)
+// Free text → spec with every understood piece shown as a chip before anything is saved.
+function quickAddBuild(text, typeVerb) {
+    var t = String(text || '').trim();
+    if (!t) return null;
+    var op = { verb: typeVerb || 'EVENT', fields: {}, quick: t, checked: false, line: 1, interactive: true };
+    var built = buildEventSpec(op, { today: getLocalDateString(), settings: state.settings });
+    var spec = built.spec;
+    if (typeVerb === 'EVENT') spec.type = 'event';
+    // "#green" with no calendar called green → a color, not a new calendar
+    if (spec.calendarRef && !findCalendarByName(spec.calendarRef) && quickColorKey(spec.calendarRef)) {
+        spec.color = quickColorKey(spec.calendarRef);
+        spec.calendarRef = null;
+    }
+    var cal = spec.calendarRef ? findCalendarByName(spec.calendarRef) : getCalendar(getCalendarForTypePreview(spec.type));
+    var calName = spec.calendarRef && !cal ? spec.calendarRef.replace(/\b\w/g, function(x) { return x.toUpperCase(); }) + ' (new calendar)' : (cal ? cal.name : '');
+    var hex = spec.color ? colorHex(spec.color) : (cal ? colorHex(cal.color) : calendarColorHex(getCalendarForTypePreview(spec.type)));
+    return { op: op, spec: spec, errors: built.errors, warnings: built.warnings, cal: cal, calName: calName, hex: hex, when: fmtWhen(spec, state.settings, getLocalDateString()) };
+}
+
+function quickAddCardHtml(r) {
+    var spec = r.spec;
+    var chip = function(ic, txt, extra) { return '<span class="gc-qa-chip">' + (extra || icon(ic)) + escapeHtml(txt) + '</span>'; };
+    var chips = [];
+    if (spec.recurrence) chips.push(chip('repeat', describeRecurrence(spec.recurrence, spec.startDate)));
+    if (spec.color) chips.push(chip('', colorName(spec.color), '<span class="gc-dot" style="background:' + colorHex(spec.color) + '"></span>'));
+    if (r.calName) chips.push(chip('calendar_today', r.calName));
+    if (spec.location) chips.push(chip('location_on', spec.location));
+    if (QUICK_REMINDER_RE.test(r.op.quick)) { // only when a reminder was said — defaults aren't news
+        var rem = reminderMinutes(spec);
+        chips.push(chip(rem.length ? 'alarm' : 'notifications_off', rem.length ? reminderLabel(rem[0], spec.allDay) : 'No reminder'));
+    }
+    if (spec.priority) chips.push(chip('flag', spec.priority.charAt(0).toUpperCase() + spec.priority.slice(1) + ' priority'));
+    if (spec.notes) chips.push(chip('notes', spec.notes.length > 40 ? spec.notes.slice(0, 40) + '…' : spec.notes));
+    return '<div class="gc-qa-card" style="--qa:' + r.hex + '"><span class="gc-qa-bar"></span><div class="gc-qa-main">' +
+        '<div class="gc-qa-title">' + icon(typeIcon(spec.type), 'gc-qa-ic') + '<span>' + escapeHtml(spec.title || (spec.type === 'appointment' ? 'Patient appointment' : '(No title)')) + '</span></div>' +
+        '<div class="gc-qa-when">' + escapeHtml(r.when) + '</div>' +
+        (chips.length ? '<div class="gc-qa-chips">' + chips.join('') + '</div>' : '') +
+        (r.errors && r.errors.length ? '<div class="gc-qa-warn">' + escapeHtml(r.errors[0]) + '</div>' : '') +
+        '</div></div>';
+}
+
 function quickAddPreview(text) {
     var out = $('gcQuickPreview');
     if (!out) return null;
-    var t = String(text || '').trim();
-    if (!t) { out.innerHTML = ''; out.hidden = true; return null; }
-    var op = { verb: 'EVENT', fields: {}, quick: t, checked: false, line: 1 };
-    var built = buildEventSpec(op, { today: getLocalDateString(), settings: state.settings });
-    var spec = built.spec;
-    var cal = spec.calendarRef ? findCalendarByName(spec.calendarRef) : null;
-    var calName = spec.calendarRef ? (cal ? cal.name : spec.calendarRef + ' (new)') : (getCalendar(getCalendarForTypePreview(spec.type)) || {}).name;
-    var hex = cal ? colorHex(cal.color) : calendarColorHex(getCalendarForTypePreview(spec.type));
-    var when = fmtWhen(spec, state.settings, getLocalDateString());
+    var r = quickAddBuild(text);
+    if (!r) { out.innerHTML = ''; out.hidden = true; return null; }
     out.hidden = false;
-    out.innerHTML = '<div class="gc-qa-card"><span class="gc-dot" style="background:' + hex + '"></span><div>' +
-        '<div class="gc-qa-title">' + icon(typeIcon(spec.type), 'gc-qa-ic') + escapeHtml(spec.title || '(No title)') + '</div>' +
-        '<div class="gc-qa-when">' + escapeHtml(when) + '</div>' +
-        '<div class="gc-qa-meta">' + escapeHtml([calName, spec.recurrence ? describeRecurrence(spec.recurrence, spec.startDate) : '', spec.location ? '@ ' + spec.location : '', spec.priority ? spec.priority + ' priority' : ''].filter(Boolean).join(' · ')) + '</div>' +
-        '</div></div><div class="gc-qa-hint">Enter to add · Shift+Enter for details</div>';
-    return { op: op, spec: spec, errors: built.errors };
+    out.innerHTML = quickAddCardHtml(r) + '<div class="gc-qa-hint">Enter to add' + (isCoarsePointer() ? '' : ' · Shift+Enter for details') + '</div>';
+    return r;
 }
 
-function submitQuickAdd(openDetails) {
-    var input = $('gcQuickInput');
-    var text = input.value.trim();
-    if (!text) return;
-    var r = quickAddPreview(text);
-    if (!r) return;
+function isCoarsePointer() {
+    try { return window.matchMedia('(pointer: coarse)').matches; } catch (e) { return false; }
+}
+
+// Saves a built quick-add (one undo step); returns the new event
+function commitQuickAdd(r) {
     var spec = deepClone(r.spec);
-    if (openDetails) {
-        var cal = spec.calendarRef ? findCalendarByName(spec.calendarRef) : null;
-        spec.calendarId = cal ? cal.id : null;
-        input.value = '';
-        quickAddPreview('');
-        openEditor({ draft: spec });
-        return;
-    }
     var ch = beginChange('quick add');
     var calId = null;
     if (spec.calendarRef) {
@@ -76,13 +99,121 @@ function submitQuickAdd(openDetails) {
     spec.calendarId = calId;
     spec.source = 'quick';
     var ev = createEventRecord(spec);
-    input.value = '';
-    quickAddPreview('');
     finishChange(ch, (EVENT_TYPES[ev.type] || 'Event') + ' added · ' + fmtWhen(buildInstance(ev, null), state.settings, getLocalDateString()));
-    if (ev.startDate !== currentDate && (ui.view === 'day' || ui.view === 'week' || ui.view === '3day' || ui.view === '4day')) {
-        var vis = getVisibleDays(ui.view, currentDate);
+    if (ev.startDate !== currentDate && (ui.view === 'day' || ui.view === 'week' || ui.view === '3day' || ui.view === '4day' || !ui.view)) {
+        var vis = getVisibleDays(ui.view || 'week', currentDate);
         if (vis.indexOf(ev.startDate) === -1) goToDate(ev.startDate);
     }
+    return ev;
+}
+
+function quickAddToEditor(r) {
+    var spec = deepClone(r.spec);
+    var cal = spec.calendarRef ? findCalendarByName(spec.calendarRef) : null;
+    spec.calendarId = cal ? cal.id : null;
+    delete spec.calendarRef;
+    openEditor({ draft: spec });
+}
+
+function submitQuickAdd(openDetails) {
+    var input = $('gcQuickInput');
+    var text = input.value.trim();
+    if (!text) return;
+    var r = quickAddPreview(text);
+    if (!r) return;
+    input.value = '';
+    quickAddPreview('');
+    if (openDetails) { quickAddToEditor(r); return; }
+    commitQuickAdd(r);
+}
+
+// ---------------------------------------------------------------- quick add sheet (phones: the + button)
+// Drops from the top so the iPhone keyboard never covers the preview.
+var QUICK_EXAMPLES = [
+    'IPPM lecture tues mornings 8-10am until dec 18 blue',
+    'task: call the lab about Chen\'s crown fri 3pm',
+    'Dentist next thu 2pm @ BU Dental remind me 1 hour before',
+    'PR2 write-up due nov 20 red',
+    'Gym MWF 6am green'
+];
+function openQuickAddSheet(prefill) {
+    closePopover(true);
+    if (typeof closeMenu === 'function') closeMenu();
+    var old = document.querySelector('.gc-qa-sheet-wrap');
+    if (old) old.parentNode.removeChild(old);
+    var typeVerb = '';
+    var types = [['', 'Auto', 'auto_awesome'], ['EVENT', 'Event', 'event'], ['TASK', 'Task', 'task_alt'], ['DEADLINE', 'Deadline', 'flag'], ['APPOINTMENTS', 'Patient', 'dentistry']];
+    var wrap = document.createElement('div');
+    wrap.className = 'gc-qa-sheet-wrap';
+    wrap.innerHTML = '<div class="gc-qa-scrim" data-close></div>' +
+        '<div class="gc-qa-sheet" role="dialog" aria-modal="true" aria-label="Quick add">' +
+        '<form class="gc-qa-sheet-top" autocomplete="off">' + icon('bolt') +
+        '<textarea class="gc-qa-sheet-input" name="q" rows="1" enterkeyhint="done" autocomplete="off" autocapitalize="sentences" autocorrect="on" spellcheck="true" placeholder="Type or dictate — gym MWF 6am green" aria-label="Describe what to add"></textarea>' +
+        '<button type="button" class="gc-icon-btn" data-close aria-label="Close">' + icon('close') + '</button></form>' +
+        '<div class="gc-qa-sheet-preview"></div>' +
+        '<div class="gc-qa-types" role="radiogroup" aria-label="Type">' + types.map(function(t) {
+            return '<button type="button" class="gc-qa-type' + (t[0] === typeVerb ? ' sel' : '') + '" role="radio" aria-checked="' + (t[0] === typeVerb) + '" data-verb="' + t[0] + '">' + icon(t[2]) + t[1] + '</button>';
+        }).join('') + '</div>' +
+        '<div class="gc-qa-sheet-actions">' +
+        '<button type="button" class="gc-btn text sm" data-act="paste">' + icon('content_paste') + 'Paste from Claude</button>' +
+        '<button type="button" class="gc-btn text sm" data-act="more">More options</button><span class="gc-flex"></span>' +
+        '<button type="button" class="gc-btn filled" data-act="add" disabled>Add</button></div>' +
+        '</div>';
+    document.body.appendChild(wrap);
+    document.body.classList.add('gc-qa-open');
+    var input = wrap.querySelector('.gc-qa-sheet-input');
+    var prev = wrap.querySelector('.gc-qa-sheet-preview');
+    var addBtn = wrap.querySelector('[data-act=add]');
+    var built = null;
+    function grow() { input.style.height = 'auto'; input.style.height = Math.min(input.scrollHeight, 132) + 'px'; }
+    function refresh() {
+        grow();
+        built = quickAddBuild(input.value.replace(/\s*\n\s*/g, ' '), typeVerb || undefined);
+        addBtn.disabled = !built;
+        if (built) { prev.innerHTML = quickAddCardHtml(built); return; }
+        prev.innerHTML = '<div class="gc-qa-examples"><div class="gc-qa-ex-head">Say it the way you\'d text it — date, time, repeat, color, place, reminder:</div>' +
+            QUICK_EXAMPLES.map(function(x) { return '<button type="button" class="gc-qa-ex">' + escapeHtml(x) + '</button>'; }).join('') + '</div>';
+        prev.querySelectorAll('.gc-qa-ex').forEach(function(b) {
+            b.addEventListener('click', function() { input.value = b.textContent; refresh(); input.focus(); });
+        });
+    }
+    function close() {
+        document.body.classList.remove('gc-qa-open');
+        document.removeEventListener('keydown', onKey, true);
+        if (wrap.parentNode) wrap.parentNode.removeChild(wrap);
+    }
+    function add() {
+        if (!built) return;
+        var r = built;
+        close();
+        commitQuickAdd(r);
+    }
+    function onKey(e) { if (e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); close(); } }
+    document.addEventListener('keydown', onKey, true);
+    input.addEventListener('input', refresh);
+    // Return adds (iOS arms Shift after auto-capitalize, so Shift never means anything here)
+    input.addEventListener('keydown', function(e) { if (e.key === 'Enter' && !e.isComposing) { e.preventDefault(); add(); } });
+    wrap.querySelector('form').addEventListener('submit', function(e) { e.preventDefault(); add(); });
+    addBtn.addEventListener('click', add);
+    wrap.querySelectorAll('[data-close]').forEach(function(b) { b.addEventListener('click', close); });
+    wrap.querySelector('[data-act=more]').addEventListener('click', function() {
+        var r = built;
+        close();
+        if (r) quickAddToEditor(r);
+        else openEditor({ draft: { type: (CREATE_VERBS[typeVerb] || 'event'), startDate: currentDate || getLocalDateString(), startTime: nextHalfHour() } });
+    });
+    wrap.querySelector('[data-act=paste]').addEventListener('click', function() { close(); openImportDialog('paste'); });
+    wrap.querySelectorAll('.gc-qa-type').forEach(function(b) {
+        b.addEventListener('click', function() {
+            typeVerb = b.getAttribute('data-verb');
+            wrap.querySelectorAll('.gc-qa-type').forEach(function(x) { var on = x === b; x.classList.toggle('sel', on); x.setAttribute('aria-checked', on ? 'true' : 'false'); });
+            refresh();
+            input.focus();
+        });
+    });
+    if (prefill) input.value = prefill;
+    refresh();
+    input.focus(); // synchronous inside the tap → iOS opens the keyboard
 }
 
 // ---------------------------------------------------------------- mini calendar

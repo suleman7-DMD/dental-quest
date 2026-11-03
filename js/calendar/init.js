@@ -60,12 +60,13 @@ function periodLabel() {
     var r = visibleRange();
     var a = ymdParts(r[0]), b = ymdParts(r[1]);
     if (isPhone()) {
-        // narrow header (Google mobile style): short month, year only when it isn't this year
+        // narrow header (Google mobile style): full month when one month is showing, year only when it isn't this year
         var ty = ymdParts(getLocalDateString()).y;
         var sm = function(q) { return MONTHS_SHORT[q.m - 1] + (q.y !== ty ? ' ' + q.y : ''); };
+        var fm = function(q) { return q.y !== ty ? MONTHS_SHORT[q.m - 1] + ' ' + q.y : MONTHS[q.m - 1]; };
         if (view === 'day') return MONTHS_SHORT[p.m - 1] + ' ' + p.d + (p.y !== ty ? ', ' + p.y : '');
-        if (view === 'month') return sm(p);
-        return a.m === b.m && a.y === b.y ? sm(a) : sm(a) + ' – ' + sm(b);
+        if (view === 'month') return fm(p);
+        return a.m === b.m && a.y === b.y ? fm(a) : sm(a) + ' – ' + sm(b);
     }
     if (view === 'day') return fmtDateLong(currentDate);
     if (view === 'month') return MONTHS[p.m - 1] + ' ' + p.y;
@@ -93,6 +94,8 @@ function renderHeader() {
     if (tb) tb.title = fmtDateLong(today);
     var fav = $('gcTodayNum');
     if (fav) fav.textContent = ymdParts(today).d;
+    var tic = $('gcTodayIcNum');
+    if (tic) tic.textContent = ymdParts(today).d;
     document.body.classList.toggle('gc-sidebar-closed', !ui.sidebarOpen);
     var si = $('gcSearchInput');
     if (si && document.activeElement !== si && si.value !== searchQuery) si.value = searchQuery;
@@ -301,7 +304,7 @@ function onGlobalKeydown(e) {
         j: function() { navigate(1); }, n: function() { navigate(1); },
         k: function() { navigate(-1); }, p: function() { navigate(-1); },
         c: function() { closePopover(true); openEditor({ draft: { type: 'event', startDate: currentDate, startTime: nextHalfHour() } }); },
-        q: function() { if (!ui.sidebarOpen) toggleSidebar(true); setTimeout(function() { var qi = $('gcQuickInput'); if (qi) qi.focus(); }, isPhone() ? 230 : 0); },
+        q: function() { if (isPhone() || !ui.sidebarOpen) { openQuickAddSheet(); return; } var qi = $('gcQuickInput'); if (qi) qi.focus(); },
         i: function() { openImportDialog('paste'); },
         g: openGoToDate,
         s: openSettings,
@@ -365,13 +368,13 @@ function wireHeader() {
     }
     on('gcSearchClear', 'click', function() { setSearch(''); });
     on('gcCreateBtn', 'click', function(e) { openCreateMenu(e.currentTarget); });
-    on('gcFab', 'click', function(e) { openCreateMenu(e.currentTarget); });
+    on('gcFab', 'click', function() { openQuickAddSheet(); });
     on('gcScrim', 'click', function() { toggleSidebar(false); });
     var qi = $('gcQuickInput');
     if (qi) {
         qi.addEventListener('input', function() { quickAddPreview(qi.value); });
         qi.addEventListener('keydown', function(e) {
-            if (e.key === 'Enter') { e.preventDefault(); submitQuickAdd(e.shiftKey); }
+            if (e.key === 'Enter') { e.preventDefault(); submitQuickAdd(e.shiftKey && !isCoarsePointer()); } // iOS arms Shift after auto-capitalize
             if (e.key === 'Escape') { e.stopPropagation(); qi.value = ''; quickAddPreview(''); qi.blur(); }
         });
     }
@@ -406,7 +409,7 @@ function boot() {
         if (mq.addEventListener) mq.addEventListener('change', onScheme); else if (mq.addListener) mq.addListener(onScheme);
     }
     lastWasPhone = isPhone();
-    if (!ui.view || !VIEW_DEFS[ui.view]) ui.view = lastWasPhone ? 'schedule' : (state.settings.defaultView || 'week');
+    if (!ui.view || !VIEW_DEFS[ui.view]) ui.view = state.settings.defaultView || 'week';
     if (lastWasPhone) ui.sidebarOpen = false;
     // deep links: calendar.html#date=2026-11-05&view=day
     try {
@@ -440,6 +443,9 @@ function boot() {
     setInterval(checkReminders, 30000);
     setTimeout(checkReminders, 4000);
     initFirebase();
+    if (document.readyState === 'complete') registerServiceWorker();
+    else window.addEventListener('load', registerServiceWorker);
+    setTimeout(maybeShowInstallHint, 2500);
 }
 
 if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot);

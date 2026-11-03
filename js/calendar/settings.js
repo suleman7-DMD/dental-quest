@@ -30,6 +30,8 @@ function openSettings() {
     var adRemOpts = [[-1, 'None'], [0, 'On the day at 9am'], [1440, '1 day before at 9am'], [2880, '2 days before at 9am'], [10080, '1 week before at 9am']];
     var hours = [];
     for (var h = 0; h <= 20; h++) hours.push([h, fmtHourLabel(h, s.timeFormat)]);
+    var endHours = [];
+    for (var eh = 12; eh <= 24; eh++) endHours.push([eh, eh === 24 ? 'Midnight' : fmtHourLabel(eh, s.timeFormat)]);
     var html =
         '<div class="gc-settings">' +
         '<div class="gc-import-head"><h2>' + icon('settings') + 'Settings</h2><button class="gc-icon-btn" data-close title="Close">' + icon('close') + '</button></div>' +
@@ -38,7 +40,8 @@ function openSettings() {
         '<div class="gc-set-row"><span>Start week on</span>' + sel('weekStart', [[0, 'Sunday'], [1, 'Monday'], [6, 'Saturday']], s.weekStart) + '</div>' +
         '<div class="gc-set-row"><span>Time format</span>' + sel('timeFormat', [['12h', '1:00pm'], ['24h', '13:00']], s.timeFormat) + '</div>' +
         '<div class="gc-set-row"><span>Default view</span>' + sel('defaultView', [['day', 'Day'], ['3day', '3 days'], ['4day', '4 days'], ['week', 'Week'], ['month', 'Month'], ['year', 'Year'], ['schedule', 'Schedule']], s.defaultView) + '</div>' +
-        '<div class="gc-set-row"><span>Day view starts scrolled to</span>' + sel('dayStartHour', hours, s.dayStartHour) + '</div>' +
+        '<div class="gc-set-row"><span>Your day starts at <small class="gc-muted">(phone week view fits your day on one screen)</small></span>' + sel('dayStartHour', hours, s.dayStartHour) + '</div>' +
+        '<div class="gc-set-row"><span>Your day ends at</span>' + sel('dayEndHour', endHours, s.dayEndHour) + '</div>' +
         '<div class="gc-set-row"><span>Density</span>' + sel('density', [['comfortable', 'Comfortable'], ['compact', 'Compact']], s.density) + '</div>' +
         '<div class="gc-set-row"><span>Theme <small class="gc-muted">(this device)</small></span><select class="gc-input sm" data-theme-sel><option value="system">Device default</option><option value="light">Light</option><option value="dark">Dark</option></select></div>' +
         tog('showWeekends', 'Show weekends', s.showWeekends) +
@@ -65,6 +68,7 @@ function openSettings() {
         '<button class="gc-btn outlined sm" data-act="import">' + icon('content_paste') + ' Import / export</button>' +
         '<button class="gc-btn outlined sm" data-act="ics">' + icon('download') + ' Download .ics</button>' +
         '</div></section>' +
+        '<section><h3>' + icon('install_mobile') + ' Home Screen app</h3>' + installSectionHtml() + '</section>' +
         '<section><h3>Help</h3><div class="gc-set-actions">' +
         '<button class="gc-btn outlined sm" data-act="keys">' + icon('keyboard') + ' Keyboard shortcuts</button>' +
         '<button class="gc-btn outlined sm" data-act="guide">' + icon('smart_toy') + ' Claude paste format</button>' +
@@ -77,9 +81,9 @@ function openSettings() {
         el.addEventListener('change', function() {
             var k = el.getAttribute('data-set');
             var v = el.value;
-            if (['weekStart', 'defaultDuration', 'apptDuration', 'defaultReminder', 'defaultAllDayReminder', 'dayStartHour'].indexOf(k) !== -1) v = +v;
+            if (['weekStart', 'defaultDuration', 'apptDuration', 'defaultReminder', 'defaultAllDayReminder', 'dayStartHour', 'dayEndHour'].indexOf(k) !== -1) v = +v;
             setSetting(k, v);
-            if (k === 'dayStartHour') lastGridRangeKey = null;
+            if (k === 'dayStartHour' || k === 'dayEndHour') lastGridRangeKey = null;
         });
     });
     box.querySelectorAll('[data-set-bool]').forEach(function(el) {
@@ -133,6 +137,71 @@ function openGoToDate() {
 function resolvedTheme() {
     if (ui.theme === 'dark' || ui.theme === 'light') return ui.theme;
     return window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+}
+
+// ---------------------------------------------------------------- Home Screen app (iPhone)
+// iOS turns any page with a manifest + apple-touch-icon into a full-screen app
+// from Share → Add to Home Screen. It gets its OWN storage, so the PIN is asked once.
+function isStandaloneApp() {
+    try { return window.navigator.standalone === true || window.matchMedia('(display-mode: standalone)').matches; } catch (e) { return false; }
+}
+
+function isIOSDevice() {
+    var ua = navigator.userAgent || '';
+    return /iPhone|iPad|iPod/.test(ua) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+}
+
+function installStepsHtml() {
+    var chrome = /CriOS/.test(navigator.userAgent || '');
+    return '<ol class="gc-install-steps">' +
+        (chrome ? '<li>Tap ' + icon('ios_share') + ' <b>Share</b> at the right end of Chrome\'s address bar</li>'
+            : '<li>Tap ' + icon('ios_share') + ' <b>Share</b> in Safari (on newer iOS it\'s inside the ' + icon('more_horiz') + ' button)</li>') +
+        '<li>Scroll the sheet and tap ' + icon('add_to_home_screen') + ' <b>Add to Home Screen</b></li>' +
+        '<li>Leave <b>Open as Web App</b> on if you see it, then tap <b>Add</b></li>' +
+        '<li>Open <b>Calendar</b> from your Home Screen and enter your PIN once — the app keeps its own copy and syncs like everywhere else</li>' +
+        '</ol>';
+}
+
+function installSectionHtml() {
+    if (isStandaloneApp()) return '<div class="gc-set-row"><span>' + icon('check_circle') + ' Running as a Home Screen app on this device</span></div>';
+    return (isIOSDevice() ? '' : '<p class="gc-muted">On your iPhone, open this page in Safari or Chrome, then:</p>') + installStepsHtml();
+}
+
+function openInstallHelp() {
+    return openModal('<div class="gc-dialog"><h2 class="gc-dialog-title">Put Calendar on your Home Screen</h2>' +
+        '<div class="gc-dialog-body"><p>It opens full-screen like a real app — no address bar, one tap away, and it still opens with no signal.</p>' +
+        installStepsHtml() + '</div>' +
+        '<div class="gc-dialog-actions"><button class="gc-btn filled" data-close>Got it</button></div></div>', { narrow: true, label: 'Add to Home Screen' });
+}
+
+function maybeShowInstallHint() {
+    if (!isIOSDevice() || isStandaloneApp() || ui.installHintDismissed || document.querySelector('.gc-install-hint')) return;
+    var el = document.createElement('div');
+    el.className = 'gc-install-hint';
+    el.setAttribute('role', 'status');
+    el.innerHTML = '<img src="icons/calendar-180.png" alt="" width="36" height="36">' +
+        '<div class="gc-install-txt"><b>Make it an app</b><span>Add Calendar to your Home Screen</span></div>' +
+        '<button class="gc-btn tonal sm" data-act="how">How</button>' +
+        '<button class="gc-icon-btn sm" data-act="x" aria-label="Dismiss">' + icon('close') + '</button>';
+    var dismiss = function() { ui.installHintDismissed = true; saveUiPrefs(); if (el.parentNode) el.parentNode.removeChild(el); };
+    el.querySelector('[data-act=how]').addEventListener('click', function() { dismiss(); openInstallHelp(); });
+    el.querySelector('[data-act=x]').addEventListener('click', dismiss);
+    document.body.appendChild(el);
+}
+
+// Offline launch for the Home Screen app. Skipped under automation: tests route a
+// fake Firebase, and a service worker would fetch around that routing.
+function registerServiceWorker() {
+    if (!('serviceWorker' in navigator) || !window.isSecureContext) return;
+    if (navigator.webdriver && !/[?&]swtest\b/.test(location.search)) return;
+    navigator.serviceWorker.register('calendar-sw.js', { scope: 'calendar.html' }).then(function() {
+        return navigator.serviceWorker.ready;
+    }).then(function(reg) {
+        if (!reg.active) return;
+        var urls = [location.href.split('#')[0]];
+        try { performance.getEntriesByType('resource').forEach(function(r) { urls.push(r.name); }); } catch (e) {}
+        reg.active.postMessage({ type: 'precache', urls: urls });
+    }).catch(function(e) { console.warn('Service worker not registered:', e && e.message); });
 }
 
 function applyTheme() {

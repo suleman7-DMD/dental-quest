@@ -58,13 +58,13 @@ html.dark .gc-ad-chip:hover, html.dark .gc-m-chip:hover { filter: brightness(1.1
 .gc-ad-more:hover, .gc-m-more:hover { background: var(--hover); }
 
 .gc-grid-scroll { flex: 1 1 auto; overflow-y: auto; overflow-x: hidden; position: relative; overscroll-behavior: contain; scrollbar-width: thin; }
-.gc-grid-body { display: flex; position: relative; }
+.gc-grid-body { display: flex; position: relative; height: calc(var(--hh, 48px) * 24); }
 .gc-hours { width: var(--gutter); flex: none; position: relative; }
 .gc-hour-label { position: absolute; right: 0; width: 100%; transform: translateY(-50%); padding-right: 8px; text-align: right; font-size: 10px; color: var(--text-2); white-space: nowrap; }
 .gc-cols {
     flex: 1 1 auto; position: relative; min-width: 0; display: grid; grid-template-columns: repeat(var(--cols), minmax(0, 1fr));
     background-image: linear-gradient(to bottom, var(--divider) 1px, transparent 1px);
-    background-size: 100% var(--hour-h);
+    background-size: 100% var(--hh, 48px);
 }
 .gc-col { position: relative; border-left: 1px solid var(--divider); min-width: 0; }
 .gc-col:last-child { border-right: 0; }
@@ -90,6 +90,32 @@ body.gc-dragging, body.gc-dragging * { cursor: grabbing !important; user-select:
 body.gc-resizing, body.gc-resizing * { cursor: ns-resize !important; }
 .gc-now { position: absolute; left: -1px; right: 0; height: 2px; background: var(--now); z-index: 35; pointer-events: none; }
 .gc-now::before { content: ''; position: absolute; left: -6px; top: -5px; width: 12px; height: 12px; border-radius: 50%; background: var(--now); }
+
+/* zoom toggle (fit the whole day ⇄ full-size hours) — pinch works too */
+.gc-zoom-btn { margin-bottom: 4px; color: var(--text-2); }
+.gc-grid-view.hh-tight .gc-hour-label.odd { visibility: hidden; }
+.gc-grid-scroll { touch-action: pan-x pan-y; }
+body.gc-pinching .gc-grid-scroll { overflow: hidden; }
+
+/* phone week: title-first chips — wrapped, shrunk to fit by fitGridChips() */
+.gc-ev.nw {
+    padding: 1px 2px 1px 3px; border-radius: 4px; line-height: 1.16; font-size: var(--fs, 10px);
+    box-shadow: 0 0 0 1px var(--bg); -webkit-touch-callout: none;
+}
+.gc-ev.nw .gc-ev-t {
+    font-weight: 500; letter-spacing: -.1px; overflow-wrap: anywhere; word-break: break-word;
+    -webkit-hyphens: auto; hyphens: auto;
+}
+.gc-ev.nw .gc-ev-t.mw { overflow-wrap: normal; word-break: normal; -webkit-hyphens: manual; hyphens: manual; }
+.gc-ev.nw.clamped .gc-ev-t { display: -webkit-box; -webkit-box-orient: vertical; overflow: hidden; }
+.gc-ev.nw .gc-ev-s { display: none; font-size: max(8px, calc(var(--fs, 10px) - 1px)); opacity: .9; white-space: nowrap; overflow: hidden; letter-spacing: -.2px; }
+.gc-ev.nw.show-time .gc-ev-s { display: block; }
+.gc-ev.nw .gc-ev-ic { font-size: 1.1em; margin-right: 1px; vertical-align: -.15em; }
+.gc-ev.nw .gc-ev-resize { height: 6px; }
+.gc-grid-view.narrow .gc-ad-chip { height: 18px; line-height: 18px; font-size: 10px; padding: 0 3px; border-radius: 3px; gap: 2px; }
+.gc-grid-view.narrow .gc-ad-chip .gc-ev-ic { font-size: 12px; margin-right: 0; }
+.gc-grid-view.narrow .gc-ad-more { height: 18px; padding: 0 2px; font-size: 10.5px; text-align: center; }
+.gc-grid-view.narrow .gc-now::before { left: -4px; top: -3px; width: 8px; height: 8px; }
 
 /* ---------------------------------------------------------------- month */
 .gc-month-view { display: flex; flex-direction: column; height: 100%; }
@@ -410,8 +436,17 @@ body.gc-compact .gc-daynum { width: 38px; height: 38px; font-size: 22px; }
     .gc-head-day { padding-bottom: 4px; }
     .gc-daynum { width: 36px; height: 36px; font-size: 20px; }
     .gc-grid-view.single .gc-head-day { padding-left: 4px; }
-    .gc-hour-label { font-size: 9.5px; padding-right: 6px; }
+    .gc-hour-label { font-size: 9.5px; padding-right: 5px; }
     .gc-ev { padding: 2px 4px; font-size: 11px; }
+    .gc-grid-head { padding-top: 2px; }
+    .gc-gutter-head { padding: 0 2px 2px 0; align-items: center; }
+    .gc-gutter-head .gc-tz { display: none; }
+    .gc-zoom-btn { margin: 0; width: 32px; height: 32px; }
+    .gc-zoom-btn .ms { font-size: 20px; }
+    .gc-grid-view:not(.single) .gc-head-day { gap: 1px; padding: 0 0 4px; }
+    .gc-grid-view:not(.single) .gc-dow { font-size: 10px; letter-spacing: .3px; }
+    .gc-grid-view:not(.single) .gc-daynum { width: 28px; height: 28px; font-size: 15px; font-weight: 500; }
+    .gc-gutter-allday { padding: 0 2px 1px 0; }
     .gc-ev-time { font-size: 10.5px; }
     .gc-ad-chip { font-size: 11px; padding: 0 5px; }
     .gc-m-chip, .gc-m-timed { font-size: 11px; padding: 0 3px; }

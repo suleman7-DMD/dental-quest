@@ -323,7 +323,8 @@ function getDefaultSettings() {
         showCompletedTasks: true,
         defaultReminder: 30,        // minutes before timed events; -1 = none
         defaultAllDayReminder: -1,  // minutes before 9:00 on all-day events; -1 = none
-        dayStartHour: 7,            // initial scroll position of time grids
+        dayStartHour: 7,            // your day: grids scroll here; the phone "fit day" view starts here
+        dayEndHour: 23,             // ...and ends here (stretched to any item outside it)
         density: 'comfortable'      // 'comfortable' | 'compact'
     };
 }
@@ -487,6 +488,7 @@ function normalizeSettings(s) {
     out.defaultReminder = (s.defaultReminder !== undefined && s.defaultReminder !== null && isFinite(+s.defaultReminder)) ? +s.defaultReminder : d.defaultReminder;
     out.defaultAllDayReminder = (s.defaultAllDayReminder !== undefined && s.defaultAllDayReminder !== null && isFinite(+s.defaultAllDayReminder)) ? +s.defaultAllDayReminder : d.defaultAllDayReminder;
     out.dayStartHour = (+s.dayStartHour >= 0 && +s.dayStartHour <= 20) ? +s.dayStartHour : d.dayStartHour;
+    out.dayEndHour = (+s.dayEndHour >= 12 && +s.dayEndHour <= 24) ? Math.max(out.dayStartHour + 1, +s.dayEndHour) : d.dayEndHour;
     out.density = s.density === 'compact' ? 'compact' : 'comfortable';
     return out;
 }
@@ -570,13 +572,15 @@ var searchQuery = '';
 
 function getDefaultUiPrefs() {
     return {
-        view: null,                // null → settings.defaultView (or schedule on phones)
+        view: null,                // null → settings.defaultView
         sidebarOpen: true,
         theme: 'system',           // 'system' | 'light' | 'dark'
         overlays: { holidays: true, rmDeadlines: false, rmAppointments: false, rmD4: false },
         allDayExpanded: false,
         myCalsOpen: true,
-        otherCalsOpen: true
+        otherCalsOpen: true,
+        gridZoom: null,            // null = auto (fit the day on phones) | 'fit' | 'normal' | px per hour
+        installHintDismissed: false
     };
 }
 
@@ -593,7 +597,9 @@ function loadUiPrefs() {
             overlays: Object.assign({}, d.overlays, p.overlays || {}),
             allDayExpanded: !!p.allDayExpanded,
             myCalsOpen: p.myCalsOpen !== false,
-            otherCalsOpen: p.otherCalsOpen !== false
+            otherCalsOpen: p.otherCalsOpen !== false,
+            gridZoom: p.gridZoom === 'fit' || p.gridZoom === 'normal' || (typeof p.gridZoom === 'number' && isFinite(p.gridZoom)) ? p.gridZoom : null,
+            installHintDismissed: !!p.installHintDismissed
         };
     } catch (e) {
         return d;

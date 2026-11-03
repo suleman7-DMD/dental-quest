@@ -465,12 +465,15 @@ function buildEventSpec(op, ctx) {
     var spec = emptySpecFor(type);
 
     if (op.quick !== null && op.quick !== undefined) {
-        var q = parseQuickAdd(op.quick, today, { type: op.verb === 'EVENT' ? null : type });
+        var q = parseQuickAdd(op.quick, today, { type: op.verb === 'EVENT' ? null : type, colors: !!op.interactive, nowMs: ctx.nowMs });
         spec.type = q.type || type;
         spec.title = q.title;
         spec.calendarRef = q.calendarRef;
         spec.location = q.location;
         spec.priority = q.priority;
+        spec.color = q.color || null;
+        spec.notes = q.notes || '';
+        if (q.reminder !== null && q.reminder !== undefined) spec.reminders = q.reminder < 0 ? {} : normalizeReminders([q.reminder]);
         spec.done = !!op.checked;
         return finishTiming(spec, {
             date: q.date, endDate: q.endDate, start: q.start, end: q.end, allDay: q.allDay,

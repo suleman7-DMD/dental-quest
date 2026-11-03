@@ -550,6 +550,82 @@ var REPEAT_PHRASE_RE = new RegExp(
     '(?:\\s+(?:until|till)\\s+(?:' + MONTH_NAME_SRC + '\\.?\\s+\\d{1,2}(?:st|nd|rd|th)?(?:,?\\s+\\d{4})?|\\d{1,2}\\/\\d{1,2}(?:\\/\\d{2,4})?|\\d{4}-\\d{2}-\\d{2}))?' +
     '(?:\\s+(?:for\\s+)?\\d{1,3}\\s+(?:times|weeks|days|months))?', 'i');
 
+// Plain color words the quick-add box understands (palette names need a cue:
+// "color mango", "#mango"). blue → Cobalt so it stands out from Personal's Peacock.
+var QUICK_COLOR_WORDS = {
+    'red': 'tomato', 'dark red': 'radicchio', 'orange': 'tangerine', 'dark orange': 'pumpkin', 'yellow': 'banana', 'gold': 'mango',
+    'green': 'basil', 'dark green': 'basil', 'light green': 'sage', 'lime': 'pistachio', 'mint': 'sage',
+    'teal': 'eucalyptus', 'turquoise': 'eucalyptus', 'blue': 'cobalt', 'light blue': 'peacock', 'sky blue': 'peacock',
+    'dark blue': 'blueberry', 'navy': 'blueberry', 'navy blue': 'blueberry', 'indigo': 'blueberry',
+    'purple': 'grape', 'violet': 'grape', 'light purple': 'lavender', 'lavender': 'lavender', 'lilac': 'wisteria',
+    'pink': 'flamingo', 'hot pink': 'cherryblossom', 'magenta': 'radicchio',
+    'gray': 'graphite', 'grey': 'graphite', 'black': 'graphite', 'brown': 'cocoa'
+};
+function quickColorKey(w) {
+    var k = String(w || '').toLowerCase().replace(/\s+/g, ' ').trim();
+    if (QUICK_COLOR_WORDS[k]) return QUICK_COLOR_WORDS[k];
+    var flat = k.replace(/[^a-z]/g, '');
+    return CAL_COLORS[flat] ? flat : null;
+}
+
+// "… lecture blue" / "Blue: ippm lecture" / "color mango" / "in green" → { color, s } with
+// the words cut out. A bare color word only counts at the edge of a phrase
+// (start, end, or next to a date/time that was cut) and never inside a name:
+// "Red Sox", "Dr. Green", "Green Street" stay in the title.
+function extractQuickColor(s) {
+    var palette = Object.keys(CAL_COLORS).concat(['cherry blossom']).join('|');
+    var basic = Object.keys(QUICK_COLOR_WORDS).sort(function(a, b) { return b.length - a.length; }).join('|').replace(/ /g, '\\s+');
+    var cue = s.match(new RegExp('\\b(?:colou?r(?:ed)?|make\\s+it|mark\\s+(?:it\\s+)?)\\s*[:=]?\\s*(' + basic + '|' + palette + ')\\b', 'i')) ||
+        s.match(new RegExp('\\b(' + basic + '|' + palette + ')\\s+colou?r(?:ed)?\\b', 'i'));
+    if (cue && quickColorKey(cue[1])) return { color: quickColorKey(cue[1]), s: s.slice(0, cue.index) + '  ' + s.slice(cue.index + cue[0].length) };
+    var words = [], re = /[^\s,]+/g, mm, lastEnd = 0;
+    while ((mm = re.exec(s))) {
+        var gap = s.slice(lastEnd, mm.index);
+        words.push({ w: mm[0], start: mm.index, end: mm.index + mm[0].length, brk: !words.length || /\s{2,}|,/.test(gap) });
+        lastEnd = re.lastIndex;
+    }
+    var best = null;
+    for (var i = 0; i < words.length; i++) {
+        var j = i, key = null;
+        if (i + 1 < words.length && !words[i + 1].brk && QUICK_COLOR_WORDS[(words[i].w + ' ' + words[i + 1].w).toLowerCase()]) { j = i + 1; key = QUICK_COLOR_WORDS[(words[i].w + ' ' + words[i + 1].w).toLowerCase()]; }
+        else key = QUICK_COLOR_WORDS[words[i].w.toLowerCase().replace(/[.!?:;]+$/, '')] || null;
+        if (!key) continue;
+        var from = i;
+        if (i > 0 && !words[i].brk && /^(in|as)$/i.test(words[i - 1].w)) from = i - 1;
+        var atStart = words[from].brk, atEnd = j === words.length - 1 || words[j + 1].brk;
+        if (!atStart && !atEnd) continue;
+        if (i > 0 && !words[i].brk && /^(dr|mr|mrs|ms|prof|st|mt|coach)\.?$/i.test(words[i - 1].w)) continue;
+        var cap = /^[A-Z]/.test(words[i].w);
+        if (cap && ((j + 1 < words.length && !words[j + 1].brk && /^[A-Z]/.test(words[j + 1].w)) || (i > 0 && !words[i].brk && /^[A-Z]/.test(words[i - 1].w)))) continue;
+        if (words.length - (j - from + 1) < 1) continue; // never eat the whole title
+        best = { color: key, a: words[from].start, b: words[j].end };
+        i = j; // "light blue" is one color, not "light" + blue
+    }
+    if (!best) return null;
+    return { color: best.color, s: s.slice(0, best.a) + '  ' + s.slice(best.b) };
+}
+
+// "remind me 10 min before" / "alert 1 hour" / "reminder the day before" → minutes; "no reminder" → -1
+var QUICK_REMINDER_RE = /\b(?:no\s+(?:reminders?|alerts?|notifications?))\b|\b(?:remind(?:er)?(?:\s+me)?|alert(?:\s+me)?|notify(?:\s+me)?|notification)\s+(?:(\d+(?:\.\d+)?)\s*(m|mins?|minutes?|h|hrs?|hours?|d|days?|w|wks?|weeks?)|(an?|one)\s+(hour|day|week)|(half\s+an\s+hour)|(the\s+(?:day|night)|a\s+day))(?:\s+(?:before|prior|early|ahead|in\s+advance|beforehand))?(?![a-z])/i;
+function quickReminderMinutes(m) {
+    if (/^no\s/i.test(m[0])) return -1;
+    if (m[1]) { var n = parseFloat(m[1]), u = m[2].toLowerCase()[0]; return Math.round(n * (u === 'm' ? 1 : u === 'h' ? 60 : u === 'd' ? 1440 : 10080)); }
+    if (m[4]) return m[4].toLowerCase() === 'hour' ? 60 : m[4].toLowerCase() === 'day' ? 1440 : 10080;
+    if (m[5]) return 30;
+    return 1440;
+}
+
+var PART_OF_DAY_MIN = { morning: 9 * 60, afternoon: 14 * 60, evening: 18 * 60, night: 20 * 60 };
+var QA_WD = '(?:sun(?:day)?s?|mon(?:day)?s?|tue(?:s(?:day)?)?s?|wed(?:s|nesday)?s?|thu(?:r(?:s(?:day)?)?)?s?|fri(?:day)?s?|sat(?:urday)?s?)';
+var QA_WD_LIST = QA_WD + '(?:(?:\\s*[,&\\/]\\s*|\\s+)(?:and\\s+)?' + QA_WD + ')*';
+var SCHOOL_DAYS = { mwf: 'MO,WE,FR', 'm/w/f': 'MO,WE,FR', mw: 'MO,WE', 'm/w': 'MO,WE', tth: 'TU,TH', 't/th': 'TU,TH', 'tu/th': 'TU,TH', 'tue/thu': 'TU,TH', 'tues/thurs': 'TU,TH', 'tue/thurs': 'TU,TH', 'tues/thu': 'TU,TH' };
+function weekdayCodesIn(text) {
+    var set = {};
+    (String(text).toLowerCase().match(/\b(sun|mon|tue|wed|thu|fri|sat)[a-z]*\b/g) || []).forEach(function(w) { var i = weekdayFromWord(w); if (i !== null) set[i] = true; });
+    return [0, 1, 2, 3, 4, 5, 6].filter(function(i) { return set[i]; }).map(function(i) { return DOW_CODES[i]; }).join(',');
+}
+function weeklyRepeat(byDay) { return { rec: { freq: 'weekly', interval: 1, byDay: byDay, monthlyMode: 'day', until: null, count: null }, anchor: null, forSpan: null }; }
+
 // One line of free text → event fields. Never throws.
 // "Lunch w/ Sam tomorrow 12-1pm @ Cafe #personal", "task: submit PR2 fri 5pm !!!",
 // "Perio rounds every tue 8am until 12/15", "Board review Nov 5-7 #school"
@@ -559,16 +635,54 @@ function parseQuickAdd(text, today, opts) {
     var s = ' ' + String(text || '').replace(/\s+/g, ' ').trim() + ' ';
     var out = {
         type: opts.type || null, title: '', date: null, endDate: null, start: null, end: null,
-        allDay: false, durationMin: null, repeat: null, calendarRef: null, location: '', priority: null, chips: []
+        allDay: false, durationMin: null, repeat: null, calendarRef: null, location: '', priority: null, chips: [],
+        color: null, notes: '', reminder: null
     };
     function cutAt(idx, len) {
         var before = s.slice(0, idx).replace(/(?:\b(?:on|at|from|by|starting|due)|@)\s*$/i, '');
-        s = before + ' ' + s.slice(idx + len);
+        s = before + '  ' + s.slice(idx + len); // double space marks a cut (color-word edge detection)
     }
-    var m = s.match(/^\s*(task|todo|to-do|deadline|due|appt|appointment|event|reminder)\s*[:\-–]\s*/i);
+    // dictation: "…at 3 PM." — a trailing period is punctuation, not a token
+    s = s.replace(/([^.])\.+\s*$/, '$1 ');
+    // bare "sat"/"sun" are ordinary words for the date scanner — here, next to a time or at the end, they're days
+    s = s.replace(/\b(sat|sun)\b(?=\s+(?:\d|all[\s-]?day|morning|afternoon|evening|night|noon|midnight)|[\s,]*$)/gi, function(w) { return w.toLowerCase() === 'sat' ? 'saturday' : 'sunday'; });
+    var m = s.match(/^\s*(task|todo|to-do|deadline|due|appt|appointment|event|reminder)\s*[:\-–]\s*/i) ||
+        s.match(/^\s*(task|todo|to-do|deadline|reminder)\s+(?=\S)/i);
     if (m) {
         out.type = parseTypeValue(m[1]) || 'task';
         s = ' ' + s.slice(m[0].length);
+    } else if ((m = s.match(/^\s*remind\s+me\s+to\s+/i))) {
+        out.type = 'task';
+        s = ' ' + s.slice(m[0].length);
+    }
+    // "… // bring insurance card" → notes
+    m = s.match(/\s(?:\/\/|--|notes?:)\s*(\S.*)$/i);
+    if (m) { out.notes = m[1].trim(); s = s.slice(0, m.index) + ' '; }
+    m = s.match(QUICK_REMINDER_RE);
+    if (m) { out.reminder = quickReminderMinutes(m); cutAt(m.index, m[0].length); }
+    // "in 2 hours" / "in 30 min" → starts that long from now
+    m = s.match(/\bin\s+(\d+(?:\.\d+)?|an?|one|half\s+an?)\s*(m|mins?|minutes?|h|hrs?|hours?)(?![a-z])/i);
+    if (m) {
+        var qty = /^half/i.test(m[1]) ? 0.5 : /^(an?|one)$/i.test(m[1]) ? 1 : parseFloat(m[1]);
+        var addMin = Math.round(qty * (/^h/i.test(m[2]) ? 60 : 1));
+        if (addMin > 0 && addMin <= 48 * 60) {
+            var at = new Date((opts.nowMs || Date.now()) + addMin * 60000);
+            var rounded = Math.ceil((at.getHours() * 60 + at.getMinutes()) / 5) * 5;
+            out._relDate = getLocalDateString(at);
+            out._relStart = Math.min(rounded, 1439);
+            cutAt(m.index, m[0].length);
+        }
+    }
+    // "tues mornings" / "mon & wed evenings" → weekly on those days at that part of the day
+    var partOfDay = null;
+    m = s.match(new RegExp('\\b(' + QA_WD_LIST + ')\\s+(morning|afternoon|evening|night)s\\b', 'i'));
+    if (m && weekdayCodesIn(m[1])) { out.repeat = weeklyRepeat(weekdayCodesIn(m[1])); partOfDay = PART_OF_DAY_MIN[m[2].toLowerCase()]; cutAt(m.index, m[0].length); }
+    // "tomorrow morning" / "this afternoon" / "friday night" → a time hint (the day word stays for the date scan)
+    m = s.match(new RegExp('\\b(this|tomorrow|tonight|today|in\\s+the|' + QA_WD + ')\\s+(morning|afternoon|evening|night)\\b', 'i'));
+    if (m) {
+        if (partOfDay === null) partOfDay = PART_OF_DAY_MIN[m[2].toLowerCase()];
+        var keepWord = /^(this|in\s+the)$/i.test(m[1]) ? (/^this$/i.test(m[1]) ? ' today ' : ' ') : ' ' + m[1] + ' ';
+        s = s.slice(0, m.index) + keepWord + s.slice(m.index + m[0].length);
     }
     m = s.match(/\s#([A-Za-z0-9][\w-]*)/);
     if (m) { out.calendarRef = m[1].replace(/[-_]+/g, ' '); cutAt(m.index, m[0].length); out.chips.push('#' + m[1]); }
@@ -576,13 +690,35 @@ function parseQuickAdd(text, today, opts) {
     if (m) { out.priority = parsePriority(m[1]); cutAt(m.index, m[0].length); }
     m = s.match(/\s@\s*([^#!@]+?)\s*$/);
     if (m) { out.location = m[1].trim(); s = s.slice(0, m.index) + ' '; out.chips.push('@ ' + out.location); }
-    m = s.match(REPEAT_PHRASE_RE);
+    m = out.repeat ? null : s.match(REPEAT_PHRASE_RE);
     if (m) {
         var rp = parseRepeat(m[0], today);
         if (rp && rp.rec) { out.repeat = rp; cutAt(m.index, m[0].length); out.chips.push(m[0].trim()); }
     }
+    if (!out.repeat) {
+        // class schedules: "MWF" / "T/Th"; plural days: "tuesdays and thursdays"
+        m = s.match(/(?:^|\s)(mwf|m\/w\/f|mw|m\/w|tth|t\/th|tu\/th|tue\/thu|tues\/thurs|tue\/thurs|tues\/thu)(?=\s|$|,)/i);
+        if (m) { out.repeat = weeklyRepeat(SCHOOL_DAYS[m[1].toLowerCase()]); cutAt(m.index, m[0].length); }
+        else if ((m = s.match(/\b(?:sundays|mondays|tuesdays|wednesdays|thursdays|fridays|saturdays)(?:(?:\s*[,&\/]\s*|\s+)(?:and\s+)?(?:sun|mon|tue|wed|thu|fri|sat)[a-z]*)*\b/i))) {
+            out.repeat = weeklyRepeat(weekdayCodesIn(m[0]));
+            cutAt(m.index, m[0].length);
+        }
+    }
+    // "every morning" — daily, or just the time hint when the days are already known
+    m = s.match(/\b(?:every|each)\s+(morning|afternoon|evening|night)\b/i);
+    if (m) {
+        if (partOfDay === null) partOfDay = PART_OF_DAY_MIN[m[1].toLowerCase()];
+        if (!out.repeat) {
+            var wdc = weekdayCodesIn(s.replace(m[0], ' '));
+            out.repeat = wdc ? weeklyRepeat(wdc) : { rec: { freq: 'daily', interval: 1, byDay: '', monthlyMode: 'day', until: null, count: null }, anchor: null, forSpan: null };
+        }
+        cutAt(m.index, m[0].length);
+    }
+    // "on my school calendar" / "to work cal"
+    m = out.calendarRef ? null : s.match(/\s(?:on|in|to|into|for)\s+(?:my\s+|the\s+)?([a-z][a-z0-9&'-]*(?:\s+[a-z][a-z0-9&'-]*)?)\s+cal(?:endar)?\b/i);
+    if (m) { out.calendarRef = m[1]; cutAt(m.index, m[0].length); }
     // a detached "until <date>" belongs to the repeat rule, never to the event date
-    var um = s.match(/\s(?:until|till|thru)\s+/i);
+    var um = s.match(/\s(?:until|till|thru|through|ending|ends)\s+/i);
     if (out.repeat && out.repeat.rec && um) {
         var tail = s.slice(um.index + um[0].length);
         var ud = findDateInText(tail, today);
@@ -620,14 +756,24 @@ function parseQuickAdd(text, today, opts) {
         out.start = t.start;
         out.end = t.end;
         cutAt(t.index, t.length);
+    } else if (out._relStart !== undefined) {
+        out.start = out._relStart;
+        if (!d) out.date = out._relDate;
+    } else if (partOfDay !== null && !out.allDay) {
+        out.start = partOfDay;
     } else if (out._tonight) {
         out.start = 19 * 60;
     }
-    delete out._tonight;
+    delete out._tonight; delete out._relStart; delete out._relDate;
+    if (opts.colors) {
+        var qc = extractQuickColor(s);
+        if (qc) { out.color = qc.color; s = qc.s; }
+    }
     var title = s.replace(/\s+/g, ' ')
+        .replace(/\s+,/g, ',').replace(/,(?:\s*,)+/g, ',')
         .replace(/^[\s,;:\-–—|]+|[\s,;:\-–—|]+$/g, '')
-        .replace(/^(?:on|at|from|by|and)\s+/i, '')
-        .replace(/\s+(?:on|at|from|by|and|-)$/i, '')
+        .replace(/^(?:on|at|from|by|and|for|to)\s+/i, '')
+        .replace(/\s+(?:on|at|from|by|and|in|-)$/i, '')
         .trim();
     out.title = title;
     if (!out.type) out.type = (/\b(submit|turn in|hand in|due|deadline)\b/i.test(text) && out.start === null) ? 'deadline' : 'event';
