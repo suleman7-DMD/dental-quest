@@ -1,9 +1,10 @@
 // ============================================================================
 // SULLY CALENDAR — import-ui.js
 // Import & sync dialog: paste box with live preview (checkbox per change,
-// color-coded status), sync-appointments mode, format guide + one-click copy
-// of the Claude project instructions, "Export for Claude" snapshot (with IDs
-// so Claude can emit MOVE/UPDATE/DELETE verbs), .ics import/export.
+// color-coded status, "Copy issues for Claude", tick-all), sync-appointments
+// mode, format guide + one-click copy of the Claude project instructions
+// (claude-instructions.js), "Export for Claude" snapshot (with IDs for exact
+// edits), .ics import/export.
 // applyImportPlan() runs every change as ONE undoable step.
 // ============================================================================
 
@@ -11,68 +12,42 @@ var importDraftText = '';
 var importPlan = null;
 var importIsIcs = false;
 
-var CLAUDE_GRAMMAR_TEXT = [
-    'SULLY CALENDAR — PASTE FORMAT (SULLYCAL-1)',
-    'Output exactly ONE triple-backtick code fence. Separate blocks with --- on its own line.',
-    'Dates: YYYY-MM-DD (MM/DD/YYYY also works). Times: 9:00 AM, ranges "9:00 AM - 12:00 PM". All times are America/New_York.',
-    '',
-    'CREATE',
-    'EVENT        TITLE, DATE, TIME (range) or ALL_DAY: yes (+ END_DATE for multi-day), LOCATION, CALENDAR, COLOR, REPEAT, UNTIL, COUNT, REMINDER, NOTES, ID',
-    'TASK         TITLE, DUE (date [time]), PRIORITY (low|medium|high), CALENDAR, NOTES, ID',
-    'DEADLINE     TITLE, DUE (date [time]), PRIORITY, CALENDAR, NOTES, ID',
-    'APPOINTMENTS PATIENT, CHART, DATE, TIME, PROCEDURE, CHAIR, NOTES — same as the Grad Roadmap format: a header-only',
-    '             APPOINTMENTS block, then one --- separated block per appointment.',
-    '',
-    'CHANGE — corrections are verbs, never a second add',
-    'EVENT_MOVE          ID: or MATCH: (+ FROM: old date [time]) · TO: new date and/or time (duration is kept)',
-    'EVENT_UPDATE        ID: or MATCH: (+ ON: date to change one occurrence) · then new values: NEW_TITLE, DATE, TIME,',
-    '                    LOCATION, NOTES, NOTES_APPEND, CALENDAR, COLOR, REPEAT, REMINDER, PRIORITY, STATUS · SCOPE: this|following|all',
-    'EVENT_DELETE        ID: or MATCH: (+ ON: date) · SCOPE: this|following|all for repeating events',
-    'EVENT_DONE          ID: or MATCH: (+ ON: date)      EVENT_UNDONE same fields',
-    'APPOINTMENT_MOVE    CHART: or PATIENT: · FROM: date time · TO: new date and/or time',
-    'APPOINTMENT_DELETE  CHART: or PATIENT: · DATE: · TIME:',
-    'CALENDAR            NAME: · COLOR: · NEW_NAME: · VISIBLE: yes|no',
-    '',
-    'VALUES',
-    'REPEAT: daily | weekdays | weekly on Mon, Wed | every 2 weeks on Tue | monthly on the 15th | monthly on the first Monday |',
-    '        monthly on the last Friday | yearly | RRULE:FREQ=WEEKLY;BYDAY=TU,TH   (+ UNTIL: date or COUNT: n)',
-    'REMINDER: 30 min, 1 day  (or none)        STATUS: done | open        PRIORITY: low | medium | high',
-    'COLOR: tomato flamingo tangerine banana sage basil peacock blueberry lavender grape graphite (red/blue/green… work too)',
-    'CALENDAR: an existing calendar name (Personal, Clinic Appointments, School, Deadlines, Tasks) — a new name creates it.',
-    '',
-    'Re-pasting is safe: identical events are skipped; an event pasted again with the same ID is updated in place.',
-    'When the user pastes a SULLY CALENDAR SNAPSHOT, use its ID: values for every MOVE / UPDATE / DELETE / DONE.'
-].join('\n');
-
+// Dates are relative to "Mon 2026-11-02"; Try-the-example shifts them (weekdays too) to today.
 var IMPORT_EXAMPLE_TEXT = [
     '```',
+    'TODAY: Mon 2026-11-02',
     'APPOINTMENTS',
-    '---',
     'PATIENT: Jane Doe',
     'CHART: 001234',
-    'DATE: 2026-11-04',
+    'DATE: Wed 2026-11-04',
     'TIME: 9:00 AM - 12:00 PM',
     'PROCEDURE: Crown prep #19',
     'CHAIR: 12',
     '---',
     'EVENT',
     'TITLE: Board review session',
-    'DATE: 2026-11-07',
+    'DATE: Sat 2026-11-07',
     'TIME: 10:00 AM - 1:00 PM',
     'LOCATION: Room 204',
     'CALENDAR: School',
     '---',
     'DEADLINE',
     'TITLE: PR2 write-up',
-    'DUE: 2026-11-10 11:59 PM',
+    'DUE: Tue 2026-11-10 11:59 PM',
     'PRIORITY: high',
     '---',
-    'EVENT_MOVE',
-    'MATCH: Study group',
-    'FROM: 2026-11-05',
-    'TO: 2026-11-06 7:00 PM',
+    'TASK',
+    'TITLE: Call the lab about the crown',
+    'DUE: Thu 2026-11-05 9:00 AM',
     '```'
 ].join('\n');
+
+function exampleForToday(today) {
+    return IMPORT_EXAMPLE_TEXT.replace(/(?:(?:Sun|Mon|Tue|Wed|Thu|Fri|Sat) )?2026-11-(\d\d)/g, function(_, d) {
+        var nd = addDays(today, (+d) - 2);
+        return DOW_SHORT[weekdayOf(nd)] + ' ' + nd;
+    });
+}
 
 // ---------------------------------------------------------------- serialization (for Claude / copy)
 function fmt12(hhmm) {
@@ -298,11 +273,10 @@ function openImportDialog(initialTab, prefillText) {
         '</div></div>' +
         // guide
         '<div class="gc-tabpanel" data-panel="guide" hidden>' +
-        '<p class="gc-muted">Your Claude project turns screenshots and messages into this text. Paste it on the Paste tab — you see every change before it lands. The same APPOINTMENTS text works in the Grad Roadmap.</p>' +
+        '<p class="gc-muted">Make a Claude project, paste these instructions into its Instructions field, then just talk to it (voice works): “my 10am patient Thursday cancelled, move John to Friday at 1”. Copy its code block and paste it on the Paste tab — existing items are found by date, time, name and title, no IDs needed, and you see every change before it lands.</p>' +
         '<div class="gc-guide-actions"><button class="gc-btn filled sm" data-act="copygrammar">' + icon('content_copy') + ' Copy Claude project instructions</button>' +
         '<button class="gc-btn tonal sm" data-act="tryexample">' + icon('science') + ' Try the example</button></div>' +
-        '<pre class="gc-code">' + escapeHtml(CLAUDE_GRAMMAR_TEXT) + '</pre>' +
-        '<h3 class="gc-h3">Example paste</h3><pre class="gc-code">' + escapeHtml(IMPORT_EXAMPLE_TEXT) + '</pre>' +
+        '<pre class="gc-code gc-instructions">' + escapeHtml(CLAUDE_PROJECT_INSTRUCTIONS) + '</pre>' +
         '</div>' +
         // export
         '<div class="gc-tabpanel" data-panel="export" hidden>' +
@@ -369,10 +343,20 @@ function openImportDialog(initialTab, prefillText) {
             if (c[k]) chips.push('<span class="gc-pill ' + KIND_META[k].cls + '">' + c[k] + ' ' + KIND_META[k].label.toLowerCase() + '</span>');
         });
         var foreign = Object.keys(importPlan.foreign || {}).map(function(app) { return importPlan.foreign[app] + ' ' + app + ' block' + (importPlan.foreign[app] === 1 ? '' : 's'); });
-        sum.innerHTML = '<div class="gc-pill-row">' + (chips.join('') || '<span class="gc-muted">No calendar changes found</span>') + '</div>' +
+        var issueN = importIssues(importPlan).length;
+        var actionableItems = importPlan.items.filter(function(it) { return it.kind !== 'skip' && it.kind !== 'reject'; });
+        var tickedN = actionableItems.filter(function(it) { return it.checked; }).length;
+        var unticked = actionableItems.length - tickedN;
+        sum.innerHTML = '<div class="gc-pill-row">' + (chips.join('') || '<span class="gc-muted">No calendar changes found</span>') +
+            (unticked > 1 ? '<button class="gc-btn text sm" data-act="tickall">Tick all ' + (unticked + tickedN) + '</button>' : '') +
+            (issueN ? '<button class="gc-btn tonal sm gc-issues-btn" data-act="copyissues" title="Copies the problems + the blocks that caused them — paste into your Claude project chat and it replies with fixes">' + icon('content_copy') + ' Copy ' + issueN + ' issue' + (issueN === 1 ? '' : 's') + ' for Claude</button>' : '') + '</div>' +
             (importPlan.quickFallback ? '<div class="gc-import-note">' + icon('bolt') + ' No blocks found — read as quick-add text.</div>' : '') +
             (foreign.length ? '<div class="gc-import-note">' + icon('apps') + ' Skipped ' + escapeHtml(foreign.join(', ')) + ' — paste those in their own app.</div>' : '') +
             (importPlan.warnings || []).map(function(w) { return '<div class="gc-import-note warn">' + icon('warning') + (w.line ? 'Line ' + w.line + ': ' : '') + escapeHtml(w.msg) + '</div>'; }).join('');
+        var tickAll = sum.querySelector('[data-act=tickall]');
+        if (tickAll) tickAll.addEventListener('click', function() { actionableItems.forEach(function(it) { it.checked = true; }); renderPlan(); });
+        var issuesBtn = sum.querySelector('[data-act=copyissues]');
+        if (issuesBtn) issuesBtn.addEventListener('click', function() { copyText(buildImportIssuesText(importPlan, getLocalDateString()), 'Issues copied — paste into your Claude project chat'); });
         list.innerHTML = importPlan.items.map(function(it, i) {
             var meta = KIND_META[it.kind];
             var actionable = it.kind !== 'skip' && it.kind !== 'reject';
@@ -423,9 +407,9 @@ function openImportDialog(initialTab, prefillText) {
         else go();
     });
     // guide
-    box.querySelector('[data-act=copygrammar]').addEventListener('click', function() { copyText(CLAUDE_GRAMMAR_TEXT, 'Copied — paste into your Claude project instructions'); });
+    box.querySelector('[data-act=copygrammar]').addEventListener('click', function() { copyText(CLAUDE_PROJECT_INSTRUCTIONS, 'Copied — paste into your Claude project instructions'); });
     box.querySelector('[data-act=tryexample]').addEventListener('click', function() {
-        ta.value = IMPORT_EXAMPLE_TEXT.replace(/2026-11-0(\d)/g, function(_, d) { return addDays(today, (+d) - 2); }).replace(/2026-11-10/g, addDays(today, 8));
+        ta.value = exampleForToday(today);
         setTab('paste'); recompute();
     });
     // export

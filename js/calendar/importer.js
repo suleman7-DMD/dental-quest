@@ -11,6 +11,8 @@
 
 // [CAL-IMPORT-START]
 
+var FOREIGN_HEADERS_EARLY = { TODO_DONE: 1, TODO_DELETE: 1, PATIENT_UPDATE: 1, PATIENT_DELETE: 1, PATIENT_ARCHIVE: 1, PROCEDURE_DELETE: 1 };
+
 var CREATE_VERBS = { APPOINTMENTS: 'appointment', EVENT: 'event', TASK: 'task', DEADLINE: 'deadline' };
 
 var IMPORT_HEADER_ALIASES = {
@@ -32,8 +34,48 @@ var IMPORT_HEADER_ALIASES = {
     COMPLETE: 'EVENT_DONE', COMPLETED: 'EVENT_DONE', TASK_COMPLETE: 'EVENT_DONE',
     EVENT_UNDONE: 'EVENT_UNDONE', TASK_UNDONE: 'EVENT_UNDONE', DEADLINE_UNDONE: 'EVENT_UNDONE', UNDONE: 'EVENT_UNDONE',
     MARK_UNDONE: 'EVENT_UNDONE', REOPEN: 'EVENT_UNDONE', TASK_REOPEN: 'EVENT_UNDONE',
-    CALENDAR: 'CALENDAR', CALENDARS: 'CALENDAR', CALENDAR_ADD: 'CALENDAR', NEW_CALENDAR: 'CALENDAR', CALENDAR_UPDATE: 'CALENDAR', CALENDAR_EDIT: 'CALENDAR'
+    CALENDAR: 'CALENDAR', CALENDARS: 'CALENDAR', CALENDAR_ADD: 'CALENDAR', NEW_CALENDAR: 'CALENDAR', CALENDAR_UPDATE: 'CALENDAR', CALENDAR_EDIT: 'CALENDAR',
+    MODIFY: 'EVENT_UPDATE', RESCHEDULED: 'EVENT_MOVE', CANCELLED: 'EVENT_DELETE', CANCELED: 'EVENT_DELETE', CANCELLATION: 'EVENT_DELETE', CANCELLATIONS: 'EVENT_DELETE'
 };
+
+// Every "<TYPE>_<VERB>" / "<VERB>_<TYPE>" spelling Claude might use — APPT_CANCEL,
+// CANCEL_APPOINTMENT, TASK_COMPLETE, RESCHEDULE_DEADLINE, DELETE_EVENT… — maps to
+// the generic change verb; the type word becomes a matching PREFERENCE (typeHint).
+var CHANGE_VERB_WORDS = {
+    MOVE: 'EVENT_MOVE', RESCHEDULE: 'EVENT_MOVE', RESCHEDULED: 'EVENT_MOVE',
+    UPDATE: 'EVENT_UPDATE', EDIT: 'EVENT_UPDATE', CHANGE: 'EVENT_UPDATE', MODIFY: 'EVENT_UPDATE', RENAME: 'EVENT_UPDATE',
+    DELETE: 'EVENT_DELETE', CANCEL: 'EVENT_DELETE', CANCELLED: 'EVENT_DELETE', CANCELED: 'EVENT_DELETE', REMOVE: 'EVENT_DELETE',
+    DONE: 'EVENT_DONE', COMPLETE: 'EVENT_DONE', COMPLETED: 'EVENT_DONE', FINISH: 'EVENT_DONE', FINISHED: 'EVENT_DONE',
+    UNDONE: 'EVENT_UNDONE', REOPEN: 'EVENT_UNDONE', UNCHECK: 'EVENT_UNDONE', INCOMPLETE: 'EVENT_UNDONE', NOT_DONE: 'EVENT_UNDONE'
+};
+var CHANGE_TYPE_WORDS = {
+    APPOINTMENT: 'appointment', APPOINTMENTS: 'appointment', APPT: 'appointment', APPTS: 'appointment', APT: 'appointment', APTS: 'appointment',
+    TASK: 'task', TASKS: 'task', TODO: 'task', TODOS: 'task', TO_DO: 'task', REMINDER: 'task', REMINDERS: 'task',
+    DEADLINE: 'deadline', DEADLINES: 'deadline', ASSIGNMENT: 'deadline', DUE_DATE: 'deadline',
+    EVENT: null, EVENTS: null, ITEM: null, ITEMS: null, ENTRY: null, ENTRIES: null
+};
+(function() {
+    Object.keys(CHANGE_TYPE_WORDS).forEach(function(t) {
+        Object.keys(CHANGE_VERB_WORDS).forEach(function(v) {
+            [t + '_' + v, v + '_' + t].forEach(function(tok) {
+                if (!IMPORT_HEADER_ALIASES[tok] && !FOREIGN_HEADERS_EARLY[tok]) IMPORT_HEADER_ALIASES[tok] = CHANGE_VERB_WORDS[v];
+            });
+        });
+    });
+})();
+
+// Type preference carried by a change header ("APPT_CANCEL" → appointment)
+function headerTypeHint(tok, verb) {
+    if (verb === 'APPOINTMENT_MOVE' || verb === 'APPOINTMENT_DELETE') return 'appointment';
+    if (CREATE_VERBS[verb] || verb === 'CALENDAR') return null;
+    var parts = String(tok || '').split('_');
+    for (var i = 0; i < parts.length; i++) {
+        var w = parts[i] + (parts[i] === 'TO' && parts[i + 1] === 'DO' ? '_DO' : '');
+        if (CHANGE_TYPE_WORDS[w]) return CHANGE_TYPE_WORDS[w];
+        if (parts[i] === 'DUE' && parts[i + 1] === 'DATE') return 'deadline';
+    }
+    return null;
+}
 
 // Other suite apps' block headers — counted, skipped, and reported in the preview
 var FOREIGN_HEADERS = {
@@ -54,13 +96,23 @@ var FIELD_ALIASES = {
     TASK: 'TASK_T', TODO: 'TASK_T', TO_DO: 'TASK_T',
     EVENT: 'EVENT_T',
     DEADLINE: 'DEADLINE_T', ASSIGNMENT: 'DEADLINE_T',
-    NEW_TITLE: 'NEW_TITLE', RENAME_TO: 'NEW_TITLE',
+    NEW_TITLE: 'NEW_TITLE', RENAME_TO: 'NEW_TITLE', NEW_EVENT_TITLE: 'NEW_TITLE',
     DATE: 'DATE', DAY: 'DATE', WHEN: 'DATE', START_DATE: 'DATE', DATES: 'DATE',
-    ON: 'ON', OCCURRENCE: 'ON', INSTANCE: 'ON',
+    ON: 'ON', OCCURRENCE: 'ON', INSTANCE: 'ON', OLD_DATE: 'ON', ORIGINAL_DATE: 'ON', CURRENT_DATE: 'ON', EXISTING_DATE: 'ON', WHICH_DATE: 'ON', ON_DATE: 'ON',
+    AT: 'AT', OLD_TIME: 'AT', ORIGINAL_TIME: 'AT', CURRENT_TIME: 'AT', EXISTING_TIME: 'AT', WHICH_TIME: 'AT', AT_TIME: 'AT',
+    NEW_DATE: 'NEW_DATE', NEW_DAY: 'NEW_DATE', MOVE_TO_DATE: 'NEW_DATE',
+    NEW_TIME: 'NEW_TIME', NEW_START: 'NEW_TIME', NEW_START_TIME: 'NEW_TIME', MOVE_TO_TIME: 'NEW_TIME',
+    NEW_END: 'END', NEW_END_TIME: 'END', NEW_END_DATE: 'END_DATE',
+    NEW_LOCATION: 'LOCATION', NEW_NOTES: 'NOTES', NEW_CALENDAR: 'CALENDAR', NEW_PROCEDURE: 'PROCEDURE', NEW_CHAIR: 'CHAIR',
+    NEW_COLOR: 'COLOR', NEW_PRIORITY: 'PRIORITY', NEW_REMINDER: 'REMINDER', NEW_DURATION: 'DURATION', NEW_REPEAT: 'REPEAT', NEW_STATUS: 'STATUS',
+    NEW_PATIENT: 'NEW_PATIENT', NEW_PATIENT_NAME: 'NEW_PATIENT', NEW_CHART: 'NEW_CHART', NEW_TYPE: 'NEW_TYPE', CHANGE_TYPE: 'NEW_TYPE', CONVERT_TO: 'NEW_TYPE',
+    ALL: 'ALL', ALL_MATCHES: 'ALL', MATCH_ALL: 'ALL', BULK: 'ALL', EVERY_MATCH: 'ALL', APPLY_TO_ALL: 'ALL',
+    SHIFT: 'SHIFT', SHIFT_BY: 'SHIFT', MOVE_BY: 'SHIFT', OFFSET: 'SHIFT', PUSH_BY: 'SHIFT', DELAY: 'SHIFT', DELAY_BY: 'SHIFT',
+    EXTEND: 'EXTEND', EXTEND_BY: 'EXTEND', LENGTHEN: 'EXTEND', LENGTHEN_BY: 'EXTEND', ADD_TIME: 'EXTEND', EXTRA_TIME: 'EXTEND',
     START: 'START', STARTS: 'START', BEGIN: 'START', BEGINS: 'START', START_TIME: 'START', STARTS_AT: 'START',
     END: 'END', ENDS: 'END', END_TIME: 'END', FINISH: 'END', ENDS_AT: 'END',
     END_DATE: 'END_DATE', THROUGH: 'END_DATE', THRU: 'END_DATE', LAST_DAY: 'END_DATE',
-    TIME: 'TIME', AT: 'TIME', HOURS: 'TIME', TIMES: 'TIME', TIME_SLOT: 'TIME', SLOT: 'TIME',
+    TIME: 'TIME', HOURS: 'TIME', TIMES: 'TIME', TIME_SLOT: 'TIME', SLOT: 'TIME',
     ALL_DAY: 'ALL_DAY', ALLDAY: 'ALL_DAY',
     DURATION: 'DURATION', LENGTH: 'DURATION', FOR: 'DURATION',
     DUE: 'DUE', DUE_DATE: 'DUE', BY: 'DUE', DUE_BY: 'DUE', DUE_AT: 'DUE',
@@ -83,7 +135,7 @@ var FIELD_ALIASES = {
     CHAIR: 'CHAIR', OP: 'CHAIR', OPERATORY: 'CHAIR', UNIT: 'CHAIR',
     MATCH: 'MATCH', FIND: 'MATCH', TARGET: 'MATCH', SEARCH: 'MATCH',
     FROM: 'FROM', OLD: 'FROM', WAS: 'FROM',
-    TO: 'TO', NEW: 'TO', NOW: 'TO', NEW_TIME: 'TO', NEW_DATE: 'TO',
+    TO: 'TO', NEW: 'TO', NOW: 'TO', NEW_WHEN: 'TO', MOVE_TO: 'TO', CHANGE_TO: 'TO', RESCHEDULE_TO: 'TO', NEW_DATE_TIME: 'TO', NEW_DATETIME: 'TO',
     SCOPE: 'SCOPE', APPLY_TO: 'SCOPE',
     NEW_NAME: 'NEW_NAME', RENAME: 'NEW_NAME',
     VISIBLE: 'VISIBLE', SHOW: 'VISIBLE', HIDDEN: 'HIDDEN'
@@ -124,7 +176,7 @@ function detectHeader(line) {
     // "DONE: yes" / "CALENDAR: Clinic" are FIELDS, not headers — a key that is
     // also a field alias only acts as a header when it stands alone on its line.
     if (inline && FIELD_ALIASES[tok] && !CREATE_VERBS[verb]) return null;
-    return { verb: verb, inline: inline, token: tok };
+    return { verb: verb, inline: inline, token: tok, typeHint: headerTypeHint(tok, verb) };
 }
 
 // Strip code fences, SYNTAX/banner lines, invisible chars; normalize newlines
@@ -141,6 +193,8 @@ function cleanImportText(text) {
             if (/^@[A-Z][A-Z_]*\s*$/i.test(t)) return false;
             return true;
         })
+        // chat markdown: "**ON:** 2026-11-05", "> AT: 10 AM", "`TO:` 3 PM"
+        .map(function(l) { return l.replace(/^\s*>+\s?/, '').replace(/\*\*|__|`/g, ''); })
         .join('\n');
 }
 
@@ -172,7 +226,8 @@ function splitImportBlocks(text) {
     function startsNewBlock(l) {
         var h = detectHeader(l);
         if (!h) return false;
-        if (h.foreign || !h.inline) return true;
+        if (h.foreign) return true;
+        if (!h.inline) return prevBlank || l.trim() === l.trim().toUpperCase();
         if (CREATE_VERBS[h.verb]) return prevBlank || !curVerb || !!CREATE_VERBS[curVerb];
         return prevBlank;
     }
@@ -215,14 +270,16 @@ var BULLET_RE = /^\s*(?:[-*•▪◦]|\d{1,2}[.)]|\[[ xX]\])\s+(.*)$/;
 function extractRecords(lines, quickOK) {
     var records = [];
     var cur = null, curField = null;
-    function newRec(line) { cur = { fields: {}, quick: null, line: line, foreignHint: false }; records.push(cur); curField = null; }
+    function newRec(line) { cur = { fields: {}, quick: null, line: line, foreignHint: false, raw: [] }; records.push(cur); curField = null; }
     lines.forEach(function(L) {
         var text = L.text;
+        var keep = function() { if (cur && !L.synthetic) cur.raw.push(text); };
         var fl = parseFieldLine(text);
         if (fl && fl.foreignHint) {
             if (!cur || cur.quick !== null) newRec(L.line);
             cur.foreignHint = true;
             curField = null;
+            keep();
             return;
         }
         if (fl) {
@@ -232,12 +289,14 @@ function extractRecords(lines, quickOK) {
                 if (APPEND_FIELDS[c]) {
                     cur.fields[c] = cur.fields[c] ? cur.fields[c] + '\n' + fl.value : fl.value;
                     curField = c;
+                    keep();
                     return;
                 }
                 newRec(L.line);
             }
             cur.fields[c] = fl.value;
             curField = c;
+            keep();
             return;
         }
         var b = text.match(BULLET_RE);
@@ -245,7 +304,7 @@ function extractRecords(lines, quickOK) {
         if (quickOK && !openAppend && (b || !curField)) {
             var q = (b ? b[1] : text).trim();
             if (q) {
-                cur = { fields: {}, quick: q, line: L.line, foreignHint: false, checked: /^\s*\[[xX]\]/.test(text) };
+                cur = { fields: {}, quick: q, line: L.line, foreignHint: false, checked: /^\s*\[[xX]\]/.test(text), raw: [text] };
                 records.push(cur);
                 curField = null;
             }
@@ -254,10 +313,12 @@ function extractRecords(lines, quickOK) {
         if (cur && curField) {
             var sep = (curField === 'NOTES' || curField === 'NOTES_APPEND' || curField === 'PROCEDURE') ? '\n' : ' ';
             cur.fields[curField] = cur.fields[curField] ? cur.fields[curField] + sep + text.trim() : text.trim();
+            keep();
             return;
         }
         if (!cur) newRec(L.line);
         cur.stray = (cur.stray ? cur.stray + '\n' : '') + text.trim();
+        keep();
     });
     return records;
 }
@@ -282,20 +343,37 @@ function autoDetectVerb(rec, sticky) {
     if (t === 'task') return 'TASK';
     if (t === 'deadline') return 'DEADLINE';
     if (t === 'event') return 'EVENT';
-    if (f.PATIENT && hasAnyField(f, ['DATE', 'TIME', 'START', 'WHEN'])) return 'APPOINTMENTS';
+    if (f.PATIENT && hasAnyField(f, ['DATE', 'TIME', 'START', 'ON', 'AT'])) return 'APPOINTMENTS';
     if (f.TASK_T) return 'TASK';
     if (f.DEADLINE_T) return 'DEADLINE';
     if (f.EVENT_T) return 'EVENT';
     if (f.DUE && hasAnyField(f, ['TITLE'])) return 'DEADLINE';
-    if (hasAnyField(f, ['TITLE']) && hasAnyField(f, ['DATE', 'START', 'TIME', 'END_DATE'])) return 'EVENT';
+    if (hasAnyField(f, ['TITLE']) && hasAnyField(f, ['DATE', 'START', 'TIME', 'END_DATE', 'ON', 'AT', 'DUE'])) return 'EVENT';
     return null;
 }
 
-// Full paste → { ops, foreign: {app: count}, warnings: [{line, msg}], blockCount }
+// "TODAY: Mon 2026-11-02" — the date Claude believed it was when it wrote the
+// paste. resolve.js compares it with this device's date (time-zone slips turn
+// "tomorrow" into the wrong day). Blanked, not removed, so line numbers hold.
+var TODAY_LINE_RE = /^\s*(?:[-*•]\s*)?(?:\*\*)?(?:TODAY|TODAY_IS|CURRENT_DAY|AS_OF)(?:\*\*)?\s*[:=]\s*(.+?)\s*$/i;
+function extractClaudeToday(text) {
+    var found = null;
+    var lines = String(text || '').replace(/\r\n?/g, '\n').split('\n').map(function(l) {
+        var m = l.match(TODAY_LINE_RE);
+        if (!m) return l;
+        if (found === null) found = m[1].replace(/\*\*/g, '').trim();
+        return '';
+    });
+    return { text: lines.join('\n'), today: found };
+}
+
+// Full paste → { ops, foreign: {app: count}, warnings: [{line, msg}], blockCount, claudeToday }
 function parseImportText(text) {
+    var td = extractClaudeToday(text);
+    text = td.text;
     var blocks = splitImportBlocks(text);
     var ops = [], foreign = {}, warnings = [];
-    var sticky = null, pending = null, skipNextFor = null;
+    var sticky = null, pending = null, pendingHint = null, skipNextFor = null;
     function addForeign(app, n) { foreign[app] = (foreign[app] || 0) + (n || 1); }
     blocks.forEach(function(block) {
         var lines = block.lines;
@@ -317,24 +395,28 @@ function parseImportText(text) {
             return;
         }
         skipNextFor = null;
-        var verb = null, body = lines;
+        var verb = null, body = lines, typeHint = null, headText = '';
         if (hdr) {
             body = lines.slice(1);
             if (!body.length && !hdr.inline) {
                 pending = hdr.verb;
+                pendingHint = hdr.typeHint || null;
                 if (CREATE_VERBS[hdr.verb]) sticky = hdr.verb;
                 return;
             }
             verb = hdr.verb;
+            typeHint = hdr.typeHint || null;
+            headText = lines[0].text.trim();
             if (CREATE_VERBS[verb]) sticky = verb;
-            pending = null;
+            pending = null; pendingHint = null;
             if (hdr.inline) {
                 // "TASK: Buy floss" → title; "EVENT_DELETE: Gym" → match
-                body = [{ text: (CREATE_VERBS[verb] ? 'TITLE: ' : verb === 'CALENDAR' ? 'NAME: ' : 'MATCH: ') + hdr.inline, line: lines[0].line }].concat(body);
+                body = [{ text: (CREATE_VERBS[verb] ? 'TITLE: ' : verb === 'CALENDAR' ? 'NAME: ' : 'MATCH: ') + hdr.inline, line: lines[0].line, synthetic: true }].concat(body);
             }
         } else if (pending) {
             verb = pending;
-            pending = null;
+            typeHint = pendingHint;
+            pending = null; pendingHint = null;
         }
         var effective = verb || sticky;
         var createish = !effective || !!CREATE_VERBS[effective];
@@ -353,10 +435,12 @@ function parseImportText(text) {
                 else warnings.push({ line: rec.line, msg: 'Could not tell what this block is — add a header like EVENT, TASK, DEADLINE or APPOINTMENTS' });
                 return;
             }
-            ops.push({ verb: v, fields: rec.fields, quick: rec.quick, checked: !!rec.checked, line: rec.line, stray: rec.stray || '' });
+            var raw = (rec.raw || []).join('\n');
+            if (headText) raw = headText + (raw ? '\n' + raw : '');
+            ops.push({ verb: v, fields: rec.fields, quick: rec.quick, checked: !!rec.checked, line: rec.line, stray: rec.stray || '', typeHint: typeHint, raw: raw });
         });
     });
-    return { ops: ops, foreign: foreign, warnings: warnings, blockCount: blocks.length };
+    return { ops: ops, foreign: foreign, warnings: warnings, blockCount: blocks.length, claudeToday: td.today };
 }
 
 // ---------------------------------------------------------------- spec building
@@ -439,7 +523,8 @@ function buildEventSpec(op, ctx) {
 
     // ---- timing
     var t = { date: null, endDate: null, start: null, end: null, allDay: false, duration: null, repeat: null };
-    var dateSrc = f.DATE || f.START || dueRaw;
+    var dateSrc = f.DATE || f.ON || f.NEW_DATE || f.START || dueRaw;
+    var timeSrc = f.TIME || f.AT || f.NEW_TIME || '';
     if (dateSrc) {
         var dv = parseDateTimeValue(dateSrc, today);
         t.date = dv.date; t.endDate = dv.endDate; t.start = dv.start; t.end = dv.end; t.allDay = dv.allDay;
@@ -450,11 +535,11 @@ function buildEventSpec(op, ctx) {
         if (sv.start !== null) t.start = sv.start;
         if (sv.date && !t.date) t.date = sv.date;
     }
-    if (f.TIME) {
-        var tv2 = parseDateTimeValue(f.TIME, today);
+    if (timeSrc) {
+        var tv2 = parseDateTimeValue(timeSrc, today);
         if (tv2.allDay) t.allDay = true;
         if (tv2.start !== null) { t.start = tv2.start; t.end = tv2.end; }
-        else if (!tv2.allDay) warnings.push('Could not read TIME "' + f.TIME + '"');
+        else if (!tv2.allDay) warnings.push('Could not read TIME "' + timeSrc + '"');
         if (tv2.date && !t.date) t.date = tv2.date;
     }
     if (f.END) {

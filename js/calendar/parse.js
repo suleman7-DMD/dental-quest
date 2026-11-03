@@ -636,4 +636,42 @@ function parseQuickAdd(text, today, opts) {
     return out;
 }
 
+// ---------------------------------------------------------------- import safety checks
+// "Thu 2026-11-05" / "Thursday, November 5, 2026" / "2026-11-05 (Thu)" → the
+// weekday written next to an explicit date must be that date's weekday. LLMs
+// slip on date arithmetic ("next Thursday" → wrong day); the weekday the user
+// spoke is the cross-check. → { date, said, actual } (weekday indexes) or null.
+var WD_BEFORE_RE = new RegExp('(?:^|[^a-z])' + WEEKDAY_SRC + '\\.?[\\s,]*\\(?\\s*$', 'i');
+var WD_AFTER_RE = new RegExp('^\\s*,?\\s*\\(?\\s*' + WEEKDAY_SRC + '(?![a-z])', 'i');
+function weekdayMismatch(text, today) {
+    var s = String(text || '');
+    var cands = listDateCandidates(s, today || getLocalDateString());
+    for (var i = 0; i < cands.length; i++) {
+        var c = cands[i];
+        if (c.tier !== 0 || !c.date) continue;
+        var bm = s.slice(0, c.index).match(WD_BEFORE_RE);
+        var am = s.slice(c.index + c.length).match(WD_AFTER_RE);
+        var word = bm ? bm[1] : am ? am[1] : null;
+        if (!word) continue;
+        var said = weekdayFromWord(word);
+        if (said === null) continue;
+        var actual = weekdayOf(c.date);
+        if (said !== actual) return { date: c.date, said: said, actual: actual };
+    }
+    return null;
+}
+
+// "+1 hour" / "-30 min" / "2 days later" / "45 minutes earlier" → signed minutes, or null
+function parseShift(v) {
+    var s = String(v || '').trim().toLowerCase();
+    if (!s) return null;
+    var neg = /^-|^minus\b|\b(earlier|sooner|before|back(?:ward)?s? in time)\b/.test(s);
+    var body = s.replace(/^[+-]\s*|^(?:plus|minus)\s+/, '')
+        .replace(/\b(later|earlier|sooner|after|before|forward|ahead|back|by|push(?:ed)?|move(?:d)?|shift(?:ed)?)\b/g, ' ')
+        .replace(/\s+/g, ' ').trim();
+    var d = parseDuration(body.replace(/^(an?|one)\s+/, '1 ').replace(/^half\s+(?:an?\s+)?hour$/, '30 min'));
+    if (typeof d !== 'number' || !d) return null;
+    return neg ? -d : d;
+}
+
 // [CAL-PARSE-END]

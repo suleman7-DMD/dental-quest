@@ -74,41 +74,247 @@ function instancesAt(ev, date, time) {
     return list;
 }
 
-// crit: { id, match, patient, chart, date, time, type }
-function findTargets(ctx, crit) {
-    var evs = getValues(ctx.events);
-    if (crit.id) {
-        var id = String(crit.id).trim();
-        evs = ctx.events[id] ? [ctx.events[id]] : evs.filter(function(e) { return e.extKey && e.extKey === id; });
-    }
-    var mt = crit.match ? normTitle(crit.match) : '';
-    var ch = crit.chart ? normChart(crit.chart) : '';
+// ---------------------------------------------------------------- fuzzy targeting
+// Voice → Claude → paste never carries IDs. An existing item is found by any mix
+// of ON date (or range), AT time, MATCH title words, PATIENT, CHART and a type
+// preference (APPT_/TASK_/DEADLINE_ headers). Candidates are scored; a unique
+// winner is picked, ties are reported instead of guessed.
+var MATCH_STOP_WORDS = {};
+('a an the my our your his her their me i we us with w for at on of to and or in into from by this that these those is it its be up about have has ' +
+    'existing current old same just please one ones thing things stuff item items entry entries ' +
+    'apt apts appt appts appointment appointments event events task tasks todo todos deadline deadlines reminder reminders ' +
+    'calendar schedule scheduled today tomorrow tonight yesterday am pm noon ' +
+    'monday tuesday wednesday thursday friday saturday sunday mon tue tues wed thu thur thurs fri ' +
+    'january february march april june july august september october november december jan feb apr jun jul aug sep sept oct nov dec')
+    .split(' ').forEach(function(w) { MATCH_STOP_WORDS[w] = 1; });
+var MATCH_ABBREV = { dr: 'doctor', doc: 'doctor', drs: 'doctor', mtg: 'meeting', mtgs: 'meeting', hw: 'homework', bday: 'birthday', prof: 'professor', tx: 'treatment', appt: 'appointment' };
+
+function stemWord(w) {
+    w = MATCH_ABBREV[w] || w;
+    if (w.length > 5 && /ies$/.test(w)) return w.slice(0, -3) + 'y';
+    if (w.length > 3 && /s$/.test(w) && !/ss$/.test(w)) w = w.slice(0, -1);
+    if (w.length > 5 && /(ing|ist)$/.test(w)) return w.slice(0, -3);
+    if (w.length > 4 && /(ed|al)$/.test(w)) return w.slice(0, -2);
+    return w;
+}
+
+// Significant, stemmed words of a phrase ("my 10am Dentist appt" → ["dent"])
+function matchWords(text) {
     var out = [];
+    String(text || '').toLowerCase().replace(/['’]s\b/g, '').split(/[^a-z0-9]+/).forEach(function(w) {
+        if (!w || MATCH_STOP_WORDS[w] || /^\d{1,2}(?:am|pm|a|p)$/.test(w)) return;
+        if (w.length === 1 && !/\d/.test(w)) return;
+        var st = stemWord(w);
+        if (out.indexOf(st) === -1) out.push(st);
+    });
+    return out;
+}
+
+function wordsMatch(a, b) {
+    if (a === b) return true;
+    var sh = a.length <= b.length ? a : b, lg = a.length <= b.length ? b : a;
+    return sh.length >= 3 && lg.indexOf(sh) === 0;
+}
+
+// Share of query words found in text (0..1), null when there are no query words
+function wordFit(qWords, text) {
+    if (!qWords || !qWords.length) return null;
+    var hay = matchWords(text);
+    var hit = 0;
+    qWords.forEach(function(q) { if (hay.some(function(h) { return wordsMatch(q, h); })) hit++; });
+    return hit / qWords.length;
+}
+
+function instHaystack(inst) {
+    return [inst.title, inst.patientName, inst.procedure, inst.location, displayTitle(inst)].join(' ');
+}
+
+function editDistance(a, b) {
+    if (a === b) return 0;
+    var prev = [], cur, i, j;
+    for (j = 0; j <= b.length; j++) prev[j] = j;
+    for (i = 1; i <= a.length; i++) {
+        cur = [i];
+        for (j = 1; j <= b.length; j++) cur[j] = Math.min(prev[j] + 1, cur[j - 1] + 1, prev[j - 1] + (a.charAt(i - 1) === b.charAt(j - 1) ? 0 : 1));
+        prev = cur;
+    }
+    return prev[b.length];
+}
+
+// Voice-tolerant name match: every spoken name token matches one stored token
+// (exact, or 1 typo when either is 4+ letters, 2 at 8+) — "Jon Smyth" finds "John Smith".
+function patientFits(name, inst) {
+    var q = canonPersonName(name).split(' ').filter(Boolean);
+    if (!q.length) return false;
+    var stored = inst.patientName ? canonPersonName(inst.patientName).split(' ') : matchWords(instHaystack(inst));
+    stored = stored.filter(Boolean);
+    if (!stored.length) return false;
+    return q.every(function(t) {
+        return stored.some(function(s) {
+            if (s === t || (!inst.patientName && wordsMatch(stemWord(t), s))) return true;
+            var mx = Math.max(t.length, s.length);
+            var lim = mx >= 8 ? 2 : mx >= 4 ? 1 : 0;
+            return lim > 0 && editDistance(t, s) <= lim;
+        });
+    });
+}
+
+// How well a spoken time fits an instance: exact start, inside its span, or ≤60 min off
+function timeFit(inst, min) {
+    if (inst.allDay) return null;
+    var s = instanceStartAbs(inst), e = instanceEndAbs(inst);
+    var t = absOf(inst.startDate, hhmm(min));
+    if (t === s) return { score: 8, how: 'exact', diff: 0 };
+    if (t > s && t < e) return { score: 5, how: 'during', diff: t - s };
+    var d = Math.abs(t - s);
+    if (d <= 60) return { score: 4 - d / 20, how: 'near', diff: s - t };
+    return null;
+}
+
+// Time window ("AT: 1:00 PM - 5:00 PM" = everything STARTING in the afternoon); an
+// item starting exactly at the window start wins ties ("FROM: 9 AM - 12 PM").
+function rangeFit(inst, a, b) {
+    if (inst.allDay) return null;
+    var s = instanceStartAbs(inst), base = absOf(inst.startDate, null);
+    var lo = base + a, hi = base + (b >= 1439 ? 1440 : b);
+    if (hi <= lo) hi += 1440;
+    if (s < lo || s >= hi) return null;
+    return { score: s === lo ? 8 : 6, how: s === lo ? 'exact' : 'range', diff: s - lo };
+}
+
+function isUpcomingTarget(ev, inst, today) {
+    if (ev.recurrence) return !ev.recurrence.until || ev.recurrence.until >= today;
+    return (inst.endDate || inst.startDate) >= today;
+}
+
+// crit: { id, words[], exactText, patient, chart, dates[]|null, time (min)|null, typePref, procWords[] }
+// opts: { all } → { list: [hit], warnings[], ambiguous: [cand]|null, uncertain, pickedNext, idMiss }
+function locateTargets(ctx, crit, opts) {
+    opts = opts || {};
+    var today = ctx.today, settings = ctx.settings || {};
+    var evs = getValues(ctx.events), idHit = false, idMiss = false;
+    var timeGiven = crit.time !== null && crit.time !== undefined;
+    var res = { list: [], warnings: [], ambiguous: null, uncertain: false, pickedNext: false, idMiss: false };
+    if (crit.id) {
+        var byId = ctx.events[crit.id] ? [ctx.events[crit.id]] : evs.filter(function(e) { return e.extKey && e.extKey === crit.id; });
+        if (byId.length) { evs = byId; idHit = true; }
+        else {
+            idMiss = res.idMiss = true;
+            if (!crit.words.length && !crit.patient && !crit.chart && !crit.dates) return res;
+            res.warnings.push('ID ' + crit.id + ' not found — matched by the other fields');
+        }
+    }
+    var named = idHit || !!crit.patient || !!crit.chart;
+    var dateSet = null, lo = null, hi = null;
+    if (crit.dates && crit.dates.length) {
+        dateSet = {};
+        crit.dates.forEach(function(d) { dateSet[d] = 1; if (!lo || d < lo) lo = d; if (!hi || d > hi) hi = d; });
+    }
+    var exactNorm = crit.exactText ? normTitle(crit.exactText) : '';
+    var cands = [];
     evs.forEach(function(ev) {
-        if (crit.type && ev.type !== crit.type) return;
-        if (ch) {
-            var evCh = normChart(ev.chartNumber);
-            if (evCh) { if (evCh !== ch) return; }
-            else if (!crit.patient || !namesMatch(ev.patientName, crit.patient)) return;
-        } else if (crit.patient) {
-            if (!namesMatch(ev.patientName, crit.patient)) return;
-        }
-        var exact = false;
-        if (mt) {
-            var t = normTitle(displayTitle(ev));
-            var pn = normTitle(ev.patientName);
-            exact = t === mt || pn === mt;
-            if (!exact && t.indexOf(mt) === -1 && (!pn || pn.indexOf(mt) === -1)) return;
-        }
-        if (crit.date) {
-            instancesAt(ev, crit.date, crit.time).forEach(function(i) { out.push({ ev: ev, inst: i, exact: exact }); });
+        var insts;
+        if (dateSet) {
+            insts = getEventInstances(ev, lo, hi).filter(function(i) {
+                if (dateSet[i.startDate]) return true;
+                if (!i.allDay) return false;
+                return Object.keys(dateSet).some(function(d) { return i.startDate <= d && i.endDate >= d; });
+            });
         } else {
             var base = buildInstance(ev, null);
-            if (base) { base.occ = null; base.key = ev.id; out.push({ ev: ev, inst: base, exact: exact }); }
+            if (!base) return;
+            base.occ = null; base.key = ev.id;
+            insts = [base];
         }
+        insts.forEach(function(inst) {
+            var c = { ev: ev, inst: inst, score: idHit ? 100 : 0, titleFrac: null, wordsMiss: false, timeHow: null, timeDiff: 0, timeMiss: false, typeOk: true, exact: false };
+            if (crit.chart) {
+                var ch = normChart(crit.chart), evCh = normChart(inst.chartNumber);
+                if (evCh) { if (evCh !== ch) return; c.score += 20; }
+                else if (!crit.patient || !patientFits(crit.patient, inst)) return;
+            }
+            if (crit.patient) { if (!patientFits(crit.patient, inst)) return; c.score += 15; }
+            if (timeGiven) {
+                var tf = crit.timeEnd !== null && crit.timeEnd !== undefined ? rangeFit(inst, crit.time, crit.timeEnd) : timeFit(inst, crit.time);
+                if (tf) { c.score += tf.score; c.timeHow = tf.how; c.timeDiff = tf.diff; } else c.timeMiss = true;
+            }
+            if (crit.typePref) { if (inst.type === crit.typePref) c.score += 3; else c.typeOk = false; }
+            if (crit.words.length) {
+                var frac = wordFit(crit.words, instHaystack(inst));
+                if (exactNorm && [displayTitle(inst), inst.title, inst.patientName].some(function(x) { return x && normTitle(x) === exactNorm; })) { c.exact = true; c.score += 5; }
+                if (frac) { c.titleFrac = frac; c.score += 10 * frac; }
+                else {
+                    // words that miss only survive when the slot + type (or a name) pins the item
+                    var slotPinned = dateSet && (c.timeHow === 'exact' || c.timeHow === 'during' || c.timeHow === 'range') && crit.typePref && c.typeOk;
+                    if (!named && !slotPinned) return;
+                    c.wordsMiss = true;
+                }
+            }
+            if (crit.procWords && crit.procWords.length) c.score += 2 * (wordFit(crit.procWords, inst.procedure) || 0);
+            if (!dateSet) c.upcoming = isUpcomingTarget(ev, inst, today);
+            cands.push(c);
+        });
     });
-    if (mt && out.some(function(o) { return o.exact; })) out = out.filter(function(o) { return o.exact; });
-    return out;
+
+    var hits = cands.filter(function(c) { return !c.timeMiss; });
+    var timeLoose = false;
+    if (!hits.length && timeGiven && !opts.all && (named || crit.words.length)) {
+        hits = cands.filter(function(c) { return !c.wordsMiss; });
+        timeLoose = hits.length > 0;
+    }
+    if (crit.typePref && hits.length) {
+        var pref = hits.filter(function(c) { return c.typeOk; });
+        if (pref.length || opts.all) hits = pref;
+        else if (!named && !crit.words.length && !(timeGiven && hits.some(function(c) { return c.timeHow === 'exact' || c.timeHow === 'during' || c.timeHow === 'range'; }))) hits = [];
+    }
+    if (!hits.length) return res;
+
+    if (opts.all) {
+        res.list = hits.filter(function(c) {
+            return !c.wordsMiss && (!timeGiven || c.timeHow === 'exact' || c.timeHow === 'during' || c.timeHow === 'range') && (c.titleFrac === null || c.titleFrac === 1);
+        });
+        res.list.sort(function(a, b) { return instanceStartAbs(a.inst) - instanceStartAbs(b.inst); });
+        if (!res.list.length) res.ambiguous = hits;
+        return res;
+    }
+
+    hits.sort(function(a, b) { return (b.score - a.score) || (instanceStartAbs(a.inst) - instanceStartAbs(b.inst)); });
+    var top = hits[0];
+    var tied = hits.filter(function(c) { return top.score - c.score < 0.01; });
+    if (tied.length > 1 && !dateSet) {
+        var up = tied.filter(function(c) { return c.upcoming; });
+        if (up.length) {
+            up.sort(function(a, b) { return instanceStartAbs(a.inst) - instanceStartAbs(b.inst); });
+            if (up.length > 1) {
+                res.warnings.push(tied.length + ' items match — picked the next one (' + fmtWhen(up[0].inst, settings, today) + '). Add ON: <date> to pick another');
+                res.pickedNext = true;
+            }
+            tied = [up[0]];
+        }
+    }
+    if (tied.length > 1) { res.ambiguous = tied; return res; }
+    var hit = tied[0];
+    var fmt = settings.timeFormat;
+    if (timeLoose) res.warnings.push('Nothing at ' + fmtTime(hhmm(crit.time), fmt) + ' — matched “' + displayTitle(hit.inst) + '” at ' + (hit.inst.allDay ? 'all day' : fmtTime(hit.inst.startTime, fmt)) + ' instead');
+    else if (hit.timeHow === 'near') res.warnings.push('Starts at ' + fmtTime(hit.inst.startTime, fmt) + ', not ' + fmtTime(hhmm(crit.time), fmt));
+    if (!hit.typeOk) {
+        res.warnings.push('This is ' + (hit.inst.type === 'appointment' || hit.inst.type === 'event' ? 'an ' : 'a ') + hit.inst.type + ', not ' + (crit.typePref === 'appointment' ? 'an ' : 'a ') + crit.typePref);
+        if (!named && !crit.words.length) res.uncertain = true;
+    }
+    if (hit.wordsMiss) res.warnings.push('Its title does not mention “' + crit.exactText + '” — matched by ' + (named ? 'name' : 'date, time and type'));
+    res.list = [hit];
+    return res;
+}
+
+// "Thu, Nov 5 has: 9 – 12pm Jane Doe — Crown prep (appointment); 6 – 8pm Study group (event)"
+function dayDigest(ctx, date) {
+    var settings = ctx.settings || {}, list = [];
+    getValues(ctx.events).forEach(function(ev) { instancesAt(ev, date, null).forEach(function(i) { list.push(i); }); });
+    if (!list.length) return fmtDateMed(date, ctx.today) + ' has nothing on your calendar';
+    list.sort(function(a, b) { return (b.allDay ? 1 : 0) - (a.allDay ? 1 : 0) || String(a.startTime).localeCompare(String(b.startTime)); });
+    return fmtDateMed(date, ctx.today) + ' has: ' + list.slice(0, 8).map(function(i) {
+        return (i.allDay ? 'all day' : fmtTimeRange(i.startTime, i.endTime, settings.timeFormat)) + ' ' + displayTitle(i) + ' (' + i.type + ')';
+    }).join('; ') + (list.length > 8 ? '; …' : '');
 }
 
 function describeTargetList(list, settings, today) {
@@ -207,13 +413,15 @@ function describeChanges(ch, inst, settings, today) {
 function updateFieldsToChanges(f, ctx, opts) {
     var today = ctx.today, warnings = [], errors = [];
     var ch = {};
-    var title = f.NEW_TITLE || (opts.titleIsTarget ? '' : f.TITLE);
+    var title = f.NEW_TITLE || f.NEW_NAME || (opts.titleIsTarget ? '' : f.TITLE);
     if (title) ch.title = title.trim();
     if (f.LOCATION !== undefined) ch.location = f.LOCATION.trim();
     if (f.NOTES !== undefined) ch.notes = f.NOTES.trim();
     if (f.NOTES_APPEND) ch.notesAppend = f.NOTES_APPEND.trim();
-    if (f.PATIENT && !opts.patientIsTarget) ch.patientName = f.PATIENT.trim();
-    if (f.CHART && !opts.chartIsTarget) ch.chartNumber = f.CHART.trim();
+    if (f.NEW_PATIENT) ch.patientName = f.NEW_PATIENT.trim();
+    else if (f.PATIENT && !opts.patientIsTarget) ch.patientName = f.PATIENT.trim();
+    if (f.NEW_CHART) ch.chartNumber = f.NEW_CHART.trim();
+    else if (f.CHART && !opts.chartIsTarget) ch.chartNumber = f.CHART.trim();
     if (f.PROCEDURE !== undefined) ch.procedure = f.PROCEDURE.trim();
     if (f.CHAIR !== undefined) ch.chair = f.CHAIR.trim();
     if (f.CALENDAR) ch.calendarRef = f.CALENDAR.trim();
@@ -224,7 +432,8 @@ function updateFieldsToChanges(f, ctx, opts) {
     if (f.PRIORITY) { var p = parsePriority(f.PRIORITY); if (p) ch.priority = p; else if (/^none$/i.test(f.PRIORITY)) ch.priority = null; else warnings.push('Unknown PRIORITY "' + f.PRIORITY + '"'); }
     if (f.STATUS) { var st = parseStatus(f.STATUS); if (st === null) warnings.push('Unknown STATUS "' + f.STATUS + '"'); else ch.done = st; }
     if (f.REMINDER) { var rm = parseReminders(f.REMINDER); if (rm === null) warnings.push('Could not read REMINDER "' + f.REMINDER + '"'); else ch.reminders = rm; }
-    if (f.TYPE) { var ty = parseTypeValue(f.TYPE); if (ty) ch.type = ty; else warnings.push('Unknown TYPE "' + f.TYPE + '"'); }
+    var typeSrc = f.NEW_TYPE || (opts.typeIsTarget ? '' : f.TYPE);
+    if (typeSrc) { var ty = parseTypeValue(typeSrc); if (ty) ch.type = ty; else warnings.push('Unknown TYPE "' + typeSrc + '"'); }
     if (f.REPEAT) {
         var rp = parseRepeat(f.REPEAT, today);
         if (!rp) warnings.push('Could not read REPEAT "' + f.REPEAT + '"');
@@ -246,7 +455,7 @@ function updateFieldsToChanges(f, ctx, opts) {
         if (v.allDay) { nv.allDay = true; anyTiming = true; }
         if (!v.date && v.start === null && !v.allDay) errors.push('Could not read ' + k + ' "' + f[k] + '"');
     });
-    if (f.TIME) {
+    if (f.TIME && opts.useTime !== false) {
         var tv = parseDateTimeValue(f.TIME, today);
         if (tv.allDay) { nv.allDay = true; anyTiming = true; }
         if (tv.start !== null) { nv.start = tv.start; nv.end = tv.end; anyTiming = true; }
@@ -313,7 +522,7 @@ function explicitFlags(op) {
     if (op.quick !== null && op.quick !== undefined) return { end: true, status: !!op.checked, timing: true };
     return {
         type: !!f.TYPE, status: !!f.STATUS, reminder: !!f.REMINDER, repeat: !!f.REPEAT, calendar: !!f.CALENDAR,
-        end: !!(f.END || f.DURATION || f.END_DATE || (f.TIME && /\d\s*(?:-|–|—|to|until)\s*\d|noon|midnight/i.test(f.TIME))),
+        end: !!(f.END || f.DURATION || f.END_DATE || ((f.TIME || f.AT) && /\d\s*(?:-|–|—|to|until)\s*\d|noon|midnight/i.test(f.TIME || f.AT))),
         timing: true
     };
 }
@@ -408,20 +617,8 @@ function resolveImport(parsed, ctx) {
         }));
     }
 
-    function pickOne(list, what, op, label) {
-        if (!list.length) return { none: true };
-        var uniqEv = {};
-        list.forEach(function(o) { uniqEv[o.ev.id + '|' + (o.inst.occ || '')] = o; });
-        var keys = Object.keys(uniqEv);
-        if (keys.length > 1) {
-            items.push(mkItem('reject', { label: label, reason: keys.length + ' events match ' + what + ' — add ID:, ON: or a TIME to pick one (' + describeTargetList(list, settings, today) + ')', line: op.line }));
-            return { ambiguous: true };
-        }
-        return { hit: uniqEv[keys[0]] };
-    }
-
     function targetLabel(f) {
-        return f.MATCH || f.TITLE || f.PATIENT || (f.CHART ? 'chart ' + f.CHART : '') || f.ID || 'event';
+        return f.MATCH || f.TITLE || f.TASK_T || f.EVENT_T || f.DEADLINE_T || f.PATIENT || (f.CHART ? 'chart ' + f.CHART : '') || f.ID || '';
     }
 
     function resolveVerb(op) {
@@ -454,123 +651,232 @@ function resolveImport(parsed, ctx) {
             return;
         }
 
-        if (v === 'APPOINTMENT_MOVE') {
-            if (!f.CHART && !f.PATIENT) { items.push(mkItem('reject', { label: label, reason: 'APPOINTMENT_MOVE needs CHART: or PATIENT:', line: op.line })); return; }
-            var fr = parseDateTimeValue(f.FROM || f.ON || f.DATE || '', today);
-            var to = parseDateTimeValue(f.TO || f.NEW_DATE || '', today);
-            if (!fr.date) { items.push(mkItem('reject', { label: label, reason: 'APPOINTMENT_MOVE needs FROM: <date> <time>', line: op.line })); return; }
-            if (!to.date && to.start === null) { items.push(mkItem('reject', { label: label, reason: 'APPOINTMENT_MOVE needs TO: with a new date and/or time', line: op.line })); return; }
-            var frTime = hhmm(fr.start);
-            var crit = { patient: f.PATIENT, chart: f.CHART, date: fr.date, time: frTime, type: 'appointment' };
-            var found = findTargets(ctx, crit);
-            if (f.PROCEDURE && found.length > 1) {
-                var pp = normTitle(f.PROCEDURE);
-                var narrowed = found.filter(function(o) { return normTitle(o.ev.procedure).indexOf(pp) !== -1; });
-                if (narrowed.length) found = narrowed;
+        // ---- change verbs. The existing item is found WITHOUT an ID by any mix of
+        // ON (date or range) · AT (time) · MATCH (title words) · PATIENT · CHART and
+        // the header's type (APPOINTMENT_/TASK_/DEADLINE_). New values: TO /
+        // NEW_DATE / NEW_TIME / SHIFT / NEW_TITLE / any field. Legacy roles kept:
+        // DATE/TIME are "which" for DELETE/DONE and "new" for UPDATE/MOVE unless a
+        // TO/NEW_*/SHIFT field already carries the new slot.
+        var origVerb = v;
+        var typePref = op.typeHint || null;
+        if (v === 'APPOINTMENT_MOVE') { v = 'EVENT_MOVE'; typePref = 'appointment'; }
+        if (v === 'APPOINTMENT_DELETE') { v = 'EVENT_DELETE'; typePref = 'appointment'; }
+        var isDel = v === 'EVENT_DELETE' || v === 'EVENT_DONE' || v === 'EVENT_UNDONE';
+        if (!typePref && f.TYPE && !f.ID) typePref = parseTypeValue(f.TYPE);
+        if (!typePref && (f.TASK_T || f.DEADLINE_T)) typePref = f.TASK_T ? 'task' : 'deadline';
+        var matchText = f.MATCH || f.TASK_T || f.EVENT_T || f.DEADLINE_T || '';
+        var titleIsTarget = !f.ID && !matchText && !!f.TITLE && (isDel || (!f.PATIENT && !f.CHART));
+        if (titleIsTarget) matchText = f.TITLE;
+        var patientIsTarget = !!f.PATIENT && !f.ID;
+        var chartIsTarget = !!f.CHART && !f.ID;
+        var whatLabel = { appointment: 'appointment', task: 'task', deadline: 'deadline', event: 'event' }[typePref] || 'item';
+        var hasNewSlot = !!(f.TO || f.NEW_DATE || f.NEW_TIME || f.SHIFT || f.EXTEND);
+        var dateIsWhich = isDel || (!f.ON && !f.FROM && !!f.DATE && hasNewSlot);
+        var timeIsWhich = isDel || (!f.AT && !!f.TIME && hasNewSlot);
+        var whichSrc = f.ON || f.FROM || (dateIsWhich ? f.DATE : '') || '';
+        var wv = whichSrc ? parseDateTimeValue(whichSrc, today) : { date: null, endDate: null, start: null };
+        if (whichSrc && !wv.date && wv.start === null) { items.push(mkItem('reject', { label: label || v, reason: 'Could not read the date "' + whichSrc + '" — use ON: YYYY-MM-DD', line: op.line })); return; }
+        var whichTime = wv.start, whichEnd = wv.start !== null ? wv.end : null;
+        var timeSrc = f.AT || (timeIsWhich ? f.TIME : '') || '';
+        if (timeSrc) {
+            var atv = parseDateTimeValue(timeSrc, today);
+            if (atv.start === null && !atv.date) { items.push(mkItem('reject', { label: label || v, reason: 'Could not read the time "' + timeSrc + '" — use AT: 10:00 AM', line: op.line })); return; }
+            if (atv.start !== null) { whichTime = atv.start; whichEnd = atv.end; }
+            if (atv.date && !wv.date) wv.date = atv.date;
+        }
+        var words = matchWords(matchText);
+        if (matchText && !words.length && !f.ID && !f.PATIENT && !f.CHART && !wv.date && whichTime === null) words = [normTitle(matchText)].filter(Boolean);
+        var identity = !!(f.ID || words.length || (patientIsTarget && f.PATIENT) || (chartIsTarget && f.CHART));
+        var pre = [];
+        var dates = null;
+        if (wv.date) {
+            dates = [wv.date];
+            if (wv.endDate && wv.endDate > wv.date) for (var dd = addDays(wv.date, 1); dd <= wv.endDate && dates.length < 62; dd = addDays(dd, 1)) dates.push(dd);
+        } else if (whichTime !== null && !identity) {
+            dates = [today];
+            pre.push('No date given — assumed today');
+        }
+        if (!identity && !dates) {
+            items.push(mkItem('reject', { label: label || v, reason: 'Which ' + whatLabel + '? Add ON: <date> and AT: <time>, or MATCH: <words from its title>', line: op.line }));
+            return;
+        }
+        var allMode = false;
+        if (f.ALL) allMode = parseBool(f.ALL) === true || /^(all|every|each|both|any)\b/i.test(f.ALL.trim());
+        var crit = {
+            id: f.ID ? String(f.ID).trim() : '', words: words, exactText: matchText,
+            patient: patientIsTarget ? f.PATIENT : '', chart: chartIsTarget ? f.CHART : '',
+            dates: dates, time: whichTime, timeEnd: whichEnd, typePref: typePref,
+            procWords: origVerb.indexOf('APPOINTMENT_') === 0 && f.PROCEDURE ? matchWords(f.PROCEDURE) : []
+        };
+        function critText(cr) {
+            var bits = [];
+            if (cr.exactText) bits.push('“' + cr.exactText + '”');
+            if (cr.patient) bits.push('patient ' + cr.patient);
+            if (cr.chart) bits.push('chart ' + cr.chart);
+            if (cr.id && !bits.length) bits.push('ID ' + cr.id);
+            if (cr.time !== null && cr.time !== undefined) bits.push(cr.timeEnd !== null && cr.timeEnd !== undefined ? 'starting ' + fmtTime(hhmm(cr.time), settings.timeFormat) + '–' + fmtTime(hhmm(cr.timeEnd), settings.timeFormat) : 'at ' + fmtTime(hhmm(cr.time), settings.timeFormat));
+            if (cr.dates) bits.push('on ' + fmtDateMed(cr.dates[0], today) + (cr.dates.length > 1 ? ' – ' + fmtDateMed(cr.dates[cr.dates.length - 1], today) : ''));
+            return bits.join(' ');
+        }
+
+        // new values (shared by every matched item; timing is applied per item)
+        var conv = null, shift = null, extend = null;
+        if (!isDel) {
+            conv = updateFieldsToChanges(f, ctx, {
+                titleIsTarget: titleIsTarget, patientIsTarget: patientIsTarget, chartIsTarget: chartIsTarget, typeIsTarget: !f.ID,
+                dateFields: (dateIsWhich ? [] : ['DATE']).concat(['TO', 'NEW_DATE', 'NEW_TIME']), useTime: !timeIsWhich
+            });
+            if (conv.errors.length) { items.push(mkItem('reject', { label: label || v, reason: conv.errors.join(' · '), line: op.line })); return; }
+            if (f.SHIFT) {
+                shift = parseShift(f.SHIFT);
+                if (shift === null) { items.push(mkItem('reject', { label: label || v, reason: 'Could not read SHIFT "' + f.SHIFT + '" — use +1 hour, -30 min, +2 days', line: op.line })); return; }
             }
-            var toDate = to.date || fr.date;
-            if (!found.length) {
-                var already = findTargets(ctx, { patient: f.PATIENT, chart: f.CHART, date: toDate, time: hhmm(to.start), type: 'appointment' });
-                if (already.length) items.push(mkItem('skip', { label: f.PATIENT || ('chart ' + f.CHART), reason: 'Already at ' + fmtDateMed(toDate, today) + (to.start !== null ? ' ' + fmtTime(hhmm(to.start), settings.timeFormat) : ''), line: op.line }));
-                else items.push(mkItem('reject', { label: f.PATIENT || ('chart ' + f.CHART), reason: 'No appointment found on ' + fmtDateMed(fr.date, today) + (frTime ? ' at ' + fmtTime(frTime, settings.timeFormat) : ''), line: op.line }));
+            if (f.EXTEND) {
+                extend = parseShift(f.EXTEND);
+                if (extend === null) { items.push(mkItem('reject', { label: label || v, reason: 'Could not read EXTEND "' + f.EXTEND + '" — use +1 hour (longer) or -30 min (shorter)', line: op.line })); return; }
+            }
+            if (v === 'EVENT_MOVE' && !conv.nv && shift === null && extend === null) { items.push(mkItem('reject', { label: label || v, reason: 'MOVE needs the new slot: TO:, NEW_DATE:, NEW_TIME: or SHIFT:', line: op.line })); return; }
+        }
+
+        var loc = locateTargets(ctx, crit, { all: allMode });
+        var uncertainWhy = null;
+        if (loc.ambiguous) {
+            var n = loc.ambiguous.length;
+            items.push(mkItem('reject', {
+                label: label || (typePref ? whatLabel : 'item'), notFound: false,
+                reason: (allMode ? 'Only partial matches for ' + critText(crit) + ' — ' : n + ' items match ' + critText(crit) + ' — add AT: <time> or MATCH: <title words> to pick one, or ALL: yes for every one. ') +
+                    describeTargetList(loc.ambiguous, settings, today),
+                line: op.line
+            }));
+            return;
+        }
+        if (!loc.list.length) {
+            // Re-paste after it was applied: the item already sits at its new slot / name
+            if (!isDel && conv && (conv.nv || shift !== null || conv.changes.title)) {
+                var crit2 = Object.assign({}, crit, { timeEnd: null });
+                var changedLookup = false;
+                if (conv.changes.title && titleIsTarget || (conv.changes.title && f.MATCH)) { crit2.words = matchWords(conv.changes.title); crit2.exactText = conv.changes.title; changedLookup = true; }
+                if (conv.nv && (conv.nv.date || conv.nv.start !== null)) {
+                    var nd = conv.nv.date || (dates ? dates[0] : null);
+                    if (nd) { crit2.dates = [nd]; changedLookup = true; }
+                    if (conv.nv.start !== null) { crit2.time = conv.nv.start; changedLookup = true; }
+                    else if (conv.nv.date && whichTime !== null) crit2.time = whichTime;
+                } else if (shift !== null && dates && whichTime !== null) {
+                    var sAbs = absToDateTime(absOf(dates[0], hhmm(whichTime)) + shift);
+                    crit2.dates = [sAbs.date]; crit2.time = timeToMin(sAbs.time); changedLookup = true;
+                }
+                if (changedLookup && (identity || crit2.dates)) {
+                    var loc2 = locateTargets(ctx, crit2, {});
+                    if (loc2.list.length === 1 && !loc2.warnings.length) {
+                        items.push(mkItem('skip', { label: displayTitle(loc2.list[0].inst), when: fmtWhen(loc2.list[0].inst, settings, today), reason: 'Already done — it is already ' + (conv.nv || shift !== null ? 'at the new time' : 'renamed'), line: op.line }));
+                        return;
+                    }
+                }
+            }
+            // Wrong date by a few days (date math slip)? Only with a name/title to go on.
+            if (identity && dates && dates.length === 1 && !allMode && !loc.idMiss) {
+                for (var off = 1; off <= 7 && !loc.list.length; off++) {
+                    [off, -off].some(function(o) {
+                        var l3 = locateTargets(ctx, Object.assign({}, crit, { dates: [addDays(dates[0], o)] }), {});
+                        if (l3.list.length === 1) {
+                            loc = l3;
+                            uncertainWhy = 'Nothing on ' + fmtDateMed(dates[0], today) + ' — found it on ' + fmtDateMed(l3.list[0].inst.startDate, today) + ' instead. Tick it if that is the one';
+                            return true;
+                        }
+                        return false;
+                    });
+                }
+            }
+            if (!loc.list.length) {
+                var why = 'No ' + whatLabel + ' matches ' + critText(crit) + (dates ? '. ' + dayDigest(ctx, dates[0]) : '');
+                if (v === 'EVENT_DELETE') items.push(mkItem('skip', { label: label || whatLabel, reason: why + ' — nothing to delete (already gone?)', line: op.line, notFound: true }));
+                else items.push(mkItem('reject', { label: label || whatLabel, reason: why, line: op.line, notFound: true }));
                 return;
             }
-            var pk = pickOne(found, 'that patient/time', op, f.PATIENT || ('chart ' + f.CHART));
-            if (!pk.hit) return;
-            matchedApptIds[pk.hit.ev.id] = true;
-            var mch = computeTimingChanges(pk.hit.inst, { date: toDate, start: to.start, end: to.end, endDate: null, allDay: to.allDay ? true : null, duration: null }, settings);
-            mch = stripUnchanged(pk.hit.inst, mch);
-            if (!Object.keys(mch).length) { items.push(mkItem('skip', { label: displayTitle(pk.hit.inst), reason: 'Already at that time', line: op.line })); return; }
-            pushTargetItem('move', pk.hit, mch, pk.hit.inst.occ ? 'this' : 'all', op);
-            return;
         }
+        if (loc.pickedNext && v === 'EVENT_DELETE') loc.uncertain = true;
 
-        if (v === 'APPOINTMENT_DELETE') {
-            if (!f.CHART && !f.PATIENT) { items.push(mkItem('reject', { label: label, reason: 'APPOINTMENT_DELETE needs CHART: or PATIENT:', line: op.line })); return; }
-            var dv = parseDateTimeValue(f.DATE || f.ON || f.FROM || '', today);
-            if (!dv.date) { items.push(mkItem('reject', { label: label, reason: 'APPOINTMENT_DELETE needs DATE:', line: op.line })); return; }
-            var dt = f.TIME ? parseDateTimeValue(f.TIME, today).start : dv.start;
-            var list = findTargets(ctx, { patient: f.PATIENT, chart: f.CHART, date: dv.date, time: hhmm(dt), type: 'appointment' });
-            if (!list.length) { items.push(mkItem('skip', { label: f.PATIENT || ('chart ' + f.CHART), reason: 'Nothing to delete — no appointment on ' + fmtDateMed(dv.date, today) + (dt !== null ? ' at ' + fmtTime(hhmm(dt), settings.timeFormat) : ''), line: op.line })); return; }
-            var pd = pickOne(list, 'that patient/date', op, f.PATIENT || ('chart ' + f.CHART));
-            if (!pd.hit) return;
-            matchedApptIds[pd.hit.ev.id] = true;
-            pushTargetItem('delete', pd.hit, null, pd.hit.inst.occ ? 'this' : 'all', op);
-            return;
-        }
-
-        // ---- generic event verbs: target by ID / MATCH / PATIENT / CHART (+ ON / FROM date)
-        var hasTarget = f.ID || f.MATCH || f.PATIENT || f.CHART || f.TITLE;
-        if (!hasTarget) { items.push(mkItem('reject', { label: v, reason: v + ' needs ID: or MATCH: to find the event', line: op.line })); return; }
-        var titleIsTarget = !f.ID && !f.MATCH && !f.PATIENT && !f.CHART && !!f.TITLE;
-        var onSrc = f.ON || f.FROM || ((v === 'EVENT_DELETE' || v === 'EVENT_DONE' || v === 'EVENT_UNDONE') ? (f.DATE || '') : '');
-        var on = onSrc ? parseDateTimeValue(onSrc, today) : { date: null, start: null };
-        if (onSrc && !on.date && on.start === null) { items.push(mkItem('reject', { label: label, reason: 'Could not read the date "' + onSrc + '"', line: op.line })); return; }
-        var tcrit = {
-            id: f.ID, match: f.MATCH || (titleIsTarget ? f.TITLE : ''),
-            patient: (f.PATIENT && !f.MATCH && !f.ID) ? f.PATIENT : '', chart: (f.CHART && !f.ID) ? f.CHART : '',
-            date: on.date, time: on.date ? hhmm(on.start) : null
-        };
-        if ((v === 'EVENT_DELETE' || v === 'EVENT_DONE' || v === 'EVENT_UNDONE') && f.TIME && on.date && !tcrit.time) tcrit.time = hhmm(parseDateTimeValue(f.TIME, today).start);
-        var targets = findTargets(ctx, tcrit);
-        if (!targets.length) {
-            var why = 'No event matches “' + label + '”' + (on.date ? ' on ' + fmtDateMed(on.date, today) : '');
-            if (v === 'EVENT_DELETE') items.push(mkItem('skip', { label: label, reason: why + ' — nothing to delete', line: op.line }));
-            else items.push(mkItem('reject', { label: label, reason: why, line: op.line }));
-            return;
-        }
-        var pick = pickOne(targets, '“' + label + '”', op, label);
-        if (!pick.hit) return;
-        var hit = pick.hit;
-        var recurring = !!hit.ev.recurrence;
-        var scope = parseScope(f.SCOPE) || (recurring && hit.inst.occ ? 'this' : 'all');
-        if (!recurring) scope = 'all';
-        if (scope !== 'all' && !hit.inst.occ) scope = 'all';
-        if (hit.ev.type === 'appointment') matchedApptIds[hit.ev.id] = true;
-
-        if (v === 'EVENT_DELETE') { pushTargetItem('delete', hit, null, scope, op); return; }
-        if (v === 'EVENT_DONE' || v === 'EVENT_UNDONE') {
-            var want = v === 'EVENT_DONE';
-            if (!!hit.inst.done === want) { items.push(mkItem('skip', { label: displayTitle(hit.inst), reason: want ? 'Already done' : 'Already not done', line: op.line })); return; }
-            pushTargetItem('done', hit, { done: want }, recurring && hit.inst.occ ? 'this' : 'all', op);
-            return;
-        }
-        // EVENT_MOVE / EVENT_UPDATE
-        var conv = updateFieldsToChanges(f, ctx, {
-            titleIsTarget: titleIsTarget, patientIsTarget: !!tcrit.patient, chartIsTarget: !!tcrit.chart,
-            dateFields: v === 'EVENT_MOVE' ? ['TO', 'DATE'] : ['DATE', 'TO']
+        loc.list.forEach(function(hit) {
+            var before = items.length;
+            applyVerbTo(hit, pre.concat(loc.warnings, uncertainWhy ? [uncertainWhy] : []));
+            if (loc.uncertain || uncertainWhy) for (var k = before; k < items.length; k++) items[k].checked = false;
         });
-        if (conv.errors.length) { items.push(mkItem('reject', { label: label, reason: conv.errors.join(' · '), line: op.line })); return; }
-        var changes = conv.changes;
-        if (conv.nv) Object.assign(changes, computeTimingChanges(hit.inst, conv.nv, settings));
-        if (changes._repeat) {
-            var rp = changes._repeat;
-            delete changes._repeat;
-            changes.recurrence = rp.rec ? normalizeRecurrence(rp.rec) : null;
-            if (rp.rec && (rp.anchor || rp.rec.byDay)) {
-                var st = changes.startDate || hit.inst.startDate;
-                var al = alignStartToRecurrence(st, rp.rec, rp.anchor);
-                if (al !== st) Object.assign(changes, computeTimingChanges(Object.assign({}, hit.inst, changes), { date: al }, settings));
+
+        function applyVerbTo(hit, warns) {
+            var recurring = !!hit.ev.recurrence;
+            var scope = parseScope(f.SCOPE) || (recurring && hit.inst.occ ? 'this' : 'all');
+            if (!recurring) scope = 'all';
+            if (scope !== 'all' && !hit.inst.occ) scope = 'all';
+            if (hit.ev.type === 'appointment') matchedApptIds[hit.ev.id] = true;
+            var hl = displayTitle(hit.inst);
+
+            if (v === 'EVENT_DELETE') { pushTargetItem('delete', hit, null, scope, op, warns); return; }
+            if (v === 'EVENT_DONE' || v === 'EVENT_UNDONE') {
+                var want = v === 'EVENT_DONE';
+                if (!!hit.inst.done === want) { items.push(mkItem('skip', { label: hl, when: fmtWhen(hit.inst, settings, today), reason: want ? 'Already done' : 'Already not done', line: op.line })); return; }
+                pushTargetItem('done', hit, { done: want }, recurring && hit.inst.occ ? 'this' : 'all', op, warns);
+                return;
             }
-            if (scope === 'this') scope = 'all';
+            // EVENT_MOVE / EVENT_UPDATE
+            var changes = Object.assign({}, conv.changes);
+            var nv = conv.nv ? Object.assign({}, conv.nv) : null;
+            if (shift !== null) {
+                nv = nv || { date: null, endDate: null, start: null, end: null, allDay: null, duration: null };
+                if (hit.inst.allDay) {
+                    var days = Math.round(shift / 1440);
+                    if (!days) { items.push(mkItem('reject', { label: hl, reason: 'All-day items shift by whole days — use SHIFT: +1 day', line: op.line })); return; }
+                    nv.date = addDays(hit.inst.startDate, days);
+                } else {
+                    var sh = absToDateTime(instanceStartAbs(hit.inst) + shift);
+                    nv.date = sh.date;
+                    nv.start = timeToMin(sh.time);
+                }
+            }
+            if (nv) Object.assign(changes, computeTimingChanges(hit.inst, nv, settings));
+            if (extend !== null) {
+                var cur = Object.assign({}, hit.inst, changes);
+                if (cur.allDay) {
+                    var xd = Math.round(extend / 1440);
+                    if (!xd) { items.push(mkItem('reject', { label: hl, reason: 'All-day items extend by whole days — use EXTEND: +1 day', line: op.line })); return; }
+                    var ne = addDays(cur.endDate || cur.startDate, xd);
+                    if (ne < cur.startDate) { items.push(mkItem('reject', { label: hl, reason: 'That would end before it starts', line: op.line })); return; }
+                    changes.endDate = ne;
+                } else {
+                    var endAbs = instanceEndAbs(cur) + extend;
+                    if (endAbs <= instanceStartAbs(cur)) { items.push(mkItem('reject', { label: hl, reason: 'That would end before it starts', line: op.line })); return; }
+                    var xe = absToDateTime(endAbs);
+                    changes.endDate = xe.date; changes.endTime = xe.time;
+                }
+            }
+            if (changes._repeat) {
+                var rp = changes._repeat;
+                delete changes._repeat;
+                changes.recurrence = rp.rec ? normalizeRecurrence(rp.rec) : null;
+                if (rp.rec && (rp.anchor || rp.rec.byDay)) {
+                    var st = changes.startDate || hit.inst.startDate;
+                    var al = alignStartToRecurrence(st, rp.rec, rp.anchor);
+                    if (al !== st) Object.assign(changes, computeTimingChanges(Object.assign({}, hit.inst, changes), { date: al }, settings));
+                }
+                if (scope === 'this') scope = 'all';
+            }
+            if (changes.notesAppend) {
+                var baseNotes = hit.inst.notes || '';
+                changes.notes = (changes.notes !== undefined ? changes.notes : baseNotes);
+                changes.notes = changes.notes ? changes.notes + '\n\n' + changes.notesAppend : changes.notesAppend;
+                delete changes.notesAppend;
+            }
+            var cal = changes.calendarRef;
+            delete changes.calendarRef;
+            changes = stripUnchanged(hit.inst, changes);
+            if ('recurrence' in changes && sameRecurrence(changes.recurrence, changes.startDate || hit.ev.startDate, hit.ev.recurrence, hit.ev.startDate)) delete changes.recurrence;
+            if (cal) {
+                var ci = matchCalendarByName(ctx.calendars, cal);
+                if (!ci || ci.id !== hit.ev.calendarId) changes.calendarRef = cal;
+            }
+            if (!Object.keys(changes).length) { items.push(mkItem('skip', { label: hl, when: fmtWhen(hit.inst, settings, today), reason: 'No changes — already like that', line: op.line })); return; }
+            var timingOnly = Object.keys(changes).every(function(k) { return RESOLVE_TIMING_FIELDS.indexOf(k) !== -1; });
+            pushTargetItem(v === 'EVENT_MOVE' || timingOnly ? 'move' : 'update', hit, changes, scope, op, warns.concat(conv.warnings));
         }
-        if (changes.notesAppend) {
-            var baseNotes = hit.inst.notes || '';
-            changes.notes = (changes.notes !== undefined ? changes.notes : baseNotes);
-            changes.notes = changes.notes ? changes.notes + '\n\n' + changes.notesAppend : changes.notesAppend;
-            delete changes.notesAppend;
-        }
-        var cal = changes.calendarRef;
-        delete changes.calendarRef;
-        changes = stripUnchanged(hit.inst, changes);
-        if ('recurrence' in changes && sameRecurrence(changes.recurrence, changes.startDate || hit.ev.startDate, hit.ev.recurrence, hit.ev.startDate)) delete changes.recurrence;
-        if (cal) {
-            var ci = matchCalendarByName(ctx.calendars, cal);
-            if (!ci || ci.id !== hit.ev.calendarId) changes.calendarRef = cal;
-        }
-        if (v === 'EVENT_MOVE' && !conv.nv) { items.push(mkItem('reject', { label: label, reason: 'EVENT_MOVE needs TO: with a new date and/or time', line: op.line })); return; }
-        if (!Object.keys(changes).length) { items.push(mkItem('skip', { label: displayTitle(hit.inst), reason: 'No changes — already like that', line: op.line })); return; }
-        pushTargetItem(v === 'EVENT_MOVE' || (Object.keys(changes).every(function(k) { return RESOLVE_TIMING_FIELDS.indexOf(k) !== -1; })) ? 'move' : 'update', hit, changes, scope, op, conv.warnings);
     }
 
     function pushTargetItem(kind, hit, changes, scope, op, warns) {
@@ -584,9 +890,30 @@ function resolveImport(parsed, ctx) {
         }));
     }
 
+    // Every date field is cross-checked against the weekday written next to it
+    // ("ON: Thu 2026-11-06" → 11-06 is a Friday → item left unticked + flagged).
+    var WEEKDAY_CHECK_FIELDS = ['DATE', 'ON', 'FROM', 'TO', 'NEW_DATE', 'START', 'END', 'END_DATE', 'DUE', 'DEADLINE_T', 'UNTIL'];
     parsed.ops.forEach(function(op) {
+        var before = items.length;
         if (CREATE_VERBS[op.verb]) resolveCreate(op);
         else resolveVerb(op);
+        var wm = null, wmField = '';
+        var srcs = op.quick ? [['text', op.quick]] : WEEKDAY_CHECK_FIELDS.map(function(k) { return [k, (op.fields || {})[k]]; });
+        srcs.some(function(kv) {
+            if (!kv[1]) return false;
+            wm = weekdayMismatch(kv[1], today);
+            wmField = kv[0];
+            return !!wm;
+        });
+        for (var i = before; i < items.length; i++) {
+            items[i].op = { verb: op.verb, line: op.line, raw: op.raw || op.quick || '' };
+            if (wm) {
+                var msg = 'Check the date: ' + wmField + ' says ' + DOW[wm.said] + ' but ' + fmtDateMed(wm.date, today) + ' is a ' + DOW[wm.actual] + ' — left unticked';
+                items[i].warnings = [msg].concat(items[i].warnings || []);
+                items[i].checked = false;
+                items[i].weekdayMismatch = true;
+            }
+        }
     });
 
     // Sync mode: appointments on pasted dates that the paste didn't mention are removed
@@ -606,9 +933,64 @@ function resolveImport(parsed, ctx) {
         });
     }
 
+    // Claude's TODAY: line vs this device's date — a mismatch means relative days
+    // ("tomorrow", "Friday") may be off, so nothing is pre-ticked.
+    var planWarnings = (parsed.warnings || []).slice();
+    var todayMismatch = null;
+    if (parsed.claudeToday) {
+        var ct = findDateInText(parsed.claudeToday, today);
+        var cwm = weekdayMismatch(parsed.claudeToday, today);
+        if (ct && ct.date !== today) {
+            todayMismatch = { claude: ct.date, device: today };
+            planWarnings.unshift({ line: null, msg: 'Claude wrote this on ' + fmtDateMed(ct.date, today) + ', but today is ' + fmtDateMed(today, today) +
+                ' here — “today/tomorrow/Friday” may be off by ' + Math.abs(diffDays(today, ct.date)) + ' day' + (Math.abs(diffDays(today, ct.date)) === 1 ? '' : 's') + '. Nothing is pre-ticked: check the dates, then tick what is right.' });
+        } else if (cwm) {
+            planWarnings.unshift({ line: null, msg: 'TODAY line says ' + DOW[cwm.said] + ' but ' + cwm.date + ' is a ' + DOW[cwm.actual] + ' — Claude’s date math is off; check every date. Nothing is pre-ticked.' });
+            todayMismatch = { claude: ct ? ct.date : null, device: today };
+        }
+        if (todayMismatch) items.forEach(function(it) { if (it.kind !== 'skip' && it.kind !== 'reject') it.checked = false; });
+    }
+
     var counts = { create: 0, update: 0, move: 0, delete: 0, done: 0, calendar: 0, skip: 0, reject: 0 };
     items.forEach(function(it) { counts[it.kind] = (counts[it.kind] || 0) + 1; });
-    return { items: items, counts: counts, foreign: parsed.foreign || {}, warnings: parsed.warnings || [], newCalendars: newCalendars };
+    return { items: items, counts: counts, foreign: parsed.foreign || {}, warnings: planWarnings, newCalendars: newCalendars, todayMismatch: todayMismatch };
+}
+
+// Problems in a plan, phrased for the Claude project to fix: errors, deletes
+// that found nothing, and anything left unticked (weekday/date doubts).
+function importIssues(plan) {
+    var out = [];
+    (plan.warnings || []).forEach(function(w) { out.push({ tag: 'NOT READ', msg: (w.line ? 'Line ' + w.line + ': ' : '') + w.msg, raw: '' }); });
+    (plan.items || []).forEach(function(it) {
+        var actionable = it.kind !== 'skip' && it.kind !== 'reject';
+        var tag = it.kind === 'reject' ? 'ERROR' : (it.kind === 'skip' && it.notFound) ? 'NOT FOUND' : (actionable && !it.checked && !it.sync) ? 'NEEDS CHECK (left unticked)' : null;
+        if (!tag) return;
+        var msg = it.reason || '';
+        if (actionable) msg = (it.label ? '“' + it.label + '” ' + (it.when || '') + ' → ' + (it.detail || it.kind) + '. ' : '') + (it.warnings || []).join(' · ');
+        out.push({ tag: tag, msg: msg.trim(), raw: it.op && it.op.raw ? it.op.raw : '' });
+    });
+    return out;
+}
+
+function buildImportIssuesText(plan, today) {
+    var issues = importIssues(plan);
+    if (!issues.length) return '';
+    var fine = (plan.items || []).filter(function(it) { return it.kind !== 'reject' && !(it.kind === 'skip' && it.notFound) && !(it.kind !== 'skip' && !it.checked); }).length;
+    var L = [
+        'SULLY CALENDAR IMPORT ISSUES — today is ' + DOW_SHORT[weekdayOf(today)] + ' ' + today,
+        'Fix ONLY these items. Reply with ONE code block containing just the corrected blocks (the other items are fine).',
+        ''
+    ];
+    issues.forEach(function(x, i) {
+        L.push((i + 1) + '. ' + x.tag + ' — ' + x.msg);
+        if (x.raw) {
+            L.push('   Block that was pasted:');
+            x.raw.split('\n').forEach(function(r) { L.push('   ' + r); });
+        }
+        L.push('');
+    });
+    if (fine) L.push('(' + fine + ' other item' + (fine === 1 ? ' was' : 's were') + ' fine.)');
+    return L.join('\n').trim();
 }
 
 // No recognizable blocks → treat short pastes as quick-add lines

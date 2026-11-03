@@ -348,7 +348,9 @@ html.dark .gc-import-text { background: var(--surface); }
 .gc-sync-mode input { width: 16px; height: 16px; }
 .gc-import-summary { display: flex; flex-direction: column; gap: 6px; }
 .gc-import-list { display: flex; flex-direction: column; gap: 4px; max-height: 440px; overflow-y: auto; padding-right: 2px; }
-.gc-pill-row { display: flex; flex-wrap: wrap; gap: 6px; }
+.gc-pill-row { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+.gc-pill-row .gc-btn.sm { height: 26px; padding: 0 10px; font-size: 12px; }
+.gc-issues-btn { margin-left: auto; }
 .gc-pill { display: inline-flex; align-items: center; height: 22px; padding: 0 9px; border-radius: 11px; font-size: 11.5px; font-weight: 700; white-space: nowrap; flex: none; }
 .gc-pill.new { background: #e6f4ea; color: #137333; }
 .gc-pill.upd { background: #e8f0fe; color: #174ea6; }
