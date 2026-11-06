@@ -196,6 +196,18 @@ async function logicSuite(page) {
             label: document.getElementById('simpleTDEELabel')?.textContent,
             tdeeShown: document.getElementById('simpleTDEE')?.textContent,
             details: document.getElementById('tdeeDetailsBody').innerText,
+            summary: document.getElementById('tdeeDetailsSummary').textContent,
+            homeChart: !!document.querySelector('#tdeeDetailsBody svg.tcal-chart[role="img"]'),
+            ...(() => {
+                setHomeTrendRange(56);
+                const r = {
+                    range8: document.querySelector('#tdeeDetailsBody .tcal-range button[aria-pressed="true"]')?.textContent,
+                    range8Chart: !!document.querySelector('#tdeeDetailsBody svg.tcal-chart'),
+                    rangeStored: localStorage.getItem('bodyCompHomeTrendRange')
+                };
+                setHomeTrendRange(28);
+                return r;
+            })(),
             claude: generateClaudeExport(), weekly: generateWeeklyClaudeExport(), daily: generateExportText(),
             rawDeficitLive: getCurrentRawDeficit(), calibratedLive: getCurrentDeficit(),
             progressRow: generateProgressExport('2026-10-09', '2026-10-09').rows[0].deficit,
@@ -212,8 +224,13 @@ async function logicSuite(page) {
     ok(cal.logsUnchanged, 'stored day logs keep raw formula values');
     ok(cal.oct8 === 697 + cal.oct8Adj && cal.oct8Adj < 0, 'past days show the calibrated deficit (raw + that day\'s correction)');
     ok(cal.label === 'TDEE est.' && cal.tdeeShown.replace(/,/g, '').includes(String(cal.est.calibrated)), 'homepage shows labeled calibrated estimate');
-    ok(/Original formula/.test(cal.details) && /Learned correction/.test(cal.details) && /Your TDEE \(calibrated\)/.test(cal.details) && /don't subtract extra/.test(cal.details), 'details show formula, correction, calibrated, no-extra-subtractor note');
-    ok(/Re-learned every day from 26 food-logged days and 27 morning weigh-ins/.test(cal.details), 'details name the data used');
+    ok(/your tdee/i.test(cal.details) && /formula [\d,]+/.test(cal.details) && /correction/i.test(cal.details) && /don't subtract extra/.test(cal.details), 'home dropdown: TDEE, formula, correction, no-extra-subtractor note');
+    ok(/Re-learned every day from 26 food-logged days and 27 morning weigh-ins/.test(cal.details), 'home dropdown names the data used');
+    ok(/Scale vs\. food log/.test(cal.details) && /Scale trend\s*[−+]?\d+\.\d lb/.test(cal.details) && /Formula\s*[−+]?\d+\.\d lb/.test(cal.details) && cal.homeChart, 'home dropdown: trend vs. model chart + legend values');
+    ok(/This morning/.test(cal.details) && /expected 18\d\.\d ± \d\.\d/.test(cal.details) && /Tomorrow's expected weigh-in/.test(cal.details), 'home dropdown: this morning vs. expected + tomorrow\'s expectation');
+    ok(/Verified on your data: \d-week forecasts/.test(cal.details), 'home dropdown: out-of-sample accuracy line');
+    ok(/^Trend vs\. model · [−+]\d\.\d\d lb\/wk · calibration −\d+\/day$/.test(cal.summary), `home dropdown summary (got ${cal.summary})`);
+    ok(cal.range8 === '8W' && cal.range8Chart && cal.rangeStored === '56', 'home chart range toggle (4W/8W/12W) re-renders and is remembered');
     ok(cal.calibratedLive === cal.rawDeficitLive + cal.est.adjustment, 'live calibrated deficit');
     ok(new RegExp(`DEFICIT:${cal.rawDeficitLive}\\n`).test(cal.claude), 'Claude export DEFICIT stays raw');
     ok(/CALIBRATION_ADJ:-\d+\|CALIBRATED_TDEE:\d+\|CALIBRATED_DEFICIT:-?\d+\|CALIBRATION_SD:\d+\|CALIBRATION_CONFIDENCE:\w+\|NOTE:kalman_filter_estimate/.test(cal.claude), 'Claude export adds labeled calibration line with SD');
@@ -240,6 +257,7 @@ async function logicSuite(page) {
             deficit: getDisplayDeficitForDate('2026-10-09') === getCurrentRawDeficit(),
             oct8: getDisplayDeficitForDate('2026-10-08'),
             label: document.getElementById('simpleTDEELabel')?.textContent,
+            summaryOff: document.getElementById('tdeeDetailsSummary').textContent,
             claudeNoCal: !/CALIBRATION_ADJ/.test(generateClaudeExport()),
             progressNoCal: !/TDEE CALIBRATION/.test(generateProgressExport('2026-10-02', '2026-10-08').text),
             card: document.getElementById('tdeeCalibration').textContent
@@ -251,6 +269,7 @@ async function logicSuite(page) {
     });
     ok(off.same && off.deficit && off.oct8 === 697 && off.label === 'TDEE', 'disabled → original TDEE and deficits');
     ok(off.claudeNoCal && off.progressNoCal, 'disabled → no export extras');
+    ok(/calibration off$/.test(off.summaryOff), `disabled → home summary says calibration off (got ${off.summaryOff})`);
     ok(/not applied — off/.test(off.card), 'disabled → card says the calibration is not applied');
     ok(off.backOn, 're-enabling restores the learned correction');
 

@@ -1396,12 +1396,49 @@
             list-style-position: inside;
         }
 
-        .tdee-details-body {
-            margin-top: 8px;
-            padding: 10px 12px;
-            background: var(--bg-tertiary);
-            border-radius: 10px;
-        }
+        /* Home "Trend vs. model" dropdown (Nov 2026) */
+        .tdee-details-body { margin-top: 8px; }
+        .tcal { display: flex; flex-direction: column; gap: 8px; font-size: 1.05em; color: var(--text-secondary); max-width: 640px; margin: 0 auto; }
+        .tcal-chips { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; }
+        .tcal-chip { background: rgba(15, 23, 42, 0.55); border: 1px solid var(--border-color); border-radius: 12px; padding: 8px 9px 7px; min-width: 0; }
+        .tcal-chip-label { font-size: 0.72em; letter-spacing: 0.07em; text-transform: uppercase; color: var(--text-muted); font-weight: 600; }
+        .tcal-chip-value { margin-top: 2px; font-size: 1.32em; font-weight: 700; color: var(--text-primary); font-variant-numeric: tabular-nums; white-space: nowrap; line-height: 1.15; }
+        .tcal-chip-value small { font-size: 0.58em; font-weight: 500; color: var(--text-muted); }
+        .tcal-chip-sub { font-size: 0.8em; color: var(--text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .tcal-spark { display: block; width: 100%; height: 16px; margin-top: 2px; }
+        .tcal-card { background: rgba(15, 23, 42, 0.55); border: 1px solid var(--border-color); border-radius: 12px; padding: 10px 11px; }
+        .tcal-head { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+        .tcal-title { font-weight: 600; color: var(--text-primary); }
+        .tcal-range { display: inline-flex; background: var(--bg-tertiary); border-radius: 999px; padding: 2px; flex-shrink: 0; }
+        .tcal-range button { border: 0; background: transparent; color: var(--text-secondary); font: inherit; font-size: 0.82em; font-weight: 600; padding: 4px 10px; border-radius: 999px; cursor: pointer; }
+        .tcal-range button[aria-pressed="true"] { background: var(--accent-blue); color: #fff; }
+        .tcal-chart { display: block; width: 100%; max-width: 520px; height: auto; margin: 6px auto 2px; }
+        .tcal-legend { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 4px; }
+        .tcal-leg { display: grid; grid-template-columns: auto 1fr; column-gap: 5px; align-items: center; min-width: 0; }
+        .tcal-leg-name { font-size: 0.8em; color: var(--text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .tcal-leg strong { grid-column: 2; color: var(--text-primary); font-variant-numeric: tabular-nums; font-size: 1.02em; }
+        .tcal-key { width: 12px; height: 3px; border-radius: 2px; background: var(--accent-blue); }
+        .tcal-key.cal { background: var(--accent-green); }
+        .tcal-key.model { background: repeating-linear-gradient(90deg, var(--accent-orange) 0 4px, transparent 4px 6px); }
+        .tcal-note { margin-top: 6px; font-size: 0.9em; line-height: 1.4; color: var(--text-secondary); }
+        .tcal-note strong { color: var(--text-primary); }
+        .tcal-pill { font-size: 0.8em; font-weight: 600; padding: 2px 8px; border-radius: 999px; background: var(--bg-tertiary); color: var(--text-secondary); white-space: nowrap; font-variant-numeric: tabular-nums; }
+        .tcal-pill.up { background: var(--accent-green-dim); color: var(--accent-green); }
+        .tcal-pill.down { background: var(--accent-orange-dim); color: var(--accent-orange); }
+        .tcal-gauge { position: relative; height: 8px; margin: 12px 4px 4px; border-radius: 999px; background: linear-gradient(90deg, rgba(16,185,129,0.25), rgba(255,255,255,0.06) 50%, rgba(249,115,22,0.25)); }
+        .tcal-gauge-band { position: absolute; top: 0; bottom: 0; left: 33.3%; width: 33.4%; border-radius: 999px; background: rgba(59, 130, 246, 0.35); }
+        .tcal-gauge-mid { position: absolute; top: -3px; bottom: -3px; left: 50%; width: 2px; margin-left: -1px; background: var(--text-secondary); border-radius: 1px; }
+        .tcal-gauge-dot { position: absolute; top: 50%; width: 14px; height: 14px; margin: -7px 0 0 -7px; border-radius: 50%; background: var(--text-primary); border: 3px solid var(--accent-blue); box-shadow: 0 0 0 3px rgba(59,130,246,0.25); }
+        .tcal-gauge-dot.odd { border-color: var(--accent-yellow); box-shadow: 0 0 0 3px rgba(245,158,11,0.25); }
+        .tcal-gauge-scale { display: flex; justify-content: space-between; font-size: 0.76em; color: var(--text-muted); margin-top: 6px; }
+        .tcal-row { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
+        .tcal-row strong { color: var(--text-primary); font-size: 1.08em; font-variant-numeric: tabular-nums; white-space: nowrap; }
+        .tcal-sub { font-size: 0.82em; color: var(--text-muted); }
+        .tcal-verify { display: flex; gap: 8px; align-items: flex-start; margin-top: 9px; padding-top: 9px; border-top: 1px solid var(--border-color); font-size: 0.88em; line-height: 1.4; }
+        .tcal-verify strong { color: var(--text-primary); }
+        .tcal-check { flex-shrink: 0; width: 18px; height: 18px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; background: var(--accent-green-dim); color: var(--accent-green); font-size: 0.8em; font-weight: 700; }
+        .tcal-foot { font-size: 0.82em; line-height: 1.45; color: var(--text-muted); padding: 0 2px; }
+        .tcal-link { background: none; border: 0; padding: 0; font: inherit; color: var(--accent-blue); font-weight: 600; cursor: pointer; }
 
         .tdee-line {
             display: flex;
@@ -7277,8 +7314,8 @@
                     <span class="burn-separator">|</span>
                     <span id="simpleDeficitLabel">Deficit:</span> <strong id="simpleDeficit" class="deficit-positive">+2,150</strong>
                 </div>
-                <details class="tdee-details" id="tdeeDetails" ontoggle="if (this.open) renderTdeeDetailsBody()">
-                    <summary id="tdeeDetailsSummary">Estimate details</summary>
+                <details class="tdee-details" id="tdeeDetails" ontoggle="onTdeeDetailsToggle(this)">
+                    <summary id="tdeeDetailsSummary">Trend vs. model</summary>
                     <div class="tdee-details-body" id="tdeeDetailsBody"></div>
                 </details>
             </div>
@@ -12286,34 +12323,197 @@
             return null;
         }
 
-        function buildTdeeEstimateHtml(estimate, status) {
+        // ============================================
+        // HOME "TREND VS MODEL" DROPDOWN (Nov 2026)
+        // Condensed live view of the adaptive TDEE: the scale trend against
+        // what the original formula and the calibrated TDEE predicted from
+        // the food log, this morning's weigh-in against its expectation,
+        // tomorrow's expected weigh-in and the out-of-sample accuracy check.
+        // ============================================
+        const HOME_TREND_RANGES = [28, 56, 84];
+        const HOME_TREND_RANGE_KEY = 'bodyCompHomeTrendRange';
+        const HOME_TREND_OPEN_KEY = 'bodyCompHomeTrendOpen';
+        let _tdeeDetailsRestored = false;
+
+        function getHomeTrendRange() {
+            try {
+                const v = Number(localStorage.getItem(HOME_TREND_RANGE_KEY));
+                if (HOME_TREND_RANGES.includes(v)) return v;
+            } catch { /* storage unavailable */ }
+            return 28;
+        }
+
+        function setHomeTrendRange(days) {
+            try { localStorage.setItem(HOME_TREND_RANGE_KEY, String(days)); } catch { /* storage unavailable */ }
+            renderTdeeDetailsBody();
+        }
+
+        function onTdeeDetailsToggle(el) {
+            try { localStorage.setItem(HOME_TREND_OPEN_KEY, el.open ? '1' : '0'); } catch { /* storage unavailable */ }
+            if (el.open) renderTdeeDetailsBody();
+        }
+
+        function restoreTdeeDetailsOpen() {
+            const el = document.getElementById('tdeeDetails');
+            if (!el) return;
+            try { if (localStorage.getItem(HOME_TREND_OPEN_KEY) === '1') el.open = true; } catch { /* storage unavailable */ }
+        }
+
+        function homeNiceTicks(lo, hi, count = 3) {
+            const rough = (hi - lo) / count;
+            const mag = 10 ** Math.floor(Math.log10(rough));
+            const r = rough / mag;
+            const step = mag * (r < 1.5 ? 1 : r < 3 ? 2 : r < 7 ? 5 : 10);
+            const ticks = [];
+            for (let v = Math.ceil(lo / step) * step; v <= hi + 1e-9; v += step) ticks.push(Math.round(v / step) * step);
+            return ticks;
+        }
+
+        // Trend (filled), calibrated and formula paths with weigh-in dots.
+        function buildHomeTrendChart(paths) {
+            const W = 340, H = 150, pad = { t: 10, r: 10, b: 18, l: 30 };
+            const vals = [];
+            paths.forEach(p => {
+                [p.trend, p.model, p.calibrated, p.weight].forEach(v => { if (Number.isFinite(v)) vals.push(v); });
+            });
+            if (paths.length < 2 || vals.length < 2) return '';
+            let lo = Math.min(...vals), hi = Math.max(...vals);
+            const span = Math.max(hi - lo, 1);
+            lo -= span * 0.06; hi += span * 0.06;
+            const n = paths.length;
+            const x = i => pad.l + (i / (n - 1)) * (W - pad.l - pad.r);
+            const y = v => pad.t + ((hi - v) / (hi - lo)) * (H - pad.t - pad.b);
+            const line = key => paths.map((p, i) => `${i ? 'L' : 'M'}${x(i).toFixed(1)},${y(p[key]).toFixed(1)}`).join('');
+            const base = (H - pad.b).toFixed(1);
+            const area = `${line('trend')}L${x(n - 1).toFixed(1)},${base}L${x(0).toFixed(1)},${base}Z`;
+            let svg = `<defs><linearGradient id="tcalTrendFill" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0" stop-color="var(--accent-blue)" stop-opacity="0.28"/>
+                <stop offset="1" stop-color="var(--accent-blue)" stop-opacity="0"/></linearGradient></defs>`;
+            homeNiceTicks(lo, hi).forEach(v => {
+                svg += `<line x1="${pad.l}" x2="${W - pad.r}" y1="${y(v).toFixed(1)}" y2="${y(v).toFixed(1)}" stroke="rgba(255,255,255,0.06)"/>`;
+                svg += `<text x="${pad.l - 5}" y="${(y(v) + 3).toFixed(1)}" text-anchor="end" font-size="8.5" fill="var(--text-muted)">${v % 1 ? v.toFixed(1) : v}</text>`;
+            });
+            svg += `<path d="${area}" fill="url(#tcalTrendFill)"/>`;
+            svg += `<path d="${line('model')}" fill="none" stroke="var(--accent-orange)" stroke-width="1.6" stroke-dasharray="4 3" stroke-linecap="round"/>`;
+            svg += `<path d="${line('calibrated')}" fill="none" stroke="var(--accent-green)" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>`;
+            paths.forEach((p, i) => {
+                if (Number.isFinite(p.weight)) svg += `<circle cx="${x(i).toFixed(1)}" cy="${y(p.weight).toFixed(1)}" r="1.9" fill="var(--text-secondary)" opacity="0.55"/>`;
+            });
+            svg += `<path d="${line('trend')}" fill="none" stroke="var(--accent-blue)" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>`;
+            const ex = x(n - 1), ey = y(paths[n - 1].trend);
+            svg += `<circle cx="${ex.toFixed(1)}" cy="${ey.toFixed(1)}" r="5.5" fill="var(--accent-blue)" opacity="0.25"/><circle cx="${ex.toFixed(1)}" cy="${ey.toFixed(1)}" r="2.8" fill="var(--accent-blue)" stroke="var(--bg-secondary)" stroke-width="1"/>`;
+            svg += `<text x="${pad.l}" y="${H - 4}" font-size="8.5" fill="var(--text-muted)">${escapeHtml(formatShortDate(paths[0].date))}</text>`;
+            svg += `<text x="${W - pad.r}" y="${H - 4}" font-size="8.5" text-anchor="end" fill="var(--text-muted)">Today</text>`;
+            return `<svg class="tcal-chart" viewBox="0 0 ${W} ${H}" role="img" aria-label="Weight trend against the formula and calibrated predictions">${svg}</svg>`;
+        }
+
+        function buildSparkline(values, color = 'var(--accent-blue)') {
+            const v = values.filter(Number.isFinite);
+            if (v.length < 2) return '';
+            const W = 100, H = 18;
+            const lo = Math.min(...v), hi = Math.max(...v), span = Math.max(hi - lo, 1);
+            const pts = v.map((val, i) => `${(i / (v.length - 1) * W).toFixed(1)},${(H - 2 - (val - lo) / span * (H - 4)).toFixed(1)}`);
+            return `<svg class="tcal-spark" viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" aria-hidden="true"><polyline points="${pts.join(' ')}" fill="none" stroke="${color}" stroke-width="1.5" vector-effect="non-scaling-stroke" stroke-linejoin="round"/></svg>`;
+        }
+
+        function buildHomeTrendHtml() {
+            const status = getTdeeCalibrationStatus();
+            const run = status.run;
             const info = describeTdeeCalibration(status);
-            const adj = estimate.adjustment;
-            const line = (label, value, cls = '') => `<div class="tdee-line ${cls}"><span>${label}</span><strong>${value}</strong></div>`;
-            let html = line('Original formula', `${formatNumber(estimate.raw)} kcal`);
-            if (status.enabled && status.run.ok) {
-                html += line('Learned correction', `${formatSignedKcal(adj)} kcal${estimate.sd ? ` <span style="font-weight:400;color:var(--text-muted);">±${estimate.sd}</span>` : ''}`);
-                html += line('Your TDEE (calibrated)', `${formatNumber(estimate.calibrated)} kcal`, 'total');
+            const C = TDEE_CALIBRATION;
+            const rho = C.KCAL_PER_LB;
+            const est = getLiveTdeeEstimate();
+            const lb = v => `${v > 0 ? '+' : v < 0 ? '−' : ''}${Math.abs(v).toFixed(1)}`;
+            if (!run.ok) {
+                return `<div class="tcal"><div class="tcal-card"><div class="tcal-title">${escapeHtml(info.label)}</div>
+                    <div class="tcal-foot">${escapeHtml(info.basis)} Original formula today: ${formatNumber(est.raw)} kcal.</div></div></div>`;
             }
-            html += `<div class="tdee-note"><strong>Calibration: ${escapeHtml(info.label)}</strong><br>${escapeHtml(info.basis)}</div>`;
-            const upd = status.enabled ? getLatestCalibrationUpdate(status.run) : null;
+
+            const cur = run.current;
+            const trend = calTrendFromRun(run);
+            const correction = Math.round(cur.correction);
+            const range = getHomeTrendRange();
+            const from = calAddDays(run.endDate, -range) < run.startDate ? run.startDate : calAddDays(run.endDate, -range);
+            const paths = calPredictionPaths(run, from);
+            const first = paths[0], last = paths[paths.length - 1];
+            const dScale = last.trend - first.trend, dCal = last.calibrated - first.calibrated, dModel = last.model - first.model;
+            const logged = paths.slice(0, -1).filter(p => p.tracked).length;
+            const windowKcal = logged ? (dModel - dScale) * rho / logged : 0;
+            const corrHistory = run.series.slice(-60).map(r => r.correction);
+            const corrWeekAgo = run.series.length > 7 ? run.series[run.series.length - 8].correction : null;
+
+            // Chips
+            const chips = `<div class="tcal-chips">
+                <div class="tcal-chip"><div class="tcal-chip-label">Trend</div>
+                    <div class="tcal-chip-value">${cur.trend.toFixed(1)}<small> lb</small></div>
+                    <div class="tcal-chip-sub">${trend ? `${trend.lbPerWeek > 0 ? '+' : trend.lbPerWeek < 0 ? '−' : ''}${Math.abs(trend.lbPerWeek).toFixed(2)} lb/wk` : 'rate: more weigh-ins'}</div></div>
+                <div class="tcal-chip"><div class="tcal-chip-label">Your TDEE</div>
+                    <div class="tcal-chip-value">${formatNumber(status.enabled ? est.calibrated : est.raw)}</div>
+                    <div class="tcal-chip-sub">${status.enabled ? `formula ${formatNumber(est.raw)}` : 'calibration off'}</div></div>
+                <div class="tcal-chip"><div class="tcal-chip-label">Correction</div>
+                    <div class="tcal-chip-value">${formatSignedKcal(correction)}<small> ±${Math.round(cur.correctionSd)}</small></div>
+                    ${buildSparkline(corrHistory)}</div>
+            </div>`;
+
+            // Chart card
+            const rangeBtns = HOME_TREND_RANGES.map(d => `<button type="button" aria-pressed="${d === range}" onclick="event.stopPropagation(); setHomeTrendRange(${d})">${d / 7}W</button>`).join('');
+            const leg = (cls, name, value) => `<div class="tcal-leg"><span class="tcal-key ${cls}"></span><span class="tcal-leg-name">${name}</span><strong>${lb(value)} lb</strong></div>`;
+            const chartCard = `<div class="tcal-card">
+                <div class="tcal-head"><span class="tcal-title">Scale vs. food log</span><span class="tcal-range" role="group" aria-label="Chart range">${rangeBtns}</span></div>
+                ${buildHomeTrendChart(paths)}
+                <div class="tcal-legend">${leg('scale', 'Scale trend', dScale)}${leg('cal', 'Calibrated', dCal)}${leg('model', 'Formula', dModel)}</div>
+                <div class="tcal-note">${Math.abs(dModel - dScale) < 0.15
+                    ? `Formula and scale agree over these ${Math.round(paths.length / 7)} weeks.`
+                    : `Formula predicted <strong>${Math.abs(dModel - dScale).toFixed(1)} lb ${dModel < dScale ? 'more' : 'less'} loss</strong> than the scale shows (≈ ${formatSignedKcal(windowKcal)} kcal/day over ${logged} logged days).`}
+                    ${status.enabled ? `The calibrated line only uses what the app knew each morning.` : ''}</div>
+            </div>`;
+
+            // This morning's (or the latest) weigh-in vs. expectation
+            const upd = getLatestCalibrationUpdate(run);
+            let morning = '';
             if (upd) {
+                const isToday = upd.date === run.endDate;
+                const diff = upd.weight - upd.predicted;
+                const pos = calClamp(50 + diff / (3 * upd.predictedSd) * 50, 3, 97);
                 const moved = Math.round(upd.after - upd.before);
-                html += `<div class="tdee-note">${escapeHtml(formatShortDate(upd.date))} weigh-in ${upd.weight} lb vs. ${upd.predicted.toFixed(1)} ± ${upd.predictedSd.toFixed(1)} expected from your log → correction ${moved === 0 ? 'unchanged' : `${formatSignedKcal(moved)} kcal`}${upd.downweighted ? ' (unusual reading, down-weighted)' : ''}.</div>`;
+                morning = `<div class="tcal-card">
+                    <div class="tcal-head"><span class="tcal-title">${isToday ? 'This morning' : `Latest weigh-in · ${escapeHtml(formatShortDate(upd.date))}`}</span>
+                        <span class="tcal-pill ${moved > 0 ? 'up' : moved < 0 ? 'down' : ''}">correction ${moved === 0 ? '±0' : formatSignedKcal(moved)}</span></div>
+                    <div class="tcal-gauge" aria-hidden="true"><span class="tcal-gauge-band"></span><span class="tcal-gauge-mid"></span><span class="tcal-gauge-dot${upd.downweighted ? ' odd' : ''}" style="left:${pos.toFixed(1)}%"></span></div>
+                    <div class="tcal-gauge-scale"><span>lighter</span><span>expected ${upd.predicted.toFixed(1)} ± ${upd.predictedSd.toFixed(1)}</span><span>heavier</span></div>
+                    <div class="tcal-note">Weighed <strong>${upd.weight} lb</strong>, ${Math.abs(diff) < 0.05 ? 'right on' : `${Math.abs(diff).toFixed(1)} lb ${diff < 0 ? 'lighter' : 'heavier'} than`} your log predicted${upd.downweighted ? ' — unusual reading, counted at reduced weight' : ''}.${isToday ? '' : ' Weigh in tomorrow morning to update it.'}</div>
+                </div>`;
             }
-            if (status.enabled && adj !== 0) {
-                html += `<div class="tdee-note">${adj < 0
-                    ? `Your scale shows less loss than your food log predicts, so your real deficit is about ${formatNumber(Math.abs(adj))} kcal/day smaller than the original formula says. Deficit, targets and Progress all use the calibrated TDEE. It already includes any under-logging — don't subtract extra.`
-                    : `Your scale shows more loss than your food log predicts, so your real deficit is about ${formatNumber(adj)} kcal/day larger than the original formula says. Deficit, targets and Progress all use the calibrated TDEE.`}</div>`;
-            }
-            html += '<div class="tdee-note">Original formula = BMR (Mifflin-St Jeor) × activity + 7-day average of imported workouts. The correction lumps together under-logged food, formula and workout-calorie error and metabolic adaptation. It never changes your daily intake budget.</div>';
-            return html;
+
+            // Tomorrow's expectation from today's plan
+            const planned = Math.max(getTodayTotals().calories || 0, getIntakeGoals().budget);
+            const tdeeTrue = est.raw + cur.correction;
+            const tomorrow = cur.trend + (planned - tdeeTrue) / rho;
+            const tomorrowSd = Math.sqrt(cur.trendSd ** 2 + (C.TRACKED_DAY_KCAL_SD / rho) ** 2 + (cur.correctionSd / rho) ** 2 + C.SCALE_NOISE_LB ** 2);
+            const tomorrowHtml = `<div class="tcal-row"><span>Tomorrow's expected weigh-in</span><strong>${tomorrow.toFixed(1)} ± ${tomorrowSd.toFixed(1)} lb</strong></div>
+                <div class="tcal-sub">if today ends at ${formatNumber(planned)} kcal</div>`;
+
+            // Accuracy check (walk-forward, out of sample)
+            const bt = [28, 14, 7].map(h => getEnergyBalanceBacktest(h)).find(t => t.n >= 3);
+            const accuracy = bt ? `<div class="tcal-verify"><span class="tcal-check">✓</span><span>Verified on your data: ${bt.horizon / 7}-week forecasts averaged <strong>${Math.abs(bt.calibrated.bias).toFixed(1)} lb</strong> off calibrated vs <strong>${Math.abs(bt.model.bias).toFixed(1)} lb</strong> with the formula (${bt.n} tests).</span></div>` : '';
+
+            const week = corrWeekAgo === null ? '' : ` · 7-day change ${formatSignedKcal(cur.correction - corrWeekAgo)}`;
+            return `<div class="tcal">
+                ${chips}
+                ${chartCard}
+                ${morning}
+                <div class="tcal-card">${tomorrowHtml}${accuracy}</div>
+                <div class="tcal-foot">${escapeHtml(info.label)}${week}. ${escapeHtml(info.basis)} ${status.enabled
+                    ? `TDEE = formula ${formatNumber(est.raw)} (BMR × activity + 7-day workouts) ${formatSignedKcal(correction)} learned. It already includes any under-logging — don't subtract extra.`
+                    : 'Calibration is off in Settings, so targets and deficits use the formula.'}
+                    <button type="button" class="tcal-link" onclick="navigateToTab('progress')">Full analysis →</button></div>
+            </div>`;
         }
 
         function renderTdeeDetailsBody() {
             const body = document.getElementById('tdeeDetailsBody');
             if (!body) return;
-            body.innerHTML = buildTdeeEstimateHtml(getLiveTdeeEstimate(), getTdeeCalibrationStatus());
+            body.innerHTML = buildHomeTrendHtml();
         }
 
         function renderSimpleView() {
@@ -12427,10 +12627,14 @@
             if (simpleTDEELabel) simpleTDEELabel.textContent = tdeeEstimate.adjustment !== 0 ? 'TDEE est.' : 'TDEE';
             const tdeeDetailsSummary = document.getElementById('tdeeDetailsSummary');
             if (tdeeDetailsSummary) {
-                tdeeDetailsSummary.textContent = tdeeEstimate.adjustment !== 0
-                    ? `Estimate details · calibration ${formatSignedKcal(tdeeEstimate.adjustment)}`
-                    : 'Estimate details';
+                const homeRun = getEnergyBalanceRun();
+                const homeTrend = homeRun.ok ? calTrendFromRun(homeRun) : null;
+                const homeRate = homeTrend ? ` · ${homeTrend.lbPerWeek > 0 ? '+' : homeTrend.lbPerWeek < 0 ? '−' : ''}${Math.abs(homeTrend.lbPerWeek).toFixed(2)} lb/wk` : '';
+                tdeeDetailsSummary.textContent = homeRun.ok
+                    ? `Trend vs. model${homeRate} · calibration ${isTdeeCalibrationEnabled() ? `${formatSignedKcal(Math.round(homeRun.current.correction))}/day` : 'off'}`
+                    : 'Trend vs. model';
             }
+            if (!_tdeeDetailsRestored) { _tdeeDetailsRestored = true; restoreTdeeDetailsOpen(); }
             if (document.getElementById('tdeeDetails')?.open) renderTdeeDetailsBody();
             if (simpleEaten) simpleEaten.textContent = formatNumber(totals.calories);
             if (simpleDeficit) {
