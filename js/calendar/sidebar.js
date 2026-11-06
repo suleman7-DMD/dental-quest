@@ -57,9 +57,20 @@ function quickAddBuild(text, typeVerb) {
 function quickAddCardHtml(r) {
     if (r.parts && r.parts.length > 1) {
         var warn = (r.errors || []).concat(r.warnings || []);
-        return '<div class="gc-qa-multi-head">' + icon('event_repeat') + '<span><b>' + r.parts.length + ' repeating series</b> from one line</span></div>' +
-            r.parts.map(function(p) { return quickAddCardHtml({ op: r.op, spec: p.spec, cal: p.cal, calName: p.calName, hex: p.hex, when: p.when, errors: [] }); }).join('') +
-            (warn.length ? '<div class="gc-qa-warn">' + warn.map(escapeHtml).join('<br>') + '</div>' : '');
+        var warnHtml = warn.length ? '<div class="gc-qa-warn">' + warn.map(escapeHtml).join('<br>') + '</div>' : '';
+        var f = r.parts[0].spec;
+        // the same thing on several days ("nov 26-28 8am-7pm") → one card listing the days
+        if (r.parts.every(function(p) { var x = p.spec; return !x.recurrence && x.title === f.title && x.type === f.type && x.allDay === f.allDay && x.startTime === f.startTime && x.endTime === f.endTime && x.color === f.color; })) {
+            var today = getLocalDateString();
+            var dayCard = quickAddCardHtml({ op: r.op, spec: f, cal: r.parts[0].cal, calName: r.parts[0].calName, hex: r.parts[0].hex, errors: [],
+                when: f.allDay ? 'All day' : fmtTimeRange(f.startTime, f.endTime, (state.settings && state.settings.timeFormat) || '12h') });
+            var days = '<div class="gc-qa-chips gc-qa-days">' + r.parts.map(function(p) { return '<span class="gc-qa-chip">' + icon('today') + escapeHtml(fmtDateMed(p.spec.startDate, today)) + '</span>'; }).join('') + '</div>';
+            return '<div class="gc-qa-multi-head">' + icon('calendar_month') + '<span><b>' + r.parts.length + ' separate events</b> — one on each day</span></div>' +
+                dayCard.replace(/<\/div><\/div>$/, days + '</div></div>') + warnHtml;
+        }
+        var allRepeat = r.parts.every(function(p) { return p.spec.recurrence; });
+        return '<div class="gc-qa-multi-head">' + icon('event_repeat') + '<span><b>' + r.parts.length + (allRepeat ? ' repeating series' : ' items') + '</b> from one line</span></div>' +
+            r.parts.map(function(p) { return quickAddCardHtml({ op: r.op, spec: p.spec, cal: p.cal, calName: p.calName, hex: p.hex, when: p.when, errors: [] }); }).join('') + warnHtml;
     }
     var spec = r.spec;
     var chip = function(ic, txt, extra) { return '<span class="gc-qa-chip">' + (extra || icon(ic)) + escapeHtml(txt) + '</span>'; };
@@ -100,7 +111,7 @@ function isCoarsePointer() {
     try { return window.matchMedia('(pointer: coarse)').matches; } catch (e) { return false; }
 }
 
-// Saves a built quick-add — every series of a changing schedule — as one undo step; returns the first event
+// Saves a built quick-add — every series of a changing schedule, every day of a day list — as one undo step; returns the first event
 function commitQuickAdd(r) {
     var ch = beginChange('quick add');
     var made = (r.parts || [{ spec: r.spec }]).map(function(p) {
@@ -120,7 +131,8 @@ function commitQuickAdd(r) {
     if (made.length > 1) {
         var last = made.map(function(e) { return lastOccurrenceDate(e); });
         var end = last.indexOf(null) === -1 ? last.sort().pop() : null;
-        finishChange(ch, made.length + ' repeating series added · ' + fmtDateMed(ev.startDate, today) + (end ? ' → ' + fmtDateMed(end, today) : ''));
+        var kind = made.every(function(e) { return e.recurrence; }) ? ' repeating series' : made.some(function(e) { return e.recurrence; }) ? ' items' : ' events';
+        finishChange(ch, made.length + kind + ' added · ' + fmtDateMed(ev.startDate, today) + (end ? ' → ' + fmtDateMed(end, today) : ''));
     } else {
         finishChange(ch, (EVENT_TYPES[ev.type] || 'Event') + ' added · ' + fmtWhen(buildInstance(ev, null), state.settings, today));
     }

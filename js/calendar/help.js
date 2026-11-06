@@ -20,7 +20,8 @@ var HELP_QUICK_EXAMPLES = [
     ['board review sat all day // bring flashcards', 'All day, with a note'],
     ['Lab cleanup daily 4pm 10 times no reminder', 'Stops after 10, silent'],
     ['Ortho tue/wed 9-11am until nov 15 then tue/thu/fri 1-3pm nov 17-29', 'Schedule changes → 2 series'],
-    ['Anatomy mon wed 9-11am, lab fri 1-4pm until dec 18 except nov 27', 'Own hours per day, skip a date']
+    ['Anatomy mon wed 9-11am, lab fri 1-4pm until dec 18 except nov 27', 'Own hours per day, skip a date'],
+    ['Thanksgiving break nov 26-28 8am-7pm', 'A box on each day, 8 AM–7 PM']
 ];
 
 var SHORTCUTS = [
@@ -63,9 +64,10 @@ function helpSectionHtml(id) {
             helpRows([
                 ['When', s('tomorrow') + ' ' + s('fri') + ' ' + s('next thu') + ' ' + s('nov 20') + ' ' + s('12/15') + ' ' + s('in 2 hours') + ' ' + s('noon') + ' ' + s('8-10am') + ' ' + s('all day') + ' ' + s('dec 4 to dec 6')],
                 ['Part of day', s('morning') + ' 9 AM · ' + s('afternoon') + ' 2 PM · ' + s('evening') + ' 6 PM · ' + s('night') + ' 8 PM'],
-                ['How long', s('for 90 min') + ' ' + s('for two hours') + ' ' + s('for half an hour')],
+                ['How long', s('for 90 min') + ' ' + s('for two hours') + ' ' + s('for half an hour') + '. No end time? Events run 1 hour — except ' + s('8:30am') + ', ' + s('12:30pm') + ' and ' + s('4pm') + ', which fill the 3-hour clinic session (8:30–11:30, 12:30–3:30, 4–7).'],
                 ['Repeat', s('every tuesday') + ' ' + s('tues mornings') + ' ' + s('tue wed') + ' ' + s('MWF') + ' ' + s('T/Th') + ' ' + s('tuesdays and thursdays') + ' ' + s('weekdays') + ' ' + s('mon-fri') + ' ' + s('daily') + ' ' + s('every other wed')],
                 ['Stop repeating', s('until dec 18') + ' ' + s('for 6 weeks') + ' ' + s('10 times')],
+                ['Several days', s('nov 26-28 8am-7pm') + ' ' + s('nov 26, 27, 28 and 30') + ' ' + s('nov 26-30 except nov 29') + ' — with a time, every day gets its own box. With no time, ' + s('dec 4 to dec 6') + ' stays one all-day bar.'],
                 ['Skip dates', s('except nov 26') + ' ' + s('no class nov 11 and 25') + ' ' + s('skip 12/24-12/31')],
                 ['Schedule changes', 'Join the parts with ' + s('then') + ', ' + s(';') + ' or a new sentence — ' + s('tue/wed 9-11am until nov 15 then tue/thu/fri 1-3pm nov 17-29') + '. Different hours per day: ' + s('mon wed 9-11am, fri 1-4pm') + '. Times can come after: ' + s('nov 15 ending dates 9-11am, nov 17-29 dates 1-3pm') + ', ' + s('first part 9-11am, second part 1-3pm') + ' or ' + s('9-11am and 1-3pm respectively') + '. Each part is its own repeating series — edit or delete one without touching the others.'],
                 ['Color', 'Say it anywhere: red, orange, yellow, gold, green, teal, blue, light blue, navy, purple, pink, gray, brown. Palette names need a cue — ' + s('color mango') + ' or ' + s('#mango') + '. Names stay names (Dr. Green, Red Sox).'],

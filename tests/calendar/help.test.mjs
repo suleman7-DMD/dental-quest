@@ -40,7 +40,8 @@ const EXPECT = {
     'Lab cleanup daily 4pm 10 times no reminder': { title: 'Lab cleanup', start: '16:00', rec: 'daily:#10', rem: '' },
     // multi-series examples: the first series here, every series in quickadd.test.mjs
     'Ortho tue/wed 9-11am until nov 15 then tue/thu/fri 1-3pm nov 17-29': { title: 'Ortho', date: '2026-11-03', start: '09:00', end: '11:00', rec: 'weekly:TU,WE→2026-11-15', series: 2 },
-    'Anatomy mon wed 9-11am, lab fri 1-4pm until dec 18 except nov 27': { title: 'Anatomy', date: '2026-11-02', start: '09:00', end: '11:00', rec: 'weekly:MO,WE→2026-12-18', series: 2 }
+    'Anatomy mon wed 9-11am, lab fri 1-4pm until dec 18 except nov 27': { title: 'Anatomy', date: '2026-11-02', start: '09:00', end: '11:00', rec: 'weekly:MO,WE→2026-12-18', series: 2 },
+    'Thanksgiving break nov 26-28 8am-7pm': { title: 'Thanksgiving break', date: '2026-11-26', start: '08:00', end: '19:00', rec: null, series: 3 }
 };
 
 test('every tappable Help example makes what its caption says', () => {
@@ -56,6 +57,7 @@ test('every tappable Help example makes what its caption says', () => {
 test('the phrase table holds: lengths, repeat endings, reminders, calendars, priority, ranges', () => {
     assert.deepEqual(pick(qa('Meeting for two hours fri 3pm'), ['title', 'start', 'end']), { title: 'Meeting', start: '15:00', end: '17:00' });
     assert.deepEqual(pick(qa('Nap for half an hour 2pm'), ['title', 'end']), { title: 'Nap', end: '14:30' });
+    assert.deepEqual(['Sim lab fri 8:30am', 'Sim lab fri 12:30pm', 'Sim lab fri 4pm', 'Sim lab fri 9am'].map((t) => qa(t).end), ['11:30', '15:30', '19:00', '10:00']);
     assert.deepEqual(pick(qa('Ortho seminar weekdays 7am for 6 weeks'), ['title', 'rec']), { title: 'Ortho seminar', rec: 'weekly:MO,TU,WE,TH,FR→2026-12-13' });
     assert.deepEqual(pick(qa('Huddle every tuesday 7:30am for a month'), ['title', 'rec']), { title: 'Huddle', rec: 'weekly:TU→2026-12-02' });
     assert.deepEqual(pick(qa('Rent due dec 1 remind me the day before'), ['type', 'rem']), { type: 'deadline', rem: 'm1440' });
@@ -76,6 +78,8 @@ test('the phrase table holds: lengths, repeat endings, reminders, calendars, pri
     assert.equal(qa('lecture every wed 9am skip 12/23-12/31').skips, '2026-12-23,2026-12-30');
     assert.equal(qa('tue/wed 9-11am until nov 15 then tue/thu/fri 1-3pm nov 17-29').series, 2);
     assert.equal(qa('mon wed 9-11am, fri 1-4pm').series, 2);
+    assert.equal(qa('nov 26, 27, 28 and 30 8am-7pm').series, 4);
+    assert.equal(qa('nov 26-30 except nov 29 8am-7pm').series, 4);
     assert.equal(qa('x every tue until nov 15 then thu until nov 29. nov 15 ending dates 9-11am, nov 17-29 dates 1-3pm').start, '09:00');
     assert.equal(qa('x every tue until nov 15 then thu until nov 29. first part 9-11am, second part 1-3pm').start, '09:00');
     assert.equal(qa('x every tue until nov 15 then thu until nov 29 at 9-11am and 1-3pm respectively').start, '09:00');

@@ -169,3 +169,57 @@ test('one series: bare day lists, one day until a date, glued dates, mon-fri, ex
     assert.equal(qaAll('Conference wed-fri').series[0][3], 'once');
     assert.equal(qaAll('clinic every tue thru thu 8am').series[0][3], 'weekly:TU,WE,TH');
 });
+
+const dayBoxes = (text, interactive = true) => qaAll(text, interactive).series.map((s) => s[1] + ' ' + s[2] + ' ' + s[3]);
+const THANKSGIVING = ['2026-11-26', '2026-11-27', '2026-11-28', '2026-11-30'].map((d) => d + ' 08:00-19:00 once');
+
+test('the same thing on several days with a time → a separate box on each day', () => {
+    assert.deepEqual(dayBoxes('thanksgiving break nov 26-28 8am-7pm'), THANKSGIVING.slice(0, 3));
+    assert.equal(qaAll('thanksgiving break nov 26-28 8am-7pm').series[0][0], 'thanksgiving break');
+    for (const t of ['thanksgiving break nov 26, 27, 28 and 30 8am-7pm', 'thanksgiving break nov 26, nov 27, and nov 28, nov 30  8am-7pm',
+        'thanksgiving break nov 26-28 and nov 30 8am-7pm', 'thanksgiving break nov 26-30 except nov 29 8am-7pm', 'thanksgiving break 8am-7pm on nov 26, 27, 28, 30',
+        'thanksgiving break 11/26, 11/27, 11/28 & 11/30 from 8am to 7pm', 'thanksgiving break thu nov 26 - sat nov 28 and mon nov 30 8-7pm']) {
+        assert.deepEqual(dayBoxes(t), THANKSGIVING, t);
+    }
+    // a day said twice is added once, with the likely-meant day named
+    const dup = qaAll('thanksgiving break nov 27, nov 27, and nov 28, nov 30  8am-7pm');
+    assert.deepEqual(dup.series.map((s) => s[1]), ['2026-11-27', '2026-11-28', '2026-11-30']);
+    assert.match(dup.warnings.join(' '), /Nov 27 is listed twice — added once \(meant Nov 26\?\)/);
+    assert.deepEqual(qaAll('break nov 26-28 and nov 30 8am-7pm blue').series.map((s) => s[5]), ['cobalt', 'cobalt', 'cobalt', 'cobalt']);
+    assert.deepEqual(dayBoxes('shift today and tomorrow 3pm-11pm'), ['2026-11-06 15:00-23:00 once', '2026-11-07 15:00-23:00 once']);
+    assert.match(qaAll('call thu nov 26 and fri nov 28 9am').warnings.join(' '), /Nov 28 is a Saturday, not a Friday/);
+    // a long stretch is one daily series, not dozens of events
+    const long = qaAll('rotation jan 5 - mar 20 8am-5pm');
+    assert.deepEqual(long.series.map((s) => s[3]), ['daily:→2027-03-20']);
+    assert.match(long.warnings.join(' '), /75 days — added as one daily series/);
+});
+
+test('day spans that stay one item: all-day bars, times on each end, repeats bounded by the span', () => {
+    assert.deepEqual(qaAll('Retreat dec 4 to dec 6').series.map((s) => s[2]), ['all day']);
+    assert.equal(c.buildEventSpec({ verb: 'EVENT', fields: {}, quick: 'Retreat dec 4 to dec 6', interactive: true }, { today: FRI, settings: c.getDefaultSettings(), nowMs: NOW }).spec.endDate, '2026-12-06');
+    const trip = c.buildEventSpec({ verb: 'EVENT', fields: {}, quick: 'trip nov 26 8am - nov 28 7pm', interactive: true }, { today: FRI, settings: c.getDefaultSettings(), nowMs: NOW });
+    assert.deepEqual([trip.spec.startDate, trip.spec.startTime, trip.spec.endDate, trip.spec.endTime, !!trip.specs], ['2026-11-26', '08:00', '2026-11-28', '19:00', false]);
+    assert.deepEqual(qaAll('gym MWF nov 10 - dec 18 6am').series[0].slice(1, 4), ['2026-11-11', '06:00-07:00', 'weekly:MO,WE,FR→2026-12-18']);
+    assert.deepEqual(qaAll('break every day nov 26-28 8am-7pm').series, [['break', '2026-11-26', '08:00-19:00', 'daily:→2026-11-28', '']]);
+    // pasted imports never split
+    assert.equal(qaAll('thanksgiving break nov 26, 27, 28 and 30 8am-7pm', false).series.length, 1);
+});
+
+test('8:30am, 12:30pm and 4pm with no end time run the 3-hour clinic session', () => {
+    const when = (t, interactive = true) => qaAll(t, interactive).series.map((s) => s[2]);
+    for (const [t, want] of [['lecture fri 8:30am', '08:30-11:30'], ['lecture fri 8:30', '08:30-11:30'], ['lecture fri 12:30pm', '12:30-15:30'], ['lecture fri 12:30', '12:30-15:30'],
+        ['lecture fri 4:00pm', '16:00-19:00'], ['lecture fri 4pm', '16:00-19:00'], ['lecture fri 4:00', '16:00-19:00'], ['gym MWF 8:30am', '08:30-11:30'], ['pt Moe tue 12:30', '12:30-15:30']]) {
+        assert.deepEqual(when(t), [want], t);
+    }
+    // repeating series, schedule changes and per-day lists follow it too
+    assert.deepEqual(when('x tue/wed 8:30am until nov 15 then tue/thu/fri 12:30pm nov 17-29'), ['08:30-11:30', '12:30-15:30']);
+    assert.deepEqual(when('break nov 26-28 4pm'), ['16:00-19:00', '16:00-19:00', '16:00-19:00']);
+    // an end time or a length wins; other times keep the normal hour; tasks and deadlines stay a due time
+    for (const [t, want] of [['lecture 8:30-9:45 am', '08:30-09:45'], ['lecture 8:30am to 10', '08:30-10:00'], ['lecture 8:30am for 1 hour', '08:30-09:30'], ['lecture 12:30-1:15', '12:30-13:15'],
+        ['lecture fri 8:30 pm', '20:30-21:30'], ['lecture fri 4am', '04:00-05:00'], ['lecture fri 9am', '09:00-10:00'], ['lecture fri 12:45pm', '12:45-13:45'],
+        ['remind me to call mom fri 4pm', '16:00-16:00'], ['rent due fri 4pm', '16:00-16:00']]) {
+        assert.deepEqual(when(t), [want], t);
+    }
+    // typed quick add only — pasted imports keep the default length
+    assert.deepEqual(when('lecture fri 8:30am', false), ['08:30-09:30']);
+});

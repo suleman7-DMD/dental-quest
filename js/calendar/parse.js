@@ -881,6 +881,11 @@ function parseQuickAdd(text, today, opts) {
         out.start = t.start;
         out.end = t.end;
         cutAt(t.index, t.length);
+        // "trip nov 26 8am - nov 28 7pm" — a time on each end of a date range: start on the first, end on the last
+        if (t.end === null && d && d.rangeEndIndex !== undefined) {
+            var t2 = scanTimes(s, true);
+            if (t2 && t2.end === null) { out.end = t2.start; cutAt(t2.index, t2.length); }
+        }
     } else if (out._relStart !== undefined) {
         out.start = out._relStart;
         if (!d) out.date = out._relDate;
@@ -903,6 +908,11 @@ function parseQuickAdd(text, today, opts) {
     out.title = title;
     if (!out.type) out.type = (/\b(submit|turn in|hand in|due|deadline)\b/i.test(text) && out.start === null) ? 'deadline' : 'event';
     if (!out.date) out.date = today;
+    // "gym MWF nov 10 - dec 18" — a repeat's date range is when it runs, never one long event
+    if (out.repeat && out.repeat.rec && out.endDate) {
+        if (!out.repeat.rec.until && !out.repeat.rec.count && !out.repeat.forSpan) out.repeat.rec.until = out.endDate;
+        out.endDate = null;
+    }
     if (out.repeat && out.repeat.rec) out.date = alignStartToRecurrence(out.date, out.repeat.rec, out.repeat.anchor);
     return out;
 }
@@ -1282,6 +1292,115 @@ function parseQuickSchedule(text, today, opts) {
     var clauseUsed = phases.some(function(c) { return !c.isSched && c.timed; }) || series.length < phases.reduce(function(n, p) { return n + (p.isSched ? p.slots.length : 0); }, 0);
     if (items.length === 1 && !clauseUsed) return null; // one plain series — parseQuickAdd already reads it
     return { items: items, warnings: warnings };
+}
+
+// ---------------------------------------------------------------- quick add: the same thing on several days
+// "thanksgiving break nov 26-28 8am-7pm" / "nov 26, 27, 28 and 30 8am-7pm" / "nov 26-30 except nov 29 8am-7pm"
+// → one event per day: a timed range is a box on each day, never a bar across them.
+// Stays ONE event: a range with no time (multi-day all-day bar), a time on each end
+// ("nov 26 8am - nov 28 7pm"), anything that repeats. Over 31 days → one daily series
+// with the missing days skipped, instead of a pile of copies.
+// → { items: [parseQuickAdd-shaped], warnings[] } or null.
+var QD_LIST_SEP_RE = new RegExp('^[\\s,]*(?:(?:&|\\+|\\band\\b|\\bplus\\b|\\bas\\s+well\\s+as\\b)[\\s,]*)*(?:(?:on\\s+)?' + WEEKDAY_SRC + '\\.?,?\\s*)?$', 'i');
+var QD_DAY_WORD_RE = /^(?:today|tonight|tomorrow|tomorow|tmrw|tmr|day after tomorrow)$/i;
+function parseQuickDays(text, today, opts) {
+    opts = opts || {};
+    today = today || getLocalDateString();
+    var s = ' ' + tidyQuickText(text, today) + ' ';
+    var notes = '', exdates = [], m;
+    if ((m = s.match(/\s(?:\/\/|--|notes?:)\s*(\S.*)$/i))) { notes = m[0]; s = s.slice(0, m.index) + ' '; }
+    for (var xg = 0; xg < 6; xg++) {
+        var qx = extractQuickExceptions(s, today);
+        if (!qx) break;
+        exdates = exdates.concat(qx.dates);
+        s = qx.s;
+    }
+    var cands = [], lastEnd = -1;
+    listDateCandidates(s, today).forEach(function(c) {
+        if (c.index < lastEnd) return;
+        if (c.tier === 2 || (c.tier === 1 && !QD_DAY_WORD_RE.test(s.substr(c.index, c.length)))) return;
+        cands.push(c);
+        lastEnd = c.index + c.length;
+    });
+    if (!cands.length) return null;
+    // runs of dates joined by commas / "and" (a weekday name may ride along: "thu nov 26, fri nov 27")
+    var groups = [], g = null;
+    var rangeSep = new RegExp('^' + RANGE_SEP_SRC + '(?:' + WEEKDAY_SRC + '\\.?,?\\s*)?$', 'i'); // "nov 26 - sat nov 28" too
+    for (var i = 0; i < cands.length; i++) {
+        var c = cands[i], gap = g ? s.slice(g.end, c.index) : null;
+        var last = g && g.parts[g.parts.length - 1];
+        if (g && last.single && rangeSep.test(gap) && c.date > last.from) { // "nov 26 - nov 28"
+            last.to = c.date; last.single = false; g.end = c.index + c.length;
+        } else {
+            if (!g || !QD_LIST_SEP_RE.test(gap)) { g = { start: c.index, end: c.index, parts: [], said: [] }; groups.push(g); }
+            g.parts.push({ from: c.date, to: c.endDate || c.date, single: !c.endDate });
+            g.end = c.index + c.length;
+        }
+        // bare day numbers keep the month before them: "nov 26, 27, 28 and 30"
+        for (var bg = 0; bg < 31; bg++) {
+            var bm = s.slice(g.end).match(/^([\s,]*(?:(?:&|\+|\band\b|\bplus\b)[\s,]*)*)(\d{1,2})(?:st|nd|rd|th)?(?![\d:\/])(?!\s*(?:[ap]\.?m\b|o'?clock|[-–—]\s*\d|to\s+\d|(?:min|hour|hr|day|week|time)s?\b))/i);
+            if (!bm || !bm[1].length) break;
+            var at = g.end + bm[1].length;
+            if (cands.some(function(x) { return x.index >= g.end && x.index <= at; })) break;
+            var lp = ymdParts(g.parts[g.parts.length - 1].to), dd = safeYMD(lp.y, lp.m, +bm[2]);
+            if (!dd) break;
+            g.parts.push({ from: dd, to: dd, single: true });
+            g.end = at + bm[0].length - bm[1].length;
+        }
+    }
+    var dayCount = function(grp) { return grp.parts.reduce(function(n, p) { return n + diffDays(p.from, p.to) + 1; }, 0); };
+    var multi = groups.filter(function(grp) { return grp.parts.length > 1 || dayCount(grp) > 1; });
+    if (multi.length !== 1 || groups.length !== 1) return null; // dates in two places — not a plain list
+    g = multi[0];
+    // the words around the list are the event: title, time, color, place…
+    var from = g.start, pre = s.slice(0, from);
+    var wm = pre.match(new RegExp('(?:^|\\s)(?:on\\s+)?' + WEEKDAY_SRC + '\\.?,?\\s*$', 'i'));
+    if (wm) from -= wm[0].length - (/^\s/.test(wm[0]) ? 1 : 0);
+    var km = s.slice(0, from).match(/(?:^|\s)(?:on|from|between|during)\s*$/i);
+    if (km) from -= km[0].length - (/^\s/.test(km[0]) ? 1 : 0);
+    var listText = s.slice(from, g.end);
+    var q = parseQuickAdd(s.slice(0, from) + '  ' + s.slice(g.end) + notes, today, opts);
+    if (q.repeat) return null; // "gym MWF nov 10 - dec 18" is one series with an end date
+    var timed = q.start !== null && q.start !== undefined;
+    if (!timed && g.parts.length === 1) return null; // "retreat dec 4 to dec 6" — one all-day bar
+    // every day said, in order; repeats and skips noted
+    var warnings = [], seen = {}, dupes = [], days = [];
+    g.parts.forEach(function(p) {
+        for (var d = p.from, n = 0; d <= p.to && n < 400; d = addDays(d, 1), n++) {
+            if (seen[d]) { if (p.single && dupes.indexOf(d) === -1) dupes.push(d); continue; }
+            seen[d] = 1;
+            days.push(d);
+        }
+    });
+    days.sort();
+    // "nov 27, nov 27, nov 28" is usually a typo for the day before or after — say which one is missing
+    dupes.forEach(function(d) {
+        var near = !seen[addDays(d, -1)] ? addDays(d, -1) : !seen[addDays(d, 1)] ? addDays(d, 1) : null;
+        warnings.push(qsFmt(d) + ' is listed twice — added once' + (near ? ' (meant ' + qsFmt(near) + '?)' : ''));
+    });
+    var skipped = {};
+    exdates.forEach(function(d) { if (seen[d]) skipped[d] = 1; else warnings.push(qsFmt(d) + ' isn\'t in the list — nothing to skip'); });
+    days = days.filter(function(d) { return !skipped[d]; });
+    if (!days.length) return null;
+    var wmm = weekdayMismatch(listText, today);
+    if (wmm) warnings.push(qsFmt(wmm.date) + ' is a ' + DOW[wmm.actual] + ', not a ' + DOW[wmm.said] + ' — check the dates');
+    function item(date, repeat, ex) {
+        var o = {};
+        Object.keys(q).forEach(function(k) { o[k] = q[k]; });
+        o.date = date; o.endDate = null; o.repeat = repeat; o.exdates = ex; o.allDay = !timed;
+        return o;
+    }
+    if (days.length > 31) {
+        var first = days[0], lastDay = days[days.length - 1], on = {}, gaps = [];
+        days.forEach(function(d) { on[d] = 1; });
+        for (var d = first; d <= lastDay; d = addDays(d, 1)) if (!on[d]) gaps.push(d);
+        var rp = dailyRepeat();
+        rp.rec.until = lastDay;
+        warnings.push(days.length + ' days — added as one daily series (delete any day on its own)');
+        return { items: [item(first, rp, gaps)], warnings: warnings };
+    }
+    if (days.length < 2) return null;
+    return { items: days.map(function(d) { return item(d, null, []); }), warnings: warnings };
 }
 
 // How well a clause's dates ("nov 15 ending", "nov 17-nov 29") name a phase

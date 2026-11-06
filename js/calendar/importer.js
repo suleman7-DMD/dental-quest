@@ -493,6 +493,15 @@ function buildEventSpec(op, ctx) {
             (plan.items[0].exdates || []).forEach(function(d) { if (!skipped[d]) all.warnings.push(fmtSkipDate(d) + ' isn\'t on this schedule — nothing to skip'); });
             return all;
         }
+        // the same thing on several days ("nov 26-28 8am-7pm", "nov 26, 27, 28 and 30") → one event per day
+        var spread = op.interactive ? parseQuickDays(op.quick, today, qopts) : null;
+        if (spread) {
+            var dayParts = spread.items.map(function(q) { return quickSpec(q, op, type, settings, today); });
+            var res = { spec: dayParts[0].spec, specs: dayParts.map(function(p) { return p.spec; }), errors: [], warnings: spread.warnings.slice() };
+            dayParts.forEach(function(p) { res.errors = res.errors.concat(p.errors); res.warnings = res.warnings.concat(p.warnings); });
+            if (res.specs.length === 1) delete res.specs;
+            return res;
+        }
         var one = quickSpec(parseQuickAdd(op.quick, today, qopts), op, type, settings, today);
         (one.unskipped || []).forEach(function(d) { one.warnings.push(fmtSkipDate(d) + ' isn\'t one of its days — nothing to skip'); });
         delete one.unskipped;
@@ -606,6 +615,16 @@ function buildEventSpec(op, ctx) {
 }
 
 // One parseQuickAdd-shaped record → { spec, errors, warnings, unskipped[] }
+// Typed quick add: an event starting at a clinic session time with no end or length said
+// runs the whole 3-hour session — 8:30 → 11:30, 12:30 → 3:30, 4:00 → 7:00.
+var QUICK_SESSION_STARTS = [510, 750, 960]; // minutes after midnight
+var QUICK_SESSION_MIN = 180;
+function quickSessionLength(q, type) {
+    if (q.allDay || q.durationMin || (q.end !== null && q.end !== undefined)) return null;
+    if (type === 'task' || type === 'deadline') return null; // those are a due time, not a block
+    return QUICK_SESSION_STARTS.indexOf(q.start) !== -1 ? QUICK_SESSION_MIN : null;
+}
+
 function quickSpec(q, op, type, settings, today) {
     var spec = emptySpecFor(type);
     spec.type = q.type || type;
@@ -621,7 +640,7 @@ function quickSpec(q, op, type, settings, today) {
     if (spec.type === 'appointment' && spec.title && !spec.patientName) { spec.patientName = spec.title; spec.title = ''; }
     var built = finishTiming(spec, {
         date: q.date, endDate: q.endDate, start: q.start, end: q.end, allDay: q.allDay,
-        duration: q.durationMin, repeat: q.repeat
+        duration: (op.interactive && quickSessionLength(q, spec.type)) || q.durationMin, repeat: q.repeat
     }, settings, [], [], today, null);
     // "except nov 26" → that occurrence deleted, the way a single-occurrence delete stores it
     built.unskipped = [];

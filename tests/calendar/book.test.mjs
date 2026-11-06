@@ -95,6 +95,6 @@ test('a BOOK range with the wrong weekday leaves cancellations unticked', () => 
 test('quick add "pt Moe 8:30" is a 3-hour patient visit named Moe', () => {
     const s = JSON.parse(JSON.stringify(c.buildEventSpec({ verb: 'EVENT', fields: {}, quick: 'pt Moe tue 8:30', interactive: true }, { today: TODAY, settings: c.getDefaultSettings() }))).spec;
     assert.deepEqual([s.type, s.patientName, s.title, s.startDate, s.startTime, s.endTime], ['appointment', 'Moe', '', '2026-11-03', '08:30', '11:30']);
-    const g = JSON.parse(JSON.stringify(c.buildEventSpec({ verb: 'EVENT', fields: {}, quick: 'Gym tue 8:30', interactive: true }, { today: TODAY, settings: c.getDefaultSettings() }))).spec;
-    assert.deepEqual([g.type, g.title, g.endTime], ['event', 'Gym', '09:30']);
+    const g = JSON.parse(JSON.stringify(c.buildEventSpec({ verb: 'EVENT', fields: {}, quick: 'Gym tue 9:30', interactive: true }, { today: TODAY, settings: c.getDefaultSettings() }))).spec;
+    assert.deepEqual([g.type, g.title, g.endTime], ['event', 'Gym', '10:30']); // not a visit — and not a session start (8:30 → 3h, see quickadd.test.mjs)
 });
