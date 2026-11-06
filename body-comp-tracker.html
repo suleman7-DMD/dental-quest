@@ -10685,73 +10685,21 @@
             return { avg: getAvgWorkoutCaloriesForDate(todayStr), days: 7 };
         }
 
-        function calculateMode(sleepHours, isBrainDay) {
-            // All-nighter mode forces ORANGE (maintenance) regardless of sleep
-            if (state.ecosystemContext?.stimulant?.allNighterMode === true) {
-                return 'ORANGE';
-            }
-
-            // Brain day doesn't change mode, just adds carb reminder
-            if (sleepHours >= 6) return 'GREEN';
-            if (sleepHours >= 5) return 'YELLOW';
-            return 'ORANGE';
-        }
-
-        function calculateTargets(mode, tdee, weight_lbs, isBrainDay = false) {
-            const weight_kg = weight_lbs / 2.205;
-            const protein_base = Math.round(weight_kg * 2.0); // 2g/kg
-
-            const modes = {
-                'GREEN': {
-                    deficit: 500,
-                    proteinMultiplier: 1.0,
-                    floor: 1900
-                },
-                'YELLOW': {
-                    deficit: 300,
-                    proteinMultiplier: 1.10,
-                    floor: 2000
-                },
-                'ORANGE': {
-                    deficit: 0,
-                    proteinMultiplier: 1.15,
-                    floor: tdee
-                }
-            };
-
-            const m = modes[mode] || modes['GREEN'];
-            const targetCals = Math.max(tdee - m.deficit, m.floor);
-
-            // Brain Day: 150g carbs minimum for cognitive performance
-            // (~600 kcal from carbs, ensuring brain gets glucose)
-            const carbTarget = isBrainDay ? 150 : 0;
-
+        // THE daily calorie target (Nov 2026). No modes: it is the intake
+        // budget for that date (Settings base + learned correction, floored),
+        // so the target always means the same calibrated deficit. Sleep,
+        // clinic days and exams no longer move it. Protein = Settings goal.
+        function calculateTargets(tdee, isBrainDay = false, dateStr = null) {
+            const goals = getIntakeGoals(dateStr);
+            const targetCals = goals.budget;
             return {
                 calories: targetCals,
-                protein: Math.round(protein_base * m.proteinMultiplier),
-                carbs: carbTarget,
-                floor: m.floor,
-                // The achievable deficit can be smaller than the nominal mode
-                // deficit when the safety floor raises the calorie target.
-                deficit: Math.max(0, tdee - targetCals),
-                nominalDeficit: m.deficit
-            };
-        }
-
-        function applyTargetModifiers(targets) {
-            const academic = state.ecosystemContext?.academic;
-            const daysUntilExam = academic?.daysUntilExam;
-            if (!academic?.nextExam || daysUntilExam == null || daysUntilExam > 7) {
-                return { ...targets, calorieMultiplier: 1, multiplierReason: null };
-            }
-            const multiplier = daysUntilExam <= 3 ? 1.2 : 1.1;
-            const percent = Math.round((multiplier - 1) * 100);
-            return {
-                ...targets,
-                calories: Math.round(targets.calories * multiplier),
-                deficit: Math.max(0, (targets.calories + targets.deficit) - Math.round(targets.calories * multiplier)),
-                calorieMultiplier: multiplier,
-                multiplierReason: `Exam in ${daysUntilExam} day${daysUntilExam === 1 ? '' : 's'}. Target +${percent}% to prevent stress undereating.`
+                protein: goals.proteinGoal,
+                // Brain Day: 150g carbs minimum for cognitive performance
+                carbs: isBrainDay ? 150 : 0,
+                floor: Math.min(INTAKE_BUDGET_FLOOR_KCAL, targetCals),
+                // Planned deficit against the calibrated TDEE
+                deficit: Math.max(0, tdee - targetCals)
             };
         }
 
@@ -10763,13 +10711,10 @@
             // triggers this refresh
             state.today.activeCalories = Math.max(state.today.activeCalories || 0, todayWorkoutCals);
             const liveWeight = getWeightForDate(state.today.date || getLocalDateString());
-            // Targets plan against the calibrated TDEE (formula + learned
-            // correction) so a mode's deficit is a real deficit.
+            // The target is the calibrated budget; planTdee records the
+            // calibrated TDEE it was planned on (see ensureTargetsMatchCalibration).
             const tdee = getPlanningTDEE(liveWeight, state.today.date);
-            state.today.targets = { ...applyTargetModifiers(calculateTargets(
-                state.today.mode, tdee,
-                liveWeight,
-                state.today.isBrainDay)), planTdee: tdee };
+            state.today.targets = { ...calculateTargets(tdee, state.today.isBrainDay, state.today.date), planTdee: tdee };
         }
 
         // Today's targets are stored, but the correction re-fits whenever any
@@ -10779,16 +10724,7 @@
         function ensureTargetsMatchCalibration() {
             if (!state.today?.setupComplete || !state.today.targets) return;
             const tdee = getPlanningTDEE(getWeightForDate(state.today.date || getLocalDateString()), state.today.date);
-            if (state.today.targets.planTdee !== tdee) refreshTodayTargets();
-        }
-
-        function getModeDisplay(mode) {
-            const displays = {
-                'GREEN': { emoji: '🟢', label: 'GREEN', subtitle: '6+ hours sleep — full deficit', class: 'green' },
-                'YELLOW': { emoji: '🟡', label: 'YELLOW', subtitle: '5-6 hours sleep — moderate deficit', class: 'yellow' },
-                'ORANGE': { emoji: '🟠', label: 'ORANGE', subtitle: '<5 hours sleep — maintenance day', class: 'orange' }
-            };
-            return displays[mode] || displays['GREEN'];
+            if (state.today.targets.planTdee !== tdee || state.today.targets.calories !== getIntakeGoals().budget) refreshTodayTargets();
         }
 
         // ============================================
@@ -11491,12 +11427,9 @@
             const nutritionStatus = nutritionTracked ? 'tracked'
                 : (log.nutritionStatus === 'assumed' ? 'assumed' : 'unresolved');
 
-            // Determine status using shared function — fall back to the mode's REAL
-            // floor (1900/2000/tdee) and the unified 172g protein baseline
-            const historicalSleep = log.sleepHours ?? state.profile.sleepBaseline ?? 6.5;
-            const historicalMode = log.mode || (historicalSleep >= 6 ? 'GREEN' : historicalSleep >= 5 ? 'YELLOW' : 'ORANGE');
-            const derivedTargets = calculateTargets(
-                historicalMode, tdee, getWeightForDate(dateStr), log.isBrainDay === true);
+            // Determine status using shared function — a day's stored targets,
+            // else that date's calibrated budget
+            const derivedTargets = calculateTargets(tdee, log.isBrainDay === true, dateStr);
             const targetCalories = log.target ?? derivedTargets.calories;
             const targetProtein = log.targetProtein ?? derivedTargets.protein;
             const targetFloor = log.floor ?? log.targetFloor ?? derivedTargets.floor;
@@ -11527,7 +11460,7 @@
                 target: targetCalories,
                 targetProtein: targetProtein,
                 targetDeficit: Math.max(0, tdee - targetCalories),
-                mode: historicalMode,
+                mode: log.mode ?? null, // legacy days keep their old mode; new days have none
                 status: status,
                 perfect: perfect,
                 calHit: calHit,
@@ -12130,35 +12063,21 @@
         // ============================================
 
         function renderDashboard() {
-            const mode = state.today.mode || 'GREEN';
-            const modeDisplay = getModeDisplay(mode);
             // Fallback prevents a hard crash of the whole dashboard when targets
             // haven't been computed yet (e.g. before autoStartDay on a fresh day).
             const targets = state.today.targets || { calories: 2000, protein: 172, carbs: 150, floor: 1900 };
             const totals = getTodayTotals();
             const currentDeficit = getCurrentDeficit();
 
-            // Mode banner (respect focusMode)
+            // No modes (Nov 2026): the old mode banner stays hidden
             const modeBanner = document.getElementById('modeBanner');
-            if (state.settings?.focusMode) {
-                modeBanner.className = 'mode-banner plain';
-                document.getElementById('modeValue').textContent = modeDisplay.label;  // No emoji
-                document.getElementById('modeSubtitle').textContent = '';  // Hide subtitle in focus mode
-            } else {
-                modeBanner.className = `mode-banner ${modeDisplay.class}`;
-                document.getElementById('modeValue').textContent = `${modeDisplay.emoji} ${modeDisplay.label}`;
-                document.getElementById('modeSubtitle').textContent = modeDisplay.subtitle;
-            }
-
-            // Brain day indicator
-            if (state.today.isBrainDay) {
-                document.getElementById('modeSubtitle').textContent += ' • 🧠 Clinic Day';
-            }
+            if (modeBanner) modeBanner.style.display = 'none';
 
             // Target cards
-            document.getElementById('targetCals').textContent = formatNumber(targets.calories);
-            document.getElementById('targetProtein').textContent = targets.protein;
-            document.getElementById('targetFloor').textContent = formatNumber(targets.floor);
+            const setText = (id, text) => { const el = document.getElementById(id); if (el) el.textContent = text; };
+            setText('targetCals', formatNumber(targets.calories));
+            setText('targetProtein', targets.protein);
+            setText('targetFloor', formatNumber(targets.floor));
 
             // TDEE Breakdown display
             const liveWeight = getWeightForDate(state.today.date || getLocalDateString());
@@ -12267,14 +12186,14 @@
         // real TDEE lower / under-logging), so the planned REAL deficit stays
         // what the base budget intended. Off when calibration is off.
         const INTAKE_BUDGET_FLOOR_KCAL = 1500;
-        function getIntakeGoals() {
+        function getIntakeGoals(dateStr = null) {
             const s = state.settings || {};
             const positive = (value, fallback) => {
                 const n = Number(value);
                 return Number.isFinite(n) && n > 0 ? Math.round(n) : fallback;
             };
             const baseBudget = positive(s.intakeBudgetKcal, 1900);
-            const correction = getActiveCalibrationAdjustment(state.today?.date || getLocalDateString());
+            const correction = getActiveCalibrationAdjustment(dateStr || state.today?.date || getLocalDateString());
             const budget = correction === 0 ? baseBudget : Math.max(INTAKE_BUDGET_FLOOR_KCAL, baseBudget + correction);
             return {
                 budget,
@@ -12580,13 +12499,14 @@
             // Update progress bars
             const calPercent = Math.min((totals.calories / targets.calories) * 100, 100);
 
-            document.getElementById('calCurrent').textContent = totals.calories;
-            document.getElementById('calTarget').textContent = targets.calories;
-            document.getElementById('calProgressFill').style.width = `${calPercent}%`;
+            const calCurrentEl = document.getElementById('calCurrent');
+            if (calCurrentEl) calCurrentEl.textContent = totals.calories;
+            const calTargetEl = document.getElementById('calTarget');
+            if (calTargetEl) calTargetEl.textContent = targets.calories;
+            const calFillEl = document.getElementById('calProgressFill');
+            if (calFillEl) calFillEl.style.width = `${calPercent}%`;
 
-            // Protein bar shows the configured goal/minimum (Settings), the same
-            // fixed-goal model as the intake budget. Day scoring keeps its own
-            // stored mode targets.
+            // Protein bar shows the configured goal/minimum (Settings).
             const intakeGoals = getIntakeGoals();
             document.getElementById('proCurrent').textContent = totals.protein;
             document.getElementById('proTarget').textContent = intakeGoals.proteinGoal;
@@ -12817,30 +12737,9 @@
                 stimSleepHoursEl.className = sleepHours >= 6 ? 'stim-value good' : sleepHours >= 5 ? 'stim-value warning' : 'stim-value danger';
             }
 
-            // Update mode badge
+            // No modes (Nov 2026): the old mode badge stays hidden
             const modeBadge = document.getElementById('modeBadge');
-            const modeConfig = {
-                'GREEN': { emoji: '🟢', label: 'GREEN MODE', class: 'green' },
-                'YELLOW': { emoji: '🟡', label: 'YELLOW MODE', class: 'yellow' },
-                'ORANGE': { emoji: '🟠', label: 'ORANGE MODE', class: 'orange' }
-            };
-            // FIX: `mode` was never declared here — renderSimpleView threw
-            // `ReferenceError: mode is not defined` on EVERY call, aborting before
-            // renderSimpleMealList() so the meal list/count never refreshed (showed
-            // "0 meals") even though the deficit/eaten (rendered earlier) updated.
-            const mode = state.today?.mode
-                || (state.today?.sleepHours != null
-                    ? calculateMode(state.today.sleepHours, state.today.isBrainDay)
-                    : 'GREEN');
-            const mc = modeConfig[mode] || modeConfig['GREEN'];
-            // Focus mode: show plain text without emoji/color
-            if (state.settings?.focusMode) {
-                modeBadge.textContent = mc.label.replace(' MODE', '');  // Just "GREEN", "YELLOW", "ORANGE"
-                modeBadge.className = 'mode-badge plain';
-            } else {
-                modeBadge.textContent = `${mc.emoji} ${mc.label}`;
-                modeBadge.className = `mode-badge ${mc.class}`;
-            }
+            if (modeBadge) modeBadge.style.display = 'none';
 
             // Update schedule card (God Mode 8A.1)
             renderScheduleCard();
@@ -14151,7 +14050,7 @@
         }
 
         function getWorkoutRecommendation() {
-            const mode = state.today.mode || 'GREEN';
+            const sleptBadly = state.today.sleepHours != null && state.today.sleepHours < 5;
             const academic = state.ecosystemContext?.academic;
             const todayStr = getLocalDateString();
 
@@ -14217,7 +14116,7 @@
             let recommendation = '';
             let color = 'var(--text-secondary)';
 
-            if (mode === 'ORANGE') {
+            if (sleptBadly) {
                 recommendation = 'Rest recommended — sleep was rough';
                 color = 'var(--accent-orange)';
             } else if (daysSinceWorkout === 0) {
@@ -14226,7 +14125,7 @@
             } else if (daysSinceWorkout >= 3) {
                 recommendation = '3+ days since gym — go today';
                 color = 'var(--accent-red)';
-            } else if (daysSinceWorkout >= 2 && mode === 'GREEN') {
+            } else if (daysSinceWorkout >= 2 && !(state.today.sleepHours != null && state.today.sleepHours < 6)) {
                 recommendation = 'Good day to lift';
                 color = 'var(--accent-green)';
             } else if (daysSinceWorkout === 1) {
@@ -15776,19 +15675,17 @@
                 return;
             }
 
-            // Calculate mode and targets
-            const mode = calculateMode(sleepHours, isBrainDay);
+            // Today's target = the calibrated budget
             const setupWeight = getWeightForDate(getLocalDateString());
             const tdee = getPlanningTDEE(setupWeight, getLocalDateString());
-            const targets = calculateTargets(mode, tdee, setupWeight, isBrainDay);
 
             // Update today's state
             state.today.date = getLocalDateString();
             state.today.sleepHours = sleepHours;
             state.today.activeCalories = activeCalories;
             state.today.isBrainDay = isBrainDay;
-            state.today.mode = mode;
-            state.today.targets = targets;
+            state.today.mode = null;
+            state.today.targets = { ...calculateTargets(tdee, isBrainDay, state.today.date), planTdee: tdee };
             state.today.setupComplete = true;
             // Reset micronutrient tracking for new day
             state.today.magnesiumTaken = false;
@@ -15809,8 +15706,7 @@
 
             renderSimpleView();
 
-            const modeDisplay = getModeDisplay(mode);
-            showToast(`${modeDisplay.emoji} ${modeDisplay.label} mode activated`);
+            showToast(`Today's target: ${formatNumber(state.today.targets.calories)} cal (calibrated)`);
         }
 
         // ============================================
@@ -17009,7 +16905,6 @@
                 calScore: calScore,
                 proteinScore: proteinScore,
                 // Context
-                mode: today.mode,
                 sleepHours: today.sleepHours,
                 activeCalories: today.activeCalories,
                 mealCount: totals.mealCount,
@@ -17507,8 +17402,7 @@
             if (_rawDeficitScope === 0) return withRawDeficits(() => generateExportText());
             const totals = getTodayTotals();
             const targets = state.today.targets;
-            const mode = state.today.mode || 'GREEN';
-            const modeDisplay = getModeDisplay(mode);
+            const goalsNow = getIntakeGoals();
             const deficit = getCurrentDeficit();
 
             const date = new Date().toLocaleDateString('en-US', {
@@ -17519,8 +17413,8 @@
 DAILY LOG — ${date}
 ══════════════════════════════════════
 
-MODE: ${modeDisplay.emoji} ${modeDisplay.label} (${state.today.sleepHours}h sleep)
-TARGETS: ${formatNumber(targets.calories)} cal | ${targets.protein}g protein | Floor: ${formatNumber(targets.floor)}
+SLEEP: ${state.today.sleepHours ?? '--'}h
+TARGETS: ${formatNumber(targets.calories)} cal (budget ${formatNumber(goalsNow.baseBudget)}${goalsNow.budgetCorrection ? ` ${goalsNow.budgetCorrection < 0 ? '−' : '+'} ${Math.abs(goalsNow.budgetCorrection)} calibration` : ''}) | ${targets.protein}g protein | Floor: ${formatNumber(targets.floor)}
 
 MEALS:
 `;
@@ -17672,7 +17566,7 @@ CALIBRATED DEFICIT (estimate): ${formatSignedKcal(deficit + exportCal.current)} 
             if (_rawDeficitScope === 0) return withRawDeficits(() => generateClaudeExport());
             const totals = getTodayTotals();
             const targets = state.today.targets;
-            const mode = state.today.mode || 'GREEN';
+            const goalsNow = getIntakeGoals();
             const deficit = getCurrentDeficit();
             const date = getLocalDateString();
 
@@ -17687,8 +17581,8 @@ CALIBRATED DEFICIT (estimate): ${formatSignedKcal(deficit + exportCal.current)} 
 
             // Build structured export
             let export_str = `BODY_COMP_LOG|${date}\n`;
-            export_str += `SLEEP:${state.today.sleepHours || 0}h|MODE:${mode}\n`;
-            export_str += `TARGET_CAL:${targets.calories}|ACTUAL_CAL:${totals.calories}|DEFICIT:${deficit}\n`;
+            export_str += `SLEEP:${state.today.sleepHours || 0}h\n`;
+            export_str += `TARGET_CAL:${targets.calories}|BUDGET_BASE:${goalsNow.baseBudget}|BUDGET_CORRECTION:${goalsNow.budgetCorrection}|ACTUAL_CAL:${totals.calories}|DEFICIT:${deficit}\n`;
             const claudeCal = getCalibrationExportInfo();
             if (claudeCal && claudeCal.current !== 0) {
                 const rawTdeeNow = calculateTDEE(getWeightForDate(state.today.date || date), state.profile.height_cm, state.profile.age, state.today.date);
@@ -18223,18 +18117,12 @@ CALIBRATED DEFICIT (estimate): ${formatSignedKcal(deficit + exportCal.current)} 
 
             // ========== SECTION 2: MODE CALCULATION ==========
             log.push('┌─────────────────────────────────────────────────────────┐');
-            log.push('│ SECTION 2: MODE CALCULATION                            │');
+            log.push('│ SECTION 2: SLEEP (no modes — sleep never moves the target) │');
             log.push('└─────────────────────────────────────────────────────────┘');
             log.push('');
 
             const sleepHours = state.today?.sleepHours ?? stim.sleepHours ?? 6;
-            log.push('MODE DETERMINATION LOGIC:');
-            log.push(`  Input: ${sleepHours} hours of sleep`);
-            log.push('  Rules:');
-            log.push('    • 6+ hours → GREEN (full deficit safe)');
-            log.push('    • 5-6 hours → YELLOW (reduced deficit)');
-            log.push('    • <5 hours → ORANGE (maintenance only)');
-            log.push(`  Base Result: ${sleepHours >= 6 ? 'GREEN' : sleepHours >= 5 ? 'YELLOW' : 'ORANGE'}`);
+            log.push(`  Sleep last night: ${sleepHours} hours`);
             log.push('');
 
             log.push('SLEEP DEBT ADVISORY (warnings, not forced):');
@@ -18250,9 +18138,6 @@ CALIBRATED DEFICIT (estimate): ${formatSignedKcal(deficit + exportCal.current)} 
             }
             log.push('');
 
-            log.push(`FINAL MODE: ${state.today?.mode ?? 'UNKNOWN'}`);
-            log.push(`Mode reason: ${state.today?.modeReason ?? 'Standard calculation'}`);
-            log.push('');
 
             // ========== SECTION 3: TARGET CALCULATION ==========
             log.push('┌─────────────────────────────────────────────────────────┐');
@@ -18297,32 +18182,12 @@ CALIBRATED DEFICIT (estimate): ${formatSignedKcal(deficit + exportCal.current)} 
             }
             log.push('');
 
-            log.push('MODE-BASED TARGETS:');
-            const mode = state.today?.mode || 'GREEN';
-            const deficits = { 'GREEN': 500, 'YELLOW': 300, 'ORANGE': 0 };
-            const floors = { 'GREEN': 1900, 'YELLOW': 2000, 'ORANGE': planTdee };
-
-            log.push(`  Mode: ${mode}`);
-            log.push(`  Deficit: ${deficits[mode]} cal`);
-            log.push(`  Raw target: ${planTdee} - ${deficits[mode]} = ${planTdee - deficits[mode]} cal`);
-            log.push(`  Floor: ${floors[mode]} cal`);
-            log.push(`  Final calorie target: ${Math.max(planTdee - deficits[mode], floors[mode])} cal`);
-            log.push('');
-
-            // Exam stress multiplier
-            log.push('EXAM STRESS MULTIPLIER:');
-            const daysUntil = academic.daysUntilExam;
+            log.push('DAILY TARGET (calibrated budget):');
+            const goals = getIntakeGoals();
             const targets = state.today?.targets || {};
-            if (targets.calorieMultiplier && targets.calorieMultiplier > 1) {
-                log.push(`  • Multiplier: ${targets.calorieMultiplier}x`);
-                log.push(`  • Reason: ${targets.multiplierReason || 'Exam approaching'}`);
-            } else if (daysUntil && daysUntil <= 3) {
-                log.push(`  • Exam in ${daysUntil} days → +20% expected`);
-            } else if (daysUntil && daysUntil <= 7) {
-                log.push(`  • Exam in ${daysUntil} days → +10% expected`);
-            } else {
-                log.push(`  • Exam in ${daysUntil ?? '?'} days → No multiplier`);
-            }
+            log.push(`  Settings budget: ${goals.baseBudget} cal`);
+            log.push(`  Learned correction: ${formatSignedKcal(goals.budgetCorrection)} cal`);
+            log.push(`  Target: ${goals.budget} cal (floor ${INTAKE_BUDGET_FLOOR_KCAL}) → planned deficit ${Math.max(0, planTdee - goals.budget)} cal vs calibrated TDEE ${planTdee}`);
             log.push('');
 
             log.push('FINAL TARGETS:');
@@ -25275,8 +25140,7 @@ CALIBRATED DEFICIT (estimate): ${formatSignedKcal(deficit + exportCal.current)} 
             }
             const avgCalTarget = targetDays > 0 ? Math.round(calTargetSum / targetDays) : (state.today?.targets?.calories ?? 1900);
             const avgProTarget = targetDays > 0 ? Math.round(proTargetSum / targetDays) : (state.today?.targets?.protein ?? 172);
-            const modeDefaults = { GREEN: 500, YELLOW: 300, ORANGE: 0 };
-            const avgDefTarget = modeDefaults[state.today?.mode] ?? 500;
+            const avgDefTarget = state.today?.targets?.deficit ?? 500;
             const nutBar = (label, value, target, unit, color) => {
                 const pct = Math.min(Math.round((value / target) * 100), 120);
                 return `<div style="margin-bottom:8px;">
@@ -26912,7 +26776,6 @@ CALIBRATED DEFICIT (estimate): ${formatSignedKcal(deficit + exportCal.current)} 
             text += `\n`;
 
             text += `─── CONTEXT ───\n`;
-            text += `Mode: ${log.mode || 'GREEN'}\n`;
             text += `Sleep: ${log.sleepHours || '--'} hrs\n`;
             text += `Active Calories: ${log.activeCalories || 0}\n`;
             text += `Worked Out: ${log.workedOut ? 'Yes' : 'No'}\n\n`;
@@ -27146,18 +27009,14 @@ CALIBRATED DEFICIT (estimate): ${formatSignedKcal(deficit + exportCal.current)} 
             const activeInfo = get7DayAvgActiveCalories();
             state.today.activeCalories = activeInfo.avg || 0;
 
-            // Calculate base mode based on last night's sleep
-            state.today.mode = calculateMode(sleepHours, false);
-
-            // Apply sleep debt override if needed (may change mode to ORANGE or YELLOW)
-            // This must happen AFTER base mode calculation but BEFORE target calculation
+            state.today.mode = null;
+            // Sleep-debt advisory (a warning only — never changes the target)
             applySleepDebtModeOverride();
 
-            // Calculate TDEE and targets with final mode
+            // Today's target = the calibrated budget
             const autoWeight = getWeightForDate(state.today.date || getLocalDateString());
             const tdee = getPlanningTDEE(autoWeight, state.today.date);
-            state.today.targets = applyTargetModifiers(
-                calculateTargets(state.today.mode, tdee, autoWeight, state.today.isBrainDay));
+            state.today.targets = { ...calculateTargets(tdee, state.today.isBrainDay, state.today.date), planTdee: tdee };
 
             // Mark as setup complete
             state.today.setupComplete = true;
@@ -27166,8 +27025,8 @@ CALIBRATED DEFICIT (estimate): ${formatSignedKcal(deficit + exportCal.current)} 
             saveState();
 
             // Show morning greeting toast
-            const modeDisplay = getModeDisplay(state.today.mode);
-            showToast(`Good morning! ${modeDisplay.emoji} ${state.today.mode} mode — ${state.today.targets?.calories ?? 1900} cal target`);
+            const g = getIntakeGoals();
+            showToast(`Good morning! Today's target: ${formatNumber(g.budget)} cal${g.budgetCorrection ? ` (${formatNumber(g.baseBudget)} ${g.budgetCorrection < 0 ? '−' : '+'} ${Math.abs(g.budgetCorrection)} calibration)` : ''}`);
         }
 
         // Show manual setup screen (optional override)
@@ -27474,7 +27333,6 @@ CALIBRATED DEFICIT (estimate): ${formatSignedKcal(deficit + exportCal.current)} 
                 calScore: calScore,
                 proteinScore: proteinScore,
                 // Context
-                mode: today.mode || 'GREEN',
                 sleepHours: today.sleepHours ?? null,
                 activeCalories: today.activeCalories || 0,
                 mealCount: totals.mealCount,

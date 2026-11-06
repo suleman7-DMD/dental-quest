@@ -170,7 +170,7 @@ async function logicSuite(page) {
         const status = getTdeeCalibrationStatus();
         const est = getLiveTdeeEstimate();
         const targetsCal = JSON.stringify(state.today.targets);
-        const expected = JSON.stringify({ ...applyTargetModifiers(calculateTargets(state.today.mode, est.raw + est.adjustment, getWeightForDate(state.today.date), state.today.isBrainDay)), planTdee: est.raw + est.adjustment });
+        const expected = JSON.stringify({ ...calculateTargets(est.raw + est.adjustment, state.today.isBrainDay, state.today.date), planTdee: est.raw + est.adjustment });
         state.settings.tdeeCalibrationEnabled = false;
         refreshTodayTargets();
         const targetsRaw = JSON.stringify(state.today.targets);
@@ -220,7 +220,10 @@ async function logicSuite(page) {
     ok(cal.correction < -60 && cal.correction > -400, `log says ~550/day, scale ~300/day → negative correction (got ${Math.round(cal.correction)})`);
     ok(cal.confidence !== 'high' && cal.sd > 60, `26 days is not High confidence (got ${cal.confidence}, ±${Math.round(cal.sd)})`);
     ok(cal.est.adjustment === Math.round(cal.correction) && cal.est.calibrated === cal.est.raw + cal.est.adjustment, 'calibrated TDEE = formula + learned correction');
-    ok(cal.targetsCal === cal.expected && cal.targetsCal !== cal.targetsRaw, 'mode targets plan against the calibrated TDEE');
+    ok(cal.targetsCal === cal.expected && cal.targetsCal !== cal.targetsRaw, 'daily targets plan against the calibrated TDEE');
+    const tgt = JSON.parse(cal.targetsCal);
+    ok(tgt.calories === 1900 + Math.round(cal.correction) && tgt.deficit === cal.est.calibrated - tgt.calories && tgt.floor === 1500 && JSON.parse(cal.targetsRaw).calories === 1900,
+        `no modes: calorie target = calibrated budget (${tgt.calories}), planned deficit vs calibrated TDEE (${tgt.deficit}); calibration off → 1,900`);
     ok(cal.after !== cal.before && cal.restored === cal.before, `backdated weigh-in moves the correction immediately (${cal.before} → ${cal.after})`);
     ok(cal.afterReload === cal.before && cal.noLedger, 'estimate is a pure function of the data: same after reload, no ledger written');
     ok(cal.logsUnchanged, 'stored day logs keep raw formula values');

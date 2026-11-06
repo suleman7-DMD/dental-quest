@@ -23,7 +23,7 @@ This skill enables 3 core workflows:
 
 **Use Case 1: Debug a tracking or calculation issue**
 Trigger: User says "calories are wrong" or "deficit not showing" or "mode is wrong"
-Steps: Check getTodayTotals() -> verify calculateTDEE() -> check calculateMode() -> verify saveDayLog() snapshot
+Steps: Check getTodayTotals() -> verify calculateTDEE() -> check getIntakeGoals()/calculateTargets() -> verify saveDayLog() snapshot
 Result: Root cause identified (e.g., active calories not included in TDEE, mode override from sleep debt)
 Success criteria: Totals match manual sum of meals, TDEE includes 7-day workout average, mode matches sleep hours
 
@@ -137,9 +137,6 @@ After large edits: `python3 -c "c=open('body-comp-tracker.html').read(); print('
 **Cause:** Several analytics functions had `||` instead of `??` for numeric fallbacks (treating 0 as falsy), wrong field names (`goalWeight` vs `goalWeight_lbs`), or simplified status fallback logic.
 **Solution:** Fixed Feb 2026 — all target/floor/protein fallbacks use `??`, gymScore capped at 100, recomp predictor reads `goalWeight_lbs`, calendar heatmap uses `determineDayStatus()` for fallback.
 
-### Error: Mode shows ORANGE when sleep was fine
-**Cause:** All-nighter mode from stim calc forces ORANGE regardless of sleep hours. Check `calculateMode()` line 8172.
-**Solution:** Check `state.ecosystemContext.stimulant.allNighterMode`. If true, mode is forced ORANGE.
 
 ### Error: Data wiped on new device
 **Cause:** Default state has `_version: 0` but if any code path sets `_version: Date.now()` before cloud load, empty local state overwrites cloud.
@@ -267,13 +264,8 @@ This app uses the same Firebase patterns as all Sully apps.
 Every data mutation must follow: `mutate state` -> `saveState()` -> `saveDayLog()` -> re-render.
 `saveDayLog()` (line 12228) snapshots `state.today` into `state.dailyLogs[date]` with calculated totals, deep-copied meals/workouts, ecosystem snapshot, and logic log.
 
-### 2. Mode System
-```
-Sleep >= 6h  -> GREEN  (500 cal deficit, normal training)
-Sleep 5-6h   -> YELLOW (300 cal deficit, light training)
-Sleep < 5h   -> ORANGE (0 deficit = maintenance, recovery only)
-allNighterMode -> ORANGE (forced regardless of sleep)
-```
+### 2. Daily Target (modes REMOVED Nov 2026)
+GREEN/YELLOW/ORANGE modes are gone — do not reintroduce. `calculateTargets(tdee, isBrainDay, dateStr)` returns calories = `getIntakeGoals(dateStr).budget` (Settings base, default 1900, + learned correction, floor 1500), protein = Settings goal, deficit = calibrated TDEE − target. `refreshTodayTargets()` stamps `targets.planTdee`; `ensureTargetsMatchCalibration()` (first line of `renderSimpleView`) re-plans when the correction or budget moved. Sleep, clinic days and exams never change the target (exam multiplier removed). `state.today.mode` is null; legacy day logs keep their stored `mode`.
 Sleep debt WARNING (not forced override) at SEVERE/HIGH severity.
 
 ### 3. Cross-App Ecosystem (READ-ONLY)
@@ -327,7 +319,6 @@ let pinValidated = false;        // line 7634
 | `formatNumber(num)` | 7971 | Locale-formatted number display |
 | `calculateTDEE(...)` | 8123 | BMR * activity + 7-day avg workout cals (no circular fallback) |
 | `get7DayAvgActiveCalories()` | 8177 | Workout-only average from dailyLogs (no activeCalories fallback) |
-| `calculateMode(sleep, brain)` | 8209 | Determines GREEN/YELLOW/ORANGE from sleep |
 | `calculateTargets(mode, tdee, weight, brain)` | 8222 | Calorie/protein/carb targets for mode |
 | `refreshTodayTargets()` | ~8875 | **NEW Mar 2026** — Recalculates TDEE+targets after historical data changes (14 call sites) |
 | `getTodayTotals()` | 8269 | Sum calories/protein/carbs from today's meals |
