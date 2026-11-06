@@ -551,6 +551,12 @@ function openEditor(opts) {
         if (isNew) {
             fields.recurrence = rec;
             fields.source = 'manual';
+            // quick add's "except nov 26" survives the trip through the editor while those dates still fall on the series
+            if (rec && opts.draft && opts.draft.exceptions) {
+                var keep = {};
+                Object.keys(opts.draft.exceptions).forEach(function(d) { if (isOccurrenceDate({ startDate: fields.startDate, recurrence: rec }, d)) keep[d] = { deleted: true }; });
+                if (Object.keys(keep).length) fields.exceptions = keep;
+            }
             var ch = beginChange('create');
             var created = createEventRecord(fields);
             closeModal(box);

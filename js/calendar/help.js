@@ -18,7 +18,9 @@ var HELP_QUICK_EXAMPLES = [
     ['study group every other wed 6-8pm purple', 'Every 2 weeks'],
     ['Coffee tomorrow afternoon for 90 min light blue', '2 PM, 90 minutes'],
     ['board review sat all day // bring flashcards', 'All day, with a note'],
-    ['Lab cleanup daily 4pm 10 times no reminder', 'Stops after 10, silent']
+    ['Lab cleanup daily 4pm 10 times no reminder', 'Stops after 10, silent'],
+    ['Ortho tue/wed 9-11am until nov 15 then tue/thu/fri 1-3pm nov 17-29', 'Schedule changes → 2 series'],
+    ['Anatomy mon wed 9-11am, lab fri 1-4pm until dec 18 except nov 27', 'Own hours per day, skip a date']
 ];
 
 var SHORTCUTS = [
@@ -62,8 +64,10 @@ function helpSectionHtml(id) {
                 ['When', s('tomorrow') + ' ' + s('fri') + ' ' + s('next thu') + ' ' + s('nov 20') + ' ' + s('12/15') + ' ' + s('in 2 hours') + ' ' + s('noon') + ' ' + s('8-10am') + ' ' + s('all day') + ' ' + s('dec 4 to dec 6')],
                 ['Part of day', s('morning') + ' 9 AM · ' + s('afternoon') + ' 2 PM · ' + s('evening') + ' 6 PM · ' + s('night') + ' 8 PM'],
                 ['How long', s('for 90 min') + ' ' + s('for two hours') + ' ' + s('for half an hour')],
-                ['Repeat', s('every tuesday') + ' ' + s('tues mornings') + ' ' + s('MWF') + ' ' + s('T/Th') + ' ' + s('tuesdays and thursdays') + ' ' + s('weekdays') + ' ' + s('daily') + ' ' + s('every other wed')],
+                ['Repeat', s('every tuesday') + ' ' + s('tues mornings') + ' ' + s('tue wed') + ' ' + s('MWF') + ' ' + s('T/Th') + ' ' + s('tuesdays and thursdays') + ' ' + s('weekdays') + ' ' + s('mon-fri') + ' ' + s('daily') + ' ' + s('every other wed')],
                 ['Stop repeating', s('until dec 18') + ' ' + s('for 6 weeks') + ' ' + s('10 times')],
+                ['Skip dates', s('except nov 26') + ' ' + s('no class nov 11 and 25') + ' ' + s('skip 12/24-12/31')],
+                ['Schedule changes', 'Join the parts with ' + s('then') + ', ' + s(';') + ' or a new sentence — ' + s('tue/wed 9-11am until nov 15 then tue/thu/fri 1-3pm nov 17-29') + '. Different hours per day: ' + s('mon wed 9-11am, fri 1-4pm') + '. Times can come after: ' + s('nov 15 ending dates 9-11am, nov 17-29 dates 1-3pm') + ', ' + s('first part 9-11am, second part 1-3pm') + ' or ' + s('9-11am and 1-3pm respectively') + '. Each part is its own repeating series — edit or delete one without touching the others.'],
                 ['Color', 'Say it anywhere: red, orange, yellow, gold, green, teal, blue, light blue, navy, purple, pink, gray, brown. Palette names need a cue — ' + s('color mango') + ' or ' + s('#mango') + '. Names stay names (Dr. Green, Red Sox).'],
                 ['Place', s('@ BU Dental') + ' — put it last'],
                 ['Reminder', s('remind me 1 hour before') + ' ' + s('remind me the day before') + ' ' + s('no reminder')],

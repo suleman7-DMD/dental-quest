@@ -37,24 +37,37 @@ function quickAddBuild(text, typeVerb) {
     if (!t) return null;
     var op = { verb: typeVerb || 'EVENT', fields: {}, quick: t, checked: false, line: 1, interactive: true };
     var built = buildEventSpec(op, { today: getLocalDateString(), settings: state.settings });
-    var spec = built.spec;
-    if (typeVerb === 'EVENT') spec.type = 'event';
-    // "#green" with no calendar called green → a color, not a new calendar
-    if (spec.calendarRef && !findCalendarByName(spec.calendarRef) && quickColorKey(spec.calendarRef)) {
-        spec.color = quickColorKey(spec.calendarRef);
-        spec.calendarRef = null;
-    }
-    var cal = spec.calendarRef ? findCalendarByName(spec.calendarRef) : getCalendar(getCalendarForTypePreview(spec.type));
-    var calName = spec.calendarRef && !cal ? spec.calendarRef.replace(/\b\w/g, function(x) { return x.toUpperCase(); }) + ' (new calendar)' : (cal ? cal.name : '');
-    var hex = spec.color ? colorHex(spec.color) : (cal ? colorHex(cal.color) : calendarColorHex(getCalendarForTypePreview(spec.type)));
-    return { op: op, spec: spec, errors: built.errors, warnings: built.warnings, cal: cal, calName: calName, hex: hex, when: fmtWhen(spec, state.settings, getLocalDateString()) };
+    // a schedule that changes partway ("…until nov 15 then tue/thu/fri until nov 29") → one part per series
+    var parts = (built.specs || [built.spec]).map(function(spec) {
+        if (typeVerb === 'EVENT') spec.type = 'event';
+        // "#green" with no calendar called green → a color, not a new calendar
+        if (spec.calendarRef && !findCalendarByName(spec.calendarRef) && quickColorKey(spec.calendarRef)) {
+            spec.color = quickColorKey(spec.calendarRef);
+            spec.calendarRef = null;
+        }
+        var cal = spec.calendarRef ? findCalendarByName(spec.calendarRef) : getCalendar(getCalendarForTypePreview(spec.type));
+        var calName = spec.calendarRef && !cal ? spec.calendarRef.replace(/\b\w/g, function(x) { return x.toUpperCase(); }) + ' (new calendar)' : (cal ? cal.name : '');
+        var hex = spec.color ? colorHex(spec.color) : (cal ? colorHex(cal.color) : calendarColorHex(getCalendarForTypePreview(spec.type)));
+        return { spec: spec, cal: cal, calName: calName, hex: hex, when: fmtWhen(spec, state.settings, getLocalDateString()) };
+    });
+    var r = parts[0];
+    return { op: op, spec: r.spec, parts: parts, errors: built.errors, warnings: built.warnings, cal: r.cal, calName: r.calName, hex: r.hex, when: r.when };
 }
 
 function quickAddCardHtml(r) {
+    if (r.parts && r.parts.length > 1) {
+        var warn = (r.errors || []).concat(r.warnings || []);
+        return '<div class="gc-qa-multi-head">' + icon('event_repeat') + '<span><b>' + r.parts.length + ' repeating series</b> from one line</span></div>' +
+            r.parts.map(function(p) { return quickAddCardHtml({ op: r.op, spec: p.spec, cal: p.cal, calName: p.calName, hex: p.hex, when: p.when, errors: [] }); }).join('') +
+            (warn.length ? '<div class="gc-qa-warn">' + warn.map(escapeHtml).join('<br>') + '</div>' : '');
+    }
     var spec = r.spec;
     var chip = function(ic, txt, extra) { return '<span class="gc-qa-chip">' + (extra || icon(ic)) + escapeHtml(txt) + '</span>'; };
     var chips = [];
     if (spec.recurrence) chips.push(chip('repeat', describeRecurrence(spec.recurrence, spec.startDate)));
+    if (spec.exceptions && Object.keys(spec.exceptions).length) {
+        chips.push(chip('event_busy', 'Skips ' + Object.keys(spec.exceptions).sort().map(fmtDateShort).join(', ')));
+    }
     if (spec.color) chips.push(chip('', colorName(spec.color), '<span class="gc-dot" style="background:' + colorHex(spec.color) + '"></span>'));
     if (r.calName) chips.push(chip('calendar_today', r.calName));
     if (spec.location) chips.push(chip('location_on', spec.location));
@@ -68,7 +81,7 @@ function quickAddCardHtml(r) {
         '<div class="gc-qa-title">' + icon(typeIcon(spec.type), 'gc-qa-ic') + '<span>' + escapeHtml(spec.title || (spec.type === 'appointment' ? 'Patient appointment' : '(No title)')) + '</span></div>' +
         '<div class="gc-qa-when">' + escapeHtml(r.when) + '</div>' +
         (chips.length ? '<div class="gc-qa-chips">' + chips.join('') + '</div>' : '') +
-        (r.errors && r.errors.length ? '<div class="gc-qa-warn">' + escapeHtml(r.errors[0]) + '</div>' : '') +
+        (r.errors && r.errors.length ? '<div class="gc-qa-warn">' + escapeHtml(r.errors[0]) + '</div>' : r.warnings && r.warnings.length ? '<div class="gc-qa-warn">' + escapeHtml(r.warnings[0]) + '</div>' : '') +
         '</div></div>';
 }
 
@@ -78,7 +91,8 @@ function quickAddPreview(text) {
     var r = quickAddBuild(text);
     if (!r) { out.innerHTML = ''; out.hidden = true; return null; }
     out.hidden = false;
-    out.innerHTML = quickAddCardHtml(r) + '<div class="gc-qa-hint">Enter to add' + (isCoarsePointer() ? '' : ' · Shift+Enter for details') + '</div>';
+    var multi = r.parts.length > 1;
+    out.innerHTML = quickAddCardHtml(r) + '<div class="gc-qa-hint">' + (multi ? 'Enter to add all ' + r.parts.length + ' · edit any one after' : 'Enter to add' + (isCoarsePointer() ? '' : ' · Shift+Enter for details')) + '</div>';
     return r;
 }
 
@@ -86,20 +100,30 @@ function isCoarsePointer() {
     try { return window.matchMedia('(pointer: coarse)').matches; } catch (e) { return false; }
 }
 
-// Saves a built quick-add (one undo step); returns the new event
+// Saves a built quick-add — every series of a changing schedule — as one undo step; returns the first event
 function commitQuickAdd(r) {
-    var spec = deepClone(r.spec);
     var ch = beginChange('quick add');
-    var calId = null;
-    if (spec.calendarRef) {
-        var c = findCalendarByName(spec.calendarRef);
-        calId = c ? c.id : createCalendar(spec.calendarRef.replace(/\b\w/g, function(x) { return x.toUpperCase(); }), null, TYPE_TO_KIND[spec.type] || 'general').id;
+    var made = (r.parts || [{ spec: r.spec }]).map(function(p) {
+        var spec = deepClone(p.spec);
+        var calId = null;
+        if (spec.calendarRef) {
+            var c = findCalendarByName(spec.calendarRef); // the first series may have just created it
+            calId = c ? c.id : createCalendar(spec.calendarRef.replace(/\b\w/g, function(x) { return x.toUpperCase(); }), null, TYPE_TO_KIND[spec.type] || 'general').id;
+        }
+        delete spec.calendarRef;
+        spec.calendarId = calId;
+        spec.source = 'quick';
+        return createEventRecord(spec);
+    });
+    var ev = made[0];
+    var today = getLocalDateString();
+    if (made.length > 1) {
+        var last = made.map(function(e) { return lastOccurrenceDate(e); });
+        var end = last.indexOf(null) === -1 ? last.sort().pop() : null;
+        finishChange(ch, made.length + ' repeating series added · ' + fmtDateMed(ev.startDate, today) + (end ? ' → ' + fmtDateMed(end, today) : ''));
+    } else {
+        finishChange(ch, (EVENT_TYPES[ev.type] || 'Event') + ' added · ' + fmtWhen(buildInstance(ev, null), state.settings, today));
     }
-    delete spec.calendarRef;
-    spec.calendarId = calId;
-    spec.source = 'quick';
-    var ev = createEventRecord(spec);
-    finishChange(ch, (EVENT_TYPES[ev.type] || 'Event') + ' added · ' + fmtWhen(buildInstance(ev, null), state.settings, getLocalDateString()));
     if (ev.startDate !== currentDate && (ui.view === 'day' || ui.view === 'week' || ui.view === '3day' || ui.view === '4day' || !ui.view)) {
         var vis = getVisibleDays(ui.view || 'week', currentDate);
         if (vis.indexOf(ev.startDate) === -1) goToDate(ev.startDate);
@@ -123,7 +147,7 @@ function submitQuickAdd(openDetails) {
     if (!r) return;
     input.value = '';
     quickAddPreview('');
-    if (openDetails) { quickAddToEditor(r); return; }
+    if (openDetails && r.parts.length === 1) { quickAddToEditor(r); return; } // the editor holds one series; several just get added
     commitQuickAdd(r);
 }
 
@@ -164,12 +188,16 @@ function openQuickAddSheet(prefill) {
     var input = wrap.querySelector('.gc-qa-sheet-input');
     var prev = wrap.querySelector('.gc-qa-sheet-preview');
     var addBtn = wrap.querySelector('[data-act=add]');
+    var moreBtn = wrap.querySelector('[data-act=more]');
     var built = null;
     function grow() { input.style.height = 'auto'; input.style.height = Math.min(input.scrollHeight, 132) + 'px'; }
     function refresh() {
         grow();
         built = quickAddBuild(input.value.replace(/\s*\n\s*/g, ' '), typeVerb || undefined);
         addBtn.disabled = !built;
+        var multi = !!built && built.parts.length > 1;
+        addBtn.textContent = multi ? 'Add all ' + built.parts.length : 'Add';
+        moreBtn.hidden = multi; // the editor holds one series at a time
         if (built) { prev.innerHTML = quickAddCardHtml(built); return; }
         prev.innerHTML = '<div class="gc-qa-examples"><div class="gc-qa-ex-head">Say it the way you\'d text it — date, time, repeat, color, place, reminder:</div>' +
             QUICK_EXAMPLES.map(function(x) { return '<button type="button" class="gc-qa-ex">' + escapeHtml(x) + '</button>'; }).join('') +

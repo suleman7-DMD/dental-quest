@@ -481,22 +481,22 @@ function buildEventSpec(op, ctx) {
     var spec = emptySpecFor(type);
 
     if (op.quick !== null && op.quick !== undefined) {
-        var q = parseQuickAdd(op.quick, today, { type: op.verb === 'EVENT' ? null : type, colors: !!op.interactive, nowMs: ctx.nowMs });
-        spec.type = q.type || type;
-        spec.title = q.title;
-        spec.calendarRef = q.calendarRef;
-        spec.location = q.location;
-        spec.priority = q.priority;
-        spec.color = q.color || null;
-        spec.notes = q.notes || '';
-        if (q.reminder !== null && q.reminder !== undefined) spec.reminders = q.reminder < 0 ? {} : normalizeReminders([q.reminder]);
-        spec.done = !!op.checked;
-        // a quick patient visit is named by the patient ("pt Moe 8:30" → patient Moe)
-        if (spec.type === 'appointment' && spec.title && !spec.patientName) { spec.patientName = spec.title; spec.title = ''; }
-        return finishTiming(spec, {
-            date: q.date, endDate: q.endDate, start: q.start, end: q.end, allDay: q.allDay,
-            duration: q.durationMin, repeat: q.repeat
-        }, settings, errors, warnings, today, null);
+        var qopts = { type: op.verb === 'EVENT' ? null : type, colors: !!op.interactive, nowMs: ctx.nowMs };
+        // typed quick add only: a schedule that changes ("tue/wed until nov 15 then tue/thu/fri until nov 29") → one spec per series
+        var plan = op.interactive ? parseQuickSchedule(op.quick, today, qopts) : null;
+        if (plan) {
+            var parts = plan.items.map(function(q) { return quickSpec(q, op, type, settings, today); });
+            var all = { spec: parts[0].spec, specs: parts.map(function(p) { return p.spec; }), errors: [], warnings: plan.warnings.slice() };
+            parts.forEach(function(p) { all.errors = all.errors.concat(p.errors); all.warnings = all.warnings.concat(p.warnings); });
+            var skipped = {};
+            all.specs.forEach(function(sp) { Object.keys(sp.exceptions || {}).forEach(function(d) { skipped[d] = 1; }); });
+            (plan.items[0].exdates || []).forEach(function(d) { if (!skipped[d]) all.warnings.push(fmtSkipDate(d) + ' isn\'t on this schedule — nothing to skip'); });
+            return all;
+        }
+        var one = quickSpec(parseQuickAdd(op.quick, today, qopts), op, type, settings, today);
+        (one.unskipped || []).forEach(function(d) { one.warnings.push(fmtSkipDate(d) + ' isn\'t one of its days — nothing to skip'); });
+        delete one.unskipped;
+        return one;
     }
 
     var tv = f.TYPE ? parseTypeValue(f.TYPE) : null;
@@ -604,6 +604,40 @@ function buildEventSpec(op, ctx) {
     }
     return finishTiming(spec, t, settings, errors, warnings, today, op.verb);
 }
+
+// One parseQuickAdd-shaped record → { spec, errors, warnings, unskipped[] }
+function quickSpec(q, op, type, settings, today) {
+    var spec = emptySpecFor(type);
+    spec.type = q.type || type;
+    spec.title = q.title;
+    spec.calendarRef = q.calendarRef;
+    spec.location = q.location;
+    spec.priority = q.priority;
+    spec.color = q.color || null;
+    spec.notes = q.notes || '';
+    if (q.reminder !== null && q.reminder !== undefined) spec.reminders = q.reminder < 0 ? {} : normalizeReminders([q.reminder]);
+    spec.done = !!op.checked;
+    // a quick patient visit is named by the patient ("pt Moe 8:30" → patient Moe)
+    if (spec.type === 'appointment' && spec.title && !spec.patientName) { spec.patientName = spec.title; spec.title = ''; }
+    var built = finishTiming(spec, {
+        date: q.date, endDate: q.endDate, start: q.start, end: q.end, allDay: q.allDay,
+        duration: q.durationMin, repeat: q.repeat
+    }, settings, [], [], today, null);
+    // "except nov 26" → that occurrence deleted, the way a single-occurrence delete stores it
+    built.unskipped = [];
+    if (q.exdates && q.exdates.length) {
+        var sp = built.spec;
+        q.exdates.forEach(function(d) {
+            if (sp.recurrence && isOccurrenceDate({ startDate: sp.startDate, recurrence: sp.recurrence }, d)) {
+                sp.exceptions = sp.exceptions || {};
+                sp.exceptions[d] = { deleted: true };
+            } else built.unskipped.push(d);
+        });
+    }
+    return built;
+}
+
+function fmtSkipDate(d) { var p = ymdParts(d); return MONTHS_SHORT[p.m - 1] + ' ' + p.d; }
 
 // Shared timing resolution for block + quick records
 function finishTiming(spec, t, settings, errors, warnings, today, verb) {

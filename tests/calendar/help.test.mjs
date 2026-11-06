@@ -13,9 +13,11 @@ const TODAY = '2026-11-02'; // Monday
 const NOW = new Date(2026, 10, 2, 14, 3).getTime();
 
 const qa = (text) => {
-    const s = JSON.parse(JSON.stringify(c.buildEventSpec({ verb: 'EVENT', fields: {}, quick: text, interactive: true }, { today: TODAY, settings: c.getDefaultSettings(), nowMs: NOW }))).spec;
+    const b = JSON.parse(JSON.stringify(c.buildEventSpec({ verb: 'EVENT', fields: {}, quick: text, interactive: true }, { today: TODAY, settings: c.getDefaultSettings(), nowMs: NOW })));
+    const s = b.spec;
     const r = s.recurrence;
     return {
+        series: (b.specs || [s]).length, skips: Object.keys(s.exceptions || {}).join(','),
         title: s.title, type: s.type, patient: s.patientName || '', date: s.startDate, endDate: s.endDate, start: s.startTime, end: s.endTime, allDay: !!s.allDay,
         color: s.color || null, location: s.location || '', notes: s.notes || '', cal: s.calendarRef || null, priority: s.priority || null,
         rec: r ? r.freq + (r.interval > 1 ? '/' + r.interval : '') + ':' + (r.byDay || '') + (r.until ? '→' + r.until : '') + (r.count ? '#' + r.count : '') : null,
@@ -35,7 +37,10 @@ const EXPECT = {
     'study group every other wed 6-8pm purple': { title: 'study group', date: '2026-11-04', start: '18:00', end: '20:00', color: 'grape', rec: 'weekly/2:WE' },
     'Coffee tomorrow afternoon for 90 min light blue': { title: 'Coffee', date: '2026-11-03', start: '14:00', end: '15:30', color: 'peacock' },
     'board review sat all day // bring flashcards': { title: 'board review', date: '2026-11-07', allDay: true, notes: 'bring flashcards' },
-    'Lab cleanup daily 4pm 10 times no reminder': { title: 'Lab cleanup', start: '16:00', rec: 'daily:#10', rem: '' }
+    'Lab cleanup daily 4pm 10 times no reminder': { title: 'Lab cleanup', start: '16:00', rec: 'daily:#10', rem: '' },
+    // multi-series examples: the first series here, every series in quickadd.test.mjs
+    'Ortho tue/wed 9-11am until nov 15 then tue/thu/fri 1-3pm nov 17-29': { title: 'Ortho', date: '2026-11-03', start: '09:00', end: '11:00', rec: 'weekly:TU,WE→2026-11-15', series: 2 },
+    'Anatomy mon wed 9-11am, lab fri 1-4pm until dec 18 except nov 27': { title: 'Anatomy', date: '2026-11-02', start: '09:00', end: '11:00', rec: 'weekly:MO,WE→2026-12-18', series: 2 }
 };
 
 test('every tappable Help example makes what its caption says', () => {
@@ -64,6 +69,16 @@ test('the phrase table holds: lengths, repeat endings, reminders, calendars, pri
     assert.deepEqual(pick(qa('lecture T/Th 1-4pm'), ['rec']), { rec: 'weekly:TU,TH' });
     // a length is not a repeat ending, and an event that doesn't repeat keeps "for 2 days" out of its title
     assert.deepEqual(pick(qa('Gym MWF 6am for 1 hour'), ['end', 'rec']), { end: '07:00', rec: 'weekly:MO,WE,FR' });
+    assert.deepEqual(pick(qa('lecture tue wed 9-11am'), ['title', 'rec']), { title: 'lecture', rec: 'weekly:TU,WE' });
+    assert.deepEqual(pick(qa('shift mon-fri 7am'), ['title', 'rec']), { title: 'shift', rec: 'weekly:MO,TU,WE,TH,FR' });
+    assert.deepEqual(pick(qa('Gym MWF 6am until dec 18 except nov 26'), ['rec', 'skips']), { rec: 'weekly:MO,WE,FR→2026-12-18', skips: '' }); // Thu — not a gym day
+    assert.equal(qa('lecture every wed 9am no class nov 11 and 25').skips, '2026-11-11,2026-11-25');
+    assert.equal(qa('lecture every wed 9am skip 12/23-12/31').skips, '2026-12-23,2026-12-30');
+    assert.equal(qa('tue/wed 9-11am until nov 15 then tue/thu/fri 1-3pm nov 17-29').series, 2);
+    assert.equal(qa('mon wed 9-11am, fri 1-4pm').series, 2);
+    assert.equal(qa('x every tue until nov 15 then thu until nov 29. nov 15 ending dates 9-11am, nov 17-29 dates 1-3pm').start, '09:00');
+    assert.equal(qa('x every tue until nov 15 then thu until nov 29. first part 9-11am, second part 1-3pm').start, '09:00');
+    assert.equal(qa('x every tue until nov 15 then thu until nov 29 at 9-11am and 1-3pm respectively').start, '09:00');
 });
 
 test('every key the Help page lists is wired in init.js', () => {

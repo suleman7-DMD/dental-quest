@@ -289,6 +289,9 @@ html.dark .gc-create { background: var(--surface-3); }
 .gc-qa-chip .ms { font-size: 14px; }
 .gc-qa-chip .gc-dot { width: 10px; height: 10px; flex: 0 0 10px; }
 .gc-qa-warn { font-size: 12px; color: var(--error, #b3261e); margin-top: 4px; }
+.gc-qa-multi-head { display: flex; align-items: center; gap: 6px; font-size: 12.5px; color: var(--text-2); padding: 0 2px 6px; }
+.gc-qa-multi-head .ms { font-size: 16px; color: var(--primary); }
+.gc-qa-card + .gc-qa-card { margin-top: 6px; }
 .gc-qa-hint { font-size: 11px; color: var(--text-3); padding: 4px 4px 0; }
 
 /* quick-add sheet: drops from the top so the iPhone keyboard never hides the preview */
