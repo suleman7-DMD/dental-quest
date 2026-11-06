@@ -10766,10 +10766,20 @@
             // Targets plan against the calibrated TDEE (formula + learned
             // correction) so a mode's deficit is a real deficit.
             const tdee = getPlanningTDEE(liveWeight, state.today.date);
-            state.today.targets = applyTargetModifiers(calculateTargets(
+            state.today.targets = { ...applyTargetModifiers(calculateTargets(
                 state.today.mode, tdee,
                 liveWeight,
-                state.today.isBrainDay));
+                state.today.isBrainDay)), planTdee: tdee };
+        }
+
+        // Today's targets are stored, but the correction re-fits whenever any
+        // data arrives (cloud sync from another device, imports, backdated
+        // edits, the midnight cutoff). Re-plan whenever the calibrated TDEE
+        // they were built on is no longer the current one.
+        function ensureTargetsMatchCalibration() {
+            if (!state.today?.setupComplete || !state.today.targets) return;
+            const tdee = getPlanningTDEE(getWeightForDate(state.today.date || getLocalDateString()), state.today.date);
+            if (state.today.targets.planTdee !== tdee) refreshTodayTargets();
         }
 
         function getModeDisplay(mode) {
@@ -12556,6 +12566,7 @@
         }
 
         function renderSimpleView() {
+            ensureTargetsMatchCalibration();
             const totals = getTodayTotals();
             const targets = state.today.targets || { calories: 1900, protein: 172, carbs: 0 };
 

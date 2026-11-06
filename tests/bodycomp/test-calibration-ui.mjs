@@ -170,7 +170,7 @@ async function logicSuite(page) {
         const status = getTdeeCalibrationStatus();
         const est = getLiveTdeeEstimate();
         const targetsCal = JSON.stringify(state.today.targets);
-        const expected = JSON.stringify(applyTargetModifiers(calculateTargets(state.today.mode, est.raw + est.adjustment, getWeightForDate(state.today.date), state.today.isBrainDay)));
+        const expected = JSON.stringify({ ...applyTargetModifiers(calculateTargets(state.today.mode, est.raw + est.adjustment, getWeightForDate(state.today.date), state.today.isBrainDay)), planTdee: est.raw + est.adjustment });
         state.settings.tdeeCalibrationEnabled = false;
         refreshTodayTargets();
         const targetsRaw = JSON.stringify(state.today.targets);
@@ -411,6 +411,24 @@ async function logicSuite(page) {
     ok(new RegExp(`2,100 kcal logged, ${2100 - (1900 + budget.adj)} over`).test(budget.over.status) && budget.over.current === '2,100', `above-target overage measured against the calibrated budget (${budget.over.status})`);
     ok(budget.custom.baseBudget === 2000 && budget.custom.budget === 2000 + budget.adj && budget.settingsShows === '2000', 'custom base budget honored; Settings shows/saves the base (no double subtraction)');
     ok(budget.rawBefore === budget.rawAfter, 'active calories never double counted in TDEE');
+
+    // Data arriving without a refresh call (cloud sync from another device)
+    // must re-plan today's stored targets on the next render, never stick.
+    const resync = await page.evaluate(() => {
+        __seed(); refreshTodayTargets(); renderSimpleView();
+        const before = { adj: getActiveCalibrationAdjustment(state.today.date), plan: state.today.targets.planTdee };
+        const last = getValues(state.weighIns).sort((a, b) => a.date < b.date ? -1 : 1).pop();
+        state.weighIns.w_sync = { id: 'w_sync', date: state.today.date, weight: last.weight - 3, source: 'sync' };
+        renderSimpleView();
+        const now = getPlanningTDEE(getWeightForDate(state.today.date), state.today.date);
+        const after = { adj: getActiveCalibrationAdjustment(state.today.date), plan: state.today.targets.planTdee, now,
+            budget: document.getElementById('budgetTarget').textContent };
+        delete state.weighIns.w_sync;
+        return { before, after };
+    });
+    ok(resync.after.adj !== resync.before.adj && resync.after.plan === resync.after.now && resync.after.plan !== resync.before.plan
+        && resync.after.budget.replace(/,/g, '') === String(1900 + resync.after.adj),
+        `synced weigh-in re-fits the correction (${resync.before.adj} → ${resync.after.adj}) and re-plans targets + budget on render`);
 
     // ---------- Copied-text WORKOUT import (regression) ----------
     const workout = await page.evaluate(() => {
