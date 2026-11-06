@@ -8499,7 +8499,7 @@
                     <label style="display: flex; align-items: center; gap: 10px; margin-top: 12px; cursor: pointer;">
                         <input type="checkbox" id="settingsTdeeCalibration" style="width: 20px; height: 20px; flex-shrink: 0;">
                         <span style="color: var(--text-primary);">TDEE calibration</span>
-                        <span style="font-size: 0.8em; color: var(--text-muted);">(cautious correction from weight trend; off = original estimate)</span>
+                        <span style="font-size: 0.8em; color: var(--text-muted);">(learns your real TDEE every day from food logs + weigh-ins; off = original formula)</span>
                     </label>
                     <label style="display: flex; align-items: center; gap: 10px; margin-top: 12px; cursor: pointer;">
                         <input type="checkbox" id="settingsFocusMode" style="width: 20px; height: 20px;">
@@ -10032,71 +10032,62 @@
         }
 
         // ============================================================
-        // TDEE CALIBRATION ENGINE (Oct 2026) — pure: no state, DOM, or clock.
-        // Learns a cautious, effective-dated correction to the RAW model:
-        //     calibratedTDEE = rawTDEE + adjustment
-        // from completed food logs and standardized morning weigh-ins. The
-        // correction lumps together model error, uncaptured intake, water and
-        // body-composition change; it is NOT a measured metabolic rate.
+        // ADAPTIVE TDEE ENGINE (Nov 2026 overhaul) — pure: no state, DOM, or clock.
+        // A daily energy-balance Kalman filter that tracks two hidden values:
+        //     W = true (trend) body weight, lb — the scale minus water/gut noise
+        //     b = TDEE correction, kcal/day — how far the original formula is off
+        // Physics of each completed day t:
+        //     W[t+1] = W[t] + (loggedIntake[t] − (modelTDEE[t] + b[t])) / 3500
+        // and every morning weigh-in y[t] = W[t] + scale noise updates W and b.
+        // b lumps together every systematic gap between the food log and the
+        // scale (under-logged food, label error, BMR × activity error, workout-
+        // calorie error, adaptive thermogenesis). Weight data cannot tell those
+        // apart, and real-deficit tracking does not need to:
+        //     real deficit ≈ (modelTDEE + b) − loggedIntake
+        // A day with no food log is NOT assumed average: its balance is unknown
+        // (very wide noise), so gaps never teach the correction anything.
+        // Readings far from the prediction are down-weighted (Huber), not
+        // dropped. The filter re-runs over the whole history whenever data
+        // changes, so late or batch-imported weigh-ins count the moment they
+        // land: nothing is ledgered, gated, smoothed by hand or rate-capped.
         // Inputs are always the RAW stored log values (never calibrated ones),
         // so a correction can never feed back into the next estimate.
-        // Exercised by tests/bodycomp/test-calibration.mjs via the sentinels.
+        // Noise terms: maximum-likelihood fit and out-of-sample back-test on the
+        // Jan–Nov 2026 logs. Exercised by tests/bodycomp/test-calibration.mjs.
         // ============================================================
         // [BODYCOMP-CALIBRATION-START]
         const TDEE_CALIBRATION = Object.freeze({
-            // Evidence window: 28 days, extended to 35/42 when that longer
-            // window also passes every eligibility rule.
-            WINDOW_DAYS: 28,
-            MAX_WINDOW_DAYS: 42,
-            WINDOW_STEP_DAYS: 7,
-            // Eligibility
-            MIN_INTAKE_DAYS: 21,
-            MIN_INTAKE_COVERAGE: 0.75,
-            MIN_WEIGHIN_DAYS: 14,
-            MIN_WEIGHIN_COVERAGE: 0.5,
-            MIN_WEIGHIN_SPAN_DAYS: 21,
-            ENDPOINT_DAYS: 7,
-            MIN_ENDPOINT_WEIGHINS: 5,
+            // Energy in 1 lb of body-weight change (≈7,700 kcal/kg). The same
+            // constant converts every lb ↔ kcal figure in the app, so the
+            // learned correction is self-consistent with every projection.
+            KCAL_PER_LB: 3500,
+            // Filter noise model (1 SD)
+            SCALE_NOISE_LB: 0.6,            // morning reading vs. true trend
+            TRACKED_DAY_KCAL_SD: 400,       // random error of one logged day
+            UNTRACKED_DAY_KCAL_SD: 2000,    // unlogged day: balance unknown
+            CORRECTION_DRIFT_KCAL: 8,       // daily drift of the true correction
+            PRIOR_CORRECTION_SD_KCAL: 250,  // before evidence: formula may be off ±250
+            INITIAL_WEIGHT_SD_LB: 3,
+            ROBUST_Z: 2.5,                  // readings beyond 2.5 SD are down-weighted
+            MAX_HISTORY_DAYS: 1095,
+            MAX_ABS_CORRECTION_KCAL: 1000,  // sanity bound (never reached in practice)
             // A completed day under this is far more likely a partially logged
-            // day than a real intake; it is listed, never silently counted.
+            // day than a real intake: its balance is treated as unknown.
             MIN_PLAUSIBLE_INTAKE_KCAL: 800,
             MIN_VALID_WEIGHT_LB: 60,
             MAX_VALID_WEIGHT_LB: 700,
-            // Weight preprocessing (Hampel filter on the daily series)
-            HAMPEL_HALF_WINDOW_DAYS: 3,
-            HAMPEL_MIN_NEIGHBORS: 4,
-            HAMPEL_MAD_K: 3,
-            HAMPEL_MIN_DEVIATION_LB: 1.5,
-            // Trend → energy
-            KCAL_PER_LB: 3500,
-            CI_Z: 1.645,                     // 90% Theil–Sen slope interval
-            MAX_METHOD_DISAGREEMENT_KCAL: 150,
-            WATER_SENSITIVITY_LB: 1,
-            // Update rule
-            SMOOTHING: 0.5,
-            FIRST_STEP_CAP_KCAL: 100,
-            WEEKLY_STEP_CAP_KCAL: 50,
-            WATER_LIMITED_STEP_CAP_KCAL: 50,
-            MIN_ADJUSTMENT_KCAL: -300,
-            MAX_ADJUSTMENT_KCAL: 150,
-            NOISE_KCAL: 60,
-            NOISE_REPEAT_EVALUATIONS: 3,
-            UPDATE_INTERVAL_DAYS: 7,
-            ROUND_TO_KCAL: 5,
-            // Confidence
-            STABLE_TARGET_TOLERANCE_KCAL: 75,
-            MODERATE_MIN_INTAKE_COVERAGE: 0.8,
-            MODERATE_MIN_WEIGHIN_DAYS: 18,
-            MODERATE_MIN_PRIOR_STABLE: 1,
-            HIGH_MIN_WINDOW_DAYS: 42,
-            HIGH_MIN_INTAKE_COVERAGE: 0.85,
-            HIGH_MIN_WEIGHIN_COVERAGE: 0.65,
-            HIGH_MAX_DISAGREEMENT_KCAL: 75,
-            HIGH_MIN_PRIOR_STABLE: 3,
-            // Observed-trend display / goal forecasts (not calibration)
+            CI_Z: 1.645,                    // 90% ranges
+            // Confidence = how tightly the data pin the correction down (posterior SD)
+            CONFIDENCE_MAX_SD: Object.freeze({ high: 60, moderate: 100, provisional: 175 }),
+            // Accuracy check: from every past morning weigh-in, predict the
+            // weight HORIZON days later from the food log; compare with the scale
+            BACKTEST_HORIZON_DAYS: 28,
+            BACKTEST_MATCH_DAYS: 2,
+            BACKTEST_MIN_TRACKED_SHARE: 0.8,
+            // Weight-trend rate (W today − W four weeks ago) and goal forecast
             TREND_WINDOW_DAYS: 28,
-            TREND_MIN_WEIGHINS: 8,
-            TREND_MIN_SPAN_DAYS: 14,
+            TREND_MIN_WEIGHINS: 4,
+            TREND_MIN_SPAN_DAYS: 10,
             FORECAST_MAX_DAYS: 730
         });
 
@@ -10139,11 +10130,6 @@
 
         function calClamp(value, lo, hi) {
             return Math.min(hi, Math.max(lo, value));
-        }
-
-        function calRoundTo(value, step) {
-            const rounded = Math.round(value / step) * step;
-            return rounded === 0 ? 0 : rounded; // no -0
         }
 
         // Why a weigh-in is not a standardized calibration reading (null = it is).
@@ -10196,129 +10182,283 @@
             return { days, excluded };
         }
 
-        // Hampel filter: a day far from the median of its ±3-day neighbourhood
-        // is treated as a probable water/gut fluctuation and set aside.
-        function calFlagFluctuations(days) {
-            const C = TDEE_CALIBRATION;
-            const nums = days.map(d => calDayNumber(d.date));
-            return days.map((day, i) => {
-                const neighbors = [];
-                for (let j = 0; j < days.length; j++) {
-                    if (Math.abs(nums[j] - nums[i]) <= C.HAMPEL_HALF_WINDOW_DAYS) neighbors.push(days[j].weight);
-                }
-                if (neighbors.length < C.HAMPEL_MIN_NEIGHBORS) return { ...day, fluctuation: false };
-                const med = calMedian(neighbors);
-                const mad = calMedian(neighbors.map(v => Math.abs(v - med)));
-                const limit = Math.max(C.HAMPEL_MAD_K * 1.4826 * mad, C.HAMPEL_MIN_DEVIATION_LB);
-                return { ...day, fluctuation: Math.abs(day.weight - med) > limit };
-            });
+        function calConfidenceForSd(sd) {
+            const T = TDEE_CALIBRATION.CONFIDENCE_MAX_SD;
+            if (!Number.isFinite(sd)) return 'collecting';
+            return sd <= T.high ? 'high' : sd <= T.moderate ? 'moderate' : sd <= T.provisional ? 'provisional' : 'collecting';
         }
 
-        // Theil–Sen slope (median of pairwise slopes) with Sen's
-        // nonparametric confidence interval.
-        function calTheilSen(points, z = TDEE_CALIBRATION.CI_Z) {
-            const slopes = [];
-            for (let i = 0; i < points.length; i++) {
-                for (let j = i + 1; j < points.length; j++) {
-                    const dx = points[j].x - points[i].x;
-                    if (dx !== 0) slopes.push((points[j].y - points[i].y) / dx);
-                }
-            }
-            if (!slopes.length) return null;
-            slopes.sort((a, b) => a - b);
-            const slope = calMedian(slopes);
-            const intercept = calMedian(points.map(p => p.y - slope * p.x));
-            const n = points.length;
-            const N = slopes.length;
-            const c = z * Math.sqrt(n * (n - 1) * (2 * n + 5) / 18);
-            const lowerIndex = Math.max(0, Math.round((N - c) / 2) - 1);
-            const upperIndex = Math.min(N - 1, Math.round((N + c) / 2));
-            return { slope, intercept, lower: slopes[lowerIndex], upper: slopes[upperIndex], n, pairs: N };
+        // 2×2 helpers for the smoother
+        function calM2Mul(A, B) {
+            return [[A[0][0] * B[0][0] + A[0][1] * B[1][0], A[0][0] * B[0][1] + A[0][1] * B[1][1]],
+                [A[1][0] * B[0][0] + A[1][1] * B[1][0], A[1][0] * B[0][1] + A[1][1] * B[1][1]]];
         }
 
-        function calEvaluateWindow(input, windowDays, weightDays) {
+        function calM2T(A) {
+            return [[A[0][0], A[1][0]], [A[0][1], A[1][1]]];
+        }
+
+        function calM2Inv(A) {
+            const det = A[0][0] * A[1][1] - A[0][1] * A[1][0];
+            return [[A[1][1] / det, -A[0][1] / det], [-A[1][0] / det, A[0][0] / det]];
+        }
+
+        /**
+         * Run the energy-balance filter through input.endDate (the live day:
+         * its morning weigh-in counts, its in-progress food never does).
+         * input: { endDate, days: [{date, intake, modelTdee}] (completed
+         *   food-logged days with the RAW model TDEE), weighIns: [records] }
+         * Returns one row per calendar day from the first usable weigh-in:
+         * the filtered estimate (what was knowable that morning) and the
+         * smoothed estimate (best hindsight using all data), plus the current
+         * estimate and the exact 4-week trend change.
+         */
+        function calRunEnergyBalance(input) {
             const C = TDEE_CALIBRATION;
-            const end = input.endDate;
-            const start = calAddDays(end, -(windowDays - 1));
-            const startNum = calDayNumber(start);
-            const reasons = [];
-
-            // Intake evidence: completed, genuinely tracked days with a stored
-            // RAW deficit. Unlogged and assumed days are absent, never zero.
-            const intake = [];
-            const lowIntakeDays = [];
-            for (const day of input.intakeDays || []) {
-                if (!day || !calIsDate(day.date) || day.date < start || day.date > end) continue;
-                if (!day.tracked || day.assumed) continue;
-                if (!Number.isFinite(day.rawDeficit) || !Number.isFinite(day.calories)) continue;
-                if (day.calories < C.MIN_PLAUSIBLE_INTAKE_KCAL) { lowIntakeDays.push(day.date); continue; }
-                intake.push(day);
+            const rho = C.KCAL_PER_LB;
+            const a = -1 / rho;
+            const endDate = input.endDate;
+            const R = C.SCALE_NOISE_LB ** 2;
+            const qTracked = (C.TRACKED_DAY_KCAL_SD / rho) ** 2;
+            const qUntracked = (C.UNTRACKED_DAY_KCAL_SD / rho) ** 2;
+            const qBias = C.CORRECTION_DRIFT_KCAL ** 2;
+            const historyStart = calAddDays(endDate, -(C.MAX_HISTORY_DAYS - 1));
+            const selection = selectCalibrationWeighIns(input.weighIns, endDate);
+            const weighDays = selection.days.filter(d => d.date >= historyStart);
+            if (!weighDays.length) {
+                return { ok: false, endDate, series: [], trackedDays: 0, weighInDays: 0, excludedWeighIns: selection.excluded };
             }
-            const requiredIntakeDays = Math.max(C.MIN_INTAKE_DAYS, Math.ceil(C.MIN_INTAKE_COVERAGE * windowDays));
-            if (intake.length < requiredIntakeDays) reasons.push(`${intake.length} of ${requiredIntakeDays} completed food-log days`);
+            const weights = new Map(weighDays.map(d => [d.date, d.weight]));
+            const food = new Map();
+            for (const d of input.days || []) {
+                if (!d || !calIsDate(d.date) || d.date >= endDate || d.date < historyStart) continue;
+                const intake = Number(d.intake);
+                const tdee = Number(d.modelTdee);
+                if (!Number.isFinite(intake) || !Number.isFinite(tdee) || tdee <= 0) continue;
+                if (intake < C.MIN_PLAUSIBLE_INTAKE_KCAL) continue;
+                food.set(d.date, { intake, tdee });
+            }
 
-            const inWindow = weightDays.filter(d => d.date >= start && d.date <= end);
-            const usable = inWindow.filter(d => !d.fluctuation);
-            const requiredWeighInDays = Math.max(C.MIN_WEIGHIN_DAYS, Math.ceil(C.MIN_WEIGHIN_COVERAGE * windowDays));
-            if (usable.length < requiredWeighInDays) reasons.push(`${usable.length} of ${requiredWeighInDays} morning weigh-in days`);
-            const spanDays = usable.length ? calDayNumber(usable[usable.length - 1].date) - calDayNumber(usable[0].date) : 0;
-            if (spanDays < C.MIN_WEIGHIN_SPAN_DAYS) reasons.push(`weigh-ins span ${spanDays} of ${C.MIN_WEIGHIN_SPAN_DAYS} days`);
-            const firstEnd = calAddDays(start, C.ENDPOINT_DAYS - 1);
-            const lastStart = calAddDays(end, -(C.ENDPOINT_DAYS - 1));
-            const firstPts = usable.filter(d => d.date <= firstEnd);
-            const lastPts = usable.filter(d => d.date >= lastStart);
-            if (firstPts.length < C.MIN_ENDPOINT_WEIGHINS) reasons.push(`${firstPts.length} of ${C.MIN_ENDPOINT_WEIGHINS} weigh-ins in the first 7 days`);
-            if (lastPts.length < C.MIN_ENDPOINT_WEIGHINS) reasons.push(`${lastPts.length} of ${C.MIN_ENDPOINT_WEIGHINS} weigh-ins in the last 7 days`);
+            const startDate = weighDays[0].date;
+            const anchorDate = calAddDays(endDate, -C.TREND_WINDOW_DAYS);
+            // State [W, b, A]. A is W frozen on anchorDate's morning, so
+            // W(end) − A is the 4-week change with its exact uncertainty.
+            const w0 = weighDays[0].weight;
+            const v0 = C.INITIAL_WEIGHT_SD_LB ** 2;
+            const x = [w0, 0, w0];
+            const P = [[v0, 0, v0], [0, C.PRIOR_CORRECTION_SD_KCAL ** 2, 0], [v0, 0, v0]];
+            const series = [];
+            const steps = [];
+            const last = calDayNumber(endDate);
+            let trackedDays = 0, downweighted = 0;
 
-            const base = {
-                windowDays, windowStart: start, windowEnd: end,
-                intakeDays: intake.length, requiredIntakeDays, lowIntakeDays,
-                weighInDays: usable.length, requiredWeighInDays,
-                fluctuationDays: inWindow.filter(d => d.fluctuation).map(d => d.date),
-                spanDays,
-                firstEndpointWeighIns: firstPts.length, lastEndpointWeighIns: lastPts.length,
-                intakeCoverage: intake.length / windowDays,
-                weighInCoverage: usable.length / windowDays
-            };
-            if (reasons.length) return { ...base, eligible: false, reasons };
+            for (let n = calDayNumber(startDate); n <= last; n++) {
+                const date = calDateFromDayNumber(n);
+                const row = { date, weight: null, tracked: false, intake: null, modelTdee: null };
+                const y = weights.get(date);
+                if (y !== undefined) {
+                    const S = P[0][0] + R;
+                    const innovation = y - x[0];
+                    const z = Math.abs(innovation) / Math.sqrt(S);
+                    // Huber: a far-off reading's noise is inflated, never dropped
+                    const Seff = z > C.ROBUST_Z ? S * z / C.ROBUST_Z : S;
+                    if (Seff > S) downweighted++;
+                    const K = [P[0][0] / Seff, P[1][0] / Seff, P[2][0] / Seff];
+                    const top = [P[0][0], P[0][1], P[0][2]];
+                    for (let i = 0; i < 3; i++) {
+                        x[i] += K[i] * innovation;
+                        for (let j = 0; j < 3; j++) P[i][j] -= K[i] * top[j];
+                    }
+                    Object.assign(row, { weight: y, predicted: y - innovation, predictedSd: Math.sqrt(S), z, downweighted: Seff > S });
+                }
+                // Until the anchor morning, A simply mirrors W
+                if (date <= anchorDate) {
+                    x[2] = x[0];
+                    for (let j = 0; j < 3; j++) { P[2][j] = P[0][j]; P[j][2] = P[j][0]; }
+                    P[2][2] = P[0][0];
+                }
+                row.trend = x[0];
+                row.trendSd = Math.sqrt(Math.max(0, P[0][0]));
+                row.correction = x[1];
+                row.correctionSd = Math.sqrt(Math.max(0, P[1][1]));
+                series.push(row);
+                if (n === last) break;
 
-            const kcal = C.KCAL_PER_LB;
-            const ts = calTheilSen(usable.map(d => ({ x: calDayNumber(d.date) - startNum, y: d.weight })));
-            const firstAvg = calMean(firstPts.map(d => d.weight));
-            const lastAvg = calMean(lastPts.map(d => d.weight));
-            // Centres use the actual measurement dates, not day positions
-            const elapsed = calMean(lastPts.map(d => calDayNumber(d.date))) - calMean(firstPts.map(d => calDayNumber(d.date)));
-            const endpointSlope = (lastAvg - firstAvg) / elapsed;
-            const observedDeficit = -ts.slope * kcal;
-            const endpointDeficit = -endpointSlope * kcal;
-            const meanRawDeficit = calMean(intake.map(d => d.rawDeficit));
-            const tdees = intake.map(d => d.rawTdee).filter(Number.isFinite);
-            const gap = observedDeficit - meanRawDeficit;
-            const waterSensitivity = C.WATER_SENSITIVITY_LB * kcal / elapsed;
+                // Time update through the end of this day
+                const f = food.get(date);
+                const xf = [x[0], x[1]];
+                const Pf = [[P[0][0], P[0][1]], [P[1][0], P[1][1]]];
+                let F;
+                if (f) {
+                    trackedDays++;
+                    Object.assign(row, { tracked: true, intake: f.intake, modelTdee: f.tdee });
+                    x[0] += a * x[1] + (f.intake - f.tdee) / rho;
+                    const p00 = P[0][0] + 2 * a * P[0][1] + a * a * P[1][1];
+                    const p01 = P[0][1] + a * P[1][1];
+                    const p02 = P[0][2] + a * P[1][2];
+                    P[0][0] = p00 + qTracked;
+                    P[0][1] = P[1][0] = p01;
+                    P[0][2] = P[2][0] = p02;
+                    F = [[1, a], [0, 1]];
+                } else {
+                    P[0][0] += qUntracked;
+                    F = [[1, 0], [0, 1]];
+                }
+                P[1][1] += qBias;
+                steps.push({ xf, Pf, F, xn: [x[0], x[1]], Pn: [[P[0][0], P[0][1]], [P[1][0], P[1][1]]] });
+            }
+
+            // Rauch–Tung–Striebel smoother over (W, b): best hindsight per day
+            const lastRow = series[series.length - 1];
+            let xs = [lastRow.trend, lastRow.correction];
+            let Ps = [[P[0][0], P[0][1]], [P[1][0], P[1][1]]];
+            Object.assign(lastRow, { sTrend: xs[0], sTrendSd: lastRow.trendSd, sCorrection: xs[1], sCorrectionSd: lastRow.correctionSd });
+            for (let k = steps.length - 1; k >= 0; k--) {
+                const { xf, Pf, F, xn, Pn } = steps[k];
+                const G = calM2Mul(calM2Mul(Pf, calM2T(F)), calM2Inv(Pn));
+                const dx = [xs[0] - xn[0], xs[1] - xn[1]];
+                xs = [xf[0] + G[0][0] * dx[0] + G[0][1] * dx[1], xf[1] + G[1][0] * dx[0] + G[1][1] * dx[1]];
+                const dP = [[Ps[0][0] - Pn[0][0], Ps[0][1] - Pn[0][1]], [Ps[1][0] - Pn[1][0], Ps[1][1] - Pn[1][1]]];
+                const GdPGt = calM2Mul(calM2Mul(G, dP), calM2T(G));
+                Ps = [[Pf[0][0] + GdPGt[0][0], Pf[0][1] + GdPGt[0][1]], [Pf[1][0] + GdPGt[1][0], Pf[1][1] + GdPGt[1][1]]];
+                Object.assign(series[k], {
+                    sTrend: xs[0], sTrendSd: Math.sqrt(Math.max(0, Ps[0][0])),
+                    sCorrection: xs[1], sCorrectionSd: Math.sqrt(Math.max(0, Ps[1][1]))
+                });
+            }
+
+            const windowStart = anchorDate < startDate ? startDate : anchorDate;
+            const windowWeighIns = weighDays.filter(d => d.date >= windowStart);
+            const correctionSd = Math.sqrt(Math.max(0, P[1][1]));
             return {
-                ...base,
-                eligible: true,
-                reasons: [],
-                slopeLbPerDay: ts.slope,
-                observedDeficit,
-                observedDeficitRange: [-ts.upper * kcal, -ts.lower * kcal],
-                endpointDeficit,
-                firstEndpointAvg: firstAvg,
-                lastEndpointAvg: lastAvg,
-                endpointElapsedDays: elapsed,
-                disagreement: Math.abs(observedDeficit - endpointDeficit),
-                meanRawDeficit,
-                meanRawTdee: tdees.length ? calMean(tdees) : null,
-                meanIntake: calMean(intake.map(d => d.calories)),
-                gap,
-                endpointGap: endpointDeficit - meanRawDeficit,
-                waterSensitivity,
-                waterReversible: Math.abs(gap) <= waterSensitivity,
-                observedLbPerWeek: -ts.slope * 7,
-                predictedLbPerWeek: meanRawDeficit * 7 / kcal
+                ok: true,
+                startDate,
+                endDate,
+                series,
+                trackedDays,
+                weighInDays: weighDays.length,
+                downweighted,
+                excludedWeighIns: selection.excluded,
+                current: {
+                    date: endDate,
+                    trend: x[0],
+                    trendSd: Math.sqrt(Math.max(0, P[0][0])),
+                    correction: calClamp(x[1], -C.MAX_ABS_CORRECTION_KCAL, C.MAX_ABS_CORRECTION_KCAL),
+                    correctionSd,
+                    confidence: calConfidenceForSd(correctionSd)
+                },
+                window: {
+                    startDate: windowStart,
+                    days: last - calDayNumber(windowStart),
+                    change: x[0] - x[2],
+                    changeSd: Math.sqrt(Math.max(0, P[0][0] + P[2][2] - 2 * P[0][2])),
+                    weighIns: windowWeighIns.length,
+                    spanDays: windowWeighIns.length
+                        ? calDayNumber(windowWeighIns[windowWeighIns.length - 1].date) - calDayNumber(windowWeighIns[0].date) : 0,
+                    trackedDays: series.filter(r => r.date >= windowStart && r.tracked).length
+                }
             };
         }
 
+        // Correction for a date: smoothed (best hindsight) inside the run,
+        // the earliest estimate before it, the live estimate from today on.
+        function calCorrectionForDate(run, dateStr) {
+            if (!run || !run.ok || !calIsDate(dateStr)) return 0;
+            const C = TDEE_CALIBRATION;
+            let value;
+            if (dateStr >= run.endDate) value = run.current.correction;
+            else if (dateStr < run.startDate) value = run.series[0].sCorrection;
+            else value = run.series[calDayNumber(dateStr) - calDayNumber(run.startDate)]?.sCorrection ?? run.current.correction;
+            return calClamp(value, -C.MAX_ABS_CORRECTION_KCAL, C.MAX_ABS_CORRECTION_KCAL);
+        }
+
+        // 4-week weight-trend rate from the filter (null when the window has
+        // too few weigh-ins to say anything about the scale itself).
+        function calTrendFromRun(run) {
+            const C = TDEE_CALIBRATION;
+            if (!run || !run.ok) return null;
+            const w = run.window;
+            if (w.days < 7 || w.weighIns < C.TREND_MIN_WEIGHINS || w.spanDays < C.TREND_MIN_SPAN_DAYS) return null;
+            const weeks = w.days / 7;
+            const lbPerWeek = w.change / weeks;
+            const sd = w.changeSd / weeks;
+            return {
+                startDate: w.startDate, endDate: run.endDate, points: w.weighIns, spanDays: w.spanDays,
+                lbPerWeek, lbPerWeekSd: sd,
+                lbPerWeekRange: [lbPerWeek - C.CI_Z * sd, lbPerWeek + C.CI_Z * sd],
+                trendWeight: run.current.trend, trendWeightSd: run.current.trendSd
+            };
+        }
+
+        /**
+         * Out-of-sample accuracy check. From every past morning weigh-in,
+         * predict the weight `horizon` days later from the food log alone —
+         * once with the original formula and once with the correction the
+         * filter had learned BY THAT MORNING — and compare with the scale.
+         * Errors are predicted − actual (lb): negative = predicted more loss
+         * than happened.
+         */
+        function calBacktestEnergyBalance(run, horizon = TDEE_CALIBRATION.BACKTEST_HORIZON_DAYS) {
+            const C = TDEE_CALIBRATION;
+            if (!run || !run.ok) return { horizon, n: 0 };
+            const s = run.series;
+            const model = [], calibrated = [];
+            let firstOrigin = null, lastOrigin = null;
+            for (let i = 0; i + horizon < s.length; i++) {
+                if (s[i].weight == null) continue;
+                const j = i + horizon;
+                const near = [];
+                for (let k = j - C.BACKTEST_MATCH_DAYS; k <= j + C.BACKTEST_MATCH_DAYS; k++) {
+                    if (k >= 0 && k < s.length && s[k].weight != null) near.push(s[k].weight);
+                }
+                if (!near.length) continue;
+                let tracked = 0, balance = 0;
+                for (let k = i; k < j; k++) {
+                    if (!s[k].tracked) continue;
+                    tracked++;
+                    balance += s[k].intake - s[k].modelTdee;
+                }
+                if (tracked < C.BACKTEST_MIN_TRACKED_SHARE * horizon) continue;
+                const actual = calMean(near);
+                model.push(s[i].trend + balance / C.KCAL_PER_LB - actual);
+                calibrated.push(s[i].trend + (balance - s[i].correction * tracked) / C.KCAL_PER_LB - actual);
+                if (!firstOrigin) firstOrigin = s[i].date;
+                lastOrigin = s[i].date;
+            }
+            const summarize = e => ({
+                bias: calMean(e),
+                mae: calMean(e.map(Math.abs)),
+                rmse: Math.sqrt(calMean(e.map(v => v * v)))
+            });
+            if (!model.length) return { horizon, n: 0 };
+            return { horizon, n: model.length, firstOrigin, lastOrigin, model: summarize(model), calibrated: summarize(calibrated) };
+        }
+
+        // Prediction paths for the "Model vs. Weight Trend" chart: from the
+        // smoothed trend on fromDate, accumulate each food-logged day's balance
+        // with the original formula and with the correction known that
+        // morning (out of sample). Unlogged days add nothing to either path.
+        function calPredictionPaths(run, fromDate) {
+            if (!run || !run.ok) return [];
+            const start = Math.max(0, calDayNumber(fromDate) - calDayNumber(run.startDate));
+            const s = run.series;
+            if (start >= s.length) return [];
+            const rho = TDEE_CALIBRATION.KCAL_PER_LB;
+            let model = s[start].sTrend, calibrated = s[start].sTrend;
+            const out = [];
+            for (let k = start; k < s.length; k++) {
+                out.push({ date: s[k].date, weight: s[k].weight, trend: s[k].sTrend, model, calibrated, tracked: s[k].tracked });
+                if (s[k].tracked) {
+                    model += (s[k].intake - s[k].modelTdee) / rho;
+                    calibrated += (s[k].intake - s[k].modelTdee - s[k].correction) / rho;
+                }
+            }
+            return out;
+        }
+
+        // Union of two devices' legacy weekly-ledger histories (Oct 2026
+        // engine). No longer read for any estimate; kept so the synced
+        // settings field merges deterministically instead of being dropped.
         function calNormalizeHistory(history) {
             const list = Array.isArray(history) ? history
                 : (history && typeof history === 'object') ? Object.values(history) : [];
@@ -10329,21 +10469,6 @@
                     String(a.computedAt || '').localeCompare(String(b.computedAt || '')));
         }
 
-        // Effective-dated lookup: the adjustment in force on dateStr. Dates
-        // before the first entry are never touched (0), so changing the
-        // correction never re-penalizes days that were already lived.
-        function calAdjustmentForDate(history, dateStr) {
-            const C = TDEE_CALIBRATION;
-            let adjustment = 0;
-            for (const h of calNormalizeHistory(history)) {
-                if (h.effectiveDate <= dateStr) adjustment = h.adjustment;
-                else break;
-            }
-            return calClamp(adjustment, C.MIN_ADJUSTMENT_KCAL, C.MAX_ADJUSTMENT_KCAL);
-        }
-
-        // Union of two devices' calibration histories, keyed by the evaluated
-        // date; on a collision the first-committed entry wins (deterministic).
         function calMergeHistories(a, b) {
             const byKey = new Map();
             for (const h of [...calNormalizeHistory(a), ...calNormalizeHistory(b)]) {
@@ -10354,149 +10479,43 @@
             return calNormalizeHistory([...byKey.values()]);
         }
 
-        function calShouldCommit(history, endDate) {
-            const last = calNormalizeHistory(history)
-                .map(h => h.evaluatedThrough)
-                .filter(calIsDate)
-                .sort()
-                .pop();
-            return !last || calDayNumber(endDate) - calDayNumber(last) >= TDEE_CALIBRATION.UPDATE_INTERVAL_DAYS;
-        }
-
-        /**
-         * Evaluate calibration as of input.endDate (the last COMPLETED day).
-         * input: { endDate, intakeDays: [{date, tracked, assumed, calories,
-         *   rawDeficit, rawTdee}], weighIns: [records], history: [entries] }
-         * Returns the evidence window, confidence, and the proposed adjustment
-         * that a weekly commit would record. Never mutates its input.
-         */
-        function evaluateTdeeCalibration(input) {
-            const C = TDEE_CALIBRATION;
-            const endDate = input.endDate;
-            const history = calNormalizeHistory(input.history);
-            const currentAdjustment = calAdjustmentForDate(history, calAddDays(endDate, 1));
-            const selection = selectCalibrationWeighIns(input.weighIns, endDate);
-            const weightDays = calFlagFluctuations(selection.days);
-
-            let window = null;
-            for (let days = C.MAX_WINDOW_DAYS; days >= C.WINDOW_DAYS; days -= C.WINDOW_STEP_DAYS) {
-                const candidate = calEvaluateWindow(input, days, weightDays);
-                if (candidate.eligible) { window = candidate; break; }
-                if (days === C.WINDOW_DAYS) window = candidate;
-            }
-
-            const result = {
-                endDate,
-                currentAdjustment,
-                window,
-                excludedWeighIns: selection.excluded,
-                duplicateReadings: selection.days.reduce((sum, d) => sum + d.duplicates, 0)
-            };
-            if (!window.eligible) {
-                return { ...result, eligible: false, confidence: 'collecting', decision: 'collecting',
-                    target: null, proposedAdjustment: currentAdjustment, step: 0, priorStable: 0 };
-            }
-
-            const disagree = window.disagreement > C.MAX_METHOD_DISAGREEMENT_KCAL;
-            const target = calRoundTo(calClamp(window.gap, C.MIN_ADJUSTMENT_KCAL, C.MAX_ADJUSTMENT_KCAL), C.ROUND_TO_KCAL);
-            const diff = target - currentAdjustment;
-            // Only reviews of EARLIER evidence count as independent support —
-            // re-evaluating an already-committed window must not vouch for itself
-            const prior = history
-                .filter(h => String(h.evaluatedThrough || calAddDays(h.effectiveDate, -1)) < endDate)
-                .sort((a, b) => String(b.evaluatedThrough || b.effectiveDate).localeCompare(String(a.evaluatedThrough || a.effectiveDate)));
-
-            let priorStable = 0;
-            for (const h of prior) {
-                if (Number.isFinite(h.target) && Math.abs(h.target - target) <= C.STABLE_TARGET_TOLERANCE_KCAL) priorStable++;
-                else break;
-            }
-
-            let decision = null;
-            let step = 0;
-            let proposedAdjustment = currentAdjustment;
-            if (disagree) {
-                decision = 'held-disagreement';
-            } else if (Math.abs(diff) < C.NOISE_KCAL) {
-                // Small gaps are noise unless the same direction keeps recurring
-                let repeats = diff === 0 ? 0 : 1;
-                for (const h of prior) {
-                    if (repeats === 0) break;
-                    const priorDiff = (h.target ?? NaN) - (h.previous ?? NaN);
-                    if (h.decision === 'held-noise' && Number.isFinite(priorDiff) && priorDiff !== 0 &&
-                        Math.sign(priorDiff) === Math.sign(diff)) repeats++;
-                    else break;
+        // Hampel filter + Theil–Sen: a model-free regression of the raw
+        // weigh-ins, shown beside the filter as an independent cross-check.
+        function calFlagFluctuations(days) {
+            const nums = days.map(d => calDayNumber(d.date));
+            return days.map((day, i) => {
+                const neighbors = [];
+                for (let j = 0; j < days.length; j++) {
+                    if (Math.abs(nums[j] - nums[i]) <= 3) neighbors.push(days[j].weight);
                 }
-                if (repeats < C.NOISE_REPEAT_EVALUATIONS) decision = 'held-noise';
-            }
-            if (!decision) {
-                let cap = prior.some(h => h.decision === 'applied') ? C.WEEKLY_STEP_CAP_KCAL : C.FIRST_STEP_CAP_KCAL;
-                if (window.waterReversible) cap = Math.min(cap, C.WATER_LIMITED_STEP_CAP_KCAL);
-                step = calClamp(diff * C.SMOOTHING, -cap, cap);
-                proposedAdjustment = calClamp(calRoundTo(currentAdjustment + step, C.ROUND_TO_KCAL),
-                    C.MIN_ADJUSTMENT_KCAL, C.MAX_ADJUSTMENT_KCAL);
-                step = proposedAdjustment - currentAdjustment;
-                decision = step === 0 ? 'held-noise' : 'applied';
-            }
-
-            const moderate = !disagree && !window.waterReversible &&
-                window.intakeCoverage >= C.MODERATE_MIN_INTAKE_COVERAGE &&
-                window.weighInDays >= C.MODERATE_MIN_WEIGHIN_DAYS &&
-                priorStable >= C.MODERATE_MIN_PRIOR_STABLE;
-            const high = moderate &&
-                window.windowDays >= C.HIGH_MIN_WINDOW_DAYS &&
-                window.intakeCoverage >= C.HIGH_MIN_INTAKE_COVERAGE &&
-                window.weighInCoverage >= C.HIGH_MIN_WEIGHIN_COVERAGE &&
-                window.disagreement <= C.HIGH_MAX_DISAGREEMENT_KCAL &&
-                priorStable >= C.HIGH_MIN_PRIOR_STABLE;
-
-            return {
-                ...result,
-                eligible: true,
-                confidence: high ? 'high' : moderate ? 'moderate' : 'provisional',
-                decision,
-                disagree,
-                target,
-                step,
-                proposedAdjustment,
-                priorStable
-            };
+                if (neighbors.length < 4) return { ...day, fluctuation: false };
+                const med = calMedian(neighbors);
+                const mad = calMedian(neighbors.map(v => Math.abs(v - med)));
+                const limit = Math.max(3 * 1.4826 * mad, 1.5);
+                return { ...day, fluctuation: Math.abs(day.weight - med) > limit };
+            });
         }
 
-        // The compact, Firebase-safe ledger entry a weekly commit stores
-        // (numbers and strings only — Firebase drops nulls).
-        function calBuildHistoryEntry(evaluation, computedAt) {
-            const w = evaluation.window;
-            const r = v => Math.round(v);
-            const entry = {
-                evaluatedThrough: evaluation.endDate,
-                effectiveDate: calAddDays(evaluation.endDate, 1),
-                computedAt,
-                adjustment: evaluation.proposedAdjustment,
-                previous: evaluation.currentAdjustment,
-                target: evaluation.target,
-                decision: evaluation.decision,
-                confidence: evaluation.confidence,
-                gap: r(w.gap),
-                observedDeficit: r(w.observedDeficit),
-                endpointDeficit: r(w.endpointDeficit),
-                meanRawDeficit: r(w.meanRawDeficit),
-                meanIntake: r(w.meanIntake),
-                waterSensitivity: r(w.waterSensitivity),
-                disagreement: r(w.disagreement),
-                windowStart: w.windowStart,
-                windowDays: w.windowDays,
-                intakeDays: w.intakeDays,
-                weighInDays: w.weighInDays,
-                observedLbPerWeek: Math.round(w.observedLbPerWeek * 100) / 100,
-                predictedLbPerWeek: Math.round(w.predictedLbPerWeek * 100) / 100
-            };
-            if (Number.isFinite(w.meanRawTdee)) entry.meanRawTdee = r(w.meanRawTdee);
-            return entry;
+        function calTheilSen(points, z = TDEE_CALIBRATION.CI_Z) {
+            const slopes = [];
+            for (let i = 0; i < points.length; i++) {
+                for (let j = i + 1; j < points.length; j++) {
+                    const dx = points[j].x - points[i].x;
+                    if (dx !== 0) slopes.push((points[j].y - points[i].y) / dx);
+                }
+            }
+            if (!slopes.length) return null;
+            slopes.sort((p, q) => p - q);
+            const slope = calMedian(slopes);
+            const intercept = calMedian(points.map(p => p.y - slope * p.x));
+            const n = points.length;
+            const N = slopes.length;
+            const c = z * Math.sqrt(n * (n - 1) * (2 * n + 5) / 18);
+            const lowerIndex = Math.max(0, Math.round((N - c) / 2) - 1);
+            const upperIndex = Math.min(N - 1, Math.round((N + c) / 2));
+            return { slope, intercept, lower: slopes[lowerIndex], upper: slopes[upperIndex], n, pairs: N };
         }
 
-        // Smoothed observed weight trend for display and goal forecasts
-        // (Theil–Sen over standardized readings; never used for calibration).
         function calObservedWeightTrend(weighIns, endDate, windowDays = TDEE_CALIBRATION.TREND_WINDOW_DAYS) {
             const C = TDEE_CALIBRATION;
             const start = calAddDays(endDate, -(windowDays - 1));
@@ -10517,7 +10536,7 @@
         }
 
         // Date range at which the trend reaches goalWeight, or a reason it
-        // can't be forecast. Uses the slope interval, never a point estimate.
+        // can't be forecast. Uses the rate's range, never a point estimate.
         function calGoalForecast(trend, goalWeight, fromDate) {
             const C = TDEE_CALIBRATION;
             if (!trend) return { status: 'insufficient' };
@@ -10687,11 +10706,9 @@
             // triggers this refresh
             state.today.activeCalories = Math.max(state.today.activeCalories || 0, todayWorkoutCals);
             const liveWeight = getWeightForDate(state.today.date || getLocalDateString());
-            const tdee = calculateTDEE(
-                liveWeight,
-                state.profile.height_cm,
-                state.profile.age,
-                state.today.date);
+            // Targets plan against the calibrated TDEE (formula + learned
+            // correction) so a mode's deficit is a real deficit.
+            const tdee = getPlanningTDEE(liveWeight, state.today.date);
             state.today.targets = applyTargetModifiers(calculateTargets(
                 state.today.mode, tdee,
                 liveWeight,
@@ -10881,21 +10898,20 @@
         }
 
         // ============================================================
-        // TDEE CALIBRATION — state glue (Oct 2026). The engine above is pure;
-        // these read state. Settings: tdeeCalibrationEnabled (default on),
-        // tdeeCalibrationLog (effective-dated ledger, synced with settings).
+        // ADAPTIVE TDEE — state glue (Nov 2026). The engine above is pure;
+        // these read state. Setting: tdeeCalibrationEnabled (default on).
+        // The calibrated TDEE (original formula + learned correction) is THE
+        // TDEE for every live display, deficit and mode target. Stored logs
+        // keep the RAW formula TDEE/deficit, which is what the filter reads.
+        // The Oct 2026 weekly ledger (settings.tdeeCalibrationLog) is no
+        // longer read; it stays in synced settings untouched.
         // ============================================================
         let _rawDeficitScope = 0;
-        let _calHistoryCache = { source: undefined, list: [] };
+        let _energyRun = { key: null, quick: null, run: null, backtests: {} };
+        let _energyTickKey = null;
 
         function isTdeeCalibrationEnabled() {
             return state.settings?.tdeeCalibrationEnabled !== false;
-        }
-
-        function getTdeeCalibrationHistory() {
-            const source = state.settings?.tdeeCalibrationLog;
-            if (_calHistoryCache.source !== source) _calHistoryCache = { source, list: calNormalizeHistory(source) };
-            return _calHistoryCache.list;
         }
 
         // Exports run inside this scope so every existing field keeps its raw
@@ -10905,30 +10921,84 @@
             try { return fn(); } finally { _rawDeficitScope--; }
         }
 
-        // Ledger adjustment in force on dateStr (0 when disabled or before the
-        // first effective date). Ignores the raw scope — for labeled extras.
+        // Completed food-logged days with the RAW formula TDEE stored on
+        // them, plus every weigh-in. The live day's food is never included.
+        function buildEnergyBalanceInput() {
+            const endDate = getAnalyticsCutoffDate();
+            const days = [];
+            for (const [date, log] of Object.entries(state.dailyLogs || {})) {
+                if (!calIsDate(date) || date >= endDate || !log || !hasNutritionData(log)) continue;
+                const modelTdee = (typeof log.tdee === 'number' && log.tdee > 0) ? log.tdee : getTDEEForDate(date);
+                days.push({ date, intake: Number(log.calories), modelTdee });
+            }
+            return { endDate, days, weighIns: getValues(state.weighIns || {}) };
+        }
+
+        // Everything the filter reads, as one string — the run is reused
+        // until any of it changes.
+        function energyBalanceKey() {
+            const parts = [getAnalyticsCutoffDate()];
+            for (const [date, log] of Object.entries(state.dailyLogs || {})) {
+                if (log) parts.push(`${date}:${log.calories}:${log.tdee}:${hasNutritionData(log) ? 1 : 0}`);
+            }
+            for (const w of getValues(state.weighIns || {})) {
+                if (w) parts.push(`${w.date}:${w.weight}:${w.weighInContext || ''}:${w.excludeFromCalibration ? 1 : 0}:${w.source || ''}`);
+            }
+            return parts.join('|');
+        }
+
+        // The filter over the full history, memoized. The full key is built
+        // at most once per task (renders ask hundreds of times); a cheap key
+        // catches mutations made later in the same task.
+        function getEnergyBalanceRun() {
+            const quick = `${getAnalyticsCutoffDate()}|${state._version}|${getCount(state.weighIns)}|${Object.keys(state.dailyLogs || {}).length}`;
+            if (_energyTickKey === null || _energyRun.quick !== quick) {
+                _energyTickKey = energyBalanceKey();
+                (typeof queueMicrotask === 'function' ? queueMicrotask : fn => Promise.resolve().then(fn))(() => { _energyTickKey = null; });
+            }
+            if (_energyRun.key !== _energyTickKey) {
+                let run;
+                try { run = calRunEnergyBalance(buildEnergyBalanceInput()); }
+                catch (e) { console.warn('TDEE engine error:', e); run = { ok: false, series: [], trackedDays: 0, weighInDays: 0 }; }
+                _energyRun = { key: _energyTickKey, quick, run, backtests: {} };
+            }
+            _energyRun.quick = quick;
+            return _energyRun.run;
+        }
+
+        function getEnergyBalanceBacktest(horizon = TDEE_CALIBRATION.BACKTEST_HORIZON_DAYS) {
+            const run = getEnergyBalanceRun();
+            if (!_energyRun.backtests[horizon]) _energyRun.backtests[horizon] = calBacktestEnergyBalance(run, horizon);
+            return _energyRun.backtests[horizon];
+        }
+
+        // Learned correction for a date (0 when disabled). Ignores the raw
+        // scope — used for labeled extras and for the live targets.
         function getActiveCalibrationAdjustment(dateStr) {
             if (!isTdeeCalibrationEnabled() || !calIsDate(dateStr)) return 0;
-            return calAdjustmentForDate(getTdeeCalibrationHistory(), dateStr);
+            return Math.round(calCorrectionForDate(getEnergyBalanceRun(), dateStr));
         }
 
         function getCalibrationAdjustmentForDate(dateStr) {
             return _rawDeficitScope > 0 ? 0 : getActiveCalibrationAdjustment(dateStr);
         }
 
-        // Labeled extras for text exports: the correction in force today and
-        // the sum it would add over the given food-logged dates. null when
-        // calibration is off or nothing is in force (export stays unchanged).
+        // Labeled extras for text exports: today's correction and the sum it
+        // adds over the given food-logged dates. null when off or zero.
         function getCalibrationExportInfo(dates = []) {
             if (!isTdeeCalibrationEnabled()) return null;
-            const history = getTdeeCalibrationHistory();
-            if (!history.length) return null;
-            const liveDate = state.today?.date || getLocalDateString();
-            const current = getActiveCalibrationAdjustment(liveDate);
+            const run = getEnergyBalanceRun();
+            if (!run.ok) return null;
+            const current = getActiveCalibrationAdjustment(state.today?.date || getLocalDateString());
             const periodTotal = dates.reduce((sum, d) => sum + getActiveCalibrationAdjustment(d), 0);
             if (current === 0 && periodTotal === 0) return null;
-            const entry = [...history].reverse().find(h => h.effectiveDate <= liveDate) || history[history.length - 1];
-            return { current, periodTotal, confidence: entry?.confidence || 'provisional', effectiveDate: entry?.effectiveDate || '' };
+            return {
+                current, periodTotal,
+                confidence: run.current.confidence,
+                sd: Math.round(run.current.correctionSd),
+                trackedDays: run.trackedDays,
+                weighInDays: run.weighInDays
+            };
         }
 
         // First date that is NOT completed: the live day, or the system date
@@ -10962,79 +11032,45 @@
             return getDisplayDeficitForDate(dateStr);
         }
 
-        function buildTdeeCalibrationInput() {
-            const endDate = getLastCompletedDate();
-            const intakeDays = [];
-            for (const [date, log] of Object.entries(state.dailyLogs || {})) {
-                if (!calIsDate(date) || date > endDate || !log) continue;
-                const tracked = hasNutritionData(log);
-                intakeDays.push({
-                    date,
-                    tracked,
-                    assumed: !tracked && log.nutritionStatus === 'assumed',
-                    calories: Number(log.calories),
-                    rawDeficit: typeof log.deficit === 'number' ? log.deficit : NaN,
-                    rawTdee: typeof log.tdee === 'number' ? log.tdee : NaN
-                });
-            }
-            return { endDate, intakeDays, weighIns: getValues(state.weighIns || {}), history: getTdeeCalibrationHistory() };
-        }
-
-        // Live evaluation (provisional findings shown as data arrives) plus
-        // the adjustment actually in force today.
+        // Current calibration state for the homepage details and Progress card.
         function getTdeeCalibrationStatus() {
-            const input = buildTdeeCalibrationInput();
-            const evaluation = evaluateTdeeCalibration(input);
-            const history = input.history;
-            const evaluated = history.map(h => h.evaluatedThrough).filter(calIsDate).sort();
-            const lastEvaluated = evaluated[evaluated.length - 1] || null;
+            const run = getEnergyBalanceRun();
+            const liveDate = state.today?.date || getLocalDateString();
             return {
                 enabled: isTdeeCalibrationEnabled(),
-                evaluation,
-                history,
-                appliedAdjustment: getActiveCalibrationAdjustment(state.today?.date || getLocalDateString()),
-                lastEntry: history.length ? history[history.length - 1] : null,
-                lastApplied: [...history].reverse().find(h => h.decision === 'applied') || null,
-                nextEvaluationAfter: lastEvaluated ? calAddDays(lastEvaluated, TDEE_CALIBRATION.UPDATE_INTERVAL_DAYS) : null
+                run,
+                current: run.ok ? run.current : null,
+                confidence: run.ok ? run.current.confidence : 'collecting',
+                appliedAdjustment: getActiveCalibrationAdjustment(liveDate),
+                trackedDays: run.trackedDays || 0,
+                weighInDays: run.weighInDays || 0
             };
         }
 
-        // Weekly commit of a new ledger entry. Same guarded retry pattern as
-        // the history upgrade: never runs against half-loaded or pre-upgrade
-        // state, never more than once per 7 completed days, never while off.
-        function maybeCommitTdeeCalibration(retryCount = 0) {
-            if (!isTdeeCalibrationEnabled()) return false;
-            const ready = pinValidated && !isInitialLoad && hasLoadedFromCloud && state._dataLoaded &&
-                (state.calcSchemaVersion || 0) >= CALC_SCHEMA_VERSION;
-            if (!ready) {
-                if (retryCount < 60) setTimeout(() => maybeCommitTdeeCalibration(retryCount + 1), 2000);
-                return false;
-            }
-            const input = buildTdeeCalibrationInput();
-            if (!calShouldCommit(input.history, input.endDate)) return false;
-            const evaluation = evaluateTdeeCalibration(input);
-            if (!evaluation.eligible) return false;
-            state.settings = state.settings || {};
-            state.settings.tdeeCalibrationLog = calMergeHistories(input.history,
-                [calBuildHistoryEntry(evaluation, new Date().toISOString())]);
-            saveState();
-            try {
-                renderSimpleView();
-                if (typeof refreshProgressIfActive === 'function') refreshProgressIfActive();
-            } catch (e) { console.warn('Post-calibration re-render error:', e); }
-            return true;
-        }
-
-        // Live-day TDEE for display: the raw model and the calibrated estimate.
+        // Live-day TDEE: the original formula and the calibrated estimate.
         function getLiveTdeeEstimate() {
             const liveDate = state.today?.date || getLocalDateString();
             const raw = calculateTDEE(getWeightForDate(liveDate), state.profile.height_cm, state.profile.age, state.today?.date);
             const adjustment = getCalibrationAdjustmentForDate(liveDate);
-            return { raw, adjustment, calibrated: raw + adjustment, date: liveDate };
+            const run = getEnergyBalanceRun();
+            const sd = adjustment !== 0 && run.ok ? Math.round(run.current.correctionSd) : null;
+            return { raw, adjustment, calibrated: raw + adjustment, sd, date: liveDate };
         }
 
-        // Smoothed observed weight trend through today (display/forecasts).
+        // TDEE that live targets plan against: the calibrated estimate when
+        // calibration is on (never stored as a log's tdee).
+        function getPlanningTDEE(weight_lbs, dateStr) {
+            return calculateTDEE(weight_lbs, state.profile.height_cm, state.profile.age, dateStr) +
+                getActiveCalibrationAdjustment(dateStr || state.today?.date || getLocalDateString());
+        }
+
+        // 4-week weight trend through today (rate card, forecasts). From the
+        // filter, which fuses every weigh-in with the food log between them;
+        // falls back to a plain regression of weigh-ins for other windows.
         function getObservedWeightTrend(windowDays) {
+            if (windowDays == null || windowDays === TDEE_CALIBRATION.TREND_WINDOW_DAYS) {
+                return calTrendFromRun(getEnergyBalanceRun());
+            }
             return calObservedWeightTrend(getValues(state.weighIns || {}), getLocalDateString(), windowDays);
         }
 
@@ -12221,40 +12257,56 @@
         // One explanation of the calibration state, shared by the homepage
         // details and the Progress card so the wording never diverges.
         function describeTdeeCalibration(status) {
-            const ev = status.evaluation;
-            const w = ev.window;
-            const adj = status.appliedAdjustment;
             if (!status.enabled) {
-                return { label: 'Off', basis: 'Calibration is turned off in Settings — the original model estimate is shown.' };
+                return { label: 'Off', basis: 'Calibration is turned off in Settings — the original formula is used everywhere.' };
             }
-            if (ev.eligible) {
+            const run = status.run;
+            if (!run.ok) {
+                return { label: CALIBRATION_CONFIDENCE_LABELS.collecting, basis: 'Needs morning weigh-ins: the correction is learned by comparing your food log with the scale.' };
+            }
+            const since = formatShortDate(run.startDate, run.startDate.slice(0, 4) !== run.endDate.slice(0, 4));
+            return {
+                label: CALIBRATION_CONFIDENCE_LABELS[status.confidence],
+                basis: `Re-learned every day from ${run.trackedDays} food-logged days and ${run.weighInDays} morning weigh-ins since ${since}.`
+            };
+        }
+
+        // The filtered correction's move between the two most recent mornings
+        // that had a weigh-in, and what that weigh-in said (null if none).
+        function getLatestCalibrationUpdate(run) {
+            if (!run?.ok) return null;
+            const s = run.series;
+            for (let i = s.length - 1; i > 0; i--) {
+                if (s[i].weight == null) continue;
                 return {
-                    label: CALIBRATION_CONFIDENCE_LABELS[ev.confidence],
-                    basis: `Based on ${w.intakeDays} days of food logs and ${w.weighInDays} morning weigh-ins (${formatShortDate(w.windowStart)} – ${formatShortDate(w.windowEnd)})`
+                    date: s[i].date, weight: s[i].weight, predicted: s[i].predicted, predictedSd: s[i].predictedSd,
+                    downweighted: s[i].downweighted === true, before: s[i - 1].correction, after: s[i].correction
                 };
             }
-            const needs = `Still needed: ${w.reasons.join('; ')}.`;
-            return adj !== 0
-                ? { label: 'Holding last correction', basis: `Recent data no longer meets the evidence rules, so the last correction is kept unchanged. ${needs}` }
-                : { label: CALIBRATION_CONFIDENCE_LABELS.collecting, basis: needs };
+            return null;
         }
 
         function buildTdeeEstimateHtml(estimate, status) {
             const info = describeTdeeCalibration(status);
             const adj = estimate.adjustment;
             const line = (label, value, cls = '') => `<div class="tdee-line ${cls}"><span>${label}</span><strong>${value}</strong></div>`;
-            let html = line('Original estimate', `${formatNumber(estimate.raw)} kcal`);
-            if (status.enabled) {
-                html += line('Calibration', `${formatSignedKcal(adj)} kcal`);
-                html += line('Adjusted estimate', `${formatNumber(estimate.raw + adj)} kcal`, 'total');
+            let html = line('Original formula', `${formatNumber(estimate.raw)} kcal`);
+            if (status.enabled && status.run.ok) {
+                html += line('Learned correction', `${formatSignedKcal(adj)} kcal${estimate.sd ? ` <span style="font-weight:400;color:var(--text-muted);">±${estimate.sd}</span>` : ''}`);
+                html += line('Your TDEE (calibrated)', `${formatNumber(estimate.calibrated)} kcal`, 'total');
             }
             html += `<div class="tdee-note"><strong>Calibration: ${escapeHtml(info.label)}</strong><br>${escapeHtml(info.basis)}</div>`;
+            const upd = status.enabled ? getLatestCalibrationUpdate(status.run) : null;
+            if (upd) {
+                const moved = Math.round(upd.after - upd.before);
+                html += `<div class="tdee-note">${escapeHtml(formatShortDate(upd.date))} weigh-in ${upd.weight} lb vs. ${upd.predicted.toFixed(1)} ± ${upd.predictedSd.toFixed(1)} expected from your log → correction ${moved === 0 ? 'unchanged' : `${formatSignedKcal(moved)} kcal`}${upd.downweighted ? ' (unusual reading, down-weighted)' : ''}.</div>`;
+            }
             if (status.enabled && adj !== 0) {
                 html += `<div class="tdee-note">${adj < 0
-                    ? 'Your recorded weight trend is slower than your calorie log predicts. A cautious adjustment is being applied to improve future estimates.'
-                    : 'Your recorded weight trend is faster than your calorie log predicts. A cautious adjustment is being applied to improve future estimates.'}</div>`;
+                    ? `Your scale shows less loss than your food log predicts, so your real deficit is about ${formatNumber(Math.abs(adj))} kcal/day smaller than the original formula says. Deficit, targets and Progress all use the calibrated TDEE. It already includes any under-logging — don't subtract extra.`
+                    : `Your scale shows more loss than your food log predicts, so your real deficit is about ${formatNumber(adj)} kcal/day larger than the original formula says. Deficit, targets and Progress all use the calibrated TDEE.`}</div>`;
             }
-            html += '<div class="tdee-note">Estimates, not measurements: original = BMR × activity + 7-day average of imported workouts. Calibration reflects model error, unlogged intake, water and body-composition change together. It never changes your daily intake budget.</div>';
+            html += '<div class="tdee-note">Original formula = BMR (Mifflin-St Jeor) × activity + 7-day average of imported workouts. The correction lumps together under-logged food, formula and workout-calorie error and metabolic adaptation. It never changes your daily intake budget.</div>';
             return html;
         }
 
@@ -15404,12 +15456,7 @@
             // Calculate mode and targets
             const mode = calculateMode(sleepHours, isBrainDay);
             const setupWeight = getWeightForDate(getLocalDateString());
-            const tdee = calculateTDEE(
-                setupWeight,
-                state.profile.height_cm,
-                state.profile.age,
-                getLocalDateString()
-            );
+            const tdee = getPlanningTDEE(setupWeight, getLocalDateString());
             const targets = calculateTargets(mode, tdee, setupWeight, isBrainDay);
 
             // Update today's state
@@ -17193,7 +17240,7 @@ TDEE TODAY: ~${formatNumber(calculateTDEE(getWeightForDate(state.today.date || g
             const exportCal = getCalibrationExportInfo();
             if (exportCal && exportCal.current !== 0) {
                 const rawTdeeToday = calculateTDEE(getWeightForDate(state.today.date || getLocalDateString()), state.profile.height_cm, state.profile.age, state.today.date);
-                text += `CALIBRATED TDEE (estimate): ~${formatNumber(rawTdeeToday + exportCal.current)} (personal calibration ${formatSignedKcal(exportCal.current)}, ${CALIBRATION_CONFIDENCE_LABELS[exportCal.confidence] || exportCal.confidence})
+                text += `CALIBRATED TDEE (estimate): ~${formatNumber(rawTdeeToday + exportCal.current)} (learned correction ${formatSignedKcal(exportCal.current)} ±${exportCal.sd}, ${CALIBRATION_CONFIDENCE_LABELS[exportCal.confidence] || exportCal.confidence}; ${exportCal.trackedDays} food-logged days + ${exportCal.weighInDays} weigh-ins)
 CALIBRATED DEFICIT (estimate): ${formatSignedKcal(deficit + exportCal.current)} kcal
 `;
             }
@@ -17322,7 +17369,7 @@ CALIBRATED DEFICIT (estimate): ${formatSignedKcal(deficit + exportCal.current)} 
             const claudeCal = getCalibrationExportInfo();
             if (claudeCal && claudeCal.current !== 0) {
                 const rawTdeeNow = calculateTDEE(getWeightForDate(state.today.date || date), state.profile.height_cm, state.profile.age, state.today.date);
-                export_str += `CALIBRATION_ADJ:${claudeCal.current}|CALIBRATED_TDEE:${rawTdeeNow + claudeCal.current}|CALIBRATED_DEFICIT:${deficit + claudeCal.current}|CALIBRATION_CONFIDENCE:${claudeCal.confidence}|NOTE:estimate\n`;
+                export_str += `CALIBRATION_ADJ:${claudeCal.current}|CALIBRATED_TDEE:${rawTdeeNow + claudeCal.current}|CALIBRATED_DEFICIT:${deficit + claudeCal.current}|CALIBRATION_SD:${claudeCal.sd}|CALIBRATION_CONFIDENCE:${claudeCal.confidence}|NOTE:kalman_filter_estimate\n`;
             }
             export_str += `TARGET_PROTEIN:${targets.protein}g|ACTUAL_PROTEIN:${totals.protein}g\n`;
             export_str += `FLOOR:${targets.floor}|ACTIVE_CAL:${state.today.activeCalories || 0}\n`;
@@ -17683,7 +17730,7 @@ CALIBRATED DEFICIT (estimate): ${formatSignedKcal(deficit + exportCal.current)} 
             text += `TOTALS|WeeklyDeficit:${Math.round(weekData.totals.deficit)}|EstFatLoss:${(weekData.totals.deficit / 3500).toFixed(2)}lbs\n`;
             const weekCal = getCalibrationExportInfo(weekData.days.filter(d => d.nutritionTracked && d.deficit != null).map(d => d.date));
             if (weekCal) {
-                text += `CALIBRATION|Adj:${weekCal.current}|Confidence:${weekCal.confidence}|CalibratedWeeklyDeficit:${Math.round(weekData.totals.deficit + weekCal.periodTotal)}|Note:estimate\n`;
+                text += `CALIBRATION|Adj:${weekCal.current}|SD:${weekCal.sd}|Confidence:${weekCal.confidence}|CalibratedWeeklyDeficit:${Math.round(weekData.totals.deficit + weekCal.periodTotal)}|Note:estimate\n`;
             }
             text += `WORKOUTS|Count:${weekData.totals.workouts}`;
             if (Object.keys(weekData.workoutTypes).length > 0) {
@@ -17920,21 +17967,23 @@ CALIBRATED DEFICIT (estimate): ${formatSignedKcal(deficit + exportCal.current)} 
             log.push(`  Workout calories: ${activeInfo.avg} (${activeInfo.days}-day avg)`);
             log.push(`  TOTAL TDEE: ${baseTDEE} + ${activeInfo.avg} = ${tdee} cal/day`);
             const logCal = getCalibrationExportInfo();
+            // Targets plan against the calibrated TDEE (same as refreshTodayTargets)
+            const planTdee = tdee + getActiveCalibrationAdjustment(state.today?.date || getLocalDateString());
             if (logCal && logCal.current !== 0) {
-                log.push(`  Personal calibration (estimate): ${formatSignedKcal(logCal.current)} → ${tdee + logCal.current} cal/day (${logCal.confidence}; in force from ${logCal.effectiveDate}; display only — targets use TOTAL TDEE)`);
+                log.push(`  Learned correction (Kalman filter, re-fit daily): ${formatSignedKcal(logCal.current)} ±${logCal.sd} → CALIBRATED TDEE ${planTdee} cal/day (${logCal.confidence}; ${logCal.trackedDays} food-logged days + ${logCal.weighInDays} weigh-ins; targets and live deficit use the calibrated TDEE)`);
             }
             log.push('');
 
             log.push('MODE-BASED TARGETS:');
             const mode = state.today?.mode || 'GREEN';
             const deficits = { 'GREEN': 500, 'YELLOW': 300, 'ORANGE': 0 };
-            const floors = { 'GREEN': 1900, 'YELLOW': 2000, 'ORANGE': tdee };
+            const floors = { 'GREEN': 1900, 'YELLOW': 2000, 'ORANGE': planTdee };
 
             log.push(`  Mode: ${mode}`);
             log.push(`  Deficit: ${deficits[mode]} cal`);
-            log.push(`  Raw target: ${tdee} - ${deficits[mode]} = ${tdee - deficits[mode]} cal`);
+            log.push(`  Raw target: ${planTdee} - ${deficits[mode]} = ${planTdee - deficits[mode]} cal`);
             log.push(`  Floor: ${floors[mode]} cal`);
-            log.push(`  Final calorie target: ${Math.max(tdee - deficits[mode], floors[mode])} cal`);
+            log.push(`  Final calorie target: ${Math.max(planTdee - deficits[mode], floors[mode])} cal`);
             log.push('');
 
             // Exam stress multiplier
@@ -19632,11 +19681,10 @@ CALIBRATED DEFICIT (estimate): ${formatSignedKcal(deficit + exportCal.current)} 
                 const label = `${formatShortDate(ds)}: ${valid.has(ds) ? 'standard morning weigh-in' : excluded.has(ds) ? 'reading not used for calibration' : 'no weigh-in'}`;
                 cells += `<div class="weighin-coverage-cell ${cls}" title="${label}" aria-label="${label}"></div>`;
             }
-            const C = TDEE_CALIBRATION;
             return `<div class="weighin-coverage">
                 <strong>${validCount} of 28 days</strong> have a standard morning weigh-in (${formatShortDate(start)} – today)
                 <div class="weighin-coverage-strip">${cells}</div>
-                <div class="weighin-coverage-legend">Green = usable for calibration · amber = kept but not used. Calibration needs ${C.MIN_WEIGHIN_DAYS}+ days, ${C.MIN_ENDPOINT_WEIGHINS}+ in the first and last week of its window.</div>
+                <div class="weighin-coverage-legend">Green = used by the daily TDEE calibration · amber = kept but not used. Every weigh-in counts the day it's imported (backdated ones too) — more mornings = a tighter estimate, no minimum.</div>
             </div>`;
         }
 
@@ -20324,7 +20372,6 @@ CALIBRATED DEFICIT (estimate): ${formatSignedKcal(deficit + exportCal.current)} 
             }
             renderSimpleView();
             if (typeof refreshProgressIfActive === 'function') refreshProgressIfActive();
-            if (isTdeeCalibrationEnabled()) maybeCommitTdeeCalibration();
 
             saveState();
             closeSettingsModal();
@@ -22900,46 +22947,28 @@ CALIBRATED DEFICIT (estimate): ${formatSignedKcal(deficit + exportCal.current)} 
 
         // 1. Rate of Weight Loss Analysis
         // Research: Helms et al. 2014 — 0.5-1.0% BW/week optimal for muscle retention
+        // The rate is the filter's 4-week trend (weigh-ins fused with the food
+        // log, water spikes down-weighted); a plain Theil–Sen regression of the
+        // raw weigh-ins is shown beside it as an independent cross-check.
         function renderRateOfWeightLoss() {
             const container = document.getElementById('rateOfWeightLoss');
             if (!container) return;
+            const C = TDEE_CALIBRATION;
+            const wrap = inner => `<div style="background:var(--bg-secondary);border:1px solid var(--border-color);border-radius:14px;padding:18px;">${inner}</div>`;
 
-            // Same standardized readings as the calibration engine: one morning
-            // weight per day, duplicates collapsed, isolated water spikes and
-            // flagged readings left out. Single day-to-day pairs are never used
-            // as a "rate" — they mostly measure water.
-            const todayStr = getLocalDateString();
-            const days = calFlagFluctuations(selectCalibrationWeighIns(getValues(state.weighIns || {}), todayStr).days)
-                .filter(d => !d.fluctuation);
-            const trend = getObservedWeightTrend();
+            const run = getEnergyBalanceRun();
+            const trend = calTrendFromRun(run);
             if (!trend) {
-                const C = TDEE_CALIBRATION;
-                container.innerHTML = `<div style="background:var(--bg-secondary);border:1px solid var(--border-color);border-radius:14px;padding:18px;">
-                    <div style="font-size:0.82em;color:var(--text-muted);">The weight-loss rate uses a smoothed trend: ${C.TREND_MIN_WEIGHINS}+ morning weigh-ins spanning ${C.TREND_MIN_SPAN_DAYS}+ days within the last ${C.TREND_WINDOW_DAYS} (${days.filter(d => d.date >= calAddDays(todayStr, -(C.TREND_WINDOW_DAYS - 1))).length} so far). Daily morning weigh-ins work best.</div>
-                </div>`;
+                const w = run.ok ? run.window : null;
+                container.innerHTML = wrap(`<div style="font-size:0.82em;color:var(--text-muted);">The weight-loss rate needs ${C.TREND_MIN_WEIGHINS}+ morning weigh-ins spanning ${C.TREND_MIN_SPAN_DAYS}+ days within the last ${C.TREND_WINDOW_DAYS} (${w ? w.weighIns : 0} so far). Daily morning weigh-ins work best.</div>`);
                 return;
             }
 
-            // Chart: trailing 14-day Theil–Sen rate at each weigh-in in the last
-            // 12 weeks (needs 4+ readings spanning 7+ days to plot a point)
-            const rateData = [];
-            const chartStart = calAddDays(todayStr, -83);
-            days.forEach(day => {
-                if (day.date < chartStart) return;
-                const from = calAddDays(day.date, -13);
-                const pts = days.filter(d => d.date >= from && d.date <= day.date);
-                if (pts.length < 4 || calDayNumber(pts[pts.length - 1].date) - calDayNumber(pts[0].date) < 7) return;
-                const ts = calTheilSen(pts.map(d => ({ x: calDayNumber(d.date), y: d.weight })));
-                if (!ts) return;
-                const weeklyLoss = -ts.slope * 7;
-                rateData.push({ date: day.date, weight: day.weight, weeklyLoss, pctBW: day.weight > 0 ? (weeklyLoss / day.weight) * 100 : 0 });
-            });
-
-            // Current rate: the 28-day smoothed trend (with its range)
             const currentLoss = -trend.lbPerWeek;
             const currentPct = trend.trendWeight > 0 ? (currentLoss / trend.trendWeight) * 100 : 0;
             const rangeLow = -trend.lbPerWeekRange[1];
             const rangeHigh = -trend.lbPerWeekRange[0];
+            const raw = calObservedWeightTrend(getValues(state.weighIns || {}), run.endDate);
 
             // Classification — observations, not instructions
             let badgeClass, badgeText, adviceText;
@@ -22958,176 +22987,139 @@ CALIBRATED DEFICIT (estimate): ${formatSignedKcal(deficit + exportCal.current)} 
             } else if (currentPct > 0) {
                 badgeClass = 'slow';
                 badgeText = 'Very Slow';
-                adviceText = 'The trend is nearly flat. Water and glycogen shifts can mask fat loss for a few weeks; the TDEE Calibration card compares this trend with your calorie log.';
+                adviceText = 'The trend is nearly flat. The TDEE Calibration card shows how your food log and the scale compare.';
             } else {
                 badgeClass = 'slow';
                 badgeText = 'Flat / Rising';
-                adviceText = 'No downward trend in this window. Water and glycogen shifts can mask fat loss for a few weeks — keep weighing in each morning; the TDEE Calibration card compares this trend with your calorie log.';
+                adviceText = 'No downward trend in this window. Keep weighing in each morning; the TDEE Calibration card shows how your food log and the scale compare.';
             }
 
-            // Build SVG mini chart
-            const chartWidth = 280;
-            const chartHeight = 80;
-            const padding = { top: 10, right: 15, bottom: 20, left: 35 };
-            const plotW = chartWidth - padding.left - padding.right;
-            const plotH = chartHeight - padding.top - padding.bottom;
+            // Chart: 14-day change of the smoothed trend, as % BW/week, last 12 weeks
+            const s = run.series;
+            const from = calAddDays(run.endDate, -83);
+            const dates = [], pct = [];
+            for (let i = 14; i < s.length; i++) {
+                if (s[i].date < from) continue;
+                const lossPerWeek = (s[i - 14].sTrend - s[i].sTrend) / 2;
+                dates.push(s[i].date);
+                pct.push(s[i].sTrend > 0 ? lossPerWeek / s[i].sTrend * 100 : null);
+            }
+            const chart = dates.length >= 2 ? buildCalChartSvg(dates, [{ values: pct, color: 'var(--accent-blue)', width: 1.8 }],
+                { height: 110, refBand: [0.5, 1.0], label: 'Weekly loss rate, percent of body weight', yFormat: v => `${v.toFixed(1)}%` }) : '';
 
-            const maxPct = Math.max(1.5, ...rateData.map(d => Math.abs(d.pctBW))) + 0.2;
-            const minPct = Math.min(-0.5, ...rateData.map(d => d.pctBW)) - 0.2;
-            const xScale = (i) => padding.left + (i / Math.max(rateData.length - 1, 1)) * plotW;
-            const yScale = (v) => padding.top + ((maxPct - v) / (maxPct - minPct)) * plotH;
+            const tile = (value, label) => `<div style="background:var(--bg-tertiary);padding:8px 4px;border-radius:8px;text-align:center;">
+                <div style="font-size:1.05em;font-weight:600;white-space:nowrap;">${value}</div>
+                <div style="font-size:0.7em;color:var(--text-muted);">${label}</div></div>`;
 
-            // Optimal band (0.5-1.0%)
-            const bandTop = yScale(1.0);
-            const bandBottom = yScale(0.5);
-
-            let pathD = '';
-            rateData.forEach((d, i) => {
-                pathD += (i === 0 ? 'M' : 'L') + xScale(i).toFixed(1) + ',' + yScale(d.pctBW).toFixed(1) + ' ';
-            });
-
-            const dots = rateData.map((d, i) => {
-                const color = d.pctBW > 1.0 ? 'var(--accent-red)' : d.pctBW >= 0.5 ? 'var(--accent-green)' : d.pctBW > 0 ? 'var(--accent-yellow)' : 'var(--accent-red)';
-                return `<circle cx="${xScale(i).toFixed(1)}" cy="${yScale(d.pctBW).toFixed(1)}" r="3" fill="${color}" stroke="var(--bg-primary)" stroke-width="1.5"/>`;
-            }).join('');
-
-            container.innerHTML = `
-                <div style="background:var(--bg-secondary);border:1px solid var(--border-color);border-radius:14px;padding:18px;">
-                    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
-                        <div>
-                            <div style="font-size:0.78em;color:var(--text-muted);">Current rate (28-day trend)</div>
-                            <div style="font-size:1.3em;font-weight:700;">${currentPct.toFixed(2)}% BW/wk</div>
-                        </div>
-                        <span class="rwl-warning-badge ${badgeClass}">${badgeText}</span>
+            container.innerHTML = wrap(`
+                <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
+                    <div>
+                        <div style="font-size:0.78em;color:var(--text-muted);">Current rate (4-week trend)</div>
+                        <div style="font-size:1.3em;font-weight:700;">${currentPct.toFixed(2)}% BW/wk</div>
                     </div>
-
-                    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:12px;">
-                        <div style="background:var(--bg-tertiary);padding:8px;border-radius:8px;text-align:center;">
-                            <div style="font-size:1.1em;font-weight:600;">${currentLoss.toFixed(2)}</div>
-                            <div style="font-size:0.7em;color:var(--text-muted);">lbs/week lost</div>
-                        </div>
-                        <div style="background:var(--bg-tertiary);padding:8px;border-radius:8px;text-align:center;">
-                            <div style="font-size:1.1em;font-weight:600;">${rangeLow.toFixed(1)}–${rangeHigh.toFixed(1)}</div>
-                            <div style="font-size:0.7em;color:var(--text-muted);">likely range</div>
-                        </div>
-                        <div style="background:var(--bg-tertiary);padding:8px;border-radius:8px;text-align:center;">
-                            <div style="font-size:1.1em;font-weight:600;">${trend.points}</div>
-                            <div style="font-size:0.7em;color:var(--text-muted);">weigh-ins</div>
-                        </div>
-                    </div>
-
-                    ${rateData.length >= 2 ? `<svg width="100%" viewBox="0 0 ${chartWidth} ${chartHeight}" style="display:block;margin-bottom:8px;">
-                        <rect x="${padding.left}" y="${bandTop}" width="${plotW}" height="${bandBottom - bandTop}" fill="rgba(16,185,129,0.08)" rx="2"/>
-                        <line x1="${padding.left}" y1="${bandTop}" x2="${padding.left + plotW}" y2="${bandTop}" stroke="rgba(16,185,129,0.3)" stroke-width="0.5" stroke-dasharray="3,3"/>
-                        <line x1="${padding.left}" y1="${bandBottom}" x2="${padding.left + plotW}" y2="${bandBottom}" stroke="rgba(16,185,129,0.3)" stroke-width="0.5" stroke-dasharray="3,3"/>
-                        <line x1="${padding.left}" y1="${yScale(0)}" x2="${padding.left + plotW}" y2="${yScale(0)}" stroke="var(--border-color)" stroke-width="0.5"/>
-                        <text x="${padding.left + plotW + 3}" y="${bandTop + 4}" fill="var(--accent-green)" font-size="7">1.0%</text>
-                        <text x="${padding.left + plotW + 3}" y="${bandBottom + 4}" fill="var(--accent-green)" font-size="7">0.5%</text>
-                        <path d="${pathD}" fill="none" stroke="var(--accent-blue)" stroke-width="1.5"/>
-                        ${dots}
-                    </svg>
-                    <div style="font-size:0.7em;color:var(--text-muted);margin-bottom:8px;">Chart: trailing 14-day trend at each weigh-in (last 12 weeks)</div>` : ''}
-
-                    <div style="font-size:0.78em;color:var(--text-secondary);padding:8px;background:var(--bg-tertiary);border-radius:8px;">${adviceText}</div>
-
-                    <div class="research-citation">Helms et al. 2014, JISSN: Optimal weight loss rate of 0.5-1.0% bodyweight/week for natural athletes to maximize muscle retention during a cut. Rates use a robust (Theil–Sen) trend of standard morning weigh-ins.</div>
+                    <span class="rwl-warning-badge ${badgeClass}">${badgeText}</span>
                 </div>
-            `;
+                <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:12px;">
+                    ${tile(currentLoss.toFixed(2), 'lbs/week lost')}
+                    ${tile(`${rangeLow.toFixed(2)}–${rangeHigh.toFixed(2)}`, '90% range')}
+                    ${tile(`${trend.trendWeight.toFixed(1)}`, 'trend weight (lb)')}
+                </div>
+                ${chart ? `${chart}<div style="font-size:0.7em;color:var(--text-muted);margin-bottom:8px;">Chart: 2-week change of your smoothed trend weight, % body weight per week (green band = 0.5–1.0%).</div>` : ''}
+                <div style="font-size:0.78em;color:var(--text-secondary);padding:8px;background:var(--bg-tertiary);border-radius:8px;">${adviceText}</div>
+                <div class="tdee-note" style="font-size:0.8em;">Cross-check, weigh-ins only (no food data): ${raw
+                    ? `${(-raw.lbPerWeek).toFixed(2)} lb/wk lost (range ${(-raw.lbPerWeekRange[1]).toFixed(2)}–${(-raw.lbPerWeekRange[0]).toFixed(2)}) from ${raw.points} readings`
+                    : 'not enough readings in the last 4 weeks'}. ${trend.points} weigh-ins in this window.</div>
+                <div class="research-citation">Helms et al. 2014, JISSN: optimal weight-loss rate of 0.5-1.0% bodyweight/week for natural athletes to maximize muscle retention during a cut. The rate comes from the same Kalman filter as your calibrated TDEE: every morning weigh-in fused with the food logged between them, unusual readings down-weighted.</div>`);
         }
 
         // 2. Model vs. Weight Trend (formerly "Metabolic Adaptation")
-        // Compares the model's TDEE with the TDEE implied by the observed weight
-        // trend. The gap mixes model error, unlogged intake, water/glycogen and
-        // body-composition change — it is never presented as a measured
-        // metabolic rate, and it carries no diet-break directive.
+        // The accuracy check. Shows what the original formula and the
+        // calibrated TDEE predicted the scale would do, against what it did,
+        // and a walk-forward backtest over the whole history: from every past
+        // weigh-in, predict 1/2/4 weeks ahead from the food log using only
+        // what the app knew that morning. Never a measured metabolic rate.
         function renderMetabolicAdaptation() {
             const container = document.getElementById('metabolicAdaptation');
             if (!container) return;
+            const C = TDEE_CALIBRATION;
+            const rho = C.KCAL_PER_LB;
+            const wrap = inner => `<div style="background:var(--bg-secondary);border:1px solid var(--border-color);border-radius:14px;padding:18px;font-size:0.9em;color:var(--text-secondary);">${inner}</div>`;
 
-            const win = getCompletedWindow(28);
-            const logs = Object.entries(state.dailyLogs || {})
-                .filter(([dateStr, log]) => dateStr >= win.start && dateStr <= win.end && hasNutritionData(log))
-                .sort((a, b) => a[0].localeCompare(b[0]));
-            const trend = calObservedWeightTrend(getValues(state.weighIns || {}), win.end);
-
-            if (logs.length < 14 || !trend) {
-                container.innerHTML = `<div style="background:var(--bg-secondary);border:1px solid var(--border-color);border-radius:14px;padding:18px;">
-                    <div style="font-size:0.82em;color:var(--text-muted);">Needs 14+ completed food-logged days and a smoothed weight trend (${TDEE_CALIBRATION.TREND_MIN_WEIGHINS}+ morning weigh-ins over ${TDEE_CALIBRATION.TREND_MIN_SPAN_DAYS}+ days) in the last 28 completed days. Currently ${logs.length} food-logged days${trend ? '' : ', trend not yet available'}.</div>
-                </div>`;
+            const run = getEnergyBalanceRun();
+            const w = run.ok ? run.window : null;
+            if (!run.ok || !w || w.trackedDays < 14 || w.weighIns < C.TREND_MIN_WEIGHINS) {
+                container.innerHTML = wrap(`<div style="font-size:0.82em;color:var(--text-muted);">Needs 14+ completed food-logged days and ${C.TREND_MIN_WEIGHINS}+ morning weigh-ins in the last ${C.TREND_WINDOW_DAYS} days. Currently ${w ? w.trackedDays : 0} food-logged days and ${w ? w.weighIns : 0} weigh-ins.</div>`);
                 return;
             }
 
-            const avgIntake = logs.reduce((s, [, l]) => s + (l.calories ?? 0), 0) / logs.length;
-            const weeklyLoss = -trend.lbPerWeek;
-            const trendImpliedTDEE = avgIntake + (weeklyLoss * TDEE_CALIBRATION.KCAL_PER_LB / 7);
+            // Last 4 weeks: smoothed trend change vs. each prediction
+            const s = run.series;
+            const idx = date => calDayNumber(date) - calDayNumber(run.startDate);
+            const i0 = idx(w.startDate), i1 = s.length - 1;
+            const paths4 = calPredictionPaths(run, w.startDate);
+            const scaleChange = s[i1].sTrend - s[i0].sTrend;
+            const modelChange = paths4[paths4.length - 1].model - paths4[0].model;
+            const calChange = paths4[paths4.length - 1].calibrated - paths4[0].calibrated;
+            const n = w.trackedDays;
+            // The correction these 4 weeks alone imply (negative = the scale
+            // lost less than the formula predicted)
+            const windowCorrection = (modelChange - scaleChange) * rho / n;
+            const windowGapSd = Math.sqrt((w.changeSd * rho) ** 2 + n * C.TRACKED_DAY_KCAL_SD ** 2) / n;
+            const ctx = getRecentEnergyContext(run);
+            const correction = run.current.correction;
+            const fmtLb = v => `${v > 0 ? '+' : v < 0 ? '−' : ''}${Math.abs(v).toFixed(1)} lb`;
 
-            // Model TDEE: the raw values stored on those same days (what the
-            // deficits were computed from); live model as a fallback
-            const storedTdees = logs.map(([, l]) => l.tdee).filter(v => typeof v === 'number' && v > 0);
-            const modelTDEE = storedTdees.length
-                ? storedTdees.reduce((a, b) => a + b, 0) / storedTdees.length
-                : calculateTDEE(getWeightForDate(win.end), state.profile?.height_cm ?? 174, state.profile?.age ?? 27, win.end);
+            // Chart: last 8 weeks
+            const paths = calPredictionPaths(run, calAddDays(run.endDate, -56));
+            const chart = buildCalChartSvg(paths.map(p => p.date), [
+                { values: paths.map(p => p.model), color: 'var(--accent-orange)', dash: '4,3' },
+                { values: paths.map(p => p.calibrated), color: 'var(--accent-green)' },
+                { values: paths.map(p => p.trend), color: 'var(--accent-blue)', width: 2.2 }
+            ], { height: 150, dots: paths.map(p => p.weight), label: 'Weight trend vs. predictions from the food log', yFormat: v => v.toFixed(0) });
 
-            const gap = trendImpliedTDEE - modelTDEE;
-            const gapPct = modelTDEE > 0 ? (gap / modelTDEE) * 100 : 0;
-            let icon, label, color;
-            if (Math.abs(gapPct) < 5) {
-                icon = '✅'; label = 'Model and weight trend roughly agree'; color = 'var(--accent-green)';
-            } else if (gap < 0) {
-                icon = '\u{1F4CA}'; label = 'Weight trend is slower than the model predicts'; color = 'var(--accent-blue)';
-            } else {
-                icon = '\u{1F4CA}'; label = 'Weight trend is faster than the model predicts'; color = 'var(--accent-blue)';
-            }
+            // Walk-forward backtest at 1, 2 and 4 weeks
+            const tests = [7, 14, 28].map(h => getEnergyBalanceBacktest(h)).filter(t => t.n >= 3);
+            const bt28 = tests.find(t => t.horizon === 28) || tests[tests.length - 1];
+            const backtestRows = tests.map(t => `<tr>
+                    <td style="padding:4px 6px;">${t.horizon / 7} wk</td>
+                    <td style="padding:4px 6px;text-align:right;">${fmtLb(t.model.bias)}</td>
+                    <td style="padding:4px 6px;text-align:right;">${t.model.mae.toFixed(1)}</td>
+                    <td style="padding:4px 6px;text-align:right;font-weight:600;color:var(--text-primary);">${fmtLb(t.calibrated.bias)}</td>
+                    <td style="padding:4px 6px;text-align:right;font-weight:600;color:var(--text-primary);">${t.calibrated.mae.toFixed(1)}</td>
+                    <td style="padding:4px 6px;text-align:right;color:var(--text-muted);">${t.n}</td></tr>`).join('');
+            const backtestHtml = tests.length ? `
+                <div style="border-top:1px solid var(--border-color);margin:12px 0 8px;"></div>
+                <div style="font-size:0.82em;font-weight:600;color:var(--text-primary);margin-bottom:4px;">Accuracy check on your data</div>
+                <div style="font-size:0.78em;margin-bottom:6px;">From every past morning weigh-in, predict the weight 1, 2 and 4 weeks later from your food log alone and compare with the scale. The calibrated prediction only uses the correction known <em>that morning</em> (no hindsight).</div>
+                <div style="overflow-x:auto;"><table style="width:100%;border-collapse:collapse;font-size:0.76em;font-variant-numeric:tabular-nums;">
+                    <thead><tr style="color:var(--text-muted);text-align:right;">
+                        <th style="padding:4px 6px;text-align:left;font-weight:500;">Ahead</th>
+                        <th style="padding:4px 6px;font-weight:500;">Formula bias</th>
+                        <th style="padding:4px 6px;font-weight:500;">miss</th>
+                        <th style="padding:4px 6px;font-weight:500;">Calibrated bias</th>
+                        <th style="padding:4px 6px;font-weight:500;">miss</th>
+                        <th style="padding:4px 6px;font-weight:500;">tests</th></tr></thead>
+                    <tbody>${backtestRows}</tbody></table></div>
+                <div class="tdee-note" style="font-size:0.78em;">Bias = average of predicted − actual (negative = predicted more loss than happened). Miss = average size of the error, lb. ${bt28
+                    ? `Over ${bt28.n} ${bt28.horizon / 7}-week tests (${escapeHtml(formatShortDate(bt28.firstOrigin, true))} – ${escapeHtml(formatShortDate(bt28.lastOrigin, true))}), the original formula averaged ${fmtLb(bt28.model.bias)}; calibrated averaged ${fmtLb(bt28.calibrated.bias)}.`
+                    : ''}</div>` : '';
 
-            const maxTDEE = Math.max(modelTDEE, trendImpliedTDEE, 1500);
-            const modelPct = Math.round((modelTDEE / maxTDEE) * 100);
-            const impliedPct = Math.round((Math.max(0, trendImpliedTDEE) / maxTDEE) * 100);
+            const tile = (value, label) => `<div style="background:var(--bg-tertiary);padding:8px 4px;border-radius:8px;text-align:center;">
+                <div style="font-size:1.05em;font-weight:600;white-space:nowrap;">${value}</div>
+                <div style="font-size:0.7em;color:var(--text-muted);">${label}</div></div>`;
 
-            container.innerHTML = `
-                <div style="background:var(--bg-secondary);border:1px solid var(--border-color);border-radius:14px;padding:18px;">
-                    <div style="display:flex;align-items:center;gap:10px;background:var(--bg-tertiary);padding:10px 12px;border-radius:10px;margin-bottom:14px;">
-                        <div style="font-size:1.5em;">${icon}</div>
-                        <div style="flex:1;">
-                            <div style="font-size:0.82em;font-weight:600;color:${color};">${label} (${gapPct > 0 ? '+' : ''}${gapPct.toFixed(1)}%)</div>
-                            <div style="font-size:0.75em;color:var(--text-muted);margin-top:2px;">Last 28 completed days (${formatShortDate(win.start)} – ${formatShortDate(win.end)}). No action needed here — the TDEE Calibration card applies a cautious, evidence-gated correction.</div>
-                        </div>
-                    </div>
-
-                    <div style="margin-bottom:14px;">
-                        <div style="display:flex;justify-content:space-between;font-size:0.82em;margin-bottom:4px;">
-                            <span>Model TDEE (original)</span>
-                            <span style="font-weight:600;">${formatNumber(Math.round(modelTDEE))} cal</span>
-                        </div>
-                        <div style="background:var(--bg-tertiary);border-radius:4px;height:10px;margin-bottom:10px;">
-                            <div style="width:${modelPct}%;height:100%;border-radius:4px;background:var(--accent-blue);"></div>
-                        </div>
-                        <div style="display:flex;justify-content:space-between;font-size:0.82em;margin-bottom:4px;">
-                            <span>Implied by weight trend (estimate)</span>
-                            <span style="font-weight:600;">${formatNumber(Math.round(trendImpliedTDEE))} cal</span>
-                        </div>
-                        <div style="background:var(--bg-tertiary);border-radius:4px;height:10px;">
-                            <div style="width:${impliedPct}%;height:100%;border-radius:4px;background:var(--accent-green);"></div>
-                        </div>
-                    </div>
-
-                    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;">
-                        <div style="background:var(--bg-tertiary);padding:8px;border-radius:8px;text-align:center;">
-                            <div style="font-size:1.1em;font-weight:600;">${formatNumber(Math.round(avgIntake))}</div>
-                            <div style="font-size:0.7em;color:var(--text-muted);">avg logged intake</div>
-                        </div>
-                        <div style="background:var(--bg-tertiary);padding:8px;border-radius:8px;text-align:center;">
-                            <div style="font-size:1.1em;font-weight:600;">${weeklyLoss.toFixed(2)}</div>
-                            <div style="font-size:0.7em;color:var(--text-muted);">lbs/wk (trend)</div>
-                        </div>
-                        <div style="background:var(--bg-tertiary);padding:8px;border-radius:8px;text-align:center;">
-                            <div style="font-size:1.1em;font-weight:600;">${formatSignedKcal(gap)}</div>
-                            <div style="font-size:0.7em;color:var(--text-muted);">cal/day gap</div>
-                        </div>
-                    </div>
-
-                    <div class="research-citation">The gap combines model error, intake not captured in the log, water/glycogen shifts and body-composition change. It is an estimate, not a measured metabolic rate, and it cannot separate adaptive thermogenesis (Trexler et al. 2014, JISSN) from those other causes.</div>
+            container.innerHTML = wrap(`
+                <div style="font-size:0.78em;color:var(--text-muted);margin-bottom:6px;">Last 4 weeks (${escapeHtml(formatShortDate(w.startDate))} – ${escapeHtml(formatShortDate(run.endDate))}, ${n} food-logged days, ${w.weighIns} weigh-ins)</div>
+                <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:10px;">
+                    ${tile(fmtLb(scaleChange), 'scale trend')}
+                    ${tile(fmtLb(modelChange), 'original formula said')}
+                    ${tile(fmtLb(calChange), 'calibrated said')}
                 </div>
-            `;
+                ${chart ? `${calChartLegend([['var(--accent-blue)', 'Trend weight'], ['var(--accent-orange)', 'Original formula', '4,3'], ['var(--accent-green)', 'Calibrated']])}${chart}
+                <div style="font-size:0.7em;color:var(--text-muted);">Dots = morning weigh-ins. Both predictions start on the trend 8 weeks ago and add only your logged food − TDEE.</div>` : ''}
+                <div class="tdee-note" style="font-size:0.85em;"><strong>The gap:</strong> these 4 weeks alone say your real deficit was ${formatNumber(Math.abs(Math.round(windowCorrection)))} ± ${formatNumber(Math.round(windowGapSd))} kcal/day ${windowCorrection <= 0 ? 'smaller' : 'larger'} than the original formula. One 4-week window swings that much from water and glycogen, so the app never uses one alone: across your whole history the learned correction is <strong>${formatSignedKcal(correction)} ± ${Math.round(run.current.correctionSd)} kcal/day</strong>${ctx ? ` (formula avg ${formatNumber(Math.round(ctx.modelTdee))} → calibrated ≈ ${formatNumber(Math.round(ctx.modelTdee + correction))})` : ''}.</div>
+                ${backtestHtml}
+                <div class="research-citation">The gap combines under-logged food, formula and workout-calorie error, and adaptive thermogenesis (Trexler et al. 2014, JISSN); a scale can't separate them, and the deficit math doesn't need it to. ${formatNumber(rho)} kcal per lb of trend change (the standard rule); error in that constant is absorbed by the learned correction.</div>`);
         }
 
         // 3. Protein Efficiency Score
@@ -23829,7 +23821,7 @@ CALIBRATED DEFICIT (estimate): ${formatSignedKcal(deficit + exportCal.current)} 
                 ['tdeeCalibration', 'TDEE Calibration', false],
                 ['recompPredictor', 'Weight Trend & Training', false],
                 ['rateOfWeightLoss', 'Rate of Weight Loss', false],
-                ['metabolicAdaptation', 'Model vs. Weight Trend', true],
+                ['metabolicAdaptation', 'Model vs. Weight Trend', false],
                 ['proteinEfficiency', 'Protein Efficiency', false],
                 ['recompTrajectory', 'Body Recomp Trajectory', true],
                 ['deficitAdherence', 'Deficit Adherence Patterns', true],
@@ -25567,85 +25559,153 @@ CALIBRATED DEFICIT (estimate): ${formatSignedKcal(deficit + exportCal.current)} 
         }
 
         // ============================================
-        // TDEE CALIBRATION CARD
-        // Original / correction / adjusted values, confidence, observed vs.
-        // predicted rate, and the ledger. Read-only: commits happen only in
-        // maybeCommitTdeeCalibration().
+        // TDEE CALIBRATION CARD (Nov 2026)
+        // The live estimate, how tightly the data pin it down, what moved it
+        // at the latest weigh-in, its history and its plain-language meaning.
+        // Read-only: the engine re-fits itself whenever data changes.
         // ============================================
-        const CALIBRATION_DECISION_LABELS = {
-            applied: 'Adjusted',
-            'held-noise': 'Held — change within noise',
-            'held-disagreement': 'Held — trend methods disagree',
-            collecting: 'Collecting data'
-        };
+
+        // Small responsive SVG line chart shared by the TDEE cards.
+        // series: [{ values: [number|null] aligned to dates, color, dash, width,
+        // band: [[lo, hi]|null] }]; dots: [number|null] aligned to dates.
+        function buildCalChartSvg(dates, series, { height = 140, dots = null, refBand = null, yFormat = v => String(Math.round(v)), label = 'chart' } = {}) {
+            const Wd = 300, Ht = height, pad = { t: 8, r: 8, b: 18, l: 38 };
+            const all = [];
+            series.forEach(s => {
+                s.values.forEach(v => { if (Number.isFinite(v)) all.push(v); });
+                (s.band || []).forEach(b => { if (b) all.push(b[0], b[1]); });
+            });
+            (dots || []).forEach(v => { if (Number.isFinite(v)) all.push(v); });
+            if (refBand) all.push(refBand[0], refBand[1]);
+            if (all.length < 2 || dates.length < 2) return '';
+            let lo = Math.min(...all), hi = Math.max(...all);
+            const span = Math.max(hi - lo, 1e-6);
+            lo -= span * 0.08; hi += span * 0.08;
+            const n = dates.length;
+            const xs = i => pad.l + (i / (n - 1)) * (Wd - pad.l - pad.r);
+            const ys = v => pad.t + ((hi - v) / (hi - lo)) * (Ht - pad.t - pad.b);
+            const path = values => {
+                let d = '', pen = false;
+                values.forEach((v, i) => {
+                    if (!Number.isFinite(v)) { pen = false; return; }
+                    d += `${pen ? 'L' : 'M'}${xs(i).toFixed(1)},${ys(v).toFixed(1)} `;
+                    pen = true;
+                });
+                return d;
+            };
+            let svg = '';
+            if (refBand) {
+                svg += `<rect x="${pad.l}" y="${ys(refBand[1]).toFixed(1)}" width="${Wd - pad.l - pad.r}" height="${Math.max(0, ys(refBand[0]) - ys(refBand[1])).toFixed(1)}" fill="rgba(16,185,129,0.10)"/>`;
+            }
+            const rough = (hi - lo) / 3;
+            const mag = 10 ** Math.floor(Math.log10(rough));
+            const step = mag * (rough / mag < 1.5 ? 1 : rough / mag < 3 ? 2 : rough / mag < 7 ? 5 : 10);
+            for (let v = Math.ceil(lo / step) * step; v <= hi; v += step) {
+                svg += `<line x1="${pad.l}" y1="${ys(v).toFixed(1)}" x2="${Wd - pad.r}" y2="${ys(v).toFixed(1)}" stroke="var(--border-color)" stroke-width="0.5"/>`;
+                svg += `<text x="${pad.l - 4}" y="${(ys(v) + 3).toFixed(1)}" text-anchor="end" fill="var(--text-muted)" font-size="8">${escapeHtml(yFormat(v))}</text>`;
+            }
+            series.forEach(s => {
+                if (!s.band) return;
+                const idx = s.band.map((b, i) => b ? i : -1).filter(i => i >= 0);
+                if (idx.length < 2) return;
+                const upper = idx.map(i => `${xs(i).toFixed(1)},${ys(s.band[i][1]).toFixed(1)}`);
+                const lower = idx.slice().reverse().map(i => `${xs(i).toFixed(1)},${ys(s.band[i][0]).toFixed(1)}`);
+                svg += `<polygon points="${upper.concat(lower).join(' ')}" fill="${s.color}" opacity="0.14"/>`;
+            });
+            series.forEach(s => {
+                svg += `<path d="${path(s.values)}" fill="none" stroke="${s.color}" stroke-width="${s.width || 1.6}"${s.dash ? ` stroke-dasharray="${s.dash}"` : ''} stroke-linejoin="round" stroke-linecap="round"/>`;
+            });
+            (dots || []).forEach((v, i) => {
+                if (Number.isFinite(v)) svg += `<circle cx="${xs(i).toFixed(1)}" cy="${ys(v).toFixed(1)}" r="2" fill="var(--text-muted)" opacity="0.75"/>`;
+            });
+            const xl = i => `<text x="${xs(i).toFixed(1)}" y="${Ht - 5}" text-anchor="${i === 0 ? 'start' : i === n - 1 ? 'end' : 'middle'}" fill="var(--text-muted)" font-size="8">${escapeHtml(formatShortDate(dates[i]))}</text>`;
+            svg += xl(0) + xl(Math.floor((n - 1) / 2)) + xl(n - 1);
+            return `<svg width="100%" viewBox="0 0 ${Wd} ${Ht}" role="img" aria-label="${escapeHtml(label)}" style="display:block;max-width:560px;margin:6px 0 4px;">${svg}</svg>`;
+        }
+
+        function calChartLegend(items) {
+            return `<div style="display:flex;flex-wrap:wrap;gap:4px 12px;font-size:0.72em;color:var(--text-muted);margin-bottom:6px;">${items.map(([color, text, dash]) =>
+                `<span style="display:inline-flex;align-items:center;gap:5px;"><svg width="16" height="6" aria-hidden="true"><line x1="0" y1="3" x2="16" y2="3" stroke="${color}" stroke-width="2"${dash ? ` stroke-dasharray="${dash}"` : ''}/></svg>${escapeHtml(text)}</span>`).join('')}</div>`;
+        }
+
+        // Average logged intake and formula TDEE over the last 28 completed
+        // food-logged days (what the correction is read against).
+        function getRecentEnergyContext(run, days = 28) {
+            if (!run?.ok) return null;
+            const from = calAddDays(run.endDate, -days);
+            const rows = run.series.filter(r => r.tracked && r.date >= from);
+            if (!rows.length) return null;
+            return {
+                days: rows.length,
+                intake: calMean(rows.map(r => r.intake)),
+                modelTdee: calMean(rows.map(r => r.modelTdee))
+            };
+        }
 
         function renderTdeeCalibration() {
             const container = document.getElementById('tdeeCalibration');
             if (!container) return;
 
             const status = getTdeeCalibrationStatus();
-            const estimate = getLiveTdeeEstimate();
             const info = describeTdeeCalibration(status);
-            const ev = status.evaluation;
-            const w = ev.window;
+            const run = status.run;
             const C = TDEE_CALIBRATION;
             const line = (label, value, cls = '') => `<div class="tdee-line ${cls}"><span>${label}</span><strong>${value}</strong></div>`;
-            const lbWeek = v => `${v > 0.005 ? '−' : v < -0.005 ? '+' : ''}${Math.abs(v).toFixed(2)} lb/wk`;
+            const wrap = inner => `<div style="background:var(--bg-secondary);border:1px solid var(--border-color);border-radius:14px;padding:18px;margin-bottom:16px;font-size:0.9em;color:var(--text-secondary);">${inner}</div>`;
 
-            let html = line('Original estimate', `${formatNumber(estimate.raw)} kcal/day`);
-            html += line('Correction in force', status.enabled ? `${formatSignedKcal(estimate.adjustment)} kcal/day` : 'off');
-            html += line('Adjusted estimate', `${formatNumber(estimate.calibrated)} kcal/day`, 'total');
-            html += line('Confidence', escapeHtml(info.label));
-
-            let evidence = '';
-            if (ev.eligible) {
-                const [obsLo, obsHi] = w.observedDeficitRange;
-                evidence += line('Observed weight trend', lbWeek(w.observedLbPerWeek));
-                evidence += line('Calorie-log prediction', lbWeek(w.predictedLbPerWeek));
-                evidence += line('Implied deficit (trend)', `${formatNumber(Math.round(w.observedDeficit))} kcal/day`);
-                evidence += line('Logged deficit (original)', `${formatNumber(Math.round(w.meanRawDeficit))} kcal/day`);
-                evidence += line('Gap', `${formatSignedKcal(w.gap)} kcal/day`);
-                evidence += `<div class="tdee-note">Trend range ${formatNumber(Math.round(obsLo))}–${formatNumber(Math.round(obsHi))} kcal/day. Endpoint check (7-day averages): ${formatNumber(Math.round(w.endpointDeficit))} kcal/day — methods differ by ${Math.round(w.disagreement)} (limit ${C.MAX_METHOD_DISAGREEMENT_KCAL}). A ±${C.WATER_SENSITIVITY_LB} lb water shift would move the estimate by ±${Math.round(w.waterSensitivity)} kcal/day${w.waterReversible ? ', enough to reverse this gap — so steps are limited' : ''}.</div>`;
-                const reviewed = status.history.find(h => h.evaluatedThrough === ev.endDate);
-                const decision = CALIBRATION_DECISION_LABELS[(reviewed || ev).decision] || (reviewed || ev).decision;
-                evidence += `<div class="tdee-note">Evidence target ${formatSignedKcal(ev.target)} kcal/day (bounded ${formatSignedKcal(C.MIN_ADJUSTMENT_KCAL)} to ${formatSignedKcal(C.MAX_ADJUSTMENT_KCAL)}). ${reviewed
-                    ? `Reviewed through ${formatShortDate(reviewed.evaluatedThrough)}: ${escapeHtml(decision)} (${formatSignedKcal(reviewed.adjustment)} kcal/day).`
-                    : `If reviewed now: ${escapeHtml(decision)}${ev.decision === 'applied' ? ` → ${formatSignedKcal(ev.proposedAdjustment)} kcal/day` : ''}.`}</div>`;
-            } else {
-                evidence += `<div class="tdee-note">${escapeHtml(info.basis)}</div>`;
-                evidence += line('Completed food-log days', `${w.intakeDays} / ${w.requiredIntakeDays}`);
-                evidence += line('Morning weigh-in days', `${w.weighInDays} / ${w.requiredWeighInDays}`);
+            if (!run.ok) {
+                container.innerHTML = wrap(`<div class="tdee-note"><strong>${escapeHtml(info.label)}</strong><br>${escapeHtml(info.basis)}</div>`);
+                return;
             }
 
-            const lastApplied = status.lastApplied;
-            const recal = lastApplied
-                ? `Last recalibrated ${formatShortDate(lastApplied.evaluatedThrough, true)} (in force from ${formatShortDate(lastApplied.effectiveDate)})`
-                : 'Not yet recalibrated';
-            const next = status.nextEvaluationAfter
-                ? `next review after ${formatShortDate(status.nextEvaluationAfter)} is complete`
-                : 'first review once the evidence rules are met';
+            const liveDate = state.today?.date || getLocalDateString();
+            const raw = calculateTDEE(getWeightForDate(liveDate), state.profile.height_cm, state.profile.age, state.today?.date);
+            const cur = run.current;
+            const correction = Math.round(cur.correction);
+            const sd = Math.round(cur.correctionSd);
+            const calibrated = raw + correction;
+            const lo = Math.round(raw + cur.correction - C.CI_Z * cur.correctionSd);
+            const hi = Math.round(raw + cur.correction + C.CI_Z * cur.correctionSd);
 
-            const recent = status.history.slice(-5).reverse();
-            const historyHtml = recent.length ? `
-                <div style="font-size:0.78em;font-weight:600;margin:10px 0 4px;">Recent reviews</div>
-                ${recent.map(h => `<div class="tdee-line" style="font-size:0.78em;"><span>${formatShortDate(h.effectiveDate)} · ${escapeHtml(CALIBRATION_DECISION_LABELS[h.decision] || String(h.decision || ''))}</span><strong>${formatSignedKcal(h.adjustment)}</strong></div>`).join('')}` : '';
+            let html = line('Original formula', `${formatNumber(raw)} kcal/day`);
+            html += line('Learned correction', `${formatSignedKcal(correction)} ±${sd} kcal/day`);
+            html += line(status.enabled ? 'Your TDEE (calibrated)' : 'Calibrated TDEE (not applied — off)', `${formatNumber(calibrated)} kcal/day`, 'total');
+            html += line('90% range', `${formatNumber(lo)} – ${formatNumber(hi)}`);
+            html += line('Confidence', escapeHtml(info.label));
+            html += `<div class="tdee-note">${escapeHtml(info.basis)}</div>`;
 
-            const explanation = status.enabled && estimate.adjustment !== 0
-                ? `<div class="tdee-note">${estimate.adjustment < 0
-                    ? 'Your recorded weight trend is slower than your calorie log predicts. A cautious adjustment is being applied to improve future estimates.'
-                    : 'Your recorded weight trend is faster than your calorie log predicts. A cautious adjustment is being applied to improve future estimates.'}</div>` : '';
+            const upd = getLatestCalibrationUpdate(run);
+            if (upd) {
+                const moved = Math.round(upd.after - upd.before);
+                html += `<div class="tdee-note"><strong>Latest update · ${escapeHtml(formatShortDate(upd.date))}:</strong> weighed ${upd.weight} lb; your log predicted ${upd.predicted.toFixed(1)} ± ${upd.predictedSd.toFixed(1)} lb → correction ${moved === 0 ? 'unchanged' : `${formatSignedKcal(moved)} kcal/day`}${upd.downweighted ? ' (unusual reading — down-weighted, not ignored)' : ''}.</div>`;
+            }
 
-            container.innerHTML = `
-                <div style="background:var(--bg-secondary);border:1px solid var(--border-color);border-radius:14px;padding:18px;margin-bottom:16px;font-size:0.9em;color:var(--text-secondary);">
-                    ${html}
-                    ${explanation}
-                    <div style="border-top:1px solid var(--border-color);margin:10px 0 6px;"></div>
-                    ${evidence}
-                    <div class="tdee-note">${recal}; ${next}.${status.enabled ? '' : ' Calibration is off (Settings → Personal Calibration), so the original model is used everywhere.'}</div>
-                    ${historyHtml}
-                    <div class="tdee-note">Evidence comes from your imported workouts (inside the original estimate), logged food intake, and standard morning weigh-ins entered in BodyComp — there is no direct Apple Health connection. This is an estimate of model error, not a measured metabolic rate, and it never changes your daily intake budget.</div>
-                </div>
-            `;
+            const ctx = getRecentEnergyContext(run);
+            if (ctx && Math.abs(correction) >= 10) {
+                const pctIntake = Math.round(Math.abs(correction) / ctx.intake * 100);
+                const pctTdee = Math.round(Math.abs(correction) / ctx.modelTdee * 100);
+                html += `<div class="tdee-note"><strong>What it means:</strong> ${correction < 0
+                    ? `your real deficit is ~${formatNumber(Math.abs(correction))} kcal/day smaller than the original formula says. That is the same as logging ~${pctIntake}% less food than you eat (avg logged ${formatNumber(Math.round(ctx.intake))} kcal over the last ${ctx.days} logged days), or a TDEE ~${pctTdee}% below the formula. The scale can't tell those apart, and the deficit math doesn't need to. Don't add a separate under-counting subtractor: it's already in this number.`
+                    : `your real deficit is ~${formatNumber(correction)} kcal/day larger than the original formula says (equivalent to a TDEE ~${pctTdee}% above the formula).`}</div>`;
+            }
+
+            // Correction history: what the app knew each morning (last 120 days)
+            const from = calAddDays(run.endDate, -119);
+            const rows = run.series.filter(r => r.date >= from);
+            const chart = buildCalChartSvg(rows.map(r => r.date), [{
+                values: rows.map(r => r.correction),
+                band: rows.map(r => [r.correction - r.correctionSd, r.correction + r.correctionSd]),
+                color: 'var(--accent-blue)'
+            }], { height: 110, label: 'TDEE correction over time', yFormat: v => formatSignedKcal(v) });
+            const chartHtml = chart ? `<div style="border-top:1px solid var(--border-color);margin:10px 0 4px;"></div>
+                <div style="font-size:0.78em;font-weight:600;color:var(--text-primary);">Correction over time — what the app knew each morning (kcal/day, ±1 SD)</div>
+                ${chart}` : '';
+
+            container.innerHTML = wrap(`${html}${chartHtml}
+                <div class="tdee-note">${status.enabled
+                    ? 'Used for your home-screen TDEE, live deficit, mode targets and every Progress deficit. Stored day logs keep the original formula values (exports label both).'
+                    : 'Calibration is off (Settings → Personal Calibration), so the original formula is used everywhere.'}</div>
+                <div class="research-citation">How: a Kalman filter tracks your trend weight and this correction together, re-run over your whole history whenever a log or weigh-in changes (backdated imports count right away). Each logged day moves the trend by (intake − TDEE) ÷ ${formatNumber(C.KCAL_PER_LB)} kcal/lb; each morning weigh-in corrects both. Noise model fit to your own data: scale ±${C.SCALE_NOISE_LB} lb, logged day ±${C.TRACKED_DAY_KCAL_SD} kcal, unlogged day unknown (±${formatNumber(C.UNTRACKED_DAY_KCAL_SD)} kcal, so gaps teach it nothing), correction drift ±${C.CORRECTION_DRIFT_KCAL} kcal/day.${run.downweighted ? ` ${run.downweighted} unusual reading${run.downweighted === 1 ? '' : 's'} down-weighted.` : ''} It is an estimate of total model + logging error, not a measured metabolic rate, and it never changes your daily intake budget.</div>`);
         }
 
         // ============================================
@@ -26736,9 +26796,6 @@ CALIBRATED DEFICIT (estimate): ${formatSignedKcal(deficit + exportCal.current)} 
             // from initializeUI's other call sites free no-ops.
             setTimeout(() => runHistoryUpgradeV3(), 1500);
             setTimeout(() => runFrequentFoodFatPatch(), 1600);
-            // Weekly TDEE calibration commit — waits for the same guards plus
-            // the history upgrade, and is a no-op inside the 7-day cadence.
-            setTimeout(() => maybeCommitTdeeCalibration(), 1700);
         }
 
         // v3: Auto-start the day using ecosystem data
@@ -26788,12 +26845,7 @@ CALIBRATED DEFICIT (estimate): ${formatSignedKcal(deficit + exportCal.current)} 
 
             // Calculate TDEE and targets with final mode
             const autoWeight = getWeightForDate(state.today.date || getLocalDateString());
-            const tdee = calculateTDEE(
-                autoWeight,
-                state.profile.height_cm,
-                state.profile.age,
-                state.today.date
-            );
+            const tdee = getPlanningTDEE(autoWeight, state.today.date);
             state.today.targets = applyTargetModifiers(
                 calculateTargets(state.today.mode, tdee, autoWeight, state.today.isBrainDay));
 
@@ -27004,9 +27056,6 @@ CALIBRATED DEFICIT (estimate): ${formatSignedKcal(deficit + exportCal.current)} 
                 };
 
                 saveState();
-
-                // A newly completed day may make a weekly calibration due
-                setTimeout(() => maybeCommitTdeeCalibration(), 0);
 
                 // Refresh UI if visible
                 if (document.visibilityState === 'visible') {
@@ -27283,7 +27332,7 @@ CALIBRATED DEFICIT (estimate): ${formatSignedKcal(deficit + exportCal.current)} 
             }, 3000);
         });
     </script>
-    <script src="js/bodycomp-progress-export.js?v=20261009"></script>
+    <script src="js/bodycomp-progress-export.js?v=20261106"></script>
     <!-- Sully OS Command Center: shared router + relay glue (loaded last) -->
     <script src="js/sullyos/router.js?v=20260820f"></script>
     <script src="js/sullyos/command-center.js?v=20260820f"></script>

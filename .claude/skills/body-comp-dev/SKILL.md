@@ -122,6 +122,11 @@ After large edits: `python3 -c "c=open('body-comp-tracker.html').read(); print('
 **Cause:** `calculateTDEE()` (line 8123) uses 7-day rolling average from actual workout objects in dailyLogs. No fallback to `state.today.activeCalories` (circular reference removed Feb 2026).
 **Solution:** Check workout objects in `state.today.workouts` and recent dailyLogs. Verify `activityLevel` multiplier in profile (default: sedentary=1.2). If targets seem stale, `renderSimpleView()` auto-corrects if TDEE diverges >100 cal.
 
+### Error: "Calibration stuck" / calibrated TDEE looks off (REBUILT Nov 2026)
+**How it works now:** `calRunEnergyBalance()` (calibration region) is a Kalman filter + RTS smoother over every food-logged day and morning weigh-in; it re-runs whenever data changes (`getEnergyBalanceRun()`, memoized). Correction for a date = `calCorrectionForDate()` (smoothed in the past, live estimate from today). `getPlanningTDEE()` = formula + correction → targets; `getEffectiveDeficit()` adds that day's correction for display. Raw `log.tdee` is the filter's input — never store calibrated values in logs.
+**Check:** Progress → TDEE Calibration (correction ± SD, latest weigh-in update), Model vs. Weight Trend (walk-forward backtest at 1/2/4 weeks: formula vs calibrated bias), Rate of Weight Loss (filter rate + raw Theil–Sen cross-check). Progress export has a full calibration + backtest section and per-day weigh-in/trend/TDEE columns. A single 4-week window swinging ±100 kcal from the long-run correction is water noise, not a bug.
+**Tests:** `tests/bodycomp/test-calibration.mjs` (engine, simulated people) + `test-calibration-ui.mjs` (Playwright, 140 checks).
+
 ### Error: Calorie target wildly inflated (FIXED Feb 2026)
 **Cause:** Circular self-reinforcing bug — `get7DayAvgActiveCalories()` fell back to `state.today.activeCalories`, which was set BY `autoStartDay()` FROM that same function. Once inflated, the value persisted forever.
 **Solution:** Fixed structurally — `get7DayAvgActiveCalories()` (line 8177) and `calculateTDEE()` (line 8123) now only use actual workout object data. `renderSimpleView()` auto-corrects stale targets. No clamps needed.

@@ -1,8 +1,9 @@
-// BodyComp TDEE calibration engine harness
+// BodyComp adaptive TDEE engine harness (Nov 2026 Kalman-filter engine)
 // Extracts the [BODYCOMP-CALIBRATION-START]/[BODYCOMP-CALIBRATION-END] region
 // from body-comp-tracker.html (the REAL shipped code, not a copy) and checks
-// eligibility, trend math, update limits, the effective-dated ledger, and the
-// Sep 13 – Oct 8 regression aggregates. Pure functions only — no DOM.
+// it against simulated people whose true TDEE error is known: recovery of
+// the correction, gaps, batch/backdated imports, robust readings, the
+// smoother, the walk-forward backtest and the trend. Pure functions only.
 // Run: TZ=America/New_York node tests/bodycomp/test-calibration.mjs
 
 import { readFileSync } from 'node:fs';
@@ -17,10 +18,10 @@ if (regions.length !== 1) {
     process.exit(1);
 }
 const api = new Function(regions[0] + `
-    return { TDEE_CALIBRATION, calDayNumber, calAddDays, calIsDate, calTheilSen,
-        selectCalibrationWeighIns, calFlagFluctuations, calEvaluateWindow,
-        calNormalizeHistory, calAdjustmentForDate, calMergeHistories, calShouldCommit,
-        evaluateTdeeCalibration, calBuildHistoryEntry, calObservedWeightTrend, calGoalForecast };`)();
+    return { TDEE_CALIBRATION, CALIBRATION_CONFIDENCE_LABELS, calDayNumber, calAddDays, calIsDate, calTheilSen,
+        selectCalibrationWeighIns, calFlagFluctuations, calConfidenceForSd, calRunEnergyBalance,
+        calCorrectionForDate, calTrendFromRun, calBacktestEnergyBalance, calPredictionPaths,
+        calMergeHistories, calObservedWeightTrend, calGoalForecast };`)();
 const C = api.TDEE_CALIBRATION;
 
 let pass = 0, fail = 0;
@@ -30,313 +31,260 @@ function t(name, cond, detail) {
     else { fail++; failures.push(`✗ ${name}${detail !== undefined ? ' — got: ' + JSON.stringify(detail) : ''}`); }
 }
 const near = (a, b, tol) => Math.abs(a - b) <= tol;
+const r1 = v => Math.round(v * 10) / 10;
 
-// ---------- fixture builders ----------
-// Deterministic ±0.4 lb "noise" so trends are realistic but reproducible
-const NOISE = [0.3, -0.2, 0.1, -0.4, 0.2, 0.0, -0.1, 0.4, -0.3, 0.1, -0.2, 0.3, 0.0, -0.1];
-function dates(start, n) { return Array.from({ length: n }, (_, i) => api.calAddDays(start, i)); }
-
-/** endDate = last completed day. slope in lb/day (negative = losing). */
-function scenario({ endDate = '2026-10-08', days = 42, deficit = 550, intake = 1977, slope = -550 / 3500,
-    startWeight = 190, skipWeighIns = [], skipIntake = [], noise = true, extraWeighIns = [] } = {}) {
-    const start = api.calAddDays(endDate, -(days - 1));
-    const intakeDays = dates(start, days).filter(d => !skipIntake.includes(d)).map(date => ({
-        date, tracked: true, assumed: false, calories: intake, rawDeficit: deficit, rawTdee: intake + deficit
-    }));
-    const weighIns = dates(start, days).filter(d => !skipWeighIns.includes(d)).map((date, i) => ({
-        id: `wi_${date}`, date,
-        weight: Math.round((startWeight + slope * (api.calDayNumber(date) - api.calDayNumber(start)) + (noise ? NOISE[i % NOISE.length] : 0)) * 10) / 10,
-        bodyFat: 25
-    }));
-    return { endDate, intakeDays, weighIns: [...weighIns, ...extraWeighIns], history: [] };
+// ---------- simulator ----------
+// Deterministic PRNG (mulberry32) + Box–Muller so runs are reproducible.
+function rng(seed) {
+    let a = seed >>> 0;
+    const uni = () => {
+        a = (a + 0x6D2B79F5) >>> 0;
+        let x = Math.imul(a ^ (a >>> 15), 1 | a);
+        x = (x + Math.imul(x ^ (x >>> 7), 61 | x)) ^ x;
+        return ((x ^ (x >>> 14)) >>> 0) / 4294967296;
+    };
+    return { uni, normal: () => Math.sqrt(-2 * Math.log(uni() + 1e-12)) * Math.cos(2 * Math.PI * uni()) };
 }
 
-// ---------- 1. insufficient weigh-ins ----------
-{
-    const s = scenario({ days: 28 });
-    s.weighIns = s.weighIns.filter((_, i) => i % 3 === 0); // ~10 readings
-    const ev = api.evaluateTdeeCalibration(s);
-    t('1 insufficient weigh-ins → not eligible', ev.eligible === false, ev.window.reasons);
-    t('1 → collecting state', ev.confidence === 'collecting');
-    t('1 → no adjustment proposed', ev.proposedAdjustment === 0);
-    t('1 → reason names weigh-ins', ev.window.reasons.some(r => /weigh-in/.test(r)), ev.window.reasons);
-}
-{
-    const s = scenario({ days: 28 });
-    s.intakeDays = s.intakeDays.slice(0, 18);
-    const ev = api.evaluateTdeeCalibration(s);
-    t('1b 18 intake days → not eligible', !ev.eligible && ev.window.reasons.some(r => /food-log/.test(r)), ev.window.reasons);
-}
-
-// ---------- 2/4. trend slower than log → negative correction ----------
-{
-    // Log says 550/day; scale says ~300/day → gap ≈ −250
-    const s = scenario({ slope: -300 / 3500 });
-    const ev = api.evaluateTdeeCalibration(s);
-    t('2 adequate records → eligible', ev.eligible, ev.window.reasons);
-    t('2 → gap negative ≈ −250', ev.window.gap < -150 && ev.window.gap > -350, Math.round(ev.window.gap));
-    t('2 → applied negative step', ev.decision === 'applied' && ev.proposedAdjustment < 0, [ev.decision, ev.proposedAdjustment]);
-    t('2 → first step ≤ 100', Math.abs(ev.step) <= C.FIRST_STEP_CAP_KCAL, ev.step);
-    t('2 → provisional (no history)', ev.confidence === 'provisional', ev.confidence);
-}
-{
-    // TDEE far too high: scale shows almost nothing lost
-    const s = scenario({ slope: -50 / 3500 });
-    const ev = api.evaluateTdeeCalibration(s);
-    t('4 TDEE too high → negative', ev.proposedAdjustment < 0, ev.proposedAdjustment);
-    t('4 → first step capped at −100', ev.proposedAdjustment === -100, ev.proposedAdjustment);
-    t('4 → target bounded at −300 or above', ev.target >= C.MIN_ADJUSTMENT_KCAL, ev.target);
-}
-
-// ---------- 3. accurate TDEE → ~0 ----------
-{
-    const s = scenario({ slope: -550 / 3500 });
-    const ev = api.evaluateTdeeCalibration(s);
-    t('3 accurate TDEE → eligible', ev.eligible, ev.window.reasons);
-    t('3 → |gap| small', Math.abs(ev.window.gap) < C.NOISE_KCAL, Math.round(ev.window.gap));
-    t('3 → held as noise, stays 0', ev.decision === 'held-noise' && ev.proposedAdjustment === 0, [ev.decision, ev.proposedAdjustment]);
-}
-
-// ---------- 5. TDEE too low → positive ----------
-{
-    const s = scenario({ slope: -800 / 3500 });
-    const ev = api.evaluateTdeeCalibration(s);
-    t('5 TDEE too low → positive', ev.decision === 'applied' && ev.proposedAdjustment > 0, [ev.decision, ev.proposedAdjustment]);
-    t('5 → within +150 bound', ev.proposedAdjustment <= C.MAX_ADJUSTMENT_KCAL);
-}
-
-// ---------- 6. sudden 3 lb water spike ----------
-{
-    const base = api.evaluateTdeeCalibration(scenario({ slope: -550 / 3500 }));
-    const s = scenario({ slope: -550 / 3500 });
-    s.weighIns = s.weighIns.map(w => w.date === '2026-10-06' ? { ...w, weight: w.weight + 3 } : w);
-    const ev = api.evaluateTdeeCalibration(s);
-    t('6 single 3 lb spike flagged as fluctuation', ev.window.fluctuationDays.includes('2026-10-06'), ev.window.fluctuationDays);
-    t('6 → no dramatic change', Math.abs(ev.proposedAdjustment - base.proposedAdjustment) <= 10, [base.proposedAdjustment, ev.proposedAdjustment]);
-    // Sustained late water retention (+3 lb for the final 4 days, 28-day window)
-    const s2 = scenario({ days: 28, slope: -550 / 3500 });
-    s2.weighIns = s2.weighIns.map(w => w.date >= '2026-10-05' ? { ...w, weight: w.weight + 3 } : w);
-    const ev2 = api.evaluateTdeeCalibration(s2);
-    t('6b sustained late spike → step limited to ≤ 50 or held',
-        ev2.decision !== 'applied' || Math.abs(ev2.step) <= C.WATER_LIMITED_STEP_CAP_KCAL || ev2.window.waterReversible === false && Math.abs(ev2.step) <= C.FIRST_STEP_CAP_KCAL,
-        [ev2.decision, ev2.step, Math.round(ev2.window.gap), Math.round(ev2.window.disagreement)]);
-    t('6b → never beyond first-step cap', Math.abs(ev2.proposedAdjustment) <= C.FIRST_STEP_CAP_KCAL, ev2.proposedAdjustment);
-}
-
-// ---------- 7. one missed weigh-in ----------
-{
-    const full = api.evaluateTdeeCalibration(scenario({ slope: -300 / 3500 }));
-    const miss = api.evaluateTdeeCalibration(scenario({ slope: -300 / 3500, skipWeighIns: ['2026-09-20'] }));
-    t('7 one missed weigh-in → still eligible', miss.eligible, miss.window.reasons);
-    t('7 → same decision/adjustment', miss.proposedAdjustment === full.proposedAdjustment, [full.proposedAdjustment, miss.proposedAdjustment]);
-    t('7 → gap within 25 kcal', near(miss.window.gap, full.window.gap, 25), [full.window.gap, miss.window.gap]);
-}
-
-// ---------- 8. duplicate RENPHO readings ----------
-{
-    const s = scenario({ slope: -300 / 3500 });
-    const dupes = s.weighIns.slice(0, 10).map(w => ({ ...w, id: w.id + '_dup', source: 'import' }));
-    const ev = api.evaluateTdeeCalibration({ ...s, weighIns: [...s.weighIns, ...dupes] });
-    const ref = api.evaluateTdeeCalibration(s);
-    t('8 duplicates counted', ev.duplicateReadings === 10, ev.duplicateReadings);
-    t('8 one observation per day', api.selectCalibrationWeighIns([...s.weighIns, ...dupes]).days.length === s.weighIns.length);
-    t('8 result identical to de-duplicated data', ev.proposedAdjustment === ref.proposedAdjustment && ev.window.gap === ref.window.gap);
-}
-
-// ---------- 9. evening weight excluded ----------
-{
-    const s = scenario({ slope: -300 / 3500 });
-    const ref = api.evaluateTdeeCalibration(s);
-    const evening = s.weighIns.slice(5, 15).map(w => ({ ...w, id: w.id + '_pm', weight: w.weight + 2.4, weighInContext: 'nonstandard' }));
-    const ev = api.evaluateTdeeCalibration({ ...s, weighIns: [...s.weighIns, ...evening] });
-    t('9 nonstandard (evening) readings excluded', ev.excludedWeighIns.filter(x => x.reason === 'nonstandard').length === 10);
-    t('9 result unchanged by evening readings', ev.window.gap === ref.window.gap && ev.proposedAdjustment === ref.proposedAdjustment);
-    // Unflagged same-day later reading: the lower (morning) value is used
-    const sel = api.selectCalibrationWeighIns([{ date: '2026-10-01', weight: 186.0 }, { date: '2026-10-01', weight: 188.4 }]);
-    t('9b same-day higher reading not used', sel.days[0].weight === 186.0 && sel.days[0].distinctReadings === 2);
-    const ex = api.selectCalibrationWeighIns([{ date: '2026-10-01', weight: 186, weighInContext: 'excluded' }, { date: '2026-10-02', weight: 50 }]);
-    t('9c excluded + invalid readings kept out (not deleted)', ex.days.length === 0 && ex.excluded.length === 2);
-}
-
-// ---------- 10. unlogged day not treated as zero ----------
-{
-    const skip = ['2026-09-20', '2026-09-27', '2026-10-04'];
-    const s = scenario({ slope: -300 / 3500, skipIntake: skip });
-    // An assumed day with a fake 0 must also be ignored
-    s.intakeDays.push({ date: '2026-09-21', tracked: false, assumed: true, calories: NaN, rawDeficit: 0, rawTdee: NaN });
-    const ev = api.evaluateTdeeCalibration(s);
-    t('10 unlogged days absent, mean deficit undiluted', ev.window.meanRawDeficit === 550, ev.window.meanRawDeficit);
-    t('10 intake count excludes unlogged/assumed', ev.window.intakeDays === 42 - skip.length, ev.window.intakeDays);
-}
-
-// ---------- 11. current incomplete day excluded ----------
-{
-    const s = scenario({ slope: -300 / 3500 });
-    const ref = api.evaluateTdeeCalibration(s);
-    s.intakeDays.push({ date: '2026-10-09', tracked: true, assumed: false, calories: 150, rawDeficit: 2400, rawTdee: 2550 });
-    s.weighIns.push({ id: 'wi_today', date: '2026-10-09', weight: 184.9 });
-    const ev = api.evaluateTdeeCalibration(s);
-    t('11 in-progress day (Oct 9) ignored', ev.window.meanRawDeficit === ref.window.meanRawDeficit && ev.window.gap === ref.window.gap);
-    t('11 window ends Oct 8', ev.window.windowEnd === '2026-10-08');
-}
-
-// ---------- 12. a valid 3,245 kcal day stays in ----------
-{
-    const s = scenario({ slope: -300 / 3500 });
-    s.intakeDays = s.intakeDays.map(d => d.date === '2026-10-03' ? { ...d, calories: 3245, rawDeficit: -706, rawTdee: 2539 } : d);
-    const ev = api.evaluateTdeeCalibration(s);
-    t('12 3,245 kcal day counted', ev.window.intakeDays === 42 && !ev.window.lowIntakeDays.includes('2026-10-03'));
-    t('12 its −706 included in mean', near(ev.window.meanRawDeficit, (550 * 41 - 706) / 42, 0.01), ev.window.meanRawDeficit);
-    // Only implausible (<800 kcal) partial-looking days are set aside, and listed
-    const s2 = scenario({ slope: -300 / 3500 });
-    s2.intakeDays[3] = { ...s2.intakeDays[3], calories: 420, rawDeficit: 2100 };
-    const ev2 = api.evaluateTdeeCalibration(s2);
-    t('12b <800 kcal day listed, not silently used', ev2.window.lowIntakeDays.length === 1);
-}
-
-// ---------- methods disagreement → held ----------
-{
-    // Smooth trend but endpoints distorted in opposite directions (water) → methods disagree
-    const s = scenario({ days: 28, slope: -300 / 3500, noise: false });
-    s.weighIns = s.weighIns.map(w => {
-        const k = api.calDayNumber(w.date) - api.calDayNumber('2026-09-11');
-        if (k < 7) return { ...w, weight: w.weight - 2.5 };
-        if (k >= 21) return { ...w, weight: w.weight + 2.5 };
-        return w;
-    });
-    const ev = api.evaluateTdeeCalibration(s);
-    t('disagreement > 150 → held, no change', ev.eligible && ev.decision === 'held-disagreement' && ev.proposedAdjustment === 0 && ev.confidence === 'provisional',
-        [ev.eligible, ev.decision, ev.window.disagreement && Math.round(ev.window.disagreement)]);
-}
-
-// ---------- 16 / 21. ledger: effective dates, persistence, no compounding ----------
-{
-    const s = scenario({ slope: -300 / 3500 });
-    const ev1 = api.evaluateTdeeCalibration(s);
-    const e1 = api.calBuildHistoryEntry(ev1, '2026-10-09T12:00:00.000Z');
-    t('21 entry is Firebase-safe (no null/undefined)', Object.values(e1).every(v => v !== null && v !== undefined));
-    t('16 effective the day after evaluation', e1.effectiveDate === '2026-10-09');
-    const hist1 = api.calMergeHistories([], [e1]);
-    t('16 earlier dates untouched (0)', api.calAdjustmentForDate(hist1, '2026-10-08') === 0);
-    t('16 new dates get the adjustment', api.calAdjustmentForDate(hist1, '2026-10-09') === e1.adjustment);
-    // Re-evaluating with the committed entry: same day → not due; adjustment not re-applied
-    t('21 commit cadence: not due again same week', api.calShouldCommit(hist1, '2026-10-12') === false);
-    t('21 due after 7 more completed days', api.calShouldCommit(hist1, '2026-10-15') === true);
-    t('21 merge is idempotent (no duplicates)', api.calMergeHistories(hist1, hist1).length === 1);
-    const cloudCopy = { ...e1, computedAt: '2026-10-09T15:00:00.000Z', adjustment: e1.adjustment - 5 };
-    const merged = api.calMergeHistories(hist1, [cloudCopy]);
-    t('21 two devices, same week → one entry (earliest wins)', merged.length === 1 && merged[0].adjustment === e1.adjustment);
-    // Firebase may hand the array back as an object
-    t('21 object-form history normalized', api.calNormalizeHistory({ 0: e1 }).length === 1);
-    // Next week: second step limited to 50 and builds on the first (no compounding of the gap)
-    const s2 = scenario({ slope: -300 / 3500, endDate: '2026-10-15' });
-    s2.history = hist1;
-    const ev2 = api.evaluateTdeeCalibration(s2);
-    t('21 second evaluation starts from current adjustment', ev2.currentAdjustment === e1.adjustment);
-    const same = api.evaluateTdeeCalibration({ ...s, history: hist1 });
-    t('21 re-evaluating committed evidence does not vouch for itself', same.priorStable === 0 && same.confidence === 'provisional', [same.priorStable, same.confidence]);
-    t('21 later step ≤ 50/week', Math.abs(ev2.step) <= C.WEEKLY_STEP_CAP_KCAL, ev2.step);
-    const e2 = api.calBuildHistoryEntry(ev2, '2026-10-16T12:00:00.000Z');
-    const hist2 = api.calMergeHistories(hist1, [e2]);
-    t('16 dates before 2nd update keep 1st adjustment', api.calAdjustmentForDate(hist2, '2026-10-12') === e1.adjustment);
-    t('16 dates before 1st update still 0', api.calAdjustmentForDate(hist2, '2026-09-30') === 0);
-    // Many weeks of the same evidence converge toward (never past) the target
-    let hist = [];
-    let adj = 0;
-    for (let week = 0; week < 12; week++) {
-        const end = api.calAddDays('2026-10-08', week * 7);
-        const sc = scenario({ slope: -300 / 3500, endDate: end });
-        sc.history = hist;
-        const ev = api.evaluateTdeeCalibration(sc);
-        hist = api.calMergeHistories(hist, [api.calBuildHistoryEntry(ev, `${end}T12:00:00Z`)]);
-        adj = ev.proposedAdjustment;
+/**
+ * A person whose real TDEE = formula TDEE + offset (offset lumps formula
+ * error and under-logging). endDate is the live day: weigh-ins through it,
+ * food through the day before. Water is an AR(1) process on top of tissue.
+ */
+function simulate({ endDate = '2026-11-06', days = 120, offset = -250, formula = 2530, intakeMean = 2000,
+    intakeSd = 300, startWeight = 190, scaleSd = 0.45, waterSd = 0.5, waterPhi = 0.7, weighEvery = 1,
+    untracked = [], untrackedSurplus = 0, seed = 7 } = {}) {
+    const R = rng(seed);
+    const start = api.calAddDays(endDate, -days);
+    let tissue = startWeight, water = 0;
+    const foodDays = [], weighIns = [], truth = [];
+    for (let i = 0; i <= days; i++) {
+        const date = api.calAddDays(start, i);
+        water = waterPhi * water + Math.sqrt(1 - waterPhi ** 2) * waterSd * R.normal();
+        truth.push({ date, tissue });
+        if (i % weighEvery === 0) {
+            weighIns.push({ id: `wi_${date}`, date, weight: r1(tissue + water + scaleSd * R.normal()), bodyFat: 24 });
+        }
+        if (i === days) break;
+        const gap = untracked.some(([a, b]) => date >= a && date <= b);
+        const intake = Math.round(intakeMean + intakeSd * R.normal());
+        const eaten = gap ? intake + untrackedSurplus : intake;
+        tissue += (eaten - (formula + offset)) / C.KCAL_PER_LB;
+        if (!gap) foodDays.push({ date, intake, modelTdee: formula });
     }
-    const target = api.evaluateTdeeCalibration({ ...scenario({ slope: -300 / 3500, endDate: '2027-01-07' }), history: hist }).target;
-    t('21 converges toward target without overshoot', adj <= 0 && adj >= target - 5, [adj, target]);
-    const conf = api.evaluateTdeeCalibration({ ...scenario({ slope: -300 / 3500, endDate: '2027-01-07' }), history: hist }).confidence;
-    t('21 repeated agreeing evidence raises confidence', conf === 'moderate' || conf === 'high', conf);
+    return { input: { endDate, days: foodDays, weighIns }, truth };
+}
+const run = input => api.calRunEnergyBalance(input);
+
+// ---------- 1. no weigh-ins / no food ----------
+{
+    const r = run({ endDate: '2026-11-06', days: [], weighIns: [] });
+    t('1 no weigh-ins → not ok', r.ok === false && r.trackedDays === 0);
+    const { input } = simulate({ days: 60 });
+    const w = run({ ...input, days: [] });
+    t('1b weigh-ins only → correction stays at prior 0', w.ok && near(w.current.correction, 0, 1e-9), w.current.correction);
+    t('1b → uncertainty stays near the prior (collecting)', w.current.correctionSd > 200 && w.current.confidence === 'collecting', w.current.correctionSd);
 }
 
-// ---------- bounds ----------
+// ---------- 2. recovers the true correction ----------
+for (const [offset, seed] of [[-250, 7], [-250, 11], [0, 3], [200, 5], [-400, 9]]) {
+    const { input } = simulate({ offset, seed, days: 150 });
+    const r = run(input);
+    const c = r.current.correction, sd = r.current.correctionSd;
+    t(`2 offset ${offset} (seed ${seed}) recovered within 2.5 SD`, near(c, offset, 2.5 * sd), { c: Math.round(c), sd: Math.round(sd) });
+    t(`2 offset ${offset} → SD under 100 after 150 days`, sd < 100, Math.round(sd));
+}
 {
-    const hist = [{ effectiveDate: '2026-09-01', adjustment: -900 }, { effectiveDate: '2026-09-15', adjustment: 400 }];
-    t('bounds: stored values clamped to [−300, +150]', api.calAdjustmentForDate(hist, '2026-09-10') === -300 && api.calAdjustmentForDate(hist, '2026-09-20') === 150);
+    // Calibration of the uncertainty: across many people the error/SD is ~N(0,1)
+    let inside = 0, total = 0;
+    for (let seed = 100; seed < 140; seed++) {
+        const offset = -400 + (seed % 9) * 100;
+        const r = run(simulate({ offset, seed, days: 120 }).input);
+        total++;
+        if (Math.abs(r.current.correction - offset) <= C.CI_Z * r.current.correctionSd) inside++;
+    }
+    t('2b 90% interval covers the truth ≥ 80% of the time (40 people)', inside / total >= 0.8, `${inside}/${total}`);
 }
 
-// ---------- 20. Eastern time + DST date boundaries ----------
+// ---------- 3. untracked gaps teach nothing ----------
 {
-    t('20 DST end (Nov 1 2026) day step', api.calAddDays('2026-10-31', 1) === '2026-11-01' && api.calAddDays('2026-11-01', 1) === '2026-11-02');
-    t('20 DST start (Mar 8 2026) day step', api.calAddDays('2026-03-07', 1) === '2026-03-08' && api.calAddDays('2026-03-08', 1) === '2026-03-09');
-    t('20 day numbers are integral across DST', api.calDayNumber('2026-11-02') - api.calDayNumber('2026-10-31') === 2 && api.calDayNumber('2026-03-09') - api.calDayNumber('2026-03-07') === 2);
-    t('20 year boundary', api.calAddDays('2026-12-31', 1) === '2027-01-01');
-    const s = scenario({ slope: -300 / 3500, endDate: '2026-11-15' });
-    const ev = api.evaluateTdeeCalibration(s);
-    t('20 window spanning DST stays 42 days', ev.window.windowStart === '2026-10-05' && ev.window.windowDays === 42, [ev.window.windowStart, ev.window.windowDays]);
-    t('20 endpoint elapsed days are whole numbers', Number.isInteger(ev.window.endpointElapsedDays * 5), ev.window.endpointElapsedDays);
+    // 30 unlogged days of eating 800 kcal over: weight rises, but the
+    // correction must not read that as a TDEE error
+    const gap = [['2026-08-01', '2026-08-30']];
+    const { input } = simulate({ offset: -250, days: 150, untracked: gap, untrackedSurplus: 800, seed: 21 });
+    const r = run(input);
+    t('3 surplus during a logging gap does not bias the correction', near(r.current.correction, -250, 2.5 * r.current.correctionSd), Math.round(r.current.correction));
+    t('3 gap days are not tracked', r.trackedDays === 150 - 30, r.trackedDays);
+    const gapRows = r.series.filter(s => s.date >= '2026-08-01' && s.date <= '2026-08-30');
+    t('3 gap rows flagged untracked', gapRows.length === 30 && gapRows.every(s => !s.tracked));
 }
 
-// ---------- body fat never read ----------
+// ---------- 4. order, batch and backdated imports ----------
 {
-    const s = scenario({ slope: -300 / 3500 });
-    const a = api.evaluateTdeeCalibration(s);
-    const b = api.evaluateTdeeCalibration({ ...s, weighIns: s.weighIns.map(w => ({ ...w, bodyFat: 40 })) });
-    t('RENPHO body fat has no effect', a.window.gap === b.window.gap && a.proposedAdjustment === b.proposedAdjustment);
+    const { input } = simulate({ days: 90, seed: 31 });
+    const a = run(input);
+    const shuffled = { ...input, weighIns: [...input.weighIns].reverse(), days: [...input.days].reverse() };
+    const b = run(shuffled);
+    t('4 result independent of import order', a.current.correction === b.current.correction && a.current.trend === b.current.trend);
+    const weekly = run({ ...input, weighIns: input.weighIns.filter((_, i) => i % 7 === 0) });
+    t('4 weekly-only weigh-ins still produce an estimate', weekly.ok && Number.isFinite(weekly.current.correction));
+    t('4 backfilling daily weigh-ins tightens it immediately', a.current.correctionSd < weekly.current.correctionSd, [a.current.correctionSd, weekly.current.correctionSd]);
+    // No commit schedule: the estimate is a pure function of the data
+    t('4 same data → same answer (no hidden state)', run(input).current.correction === a.current.correction);
 }
 
-// ---------- observed trend + goal forecast ----------
+// ---------- 5. robust to a bad reading ----------
 {
-    const s = scenario({ slope: -0.1, startWeight: 190, noise: false });
-    const trend = api.calObservedWeightTrend(s.weighIns, '2026-10-08');
-    t('trend slope −0.7 lb/wk', near(trend.lbPerWeek, -0.7, 0.01), trend.lbPerWeek);
+    const { input } = simulate({ days: 90, seed: 41 });
+    const ref = run(input);
+    const bad = input.weighIns.map((w, i) => i === 60 ? { ...w, weight: w.weight + 7 } : w);
+    const r = run({ ...input, weighIns: bad });
+    t('5 a +7 lb reading is down-weighted', r.downweighted >= 1 && r.series.find(s => s.date === input.weighIns[60].date).downweighted === true, r.downweighted);
+    t('5 it moves the correction by < 40 kcal', Math.abs(r.current.correction - ref.current.correction) < 40, Math.round(r.current.correction - ref.current.correction));
+}
+
+// ---------- 6. smoother and per-date lookup ----------
+{
+    const { input } = simulate({ days: 120, seed: 51 });
+    const r = run(input);
+    const s = r.series;
+    t('6 one row per calendar day', s.length === 121 && s[0].date === r.startDate && s[s.length - 1].date === r.endDate);
+    t('6 every row smoothed', s.every(x => Number.isFinite(x.sTrend) && Number.isFinite(x.sCorrection)));
+    t('6 smoothed SD ≤ filtered SD', s.every(x => x.sCorrectionSd <= x.correctionSd + 1e-9 && x.sTrendSd <= x.trendSd + 1e-9));
+    t('6 last row: smoothed = filtered', s[s.length - 1].sCorrection === s[s.length - 1].correction);
+    t('6 lookup before start = first smoothed value', api.calCorrectionForDate(r, '2020-01-01') === s[0].sCorrection);
+    t('6 lookup on/after end = current', api.calCorrectionForDate(r, r.endDate) === r.current.correction && api.calCorrectionForDate(r, '2030-01-01') === r.current.correction);
+    t('6 lookup inside = smoothed', api.calCorrectionForDate(r, s[40].date) === s[40].sCorrection);
+    t('6 lookup on failed run = 0', api.calCorrectionForDate({ ok: false }, '2026-10-01') === 0);
+}
+
+// ---------- 7. input hygiene ----------
+{
+    const { input } = simulate({ days: 60, seed: 61 });
+    const ref = run(input);
+    // Live day's food never counts
+    const live = run({ ...input, days: [...input.days, { date: input.endDate, intake: 400, modelTdee: 2530 }] });
+    t('7 live day food ignored', live.current.correction === ref.current.correction && live.trackedDays === ref.trackedDays);
+    // Weigh-ins after the live day never count; the live morning does
+    const future = run({ ...input, weighIns: [...input.weighIns, { date: '2026-11-08', weight: 150 }] });
+    t('7 future weigh-in ignored', future.current.correction === ref.current.correction);
+    t('7 live-morning weigh-in counts', ref.series[ref.series.length - 1].weight != null);
+    // Implausible partial days (< 800 kcal) are unknown, not a huge deficit
+    const partial = input.days.map((d, i) => i % 10 === 0 ? { ...d, intake: 450 } : d);
+    const p = run({ ...input, days: partial });
+    t('7 <800 kcal days treated as unlogged', p.trackedDays === ref.trackedDays - Math.ceil(input.days.length / 10), [p.trackedDays, ref.trackedDays]);
+    // Non-morning / excluded readings never reach the filter
+    const evening = input.weighIns.slice(5, 15).map(w => ({ ...w, id: w.id + '_pm', weight: w.weight + 2.4, weighInContext: 'nonstandard' }));
+    const e = run({ ...input, weighIns: [...input.weighIns, ...evening] });
+    t('7 evening readings excluded and listed', e.current.correction === ref.current.correction && e.excludedWeighIns.filter(x => x.reason === 'nonstandard').length === 10);
+    // Duplicate imports collapse to one reading per day
+    const dupes = input.weighIns.slice(0, 10).map(w => ({ ...w, id: w.id + '_dup', source: 'import' }));
+    t('7 duplicate readings change nothing', run({ ...input, weighIns: [...input.weighIns, ...dupes] }).current.correction === ref.current.correction);
+    // Body fat is never read
+    t('7 body fat has no effect', run({ ...input, weighIns: input.weighIns.map(w => ({ ...w, bodyFat: 40 })) }).current.correction === ref.current.correction);
+    // Same-day readings: lower (morning) value; invalid/excluded kept out
+    const sel = api.selectCalibrationWeighIns([{ date: '2026-10-01', weight: 186.0 }, { date: '2026-10-01', weight: 188.4 }]);
+    t('7 same-day higher reading not used', sel.days[0].weight === 186.0 && sel.days[0].distinctReadings === 2);
+    const ex = api.selectCalibrationWeighIns([{ date: '2026-10-01', weight: 186, weighInContext: 'excluded' }, { date: '2026-10-02', weight: 50 }]);
+    t('7 excluded + invalid readings kept out (not deleted)', ex.days.length === 0 && ex.excluded.length === 2);
+    // History older than MAX_HISTORY_DAYS is dropped
+    const old = run({ ...input, weighIns: [{ date: '2020-01-01', weight: 260 }, ...input.weighIns] });
+    t('7 readings beyond the history limit ignored', old.startDate === ref.startDate);
+}
+
+// ---------- 8. walk-forward backtest ----------
+{
+    const { input } = simulate({ offset: -250, days: 180, seed: 71 });
+    const r = run(input);
+    const bt = api.calBacktestEnergyBalance(r, 28);
+    t('8 backtest has many origins', bt.n > 100, bt.n);
+    t('8 formula over-predicts loss ≈ 2 lb / 4 wk', near(bt.model.bias, -250 * 28 / C.KCAL_PER_LB, 0.7), r1(bt.model.bias));
+    t('8 calibrated bias small', Math.abs(bt.calibrated.bias) < 0.7, r1(bt.calibrated.bias));
+    t('8 calibrated MAE beats formula', bt.calibrated.mae < bt.model.mae, [r1(bt.calibrated.mae), r1(bt.model.mae)]);
+    const zero = api.calBacktestEnergyBalance(run(simulate({ offset: 0, days: 180, seed: 72 }).input), 28);
+    t('8 accurate formula → both near zero', Math.abs(zero.model.bias) < 0.7 && Math.abs(zero.calibrated.bias) < 0.7, [r1(zero.model.bias), r1(zero.calibrated.bias)]);
+    t('8 no run → n 0', api.calBacktestEnergyBalance({ ok: false }, 28).n === 0);
+    const sparseFood = run({ ...input, days: input.days.filter((_, i) => i % 2 === 0) });
+    t('8 origins with < 80% logged days skipped', api.calBacktestEnergyBalance(sparseFood, 28).n === 0);
+}
+
+// ---------- 9. trend and prediction paths ----------
+{
+    const { input, truth } = simulate({ offset: -250, days: 120, seed: 81 });
+    const r = run(input);
+    const tr = api.calTrendFromRun(r);
+    const real = (truth[truth.length - 1].tissue - truth[truth.length - 1 - 28].tissue) / 4;
+    t('9 trend rate within its 90% range of the truth', tr.lbPerWeekRange[0] - 0.15 <= real && real <= tr.lbPerWeekRange[1] + 0.15, { est: r1(tr.lbPerWeek), real: r1(real), range: tr.lbPerWeekRange.map(r1) });
+    t('9 trend weight close to tissue', near(tr.trendWeight, truth[truth.length - 1].tissue, 1.2), [r1(tr.trendWeight), r1(truth[truth.length - 1].tissue)]);
+    t('9 trend needs enough weigh-ins', api.calTrendFromRun(run({ ...input, weighIns: input.weighIns.slice(0, 80) })) === null);
+    const from = api.calAddDays(r.endDate, -56);
+    const paths = api.calPredictionPaths(r, from);
+    t('9 path covers fromDate → end', paths.length === 57 && paths[0].date === from && paths[56].date === r.endDate);
+    t('9 paths start on the trend', paths[0].model === paths[0].trend && paths[0].calibrated === paths[0].trend);
+    const end = paths[paths.length - 1];
+    t('9 formula path predicts more loss than happened', end.model < end.trend - 2, [r1(end.model), r1(end.trend)]);
+    t('9 calibrated path tracks the trend', Math.abs(end.calibrated - end.trend) < 1.5, [r1(end.calibrated), r1(end.trend)]);
+}
+
+// ---------- 10. confidence, bounds ----------
+{
+    const T = C.CONFIDENCE_MAX_SD;
+    t('10 confidence bands', api.calConfidenceForSd(T.high) === 'high' && api.calConfidenceForSd(T.high + 1) === 'moderate' &&
+        api.calConfidenceForSd(T.moderate + 1) === 'provisional' && api.calConfidenceForSd(T.provisional + 1) === 'collecting' &&
+        api.calConfidenceForSd(NaN) === 'collecting');
+    t('10 every confidence has a label', ['collecting', 'provisional', 'moderate', 'high'].every(k => typeof api.CALIBRATION_CONFIDENCE_LABELS[k] === 'string'));
+    const absurd = run(simulate({ offset: -2500, days: 60, intakeMean: 2000, seed: 91 }).input);
+    t('10 current correction clamped to ±1000', Math.abs(absurd.current.correction) <= C.MAX_ABS_CORRECTION_KCAL);
+    t('10 legacy ledger merge still deterministic', api.calMergeHistories([{ effectiveDate: '2026-10-10', adjustment: -35 }], [{ effectiveDate: '2026-10-10', adjustment: -35 }]).length === 1);
+}
+
+// ---------- 11. Eastern time + DST date boundaries ----------
+{
+    t('11 DST end (Nov 1 2026) day step', api.calAddDays('2026-10-31', 1) === '2026-11-01' && api.calAddDays('2026-11-01', 1) === '2026-11-02');
+    t('11 DST start (Mar 8 2026) day step', api.calAddDays('2026-03-07', 1) === '2026-03-08' && api.calAddDays('2026-03-08', 1) === '2026-03-09');
+    t('11 day numbers are integral across DST', api.calDayNumber('2026-11-02') - api.calDayNumber('2026-10-31') === 2 && api.calDayNumber('2026-03-09') - api.calDayNumber('2026-03-07') === 2);
+    t('11 year boundary', api.calAddDays('2026-12-31', 1) === '2027-01-01');
+    const r = run(simulate({ endDate: '2026-11-15', days: 60, seed: 95 }).input);
+    t('11 run across DST has one row per day', r.series.length === 61 && r.series.every((x, i) => i === 0 || api.calDayNumber(x.date) - api.calDayNumber(r.series[i - 1].date) === 1));
+}
+
+// ---------- 12. raw cross-check trend + goal forecast ----------
+{
+    const weighIns = Array.from({ length: 42 }, (_, i) => ({ date: api.calAddDays('2026-08-28', i), weight: r1(190 - 0.1 * i) }));
+    const trend = api.calObservedWeightTrend(weighIns, '2026-10-08');
+    t('12 Theil–Sen slope −0.7 lb/wk', near(trend.lbPerWeek, -0.7, 0.01), trend.lbPerWeek);
     const f = api.calGoalForecast(trend, 180, '2026-10-09');
-    t('forecast gives a date range', f.status === 'range' && f.earliest <= f.latest, f);
-    t('forecast reached when trend ≤ goal', api.calGoalForecast(trend, 190, '2026-10-09').status === 'reached');
-    t('forecast insufficient without trend', api.calGoalForecast(null, 180, '2026-10-09').status === 'insufficient');
-    const flat = api.calObservedWeightTrend(scenario({ slope: 0, noise: true }).weighIns, '2026-10-08');
-    t('flat/uncertain trend → no date', ['uncertain', 'beyond-horizon'].includes(api.calGoalForecast(flat, 180, '2026-10-09').status));
-    t('sparse weigh-ins → no trend', api.calObservedWeightTrend(s.weighIns.slice(-5), '2026-10-08') === null);
+    t('12 forecast gives a date range', f.status === 'range' && f.earliest <= f.latest, f);
+    t('12 forecast reached when trend ≤ goal', api.calGoalForecast(trend, 190, '2026-10-09').status === 'reached');
+    t('12 forecast insufficient without trend', api.calGoalForecast(null, 180, '2026-10-09').status === 'insufficient');
+    t('12 sparse weigh-ins → no raw trend', api.calObservedWeightTrend(weighIns.slice(-5), '2026-10-08') === null);
+    const r = run(simulate({ days: 120, seed: 99 }).input);
+    const fk = api.calGoalForecast(api.calTrendFromRun(r), 170, r.endDate);
+    t('12 forecast works from the filter trend', ['range', 'beyond-horizon', 'uncertain'].includes(fk.status), fk);
 }
 
 // ---------- regression fixture: Sep 13 – Oct 8, 2026 ----------
-// Synthetic per-day values constructed to match the user's reported
-// aggregates (the raw export was not available in the repository).
+// Synthetic per-day values matching the user's reported aggregates.
 {
-    const days = dates('2026-09-13', 26);
-    const early = [569, 629, 509, 570, 569, 509, 629, 569, 569, 570, 629, 509, 569, 569, 509, 629, 569, 569, 569]; // Sep 13 – Oct 1 (sum 10,813)
+    const days = Array.from({ length: 26 }, (_, i) => api.calAddDays('2026-09-13', i));
+    const early = [569, 629, 509, 570, 569, 509, 629, 569, 569, 570, 629, 509, 569, 569, 509, 629, 569, 569, 569];
     const late = { '2026-10-02': 700, '2026-10-03': -706, '2026-10-04': 698, '2026-10-05': 697, '2026-10-06': 697, '2026-10-07': 697, '2026-10-08': 697 };
     const deficits = days.map((d, i) => i < 19 ? early[i] : late[d]);
     const intakes = days.map(d => d === '2026-10-03' ? 3245 : 1926);
-    for (let i = 0; i < 7; i++) intakes[i] += 1; // 25 × 1926 + 7 + 3,245 = 51,402 (1,977 × 26)
-    const intakeDays = days.map((date, i) => ({ date, tracked: true, assumed: false, calories: intakes[i], rawDeficit: deficits[i], rawTdee: intakes[i] + deficits[i] }));
-    // Oct 9 is the live day — present in data but must be excluded
-    intakeDays.push({ date: '2026-10-09', tracked: true, assumed: false, calories: 640, rawDeficit: 1900, rawTdee: 2540 });
-
-    const completed = intakeDays.filter(d => d.date <= '2026-10-08');
-    const total = completed.reduce((s, d) => s + d.rawDeficit, 0);
-    const meanIntake = completed.reduce((s, d) => s + d.calories, 0) / completed.length;
-    const meanTdee = completed.reduce((s, d) => s + d.rawTdee, 0) / completed.length;
-    const week = completed.filter(d => d.date >= '2026-10-02').reduce((s, d) => s + d.rawDeficit, 0);
+    for (let i = 0; i < 7; i++) intakes[i] += 1;
+    const food = days.map((date, i) => ({ date, intake: intakes[i], modelTdee: intakes[i] + deficits[i] }));
+    const total = deficits.reduce((s, d) => s + d, 0);
     t('R cumulative deficit 14,293', total === 14293, total);
-    t('R average intake ≈ 1,977', Math.round(meanIntake) === 1977, meanIntake);
-    t('R average deficit ≈ 550', Math.round(total / completed.length) === 550, total / completed.length);
-    t('R average app TDEE ≈ 2,527', Math.round(meanTdee) === 2527, meanTdee);
-    t('R Oct 3 surplus 706 preserved', completed.find(d => d.date === '2026-10-03').rawDeficit === -706);
-    t('R Oct 2–8 weekly deficit 3,480', week === 3480, week);
-
-    // Sparse weigh-ins (roughly what BodyComp holds before a RENPHO backfill)
-    const sparse = [['2026-09-13', 187.7], ['2026-09-20', 187.0], ['2026-09-28', 186.4], ['2026-10-05', 185.9], ['2026-10-08', 185.6], ['2026-10-09', 184.9]]
-        .map(([date, weight]) => ({ id: date, date, weight }));
-    const evSparse = api.evaluateTdeeCalibration({ endDate: '2026-10-08', intakeDays, weighIns: sparse, history: [] });
-    t('R sparse weigh-ins → Calibration: collecting data', !evSparse.eligible && evSparse.confidence === 'collecting');
-    t('R Oct 9 not counted', evSparse.window.intakeDays === 26, evSparse.window.intakeDays);
-
-    // After a daily RENPHO backfill (~187.7 → ~185.6 trend; synthetic readings)
-    const backfill = days.map((date, i) => ({ id: `r_${date}`, date, weight: Math.round((187.7 - 2.1 * i / 25 + NOISE[i % NOISE.length]) * 10) / 10 }));
-    const ev = api.evaluateTdeeCalibration({ endDate: '2026-10-08', intakeDays, weighIns: [...backfill, sparse[5]], history: [] });
-    t('R backfilled → eligible', ev.eligible, ev.window.reasons);
-    t('R 26 days never reaches High', ev.confidence !== 'high', ev.confidence);
-    t('R first correction negative and ≤ 100', ev.proposedAdjustment < 0 && ev.proposedAdjustment >= -100, ev.proposedAdjustment);
-    console.log(`  regression: observed ${Math.round(ev.window.observedDeficit)} kcal/day vs logged ${Math.round(ev.window.meanRawDeficit)}; gap ${Math.round(ev.window.gap)}; water ±${Math.round(ev.window.waterSensitivity)}; first step ${ev.proposedAdjustment} (${ev.confidence}, ${ev.decision})`);
+    t('R average intake ≈ 1,977', Math.round(intakes.reduce((s, v) => s + v, 0) / 26) === 1977);
+    // Oct 9 is the live day; its food must not count
+    food.push({ date: '2026-10-09', intake: 640, modelTdee: 2540 });
+    const NOISE = [0.3, -0.2, 0.1, -0.4, 0.2, 0.0, -0.1, 0.4, -0.3, 0.1, -0.2, 0.3, 0.0, -0.1];
+    const backfill = days.map((date, i) => ({ id: `r_${date}`, date, weight: r1(187.7 - 2.1 * i / 25 + NOISE[i % NOISE.length]) }));
+    const r = run({ endDate: '2026-10-09', days: food, weighIns: [...backfill, { date: '2026-10-09', weight: 184.9 }] });
+    t('R Oct 9 food not counted', r.trackedDays === 26, r.trackedDays);
+    t('R log says 550/day, scale ~300/day → negative correction', r.current.correction < -60 && r.current.correction > -400, Math.round(r.current.correction));
+    t('R 26 days is not High confidence', r.current.confidence !== 'high', r.current.confidence);
+    console.log(`  regression: correction ${Math.round(r.current.correction)} ± ${Math.round(r.current.correctionSd)} (${r.current.confidence})`);
 }
 
 console.log(`\n${pass} passed, ${fail} failed (${pass + fail} total)`);

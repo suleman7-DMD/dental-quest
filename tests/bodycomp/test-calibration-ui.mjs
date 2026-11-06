@@ -1,9 +1,10 @@
-// BodyComp calibration / budget / Progress integration harness (Playwright)
+// BodyComp adaptive TDEE / budget / Progress integration harness (Playwright)
 // Loads the real body-comp-tracker.html with the clock fixed at
 // 2026-10-09 10:00 ET, seeds the Sep 13 – Oct 8 regression fixture, and checks
-// the app-level behavior: exports, disable flag, persistence, the intake
-// budget, workout + WEIGHIN imports, completed-day rules, and phone/desktop
-// layout. Chromium + WebKit at iPhone and desktop viewports.
+// the app-level behavior: the learned correction in targets, deficits and
+// exports, backdated imports, disable flag, the intake budget, workout +
+// WEIGHIN imports, completed-day rules, the three Progress TDEE cards and
+// phone/desktop layout. Chromium + WebKit at iPhone and desktop viewports.
 // Run: PLAYWRIGHT_PATH=/path/to/node_modules/playwright node tests/bodycomp/test-calibration-ui.mjs
 
 import assert from 'node:assert/strict';
@@ -95,9 +96,10 @@ let checks = 0;
 const ok = (cond, message) => { assert(cond, message); checks++; };
 
 async function logicSuite(page) {
-    // ---------- Regression aggregates (calibration off/empty ledger) ----------
+    // ---------- Regression aggregates (original formula: calibration off) ----------
     const agg = await page.evaluate(() => {
         __seed();
+        state.settings.tdeeCalibrationEnabled = false;
         __setTodayIntake(150); // Oct 9 in progress: 150 kcal by mid-morning
         saveDayLog();
         let total = 0, intake = 0, n = 0;
@@ -116,7 +118,8 @@ async function logicSuite(page) {
             exportHasInProgress: exp.text.includes('not included in totals'),
             oct9Row: exp.rows.find(r => r.date === '2026-10-09'),
             noWorkoutRow: exp.rows.find(r => r.date === '2026-09-13'),
-            streak: calculateDeficitStreak()
+            streak: calculateDeficitStreak(),
+            restore: (state.settings.tdeeCalibrationEnabled = true)
         };
     });
     ok(agg.total === 14293, `cumulative 14,293 (got ${agg.total})`);
@@ -157,82 +160,99 @@ async function logicSuite(page) {
     ok(/Run \/ stairs/.test(runLabel) && /stairs & incline walks are logged as Run/.test(runLabel), '"Run" shown as Run / stairs');
     ok(!/Biggest Deficit\s+Oct 9/.test(progress.records) && !/Best Protein Day\s+Oct 9/.test(progress.records) && /Biggest Deficit/.test(progress.records), 'deficit/protein records exclude the in-progress day');
 
-    // ---------- Calibration commit, history integrity, persistence ----------
+    // ---------- Adaptive TDEE: learned from the data, no commit schedule ----------
     const cal = await page.evaluate(() => {
+        __seed();
+        __setTodayIntake(150);
         const logsBefore = JSON.stringify(state.dailyLogs);
-        const targetsBefore = JSON.stringify(state.today.targets);
-        const oct8Before = getDisplayDeficitForDate('2026-10-08');
         const status = getTdeeCalibrationStatus();
-        const first = maybeCommitTdeeCalibration();
-        const second = maybeCommitTdeeCalibration();
-        const ledger = getTdeeCalibrationHistory();
-        const entry = ledger[0];
         const est = getLiveTdeeEstimate();
+        const targetsCal = JSON.stringify(state.today.targets);
+        const expected = JSON.stringify(applyTargetModifiers(calculateTargets(state.today.mode, est.raw + est.adjustment, getWeightForDate(state.today.date), state.today.isBrainDay)));
+        state.settings.tdeeCalibrationEnabled = false;
+        refreshTodayTargets();
+        const targetsRaw = JSON.stringify(state.today.targets);
+        state.settings.tdeeCalibrationEnabled = true;
+        refreshTodayTargets();
         renderSimpleView();
         document.getElementById('tdeeDetails').open = true;
         renderTdeeDetailsBody();
+        // A backdated weigh-in counts the moment it's imported
+        const before = getActiveCalibrationAdjustment(state.today.date);
+        state.weighIns.wi_backdated = { id: 'wi_backdated', date: '2026-10-07', weight: 183.4, source: 'import' };
+        const after = getActiveCalibrationAdjustment(state.today.date);
+        delete state.weighIns.wi_backdated;
+        const restored = getActiveCalibrationAdjustment(state.today.date);
         saveStateImmediate();
-        const stored = JSON.parse(localStorage.getItem('bodyCompTrackerState'));
         loadState();
-        const merged = calMergeHistories(getTdeeCalibrationHistory(), [{ ...entry, computedAt: '2099-01-01T00:00:00Z', adjustment: -300 }]);
         return {
-            eligible: status.evaluation.eligible, confidence: status.evaluation.confidence,
-            first, second, ledgerLength: ledger.length, entry,
+            ok: status.run.ok, trackedDays: status.trackedDays, weighInDays: status.weighInDays,
+            correction: status.current.correction, sd: status.current.correctionSd, confidence: status.confidence,
+            est, targetsCal, targetsRaw, expected, before, after, restored,
+            afterReload: getActiveCalibrationAdjustment(state.today.date),
+            noLedger: !state.settings.tdeeCalibrationLog,
             logsUnchanged: JSON.stringify(state.dailyLogs) === logsBefore,
-            targetsUnchanged: JSON.stringify(state.today.targets) === targetsBefore,
-            oct8Same: getDisplayDeficitForDate('2026-10-08') === oct8Before,
-            est, label: document.getElementById('simpleTDEELabel')?.textContent,
+            oct8: getDisplayDeficitForDate('2026-10-08'), oct8Adj: getActiveCalibrationAdjustment('2026-10-08'),
+            label: document.getElementById('simpleTDEELabel')?.textContent,
             tdeeShown: document.getElementById('simpleTDEE')?.textContent,
             details: document.getElementById('tdeeDetailsBody').innerText,
-            storedLength: calNormalizeHistory(stored.settings.tdeeCalibrationLog).length,
-            reloadedLength: getTdeeCalibrationHistory().length,
-            mergedLength: merged.length, mergedAdj: merged[0].adjustment,
             claude: generateClaudeExport(), weekly: generateWeeklyClaudeExport(), daily: generateExportText(),
             rawDeficitLive: getCurrentRawDeficit(), calibratedLive: getCurrentDeficit(),
             progressRow: generateProgressExport('2026-10-09', '2026-10-09').rows[0].deficit,
-            progressText: generateProgressExport('2026-10-02', '2026-10-09').text
+            progressExp: generateProgressExport('2026-10-02', '2026-10-09')
         };
     });
-    ok(cal.eligible && cal.confidence === 'provisional', `backfilled 26 days → provisional (got ${cal.confidence})`);
-    ok(cal.first === true && cal.second === false && cal.ledgerLength === 1, 'one commit per 7 completed days');
-    ok(cal.entry.effectiveDate === '2026-10-09' && cal.entry.adjustment < 0 && cal.entry.adjustment >= -100, `first correction negative, ≤ 100 (got ${cal.entry.adjustment})`);
-    ok(cal.logsUnchanged, 'historical logs untouched by calibration');
-    ok(cal.targetsUnchanged, 'mode targets/budget not lowered by calibration');
-    ok(cal.oct8Same, 'days before the effective date are not re-penalized');
-    ok(cal.est.calibrated === cal.est.raw + cal.entry.adjustment, 'calibrated = raw + correction');
+    ok(cal.ok && cal.trackedDays === 26 && cal.weighInDays === 27, `filter sees 26 logged days + 27 weigh-ins (got ${cal.trackedDays}/${cal.weighInDays})`);
+    ok(cal.correction < -60 && cal.correction > -400, `log says ~550/day, scale ~300/day → negative correction (got ${Math.round(cal.correction)})`);
+    ok(cal.confidence !== 'high' && cal.sd > 60, `26 days is not High confidence (got ${cal.confidence}, ±${Math.round(cal.sd)})`);
+    ok(cal.est.adjustment === Math.round(cal.correction) && cal.est.calibrated === cal.est.raw + cal.est.adjustment, 'calibrated TDEE = formula + learned correction');
+    ok(cal.targetsCal === cal.expected && cal.targetsCal !== cal.targetsRaw, 'mode targets plan against the calibrated TDEE');
+    ok(cal.after !== cal.before && cal.restored === cal.before, `backdated weigh-in moves the correction immediately (${cal.before} → ${cal.after})`);
+    ok(cal.afterReload === cal.before && cal.noLedger, 'estimate is a pure function of the data: same after reload, no ledger written');
+    ok(cal.logsUnchanged, 'stored day logs keep raw formula values');
+    ok(cal.oct8 === 697 + cal.oct8Adj && cal.oct8Adj < 0, 'past days show the calibrated deficit (raw + that day\'s correction)');
     ok(cal.label === 'TDEE est.' && cal.tdeeShown.replace(/,/g, '').includes(String(cal.est.calibrated)), 'homepage shows labeled calibrated estimate');
-    ok(/Original estimate/.test(cal.details) && /slower than your calorie log predicts/.test(cal.details), 'details show original/correction/explanation');
-    ok(cal.storedLength === 1 && cal.reloadedLength === 1 && cal.mergedLength === 1, 'ledger persists without duplication');
-    ok(cal.mergedAdj === cal.entry.adjustment, 'cloud merge keeps the first-committed entry');
-    ok(cal.calibratedLive === cal.rawDeficitLive + cal.entry.adjustment, 'live calibrated deficit');
+    ok(/Original formula/.test(cal.details) && /Learned correction/.test(cal.details) && /Your TDEE \(calibrated\)/.test(cal.details) && /don't subtract extra/.test(cal.details), 'details show formula, correction, calibrated, no-extra-subtractor note');
+    ok(/Re-learned every day from 26 food-logged days and 27 morning weigh-ins/.test(cal.details), 'details name the data used');
+    ok(cal.calibratedLive === cal.rawDeficitLive + cal.est.adjustment, 'live calibrated deficit');
     ok(new RegExp(`DEFICIT:${cal.rawDeficitLive}\\n`).test(cal.claude), 'Claude export DEFICIT stays raw');
-    ok(/CALIBRATION_ADJ:-\d+\|CALIBRATED_TDEE:\d+\|CALIBRATED_DEFICIT:-?\d+\|CALIBRATION_CONFIDENCE:provisional\|NOTE:estimate/.test(cal.claude), 'Claude export adds labeled calibration line');
+    ok(/CALIBRATION_ADJ:-\d+\|CALIBRATED_TDEE:\d+\|CALIBRATED_DEFICIT:-?\d+\|CALIBRATION_SD:\d+\|CALIBRATION_CONFIDENCE:\w+\|NOTE:kalman_filter_estimate/.test(cal.claude), 'Claude export adds labeled calibration line with SD');
     ok(!/NEEDS_REFEED/.test(cal.claude) && !/NEEDS_REFEED/.test(cal.weekly), 'NEEDS_REFEED flag removed');
-    ok(/TOTALS\|WeeklyDeficit:3480\|/.test(cal.weekly) && /CALIBRATION\|Adj:-\d+\|Confidence:provisional\|CalibratedWeeklyDeficit:3480\|Note:estimate/.test(cal.weekly), 'weekly export raw 3,480 + labeled line (no correction in force Oct 2–8)');
-    ok(/CALIBRATED TDEE \(estimate\)/.test(cal.daily) && /today excluded/.test(cal.daily), 'daily export labeled + completed days');
+    const weekCal = cal.weekly.match(/CALIBRATION\|Adj:-\d+\|SD:\d+\|Confidence:\w+\|CalibratedWeeklyDeficit:(\d+)\|Note:estimate/);
+    ok(/TOTALS\|WeeklyDeficit:3480\|/.test(cal.weekly) && weekCal && Number(weekCal[1]) < 3480, 'weekly export: raw 3,480 + labeled calibrated weekly deficit');
+    ok(/CALIBRATED TDEE \(estimate\)/.test(cal.daily) && /learned correction −\d+ ±\d+/.test(cal.daily) && /today excluded/.test(cal.daily), 'daily export labeled + completed days');
     ok(cal.progressRow === cal.rawDeficitLive, 'progress export rows stay raw');
-    ok(/Personal TDEE calibration \(estimate, not included above\)/.test(cal.progressText), 'progress export labeled calibration line');
+    const pText = cal.progressExp.text;
+    ok(/TDEE CALIBRATION \(estimate; Kalman filter/.test(pText) && /Learned correction now: −\d+ ± \d+ kcal\/day/.test(pText), 'progress export calibration section');
+    ok(/Walk-forward backtest/.test(pText) && /7 days \(n=\d+\): formula bias/.test(pText), 'progress export includes the backtest');
+    ok(/2026-10-05 \| .*Weigh-in: \d+\.\d lb \(trend \d+\.\d\) \| TDEE formula [\d,]+ \/ calibrated [\d,]+/.test(pText), 'progress export rows carry weigh-in, trend and both TDEEs');
+    ok(cal.progressExp.rows.find(r => r.date === '2026-10-05').weight !== null, 'progress export row weight field');
 
     // ---------- Disable flag restores original behavior ----------
     const off = await page.evaluate(() => {
         state.settings.tdeeCalibrationEnabled = false;
         const est = getLiveTdeeEstimate();
+        refreshTodayTargets();
         renderSimpleView();
+        renderProgressTab();
         const result = {
-            same: est.calibrated === est.raw,
+            same: est.calibrated === est.raw && est.adjustment === 0,
             deficit: getDisplayDeficitForDate('2026-10-09') === getCurrentRawDeficit(),
+            oct8: getDisplayDeficitForDate('2026-10-08'),
             label: document.getElementById('simpleTDEELabel')?.textContent,
-            ledgerKept: getTdeeCalibrationHistory().length === 1,
-            commit: maybeCommitTdeeCalibration(),
-            claudeNoCal: !/CALIBRATION_ADJ/.test(generateClaudeExport())
+            claudeNoCal: !/CALIBRATION_ADJ/.test(generateClaudeExport()),
+            progressNoCal: !/TDEE CALIBRATION/.test(generateProgressExport('2026-10-02', '2026-10-08').text),
+            card: document.getElementById('tdeeCalibration').textContent
         };
         state.settings.tdeeCalibrationEnabled = true;
-        result.backOn = getLiveTdeeEstimate().adjustment === getTdeeCalibrationHistory()[0].adjustment;
+        refreshTodayTargets();
+        result.backOn = getLiveTdeeEstimate().adjustment !== 0;
         return result;
     });
-    ok(off.same && off.deficit && off.label === 'TDEE', 'disabled → original TDEE and deficit');
-    ok(off.ledgerKept && off.commit === false && off.claudeNoCal, 'disabled → no commits, no export extras, ledger kept');
-    ok(off.backOn, 're-enabling restores the stored correction');
+    ok(off.same && off.deficit && off.oct8 === 697 && off.label === 'TDEE', 'disabled → original TDEE and deficits');
+    ok(off.claudeNoCal && off.progressNoCal, 'disabled → no export extras');
+    ok(/not applied — off/.test(off.card), 'disabled → card says the calibration is not applied');
+    ok(off.backOn, 're-enabling restores the learned correction');
 
     // ---------- Daily intake budget (independent of TDEE/workouts/calibration) ----------
     const budget = await page.evaluate(() => {
@@ -334,7 +354,6 @@ async function layoutSuite(page, label) {
         __seed();
         __setTodayIntake(2100);
         saveDayLog();
-        maybeCommitTdeeCalibration();
         showSimpleView?.();
         renderSimpleView();
         document.getElementById('tdeeDetails').open = true;
@@ -350,16 +369,29 @@ async function layoutSuite(page, label) {
         showDetailsView();
         switchDashboardTab('progress');
         renderProgressTab();
-        document.getElementById('pm_tdeeCalibration')?.classList.remove('collapsed');
+        ['tdeeCalibration', 'rateOfWeightLoss', 'metabolicAdaptation'].forEach(id => document.getElementById('pm_' + id)?.classList.remove('collapsed'));
     });
     await clearOverlays();
-    const card = await page.evaluate(() => document.getElementById('tdeeCalibration').textContent);
-    ok(/Confidence\s*Provisional/.test(card), 'card: 26 days after first review stays Provisional (no self-vouching)');
-    ok(/Reviewed through Oct 8: Adjusted/.test(card), 'card reports the committed review, not a phantom next step');
-    await page.locator('#tdeeCalibration').scrollIntoViewIfNeeded();
-    await fits(page, '#tdeeCalibration');
+    const cards = await page.evaluate(() => ({
+        cal: document.getElementById('tdeeCalibration').textContent,
+        rate: document.getElementById('rateOfWeightLoss').textContent,
+        model: document.getElementById('metabolicAdaptation').textContent,
+        svgs: ['tdeeCalibration', 'rateOfWeightLoss', 'metabolicAdaptation'].map(id => document.querySelectorAll(`#${id} svg[role="img"]`).length)
+    }));
+    ok(/Learned correction\s*−\d+ ±\d+ kcal\/day/.test(cards.cal) && /90% range/.test(cards.cal) && /Confidence\s*(Provisional|Moderate)/.test(cards.cal), 'calibration card: correction ± SD, 90% range, confidence');
+    ok(/Latest update · Oct 9/.test(cards.cal) && /Don't add a separate under-counting subtractor/.test(cards.cal), 'calibration card: latest weigh-in update + no-extra-subtractor note');
+    ok(/Current rate \(4-week trend\)/.test(cards.rate) && /Cross-check, weigh-ins only/.test(cards.rate), 'rate card: filter rate + raw cross-check');
+    ok(/scale trend/.test(cards.model) && /original formula said/.test(cards.model) && /Accuracy check on your data/.test(cards.model) && /Formula bias/.test(cards.model), 'model card: 4-week comparison + backtest table');
+    ok(cards.svgs.every(n => n >= 1), `each card draws its chart (${cards.svgs})`);
+    for (const id of ['tdeeCalibration', 'rateOfWeightLoss', 'metabolicAdaptation']) {
+        await page.locator('#' + id).scrollIntoViewIfNeeded();
+        await fits(page, '#' + id);
+    }
     await fits(page, '#recompPredictor');
+    await page.locator('#tdeeCalibration').scrollIntoViewIfNeeded();
     await page.screenshot({ path: `${shotDir}/bodycomp-cal-progress-${label}.png`, fullPage: false });
+    await page.locator('#metabolicAdaptation').scrollIntoViewIfNeeded();
+    await page.screenshot({ path: `${shotDir}/bodycomp-cal-model-${label}.png`, fullPage: false });
 }
 
 try {

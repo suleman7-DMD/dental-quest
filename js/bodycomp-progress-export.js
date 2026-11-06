@@ -28,6 +28,11 @@ function generateProgressExport(start, end) {
         throw new Error('Choose valid dates, with the start on or before the end and no future days.');
     }
     const rows = [];
+    // Morning weigh-ins and the smoothed trend from the calibration filter,
+    // so each row carries the weight data the TDEE was learned from.
+    const energyRun = typeof getEnergyBalanceRun === 'function' ? getEnergyBalanceRun() : null;
+    const energyRows = new Map((energyRun?.ok ? energyRun.series : []).map(row => [row.date, row]));
+    const calibrationOn = typeof isTdeeCalibrationEnabled === 'function' && isTdeeCalibrationEnabled() && !!energyRun?.ok;
     const cursor = parseLocalDate(start);
     const liveDate = state.today?.date || getLocalDateString();
     while (getLocalDateString(cursor) <= end) {
@@ -42,8 +47,14 @@ function generateProgressExport(start, end) {
         const assumed = !hasNutritionData(log) && state.dailyLogs?.[date]?.nutritionStatus === 'assumed';
         const exerciseKnown = workouts.workouts.some(workout => Number.isFinite(workout.calories)) && Number.isFinite(workouts.totalCalories);
         const exerciseIncomplete = workouts.workoutCount > 0 && !workouts.workouts.every(workout => Number.isFinite(workout.calories));
+        const energyRow = energyRows.get(date);
+        const storedTdee = !live && typeof log?.tdee === 'number' && log.tdee > 0 ? Math.round(log.tdee) : null;
         rows.push({
             date,
+            weight: energyRow?.weight ?? null,
+            trendWeight: energyRow && Number.isFinite(energyRow.sTrend) ? Math.round(energyRow.sTrend * 10) / 10 : null,
+            modelTdee: storedTdee,
+            calibratedTdee: storedTdee !== null && calibrationOn ? storedTdee + getActiveCalibrationAdjustment(date) : null,
             intake: knownIntake ? Math.round(intake) : null,
             deficit: Number.isFinite(deficit) ? Math.round(deficit) : null,
             exercise: exerciseKnown ? Math.round(workouts.totalCalories) : null,
@@ -74,18 +85,9 @@ function generateProgressExport(start, end) {
         surplusDays: knownBalances.filter(row => row.deficit < 0).length,
         maintenanceDays: knownBalances.filter(row => row.deficit === 0).length
     };
-    // Optional labeled calibration line (absent when off or not in force)
-    let calibrationLine = null;
-    if (typeof getActiveCalibrationAdjustment === 'function') {
-        const calDays = knownBalances.filter(row => !row.assumed);
-        const adjTotal = calDays.reduce((sum, row) => sum + getActiveCalibrationAdjustment(row.date), 0);
-        const liveAdj = getActiveCalibrationAdjustment(state.today?.date || getLocalDateString());
-        if (adjTotal !== 0 || liveAdj !== 0) {
-            summary.calibrationAdjustmentTotal = adjTotal;
-            const sign = value => `${value > 0 ? '+' : value < 0 ? '−' : ''}${Math.abs(Math.round(value)).toLocaleString('en-US')}`;
-            calibrationLine = `Personal TDEE calibration (estimate, not included above): ${sign(liveAdj)} kcal/day in force now; applied to this period's food-logged days it would change the net balance by ${sign(adjTotal)} kcal.`;
-        }
-    }
+    // Labeled calibration section for an independent check (absent when
+    // off or not in force). Totals above stay on the original formula.
+    const calibrationLines = buildProgressExportCalibration(energyRun, calibrationOn, start, end, knownBalances, summary);
     const number = value => value.toLocaleString('en-US', { maximumFractionDigits: 1 });
     const balance = (value, unit = 'kcal') => value === null ? 'Unknown' : `${value > 0 ? 'Deficit' : value < 0 ? 'Surplus' : 'Maintenance'}: ${number(Math.abs(value))} ${unit}`;
     const text = [
@@ -100,14 +102,62 @@ function generateProgressExport(start, end) {
         `Exercise calories recorded: ${summary.exerciseDays}/${summary.completedDays} days; ${completedRows.filter(row => row.exerciseIncomplete).length} incomplete. Other days not inferred as rest.`,
         `Deficit days: ${summary.deficitDays} | Surplus days: ${summary.surplusDays} | Maintenance: ${summary.maintenanceDays} | Unknown balance: ${summary.completedDays - summary.balanceDays}`,
         ...(summary.inProgressDays ? [`In progress: ${rows.filter(row => row.partial).map(row => row.date).join(', ')} — listed below, not included in totals until complete.`] : []),
-        ...(calibrationLine ? [calibrationLine] : []),
         '',
         'DAILY DATA',
-        ...rows.map(row => `${row.date} | Intake: ${row.intake === null ? 'Not logged' : number(row.intake) + ' kcal'} | ${balance(row.deficit)}${row.assumed ? ' (assumed)' : ''} | Exercise: ${row.exercise === null ? (row.exerciseIncomplete ? 'Incomplete calorie data' : 'Not logged') : number(row.exercise) + ' kcal' + (row.exerciseIncomplete ? ' (incomplete)' : '')}${row.partial ? ' | In progress' : ''}`),
+        ...rows.map(row => `${row.date} | Intake: ${row.intake === null ? 'Not logged' : number(row.intake) + ' kcal'} | ${balance(row.deficit)}${row.assumed ? ' (assumed)' : ''} | Exercise: ${row.exercise === null ? (row.exerciseIncomplete ? 'Incomplete calorie data' : 'Not logged') : number(row.exercise) + ' kcal' + (row.exerciseIncomplete ? ' (incomplete)' : '')} | Weigh-in: ${row.weight === null ? '—' : row.weight + ' lb'}${row.trendWeight === null ? '' : ` (trend ${row.trendWeight})`}${row.modelTdee === null ? '' : ` | TDEE formula ${number(row.modelTdee)}${row.calibratedTdee === null ? '' : ` / calibrated ${number(row.calibratedTdee)}`}`}${row.partial ? ' | In progress' : ''}`),
+        ...(calibrationLines.length ? ['', ...calibrationLines] : []),
         '',
-        'Notes: Intake is logged food, not proof of complete intake. Unknown balances/intakes are excluded from their averages. Assumed balances are included and labeled. Today/live day is in progress and not totaled. Balances use the original TDEE model. Exercise is reported separately; do not add it again to BodyComp balances. Daily kcal are rounded; totals sum the listed completed-day values.'
+        'Notes: Intake is logged food, not proof of complete intake. Unknown balances/intakes are excluded from their averages. Assumed balances are included and labeled. Today/live day is in progress and not totaled. Balances use the original TDEE model (formula); the calibration section shows the learned correction separately. Weigh-ins are the standardized morning readings the calibration uses (one per day). Exercise is reported separately; do not add it again to BodyComp balances. Daily kcal are rounded; totals sum the listed completed-day values.'
     ].join('\n');
     return { text, rows, summary };
+}
+
+// Calibration + accuracy-check section of the progress export: what the
+// filter learned, how it did out of sample, and the period's numbers, so an
+// analyst can recompute the correction from the daily rows.
+function buildProgressExportCalibration(run, calibrationOn, start, end, knownBalances, summary) {
+    if (!calibrationOn || typeof calTrendFromRun !== 'function') return [];
+    const C = TDEE_CALIBRATION;
+    const cur = run.current;
+    const r = value => Math.round(value).toLocaleString('en-US');
+    const sign = value => `${value > 0 ? '+' : value < 0 ? '−' : ''}${Math.abs(Math.round(value)).toLocaleString('en-US')}`;
+    const lb = value => `${value > 0 ? '+' : value < 0 ? '−' : ''}${Math.abs(value).toFixed(2)} lb`;
+    const liveDate = state.today?.date || getLocalDateString();
+    const rawToday = calculateTDEE(getWeightForDate(liveDate), state.profile.height_cm, state.profile.age, state.today?.date);
+    const lines = [
+        'TDEE CALIBRATION (estimate; Kalman filter over all history, re-fit whenever data changes)',
+        `Data used: ${run.trackedDays} food-logged days + ${run.weighInDays} morning weigh-ins, ${run.startDate} to ${run.endDate}${run.downweighted ? ` (${run.downweighted} unusual readings down-weighted)` : ''}`,
+        `Learned correction now: ${sign(cur.correction)} ± ${Math.round(cur.correctionSd)} kcal/day (90%: ${sign(cur.correction - C.CI_Z * cur.correctionSd)} to ${sign(cur.correction + C.CI_Z * cur.correctionSd)}), ${CALIBRATION_CONFIDENCE_LABELS[cur.confidence] || cur.confidence}`,
+        `TDEE today: formula ${r(rawToday)} → calibrated ${r(rawToday + getActiveCalibrationAdjustment(liveDate))} kcal/day. The correction combines under-logged intake, formula and workout-calorie error and adaptation; it is not an extra subtractor on top.`
+    ];
+    const trend = calTrendFromRun(run);
+    if (trend) {
+        lines.push(`4-week trend: ${lb(trend.lbPerWeek)}/wk (90%: ${lb(trend.lbPerWeekRange[0])} to ${lb(trend.lbPerWeekRange[1])}), trend weight ${trend.trendWeight.toFixed(1)} ± ${trend.trendWeightSd.toFixed(1)} lb`);
+    }
+    const calDays = knownBalances.filter(row => !row.assumed);
+    const adjTotal = calDays.reduce((sum, row) => sum + getActiveCalibrationAdjustment(row.date), 0);
+    if (adjTotal !== 0 && summary.deficit !== null) {
+        summary.calibrationAdjustmentTotal = adjTotal;
+        const net = value => `${value >= 0 ? 'deficit' : 'surplus'} ${r(Math.abs(value))} kcal`;
+        lines.push(`This period with the correction applied to its ${calDays.length} food-logged days: net ${net(summary.deficit + adjTotal)} (formula: ${net(summary.deficit)}).`);
+    }
+    // Period check: smoothed trend change vs. each prediction from the log
+    const from = start < run.startDate ? run.startDate : start;
+    const to = calAddDays(end, 1) > run.endDate ? run.endDate : calAddDays(end, 1);
+    if (from < to) {
+        const paths = calPredictionPaths(run, from).filter(p => p.date <= to);
+        if (paths.length > 1) {
+            const a = paths[0], b = paths[paths.length - 1];
+            lines.push(`Period check (${from} morning → ${to} morning): scale trend ${lb(b.trend - a.trend)}; original formula predicted ${lb(b.model - a.model)}; calibrated (correction known each morning) predicted ${lb(b.calibrated - a.calibrated)}.`);
+        }
+    }
+    const tests = [7, 14, 28].map(h => getEnergyBalanceBacktest(h)).filter(t => t.n >= 3);
+    if (tests.length) {
+        lines.push('Walk-forward backtest over all history (from each weigh-in, predict the weight N days later from the food log only; error = predicted − actual, lb):');
+        tests.forEach(t => lines.push(`  ${t.horizon} days (n=${t.n}): formula bias ${t.model.bias.toFixed(2)}, MAE ${t.model.mae.toFixed(2)}, RMSE ${t.model.rmse.toFixed(2)} | calibrated bias ${t.calibrated.bias.toFixed(2)}, MAE ${t.calibrated.mae.toFixed(2)}, RMSE ${t.calibrated.rmse.toFixed(2)}`));
+    }
+    lines.push(`Model: trend(t+1) = trend(t) + (intake − formula TDEE − correction) / ${C.KCAL_PER_LB} on food-logged days; scale = trend + noise (SD ${C.SCALE_NOISE_LB} lb); logged-day noise SD ${C.TRACKED_DAY_KCAL_SD} kcal; unlogged days uninformative (SD ${C.UNTRACKED_DAY_KCAL_SD} kcal); correction random walk SD ${C.CORRECTION_DRIFT_KCAL} kcal/day; prior 0 ± ${C.PRIOR_CORRECTION_SD_KCAL}; Huber down-weighting beyond z=${C.ROBUST_Z}.`);
+    return lines;
 }
 
 function openProgressExport(trigger = document.activeElement) {
