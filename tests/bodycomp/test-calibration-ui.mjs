@@ -365,21 +365,29 @@ async function logicSuite(page) {
     ok(/Oct 3 – Oct 9/.test(nextDay.title7) && /Oct 7 – Oct 9/.test(nextDay.title3), `after rollover the windows end on the new yesterday (${nextDay.title7})`);
     ok(nextDay.oct9Def != null && nextDay.oct9Cls.includes(`t-${getDeficitTierKey(nextDay.oct9Def)}`), `Oct 9 becomes a completed, graded day (${nextDay.oct9Cls})`);
 
-    // ---------- Daily intake budget (independent of TDEE/workouts/calibration) ----------
+    // ---------- Daily intake budget = base (Settings) + learned correction ----------
     const budget = await page.evaluate(() => {
+        __seed();
         const states = [1500, 1615, 1700, 1899, 1900, 1915, 2100].map(v => getIntakeBudgetState(v, 1900));
-        const read = () => ({ status: document.getElementById('budgetStatus').textContent, current: document.getElementById('budgetCurrent').textContent, cls: document.getElementById('intakeBudgetRow').className });
-        __setTodayIntake(1700);
+        const read = () => ({ status: document.getElementById('budgetStatus').textContent, current: document.getElementById('budgetCurrent').textContent,
+            target: document.getElementById('budgetTarget').textContent, tag: document.getElementById('budgetCalTag'), cls: document.getElementById('intakeBudgetRow').className });
+        const adj = getActiveCalibrationAdjustment(state.today.date);
+        const goals = getIntakeGoals();
+        __setTodayIntake(1600);
         renderSimpleView();
         const a = read();
+        const aTag = { hidden: a.tag.hidden, text: a.tag.textContent };
         state.today.workouts = { w: { id: 'w', type: 'Lift', duration: 90, calories: 900 } };
         state.today.activeCalories = 1200;
-        state.settings.tdeeCalibrationEnabled = false;
         renderSimpleView();
-        const b = read();
-        state.settings.tdeeCalibrationEnabled = true;
+        const withWorkout = read();
         state.today.workouts = {};
         state.today.activeCalories = 0;
+        state.settings.tdeeCalibrationEnabled = false;
+        renderSimpleView();
+        const off = read();
+        const offTagHidden = off.tag.hidden;
+        state.settings.tdeeCalibrationEnabled = true;
         const rawBefore = getLiveTdeeEstimate().raw;
         state.today.activeCalories = 900; // overlapping Watch active calories must not add to TDEE
         const rawAfter = getLiveTdeeEstimate().raw;
@@ -388,16 +396,20 @@ async function logicSuite(page) {
         renderSimpleView();
         const over = read();
         state.settings.intakeBudgetKcal = 2000;
-        __setTodayIntake(1900);
-        renderSimpleView();
-        const custom = read();
+        const custom = getIntakeGoals();
+        openSettingsModal?.();
+        const settingsShows = document.getElementById('settingsIntakeBudget')?.value;
+        closeSettingsModal?.();
         delete state.settings.intakeBudgetKcal;
-        return { keys: states.map(s => s.key), a, b, over, custom, rawBefore, rawAfter, overFill: document.getElementById('budgetOverFill').style.width };
+        return { keys: states.map(s => s.key), adj, goals, a, aTag, withWorkout, off, offTagHidden, over, custom, settingsShows, rawBefore, rawAfter };
     });
     ok(budget.keys.join() === 'normal,approaching,approaching,approaching,reached,reached,above', `budget thresholds (${budget.keys})`);
-    ok(/Approaching daily intake target/.test(budget.a.status) && budget.a.status === budget.b.status && budget.a.cls === budget.b.cls, 'budget unaffected by workouts, active calories, calibration');
-    ok(/Above target — keep logging normally/.test(budget.over.status) && /2,100 kcal logged, 200 over/.test(budget.over.status) && budget.over.current === '2,100', 'above-target shows actual intake and overage (not truncated)');
-    ok(/Approaching/.test(budget.custom.status), 'budget editable (2,000 kcal setting honored)');
+    ok(budget.adj < 0 && budget.goals.baseBudget === 1900 && budget.goals.budget === 1900 + budget.adj && budget.goals.budgetCorrection === budget.adj, `budget = 1,900 + correction (${budget.adj}) = ${budget.goals.budget}`);
+    ok(budget.a.target.replace(/,/g, '') === String(1900 + budget.adj) && !budget.aTag.hidden && budget.aTag.text === `1,900 − ${Math.abs(budget.adj)} calibration`, `home shows the calibrated budget with its math (${budget.a.target}, "${budget.aTag.text}")`);
+    ok(budget.withWorkout.status === budget.a.status && budget.withWorkout.target === budget.a.target, 'budget unaffected by workouts / active calories');
+    ok(budget.off.target === '1,900' && budget.offTagHidden, 'calibration off → base budget 1,900, no tag');
+    ok(new RegExp(`2,100 kcal logged, ${2100 - (1900 + budget.adj)} over`).test(budget.over.status) && budget.over.current === '2,100', `above-target overage measured against the calibrated budget (${budget.over.status})`);
+    ok(budget.custom.baseBudget === 2000 && budget.custom.budget === 2000 + budget.adj && budget.settingsShows === '2000', 'custom base budget honored; Settings shows/saves the base (no double subtraction)');
     ok(budget.rawBefore === budget.rawAfter, 'active calories never double counted in TDEE');
 
     // ---------- Copied-text WORKOUT import (regression) ----------

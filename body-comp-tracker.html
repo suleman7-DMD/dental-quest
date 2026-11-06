@@ -7302,11 +7302,11 @@
 
             <!-- Progress Bars -->
             <div class="simple-progress">
-                <!-- Daily Intake Budget: a fixed food budget (Settings), independent of
-                     TDEE, calibration, and whether a workout block was imported. -->
+                <!-- Daily Intake Budget: the base budget (Settings) + today's learned TDEE
+                     correction; independent of workouts and the live TDEE. -->
                 <div class="progress-row intake-budget-row" id="intakeBudgetRow">
                     <div class="progress-label-row">
-                        <span class="progress-name">Daily Intake Budget</span>
+                        <span class="progress-name">Daily Intake Budget <span class="deficit-goal-tag" id="budgetCalTag" hidden></span></span>
                         <span class="progress-values"><strong id="budgetCurrent">0</strong> / <span id="budgetTarget">1,900</span> kcal</span>
                     </div>
                     <div class="simple-progress-bar budget-bar" id="budgetBar" role="progressbar" aria-label="Daily intake budget" aria-valuemin="0" aria-valuemax="1900" aria-valuenow="0">
@@ -8518,7 +8518,7 @@
                     </div>
                     <div style="font-size: 0.75em; color: var(--text-muted); margin-top: 4px;">Pace tracking needs both. Clear both to remove the goal.</div>
                     <div class="form-group" style="margin-top: 12px;">
-                        <label class="form-label" for="settingsIntakeBudget">Daily intake budget (kcal)</label>
+                        <label class="form-label" for="settingsIntakeBudget">Daily intake budget (kcal, before calibration — the learned correction is applied automatically)</label>
                         <input type="number" id="settingsIntakeBudget" class="form-input" step="10" min="800" max="6000" inputmode="numeric">
                     </div>
                     <div class="form-row">
@@ -12252,21 +12252,31 @@
 
         // Configured daily food budget and protein goals (Settings). Defaults
         // apply until the user saves their own. Calibration never edits these.
+        // Settings hold the BASE budget (set against the original formula TDEE).
+        // The live budget adds today's learned TDEE correction (negative =
+        // real TDEE lower / under-logging), so the planned REAL deficit stays
+        // what the base budget intended. Off when calibration is off.
+        const INTAKE_BUDGET_FLOOR_KCAL = 1500;
         function getIntakeGoals() {
             const s = state.settings || {};
             const positive = (value, fallback) => {
                 const n = Number(value);
                 return Number.isFinite(n) && n > 0 ? Math.round(n) : fallback;
             };
+            const baseBudget = positive(s.intakeBudgetKcal, 1900);
+            const correction = getActiveCalibrationAdjustment(state.today?.date || getLocalDateString());
+            const budget = correction === 0 ? baseBudget : Math.max(INTAKE_BUDGET_FLOOR_KCAL, baseBudget + correction);
             return {
-                budget: positive(s.intakeBudgetKcal, 1900),
+                budget,
+                baseBudget,
+                budgetCorrection: budget - baseBudget,
                 proteinGoal: positive(s.proteinGoalG, 165),
                 proteinMin: positive(s.proteinMinG, 150)
             };
         }
 
-        // Budget indicator state from intake alone — no TDEE, workouts, or
-        // calibration involved. Informational only: nothing is ever blocked.
+        // Budget indicator state from intake vs. the (calibrated) budget — no
+        // workouts or live TDEE involved. Informational only: nothing is blocked.
         function getIntakeBudgetState(intake, budget) {
             const remaining = budget - intake;
             if (intake > budget * 1.01) {
@@ -12294,6 +12304,13 @@
             row.className = `progress-row intake-budget-row budget-row-${status.key}`;
             document.getElementById('budgetCurrent').textContent = formatNumber(intake);
             document.getElementById('budgetTarget').textContent = formatNumber(budget);
+            const goals = getIntakeGoals();
+            const calTag = document.getElementById('budgetCalTag');
+            if (calTag) {
+                calTag.hidden = goals.budgetCorrection === 0;
+                calTag.textContent = `${formatNumber(goals.baseBudget)} ${goals.budgetCorrection < 0 ? '−' : '+'} ${formatNumber(Math.abs(goals.budgetCorrection))} calibration`;
+            }
+            document.getElementById('budgetBar')?.setAttribute('aria-valuemax', String(budget));
             document.getElementById('budgetFill').style.width = `${(Math.min(intake, budget) / scale) * 100}%`;
             const overFill = document.getElementById('budgetOverFill');
             overFill.style.left = `${budgetPct}%`;
@@ -20571,7 +20588,7 @@ CALIBRATED DEFICIT (estimate): ${formatSignedKcal(deficit + exportCal.current)} 
             document.getElementById('settingsFocusMode').checked = state.settings?.focusMode || false;
             document.getElementById('settingsTdeeCalibration').checked = isTdeeCalibrationEnabled();
             const intakeGoals = getIntakeGoals();
-            document.getElementById('settingsIntakeBudget').value = intakeGoals.budget;
+            document.getElementById('settingsIntakeBudget').value = intakeGoals.baseBudget; // base, never the calibrated value
             document.getElementById('settingsProteinGoal').value = intakeGoals.proteinGoal;
             document.getElementById('settingsProteinMin').value = intakeGoals.proteinMin;
             document.getElementById('settingsModal').classList.add('active');
@@ -26009,7 +26026,7 @@ CALIBRATED DEFICIT (estimate): ${formatSignedKcal(deficit + exportCal.current)} 
                 <div class="tdee-note">${status.enabled
                     ? 'Used for your home-screen TDEE, live deficit, mode targets and every Progress deficit. Stored day logs keep the original formula values (exports label both).'
                     : 'Calibration is off (Settings → Personal Calibration), so the original formula is used everywhere.'}</div>
-                <div class="research-citation">How: a Kalman filter tracks your trend weight and this correction together, re-run over your whole history whenever a log or weigh-in changes (backdated imports count right away). Each logged day moves the trend by (intake − TDEE) ÷ ${formatNumber(C.KCAL_PER_LB)} kcal/lb; each morning weigh-in corrects both. Noise model fit to your own data: scale ±${C.SCALE_NOISE_LB} lb, logged day ±${C.TRACKED_DAY_KCAL_SD} kcal, unlogged day unknown (±${formatNumber(C.UNTRACKED_DAY_KCAL_SD)} kcal, so gaps teach it nothing), correction drift ±${C.CORRECTION_DRIFT_KCAL} kcal/day.${run.downweighted ? ` ${run.downweighted} unusual reading${run.downweighted === 1 ? '' : 's'} down-weighted.` : ''} It is an estimate of total model + logging error, not a measured metabolic rate, and it never changes your daily intake budget.</div>`);
+                <div class="research-citation">How: a Kalman filter tracks your trend weight and this correction together, re-run over your whole history whenever a log or weigh-in changes (backdated imports count right away). Each logged day moves the trend by (intake − TDEE) ÷ ${formatNumber(C.KCAL_PER_LB)} kcal/lb; each morning weigh-in corrects both. Noise model fit to your own data: scale ±${C.SCALE_NOISE_LB} lb, logged day ±${C.TRACKED_DAY_KCAL_SD} kcal, unlogged day unknown (±${formatNumber(C.UNTRACKED_DAY_KCAL_SD)} kcal, so gaps teach it nothing), correction drift ±${C.CORRECTION_DRIFT_KCAL} kcal/day.${run.downweighted ? ` ${run.downweighted} unusual reading${run.downweighted === 1 ? '' : 's'} down-weighted.` : ''} It is an estimate of total model + logging error, not a measured metabolic rate. Your daily intake budget = the budget in Settings + this correction, so the real deficit you planned stays the same.</div>`);
         }
 
         // ============================================
