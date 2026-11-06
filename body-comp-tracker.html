@@ -4640,6 +4640,55 @@
         .legend-box.deficit-gym { background: rgba(6, 182, 212, 0.4); }
         .legend-box.gym-only { background: rgba(139, 92, 246, 0.35); }
 
+        /* Deficit tiers (Nov 2026): one calibrated scale for the calendar,
+           home average badges and day details. Red = surplus, amber = near
+           maintenance, green deepens with the deficit, orange ring = 1,000+. */
+        :root {
+            --tier-surplus: rgba(239, 68, 68, 0.85);
+            --tier-maint: rgba(245, 158, 11, 0.85);
+            --tier-small: rgba(16, 185, 129, 0.4);
+            --tier-great: rgba(16, 185, 129, 0.65);
+            --tier-perfect: rgba(16, 185, 129, 0.9);
+            --tier-fire: #34d399;
+            --tier-hot: #f97316;
+        }
+        .calendar-day { flex-direction: column; gap: 2px; line-height: 1; }
+        .calendar-day .cal-num { font-size: 1em; }
+        .calendar-day .cal-def { font-size: 0.68em; font-weight: 700; font-variant-numeric: tabular-nums; letter-spacing: -0.02em; }
+        .calendar-day .cal-gym { position: absolute; top: 4px; right: 4px; width: 6px; height: 6px; border-radius: 50%; background: #c4b5fd; box-shadow: 0 0 0 1.5px rgba(15, 23, 42, 0.6); }
+        .calendar-day.t-surplus, .davg.t-surplus, .cal-legend .sw.t-surplus { background: rgba(239, 68, 68, 0.42); color: #fecaca; }
+        .calendar-day.t-maint, .davg.t-maint, .cal-legend .sw.t-maint { background: rgba(245, 158, 11, 0.28); color: #fde68a; }
+        .calendar-day.t-small, .davg.t-small, .cal-legend .sw.t-small { background: rgba(16, 185, 129, 0.16); color: #a7f3d0; }
+        .calendar-day.t-great, .davg.t-great, .cal-legend .sw.t-great { background: rgba(16, 185, 129, 0.34); color: #d1fae5; }
+        .calendar-day.t-perfect, .davg.t-perfect, .cal-legend .sw.t-perfect { background: rgba(16, 185, 129, 0.6); color: #fff; }
+        .calendar-day.t-fire, .davg.t-fire, .cal-legend .sw.t-fire { background: rgba(16, 185, 129, 0.92); color: #fff; box-shadow: 0 0 0 1px rgba(110, 231, 183, 0.7), 0 0 12px rgba(52, 211, 153, 0.55); }
+        .calendar-day.t-hot, .davg.t-hot, .cal-legend .sw.t-hot { background: rgba(16, 185, 129, 0.88); color: #fff; box-shadow: inset 0 0 0 2px var(--accent-orange); }
+        .calendar-day.assumed { background-image: repeating-linear-gradient(135deg, rgba(255, 255, 255, 0.10) 0 3px, transparent 3px 7px); opacity: 0.8; }
+        .calendar-day.today { background: transparent; border: 2px solid var(--accent-blue); }
+        .cal-legend { margin: 10px 0 18px; }
+        .cal-legend-scale { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 3px; }
+        .cal-legend-scale .sw { height: 22px; border-radius: 5px; display: flex; align-items: center; justify-content: center; font-size: 0.78em; letter-spacing: -0.2em; line-height: 1; overflow: hidden; }
+        .cal-legend-scale .lbl { margin-top: 3px; font-size: 0.66em; color: var(--text-muted); text-align: center; white-space: nowrap; }
+        .cal-legend-scale .lbl strong { display: block; color: var(--text-secondary); font-weight: 600; }
+        .cal-legend-keys { display: flex; flex-wrap: wrap; justify-content: center; gap: 4px 14px; margin-top: 8px; font-size: 0.72em; color: var(--text-muted); }
+        .cal-legend-keys span { display: inline-flex; align-items: center; gap: 5px; }
+        .cal-key-box { width: 13px; height: 13px; border-radius: 3px; display: inline-block; }
+        .cal-key-box.untracked { border: 1.5px dashed var(--border-color); }
+        .cal-key-box.assumed { background: rgba(16, 185, 129, 0.36) repeating-linear-gradient(135deg, rgba(255, 255, 255, 0.14) 0 3px, transparent 3px 7px); }
+        .cal-key-box.today { border: 2px solid var(--accent-blue); }
+        .cal-key-gym { width: 7px; height: 7px; border-radius: 50%; background: #c4b5fd; display: inline-block; }
+
+        /* Home: average daily deficit badges under Recent progress */
+        .deficit-averages { margin-top: 10px; }
+        .davg-head { display: flex; justify-content: space-between; font-size: 0.7em; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.06em; margin: 0 2px 5px; }
+        .davg-strip { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 6px; }
+        .davg { display: flex; flex-direction: column; gap: 1px; padding: 6px 7px; border-radius: 10px; border: 1px solid rgba(255, 255, 255, 0.08); min-width: 0; background: var(--bg-tertiary); color: var(--text-secondary); }
+        .davg.t-none { background: var(--bg-tertiary); }
+        .davg-top { display: flex; justify-content: space-between; align-items: center; gap: 2px; font-size: 0.68em; font-weight: 700; letter-spacing: 0.04em; opacity: 0.85; }
+        .davg-emoji { font-size: 1.1em; letter-spacing: -0.25em; line-height: 1; }
+        .davg-val { font-size: 1.12em; font-weight: 800; font-variant-numeric: tabular-nums; white-space: nowrap; line-height: 1.15; }
+        .davg-cov { font-size: 0.62em; opacity: 0.7; white-space: nowrap; }
+
         .month-stats {
             display: flex;
             justify-content: space-around;
@@ -7478,6 +7527,7 @@
                     <button type="button" class="progress-export-open" onclick="openProgressExport(this)">Export Progress</button>
                 </div>
                 <div id="recentProgressList" tabindex="0" aria-label="Previous days, newest first"></div>
+                <div id="deficitAverages" class="deficit-averages" aria-label="Average daily deficit"></div>
             </section>
 
             <!-- Quick Tab Access Bar (Task 2c) -->
@@ -7988,47 +8038,17 @@
                     </div>
                 </div>
 
-                <!-- Calendar Legend -->
-                <div class="calendar-legend">
-                    <div class="legend-item">
-                        <div class="legend-box empty"></div>
-                        <span>No data</span>
-                    </div>
-                    <div class="legend-item">
-                        <div class="legend-box missed"></div>
-                        <span>Missed</span>
-                    </div>
-                    <div class="legend-item">
-                        <div class="legend-box over"></div>
-                        <span>Over (exceeded 110%)</span>
-                    </div>
-                    <div class="legend-item">
-                        <div class="legend-box partial"></div>
-                        <span>Partial (deficit only)</span>
-                    </div>
-                    <div class="legend-item">
-                        <div class="legend-box gym-only"></div>
-                        <span>Gym Only</span>
-                    </div>
-                    <div class="legend-item">
-                        <div class="legend-box good"></div>
-                        <span>Good (deficit + protein)</span>
-                    </div>
-                    <div class="legend-item">
-                        <div class="legend-box deficit-gym"></div>
-                        <span>Deficit + Gym</span>
-                    </div>
-                    <div class="legend-item">
-                        <div class="legend-box perfect"></div>
-                        <span>Perfect (all targets)</span>
-                    </div>
+                <!-- Calendar Legend: calibrated deficit tiers (same scale as the home badges) -->
+                <div class="cal-legend" aria-label="Calendar key">
+                    <div class="cal-legend-scale"><div><div class="sw t-surplus">🛑</div><div class="lbl"><strong>Surplus</strong>&lt;0</div></div><div><div class="sw t-maint">😐</div><div class="lbl"><strong>Maint.</strong>0–249</div></div><div><div class="sw t-small">🌱</div><div class="lbl"><strong>Small</strong>250+</div></div><div><div class="sw t-great">👍</div><div class="lbl"><strong>Great</strong>500+</div></div><div><div class="sw t-perfect">🎯</div><div class="lbl"><strong>Perfect</strong>700+</div></div><div><div class="sw t-fire">🔥🔥</div><div class="lbl"><strong>Fire</strong>900+</div></div><div><div class="sw t-hot">🥵</div><div class="lbl"><strong>Too far</strong>1k+</div></div></div>
+                    <div class="cal-legend-keys"><span><i class="cal-key-gym"></i>gym</span><span><i class="cal-key-box today"></i>today</span><span><i class="cal-key-box untracked"></i>untracked</span><span><i class="cal-key-box assumed"></i>assumed</span><span>number = calibrated deficit</span></div>
                 </div>
 
                 <!-- Month Stats Summary -->
                 <div class="month-stats">
                     <div class="month-stat">
                         <div class="month-stat-value" id="monthPerfectDays">0</div>
-                        <div class="month-stat-label">perfect days</div>
+                        <div class="month-stat-label">targets hit</div>
                     </div>
                     <div class="month-stat">
                         <div class="month-stat-value" id="monthTotalDeficit">0</div>
@@ -11301,12 +11321,13 @@
 
         // Single "on track" predicate for logged days (dashboard chip and
         // weekly summary previously each had their own copy).
-        function isDayOnTrack(log) {
+        function isDayOnTrack(log, dateStr) {
             if (!log) return false;
-            if (log.perfect || log.status === 'perfect' || log.status === 'good') return true;
-            // Adherence is judged on the raw model, like the stored status —
-            // a later calibration change never re-grades a past day
-            const deficit = getRawEffectiveDeficit(log);
+            if (log.perfect || log.status === 'perfect') return true;
+            // Judged on the CALIBRATED deficit like every displayed number
+            // (stored status 'good' used the raw formula, so it isn't trusted)
+            const date = dateStr || log.date || log.dateStr;
+            const deficit = calIsDate(date) ? getEffectiveDeficit(log, date) : getRawEffectiveDeficit(log);
             return deficit != null && deficit > 0 &&
                 (log.protein || 0) >= (log.targetProtein ?? 172) * 0.9;
         }
@@ -11814,7 +11835,8 @@
                 cursor.setDate(cursor.getDate() - 1);
                 const log = state.dailyLogs[getLocalDateString(cursor)];
                 if (log && hasNutritionData(log)) {
-                    const d = getRawEffectiveDeficit(log); // raw: feeds a stored assumption
+                    // Calibrated: assumed days are stored as-is and never adjusted later
+                    const d = getEffectiveDeficit(log, getLocalDateString(cursor));
                     if (d != null) deficits.push(d);
                 }
             }
@@ -12806,6 +12828,7 @@
             renderQuickStats();
             renderSimpleWorkoutSummary();
             renderRecentProgress();
+            renderDeficitAverages();
 
             // Restore context details collapsed/expanded state
             restoreContextDetailsState();
@@ -12832,6 +12855,74 @@
                     <span style="color:var(${balance == null || balance === 0 ? '--text-secondary' : balance < 0 ? '--accent-green' : '--accent-red'})">${result}${log.nutritionStatus === 'assumed' ? '<small>Assumed</small>' : ''}</span>
                 </button>`;
             }).join('') : '<p>No previous days logged yet.</p>';
+        }
+
+        // ============================================
+        // DEFICIT TIERS (Nov 2026) — one scale on the CALIBRATED deficit
+        // (kcal/day) shared by the home average badges, the calendar, day
+        // details and the 30-day mix, so a color/emoji means the same thing
+        // everywhere. Computed live from getDisplayDeficitForDate(), so tiers
+        // follow the calibration as it learns.
+        // ============================================
+        const DEFICIT_TIERS = Object.freeze([
+            { key: 'surplus', min: -Infinity, label: 'Surplus', range: 'below 0', emoji: '🛑' },
+            { key: 'maint', min: 0, label: 'Maintenance', range: '0–249', emoji: '😐' },
+            { key: 'small', min: 250, label: 'Small deficit', range: '250–499', emoji: '🌱' },
+            { key: 'great', min: 500, label: 'Great', range: '500–699', emoji: '👍' },
+            { key: 'perfect', min: 700, label: 'Perfect', range: '700–899', emoji: '🎯' },
+            { key: 'fire', min: 900, label: 'Fire', range: '900–999', emoji: '🔥🔥' },
+            { key: 'hot', min: 1000, label: 'Too aggressive', range: '1,000+', emoji: '🥵' }
+        ]);
+
+        function getDeficitTier(deficit) {
+            if (deficit == null || !Number.isFinite(deficit)) return null;
+            const d = Math.round(deficit);
+            let tier = DEFICIT_TIERS[0];
+            for (const t of DEFICIT_TIERS) if (d >= t.min) tier = t;
+            return tier;
+        }
+
+        // 612 · −140 · 1.2k (fits a calendar cell)
+        function formatCompactDeficit(deficit) {
+            const d = Math.round(deficit);
+            const sign = d < 0 ? '−' : '';
+            const a = Math.abs(d);
+            return a >= 1000 ? `${sign}${(a / 1000).toFixed(1)}k` : `${sign}${a}`;
+        }
+
+        // Average daily deficit over the N most recent COMPLETED days (the
+        // live day never counts). Days with a known deficit only: tracked
+        // days are calibrated, assumed days use their assumption.
+        function getDeficitAverage(days) {
+            const win = getCompletedWindow(days);
+            let total = 0, known = 0;
+            for (let d = win.start; d <= win.end; d = calAddDays(d, 1)) {
+                const deficit = getDisplayDeficitForDate(d);
+                if (deficit != null && Number.isFinite(deficit)) { total += deficit; known++; }
+            }
+            return { days, start: win.start, end: win.end, known, avg: known ? total / known : null };
+        }
+
+        const DEFICIT_AVERAGE_WINDOWS = [3, 7, 14, 30, 60];
+
+        function renderDeficitAverages() {
+            const el = document.getElementById('deficitAverages');
+            if (!el) return;
+            const tiles = DEFICIT_AVERAGE_WINDOWS.map(n => {
+                const a = getDeficitAverage(n);
+                const tier = getDeficitTier(a.avg);
+                const value = a.avg == null ? '—' : formatCompactDeficit(a.avg);
+                const title = a.avg == null
+                    ? `${n}-day average: no logged days`
+                    : `${n}-day average: ${formatSignedKcal(Math.round(a.avg))} kcal/day ${a.avg >= 0 ? 'deficit' : 'surplus'} — ${tier.label} (${tier.range}) · ${a.known} of ${n} days logged · ${formatShortDate(a.start)} – ${formatShortDate(a.end)}`;
+                return `<div class="davg ${tier ? 't-' + tier.key : 't-none'}" role="listitem" title="${escapeHtml(title)}" aria-label="${escapeHtml(title)}">
+                    <span class="davg-top"><span class="davg-label">${n}D</span><span class="davg-emoji" aria-hidden="true">${tier ? tier.emoji : ''}</span></span>
+                    <span class="davg-val">${value}</span>
+                    <span class="davg-cov">${a.known}/${n} days</span>
+                </div>`;
+            }).join('');
+            el.innerHTML = `<div class="davg-head"><span>Avg daily deficit</span><span>calibrated TDEE</span></div>
+                <div class="davg-strip" role="list">${tiles}</div>`;
         }
 
         // 2a. Render inline meal list in Simple View
@@ -12911,7 +13002,7 @@
                 for (let i = 6; i >= 0; i--) {
                     const d = new Date(end);
                     d.setDate(end.getDate() - i);
-                    if (isDayOnTrack(state.dailyLogs[getLocalDateString(d)])) onTrack++;
+                    if (isDayOnTrack(state.dailyLogs[getLocalDateString(d)], getLocalDateString(d))) onTrack++;
                 }
                 onTrackEl.textContent = `${onTrack}/7`;
             }
@@ -24458,7 +24549,7 @@ CALIBRATED DEFICIT (estimate): ${formatSignedKcal(deficit + exportCal.current)} 
                 const log = state.dailyLogs[getLocalDateString(d)];
                 if (!log) continue;
 
-                if (isDayOnTrack(log)) daysOnTrack++;
+                if (isDayOnTrack(log, getLocalDateString(d))) daysOnTrack++;
 
                 // Protein average must exclude assumed-deficit days (no meals →
                 // no logged protein) or the average is dragged toward zero.
@@ -25109,15 +25200,23 @@ CALIBRATED DEFICIT (estimate): ${formatSignedKcal(deficit + exportCal.current)} 
                 partial: 'Partial', gym_only: 'Gym Only', over: 'Over', missed: 'Missed', no_data: 'No Data'
             };
 
-            // Section A: Status distribution stacked bar
-            const totalDays = Object.values(agg.statusCounts).reduce((a, b) => a + b, 0) || 1;
+            // Section A: calibrated deficit-tier mix over the 30 completed days
+            // (same scale and colors as the calendar and home badges)
+            const tierCounts = Object.fromEntries(DEFICIT_TIERS.map(t => [t.key, 0]));
+            let untrackedDays = 0;
+            for (let d = window30.start; d <= window30.end; d = calAddDays(d, 1)) {
+                const tier = getDeficitTier(getDisplayDeficitForDate(d));
+                if (tier) tierCounts[tier.key]++; else untrackedDays++;
+            }
+            const totalDays = 30;
             let barSegments = '';
             let legendItems = '';
-            for (const [status, count] of Object.entries(agg.statusCounts)) {
+            const mixEntries = [...DEFICIT_TIERS.map(t => [t.label, `var(--tier-${t.key})`, tierCounts[t.key], t.emoji]), ['Untracked', 'rgba(107,114,128,0.35)', untrackedDays, '']];
+            for (const [label, color, count, emoji] of mixEntries) {
                 if (count === 0) continue;
                 const pct = ((count / totalDays) * 100).toFixed(1);
-                barSegments += `<div style="width:${pct}%; background:${statusColors[status]}; height:100%; min-width:${count > 0 ? '3px' : '0'};" title="${statusLabels[status]}: ${count}"></div>`;
-                legendItems += `<span style="display:inline-flex; align-items:center; gap:3px; font-size:0.72em; color:var(--text-secondary);"><span style="width:8px;height:8px;border-radius:2px;background:${statusColors[status]};display:inline-block;"></span>${statusLabels[status]} ${count}</span>`;
+                barSegments += `<div style="width:${pct}%; background:${color}; height:100%; min-width:3px;" title="${label}: ${count}"></div>`;
+                legendItems += `<span style="display:inline-flex; align-items:center; gap:3px; font-size:0.72em; color:var(--text-secondary);"><span style="width:8px;height:8px;border-radius:2px;background:${color};display:inline-block;"></span>${emoji ? emoji + ' ' : ''}${label} ${count}</span>`;
             }
 
             // Section B: Nutrition averages with progress bars. Targets are the
@@ -25212,7 +25311,8 @@ CALIBRATED DEFICIT (estimate): ${formatSignedKcal(deficit + exportCal.current)} 
                     }
                 }
                 const dayName = dayNames[d.getDay()];
-                const dotColor = dispStatus ? (statusColors[dispStatus] || 'rgba(107,114,128,0.4)') : 'rgba(107,114,128,0.4)';
+                const stripTier = isCompletedDay(ds) ? getDeficitTier(getDisplayDeficitForDate(ds)) : null;
+                const dotColor = stripTier ? `var(--tier-${stripTier.key})` : (ds === todayStr7d && dispStatus ? 'transparent;box-shadow:inset 0 0 0 2px var(--accent-blue)' : 'rgba(107,114,128,0.4)');
                 dayCards += `<div onclick="showDayDetails('${ds}')" style="flex:1;min-width:42px;text-align:center;padding:6px 2px;background:var(--bg-tertiary);border-radius:8px;cursor:pointer;border:${i===0?'1px solid var(--accent-blue)':'1px solid transparent'};">
                     <div style="font-size:0.65em;color:var(--text-muted);">${dayName}</div>
                     <div style="width:10px;height:10px;border-radius:50%;background:${dotColor};margin:4px auto;"></div>
@@ -25229,7 +25329,7 @@ CALIBRATED DEFICIT (estimate): ${formatSignedKcal(deficit + exportCal.current)} 
 
                     <!-- A: Status Distribution -->
                     <div style="margin-bottom:14px;">
-                        <div style="font-size:0.82em;font-weight:500;margin-bottom:6px;">Day Status Distribution</div>
+                        <div style="font-size:0.82em;font-weight:500;margin-bottom:6px;">Deficit Tiers (calibrated)</div>
                         <div style="display:flex;height:14px;border-radius:7px;overflow:hidden;gap:1px;">${barSegments}</div>
                         <div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:6px;">${legendItems}</div>
                     </div>
@@ -26317,76 +26417,47 @@ CALIBRATED DEFICIT (estimate): ${formatSignedKcal(deficit + exportCal.current)} 
                 }
 
                 const isPastNoData = !log && !isToday && !isFuture;
+                const completed = !isToday && !isFuture && isCompletedDay(dateStr);
 
-                let statusClass = '';
-                let displayCalories = 0;
-                let displayProtein = 0;
+                // One tier scale on the CALIBRATED deficit (same as the home
+                // badges). The live day is in progress: ring only, no grade.
+                const tracked = !!log && hasNutritionData(log);
+                const assumed = !!log && !tracked && log.nutritionStatus === 'assumed' && log.assumedDeficit != null;
+                const deficit = completed && (tracked || assumed) ? getDisplayDeficitForDate(dateStr) : null;
+                const tier = getDeficitTier(deficit);
+                const gym = !!log && (log.workedOut === true || hasWorkoutData(log));
+                const needsResolution = !!(log && !isToday && !isFuture && !tracked && !assumed);
 
+                let displayCalories = 0, displayProtein = 0;
                 if (log) {
-                    // Get calorie/protein values - recalculate if missing but meals exist
-                    displayCalories = log.calories || 0;
-                    displayProtein = log.protein || 0;
-
-                    // If values are 0 but meals exist, recalculate from meals
-                    const mealsArr = Array.isArray(log.meals) ? log.meals : (log.meals ? Object.values(log.meals) : []);
-                    if ((displayCalories === 0 || displayProtein === 0) && mealsArr.length > 0) {
-                        displayCalories = mealsArr.reduce((sum, m) => sum + (m.calories || 0), 0);
-                        displayProtein = mealsArr.reduce((sum, m) => sum + (m.protein || 0), 0);
-                    }
-
-                    // Recalculate deficit for status if needed — effective deficit
-                    // only, on the raw model (the same basis as stored statuses)
-                    let deficit = getRawEffectiveDeficit(log);
-                    if (deficit == null && displayCalories > 0) {
-                        const tdee = log.tdee || getTDEEForDate(dateStr);
-                        deficit = tdee - displayCalories;
-                    }
-
-                    // Use status if available, otherwise use determineDayStatus() for correct 8-status logic
-                    const status = log.status || determineDayStatus(
-                        displayCalories, displayProtein, log.target ?? 1900,
-                        log.floor ?? Math.round((log.target ?? 1900) * 0.85),
-                        log.targetProtein ?? 172, deficit ?? 0, log.workedOut
-                    ).status;
-                    switch (status) {
-                        case 'perfect':
-                            statusClass = 'perfect';  // Green
-                            break;
-                        case 'good':
-                            statusClass = 'good';     // Blue-green
-                            break;
-                        case 'partial':
-                            statusClass = 'partial';  // Yellow
-                            break;
-                        case 'over':
-                            statusClass = 'over';     // Red
-                            break;
-                        case 'no_data':
-                            statusClass = 'no-data';  // Gray
-                            break;
-                        case 'deficit_gym':
-                            statusClass = 'deficit-gym';  // Teal
-                            break;
-                        case 'gym_only':
-                            statusClass = 'gym-only';    // Purple
-                            break;
-                        default:
-                            statusClass = 'missed';   // Red
-                    }
+                    const totals = getTotalsForDate(dateStr);
+                    displayCalories = totals.mealCount > 0 ? totals.calories : (log.calories || 0);
+                    displayProtein = totals.mealCount > 0 ? totals.protein : (log.protein || 0);
                 }
 
-                const needsResolution = !!(log && !isToday && !isFuture && !hasNutritionData(log) && log.nutritionStatus !== 'assumed');
                 let cellTitle = 'No data';
-                if (log) {
-                    cellTitle = needsResolution
-                        ? (hasWorkoutData(log) ? 'Workout logged · nutrition not tracked' : 'No nutrition tracked')
-                        : displayCalories + ' cal, ' + displayProtein + 'g P' + (log.nutritionStatus === 'assumed' ? ' (assumed deficit)' : '');
+                if (isToday) {
+                    cellTitle = `Today (in progress)${gym ? ' · gym' : ''}`;
+                } else if (tier) {
+                    cellTitle = `${tier.label}: ${formatSignedKcal(Math.round(deficit))} kcal ${deficit >= 0 ? 'deficit' : 'surplus'}${assumed ? ' (assumed)' : ''}${tracked ? ` · ${displayCalories} cal, ${displayProtein}g P` : ''}${gym ? ' · gym' : ''}`;
+                } else if (log) {
+                    cellTitle = `${gym ? 'Gym · ' : ''}nutrition not tracked`;
                 } else if (isPastNoData) {
                     cellTitle = 'Tap to add data';
                 }
-                html += `<div class="calendar-day ${statusClass} ${isToday ? 'today' : ''} ${log ? 'logged' : ''} ${needsResolution ? 'needs-resolution' : ''} ${isPastNoData ? 'past-empty' : ''} ${isFuture ? 'future' : ''}"
+                const classes = ['calendar-day',
+                    tier ? `t-${tier.key}` : '',
+                    assumed ? 'assumed' : '',
+                    isToday ? 'today' : '',
+                    log ? 'logged' : '',
+                    needsResolution ? 'needs-resolution' : '',
+                    isPastNoData ? 'past-empty' : '',
+                    isFuture ? 'future' : ''].filter(Boolean).join(' ');
+                const defLabel = tier ? `${assumed ? '≈' : ''}${formatCompactDeficit(deficit)}` : '';
+                html += `<div class="${classes}"
                               ${isFuture ? '' : `onclick="showDayDetails('${dateStr}')"`}
-                              title="${cellTitle}">${day}</div>`;
+                              title="${escapeHtml(cellTitle)}" aria-label="${escapeHtml(`${formatShortDate(dateStr)}: ${cellTitle}`)}">
+                              <span class="cal-num">${day}</span>${defLabel ? `<span class="cal-def">${defLabel}</span>` : ''}${gym ? '<span class="cal-gym" aria-hidden="true"></span>' : ''}</div>`;
             }
 
             daysContainer.innerHTML = html;
@@ -26529,6 +26600,12 @@ CALIBRATED DEFICIT (estimate): ${formatSignedKcal(deficit + exportCal.current)} 
             }
 
             const status = log.status || (log.perfect ? 'perfect' : deficit > 0 ? 'partial' : 'missed');
+            // Grade on the calibrated tier scale (calendar + home badges);
+            // the live day is still in progress
+            const dayTier = !isToday && isCompletedDay(dateStr) ? getDeficitTier(deficit) : null;
+            const dayGym = log.workedOut === true || hasWorkoutData(log);
+            const tierChipColor = dayTier ? `var(--tier-${dayTier.key})` : 'var(--text-muted)';
+            const tierChipText = isToday ? 'In progress' : dayTier ? `${dayTier.emoji} ${dayTier.label}` : 'Untracked';
 
             // Build meals HTML with edit/delete buttons, add, and import
             let mealsHtml = `
@@ -26672,13 +26749,13 @@ CALIBRATED DEFICIT (estimate): ${formatSignedKcal(deficit + exportCal.current)} 
             modal.innerHTML = `
                 <div class="modal" style="max-width: 420px; max-height: 90dvh; display: flex; flex-direction: column;">
                     <div class="modal-header">
-                        <span class="modal-title">${statusEmoji[status]} ${dateDisplay}</span>
+                        <span class="modal-title">${dayTier ? dayTier.emoji : isToday ? '⏳' : '—'} ${dateDisplay}</span>
                         <button class="modal-close" onclick="closeDayDetailModal()">×</button>
                     </div>
                     <div class="modal-body" style="overflow-y: auto; flex: 1;">
                         <div style="text-align: center; margin-bottom: 15px;">
-                            <span style="display: inline-block; padding: 6px 16px; border-radius: 20px; background: ${statusColors[status]}20; color: ${statusColors[status]}; font-weight: 600; text-transform: uppercase; font-size: 0.85em;">
-                                ${status.toUpperCase()} DAY
+                            <span class="day-tier-chip" style="display: inline-block; padding: 6px 16px; border-radius: 20px; background: color-mix(in srgb, ${tierChipColor} 22%, transparent); color: ${tierChipColor}; border: 1px solid ${tierChipColor}; font-weight: 700; text-transform: uppercase; font-size: 0.85em;">
+                                ${tierChipText}${dayGym ? ' · gym' : ''}
                             </span>
                             ${isToday ? '<span style="margin-left: 8px; font-size: 0.75em; color: var(--accent-blue);">(TODAY)</span>' : ''}
                         </div>
@@ -26710,7 +26787,7 @@ CALIBRATED DEFICIT (estimate): ${formatSignedKcal(deficit + exportCal.current)} 
                             <div style="display: flex; justify-content: space-between; font-size: 0.9em; margin-top: 6px;">
                                 <span>Deficit:</span>
                                 ${deficit != null ? `
-                                <span style="color: ${deficit > 0 ? 'var(--accent-green)' : 'var(--accent-red)'}; font-weight: 600;">${deficit > 0 ? '+' : ''}${deficit} cal${log.nutritionStatus === 'assumed' ? ' <span style="font-size: 0.8em; color: var(--text-muted); font-weight: 400;">(assumed)</span>' : ''}</span>
+                                <span style="color: ${deficit > 0 ? 'var(--accent-green)' : 'var(--accent-red)'}; font-weight: 600;">${deficit > 0 ? '+' : ''}${Math.round(deficit)} cal${dayCalAdj !== 0 ? ' <span style="font-size: 0.8em; color: var(--text-muted); font-weight: 400;">(calibrated)</span>' : ''}${log.nutritionStatus === 'assumed' ? ' <span style="font-size: 0.8em; color: var(--text-muted); font-weight: 400;">(assumed)</span>' : ''}</span>
                                 ` : `
                                 <span style="color: var(--text-muted); font-weight: 600;">Not tracked</span>
                                 `}
@@ -26798,10 +26875,11 @@ CALIBRATED DEFICIT (estimate): ${formatSignedKcal(deficit + exportCal.current)} 
             text += `Protein: ${log.protein || 0}g / ${log.targetProtein || 172}g ${log.proteinHit ? '✓' : ''}\n`;
             text += `Carbs: ${log.carbs || 0}g / ${log.targetCarbs || 150}g\n`;
             const copyDef = getRawEffectiveDeficit(log);
-            text += `Deficit: ${copyDef != null ? copyDef + ' cal' : 'untracked'}${log.nutritionStatus === 'assumed' ? ' (assumed)' : ''}\n`;
             const copyAdj = hasNutritionData(log) ? getActiveCalibrationAdjustment(dateStr) : 0;
+            const copyTier = copyDef != null && isCompletedDay(dateStr) ? getDeficitTier(copyDef + copyAdj) : null;
+            text += `Deficit: ${copyDef != null ? Math.round(copyDef + copyAdj) + ' cal' : 'untracked'}${log.nutritionStatus === 'assumed' ? ' (assumed)' : ''}${copyTier ? ` — ${copyTier.label}` : ''}\n`;
             if (copyDef != null && copyAdj !== 0) {
-                text += `Calibrated deficit (estimate): ${Math.round(copyDef + copyAdj)} cal (personal calibration ${formatSignedKcal(copyAdj)})\n`;
+                text += `  (calibrated TDEE; original formula deficit ${copyDef} cal, learned correction ${formatSignedKcal(copyAdj)})\n`;
             }
             text += `\n`;
 

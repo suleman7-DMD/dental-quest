@@ -92,6 +92,8 @@ async function fits(page, selector) {
     assert(result.docOverflow <= 1, `page scrolls horizontally: ${JSON.stringify(result)}`);
 }
 
+const getDeficitTierKey = d => { const v = Math.round(d); return v < 0 ? 'surplus' : v < 250 ? 'maint' : v < 500 ? 'small' : v < 700 ? 'great' : v < 900 ? 'perfect' : v < 1000 ? 'fire' : 'hot'; };
+
 let checks = 0;
 const ok = (cond, message) => { assert(cond, message); checks++; };
 
@@ -273,6 +275,96 @@ async function logicSuite(page) {
     ok(/not applied — off/.test(off.card), 'disabled → card says the calibration is not applied');
     ok(off.backOn, 're-enabling restores the learned correction');
 
+    // ---------- Deficit tiers: home average badges + calendar (calibrated) ----------
+    const tiers = await page.evaluate(() => {
+        __seed();
+        __setTodayIntake(1800);
+        saveDayLog();
+        renderSimpleView();
+        const bounds = [[-1, 'surplus'], [0, 'maint'], [249, 'maint'], [250, 'small'], [499, 'small'], [500, 'great'], [699, 'great'],
+            [700, 'perfect'], [899, 'perfect'], [900, 'fire'], [999, 'fire'], [1000, 'hot'], [2400, 'hot']].every(([v, k]) => getDeficitTier(v).key === k);
+        // Independent averages: raw stored deficit + that day's learned correction
+        const indep = n => {
+            let t = 0, k = 0;
+            for (let i = 1; i <= n; i++) {
+                const d = calAddDays('2026-10-09', -i);
+                const log = state.dailyLogs[d];
+                if (log && hasNutritionData(log)) { t += log.deficit + getActiveCalibrationAdjustment(d); k++; }
+            }
+            return k ? { avg: t / k, k } : { avg: null, k };
+        };
+        const tiles = [...document.querySelectorAll('#deficitAverages .davg')].map(el => ({
+            cls: el.className, val: el.querySelector('.davg-val').textContent, cov: el.querySelector('.davg-cov').textContent, title: el.getAttribute('title')
+        }));
+        const expected = [3, 7, 14, 30, 60].map(n => { const e = indep(n); return { n, ...e, tier: getDeficitTier(e.avg)?.key, val: e.avg == null ? '—' : formatCompactDeficit(e.avg) }; });
+        // Calendar: September + October 2026
+        showDetailsView(); switchDashboardTab('calendar');
+        const cells = {};
+        for (const [y, m] of [[2026, 8], [2026, 9]]) {
+            calendarViewDate = new Date(y, m, 1);
+            renderCalendarHeatmap();
+            document.querySelectorAll('#calendarDays .calendar-day:not(.empty)').forEach(el => {
+                const day = Number(el.querySelector('.cal-num')?.textContent);
+                const date = `${y}-${String(m + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+                cells[date] = { cls: el.className, def: el.querySelector('.cal-def')?.textContent ?? null, gym: !!el.querySelector('.cal-gym') };
+            });
+        }
+        const calOk = [];
+        for (let d = '2026-09-13'; d <= '2026-10-08'; d = calAddDays(d, 1)) {
+            const def = getDisplayDeficitForDate(d);
+            const tier = getDeficitTier(def).key;
+            const log = state.dailyLogs[d];
+            const gym = !!(log.workedOut || hasWorkoutData(log));
+            calOk.push(cells[d].cls.includes(`t-${tier}`) && cells[d].def === formatCompactDeficit(def) && cells[d].gym === gym ? 'ok' : `${d}:${JSON.stringify(cells[d])} want ${tier} ${formatCompactDeficit(def)} gym=${gym}`);
+        }
+        // On-track judged on the calibrated deficit: raw +100 with a 'good'
+        // stored status is a calibrated surplus, so not on track
+        const probe = { ...state.dailyLogs['2026-10-08'], deficit: 100, status: 'good', perfect: false, protein: 200 };
+        const onTrackRaw100 = isDayOnTrack(probe, '2026-10-08');
+        renderConsistencyScore();
+        return {
+            bounds, tiles, expected, calOk: calOk.filter(x => x !== 'ok'),
+            oct3: cells['2026-10-03'], oct9: cells['2026-10-09'], sep12: cells['2026-09-12'],
+            legend: document.querySelector('.cal-legend')?.innerText,
+            onTrackRaw100, mix: document.getElementById('consistencyScore').innerText
+        };
+    });
+    ok(tiers.bounds, 'tier boundaries: <0 surplus · 0–249 · 250–499 · 500 great · 700 perfect · 900 fire · 1000+ too aggressive');
+    ok(tiers.tiles.length === 5 && tiers.tiles.map(t => t.title.match(/^(\d+)-day/)[1]).join() === '3,7,14,30,60', 'home badges: 3/7/14/30/60-day');
+    tiers.expected.forEach((e, i) => {
+        ok(tiers.tiles[i].val === e.val && tiers.tiles[i].cls.includes(`t-${e.tier ?? 'none'}`) && tiers.tiles[i].cov === `${e.k}/${e.n} days`,
+            `${e.n}D badge = independent calibrated average ${e.val} (${e.tier}, ${e.k}/${e.n}) — got ${JSON.stringify(tiers.tiles[i])}`);
+    });
+    ok(/Oct 2 – Oct 8/.test(tiers.tiles[1].title), `7D window = last 7 completed days, live day excluded (${tiers.tiles[1].title})`);
+    ok(tiers.calOk.length === 0, `every calendar day colored by its calibrated tier, labeled with its deficit, gym dot when trained: ${tiers.calOk.join('; ')}`);
+    ok(tiers.oct3.cls.includes('t-surplus') && tiers.oct3.def.startsWith('−'), 'Oct 3 surplus is red with a negative number');
+    ok(tiers.oct9.cls.includes('today') && !/\bt-/.test(tiers.oct9.cls) && tiers.oct9.def === null, 'live day: ring only, not graded while in progress');
+    ok(tiers.sep12.cls.includes('past-empty') && tiers.sep12.def === null, 'untracked past day: dashed, no number');
+    ok(/Surplus/.test(tiers.legend) && /Great/.test(tiers.legend) && /Perfect/.test(tiers.legend) && /Fire/.test(tiers.legend) && /gym/.test(tiers.legend) && /calibrated deficit/.test(tiers.legend), 'calendar legend explains the tier scale');
+    ok(tiers.onTrackRaw100 === false, 'on-track uses the calibrated deficit (raw +100 / stored "good" is not on track)');
+    ok(/Deficit Tiers \(calibrated\)/.test(tiers.mix) && !/Day Status Distribution/.test(tiers.mix), '30-day analytics shows the calibrated tier mix');
+
+    // Next morning: the badges and calendar move forward a day on their own
+    await page.clock.setFixedTime(new Date('2026-10-10T14:00:00Z'));
+    const nextDay = await page.evaluate(() => {
+        checkAndResetDayIfNeeded();
+        state.today.setupComplete = true;
+        refreshTodayTargets();
+        renderSimpleView();
+        calendarViewDate = new Date(2026, 9, 1);
+        renderCalendarHeatmap();
+        const oct9 = [...document.querySelectorAll('#calendarDays .calendar-day')].find(el => el.querySelector('.cal-num')?.textContent === '9');
+        return {
+            title7: document.querySelector('#deficitAverages .davg:nth-child(2)').getAttribute('title'),
+            title3: document.querySelector('#deficitAverages .davg:nth-child(1)').getAttribute('title'),
+            oct9Def: getDisplayDeficitForDate('2026-10-09'),
+            oct9Cls: oct9.className
+        };
+    });
+    await page.clock.setFixedTime(new Date('2026-10-09T14:00:00Z'));
+    ok(/Oct 3 – Oct 9/.test(nextDay.title7) && /Oct 7 – Oct 9/.test(nextDay.title3), `after rollover the windows end on the new yesterday (${nextDay.title7})`);
+    ok(nextDay.oct9Def != null && nextDay.oct9Cls.includes(`t-${getDeficitTierKey(nextDay.oct9Def)}`), `Oct 9 becomes a completed, graded day (${nextDay.oct9Cls})`);
+
     // ---------- Daily intake budget (independent of TDEE/workouts/calibration) ----------
     const budget = await page.evaluate(() => {
         const states = [1500, 1615, 1700, 1899, 1900, 1915, 2100].map(v => getIntakeBudgetState(v, 1900));
@@ -384,6 +476,15 @@ async function layoutSuite(page, label) {
     await fits(page, '#intakeBudgetRow');
     await fits(page, '#tdeeDetails');
     await page.screenshot({ path: `${shotDir}/bodycomp-cal-home-${label}.png`, fullPage: false });
+    await page.locator('#deficitAverages').scrollIntoViewIfNeeded();
+    await fits(page, '#deficitAverages');
+    await page.locator('.recent-progress').screenshot({ path: `${shotDir}/bodycomp-badges-${label}.png` });
+    await page.evaluate(() => { showDetailsView(); switchDashboardTab('calendar'); calendarViewDate = new Date(2026, 9, 1); renderCalendarHeatmap(); });
+    await clearOverlays();
+    await page.locator('#calendarHeatmap').scrollIntoViewIfNeeded();
+    await fits(page, '#calendarHeatmap');
+    await fits(page, '.cal-legend');
+    await page.screenshot({ path: `${shotDir}/bodycomp-calendar-${label}.png`, fullPage: false });
     await page.evaluate(() => {
         showDetailsView();
         switchDashboardTab('progress');
