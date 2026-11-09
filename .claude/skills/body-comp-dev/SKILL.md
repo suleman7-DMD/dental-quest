@@ -126,6 +126,7 @@ After large edits: `python3 -c "c=open('body-comp-tracker.html').read(); print('
 **How it works now:** `calRunEnergyBalance()` (calibration region) is a Kalman filter + RTS smoother over every food-logged day and morning weigh-in; it re-runs whenever data changes (`getEnergyBalanceRun()`, memoized). Correction for a date = `calCorrectionForDate()` (smoothed in the past, live estimate from today). `getPlanningTDEE()` = formula + correction → targets; `getEffectiveDeficit()` adds that day's correction for display. Raw `log.tdee` is the filter's input — never store calibrated values in logs.
 **Check:** Progress → TDEE Calibration (correction ± SD, latest weigh-in update), Model vs. Weight Trend (walk-forward backtest at 1/2/4 weeks: formula vs calibrated bias), Rate of Weight Loss (filter rate + raw Theil–Sen cross-check). Progress export has a full calibration + backtest section and per-day weigh-in/trend/TDEE columns. A single 4-week window swinging ±100 kcal from the long-run correction is water noise, not a bug.
 **Home dropdown:** `#tdeeDetails` ("Trend vs. model") = `buildHomeTrendHtml()`: chips (trend, calibrated TDEE, correction + sparkline), `buildHomeTrendChart()` (scale trend vs formula/calibrated paths, 4W/8W/12W in localStorage `bodyCompHomeTrendRange`), this-morning gauge (weigh-in vs filter's prediction ± SD), tomorrow's expected weigh-in, backtest line. Open state remembered in `bodyCompHomeTrendOpen`.
+**TDEE breakdown:** `buildTdeeBreakdownHtml()` ("How today's TDEE is built", home dropdown + Progress → TDEE Calibration) renders `getTdeeBreakdown()`: BMR (weight via `getWeighInRecordForDate`) + movement (× activity) + workouts (`getWorkoutWindowForDate`: 7-day total ÷ 7) = formula, + calibration = live TDEE. Rows are read from the same functions as `calculateTDEE`/`getLiveTdeeEstimate`, so they always sum exactly (UI test asserts it).
 **Deficit tiers:** `DEFICIT_TIERS` / `getDeficitTier()` = the one scale (calibrated kcal/day: <0 surplus 🛑, 0–249 😐, 250–499 🌱, 500 👍, 700 🎯, 900 🔥🔥, 1000+ 🥵) used by the home badges (`renderDeficitAverages()`, 3/7/14/30/60 completed days via `getDeficitAverage()`), calendar cells (tier class + calibrated number + purple gym dot; live day = ring only; computed live, never from stored `log.status`), day details chip, 30-Day Analytics mix, `isDayOnTrack(log, date)`. Stored `log.status`/`log.deficit` stay raw.
 **Tests:** `tests/bodycomp/test-calibration.mjs` (engine, simulated people) + `test-calibration-ui.mjs` (Playwright, 186 checks incl. a simulated rollover).
 
@@ -241,7 +242,7 @@ This app uses the same Firebase patterns as all Sully apps.
 | 6549-7900 | HTML structure (reordered home: actions above collapsible context), modals, progress tab |
 | 7900-8300 | State management (getDefaultState, isEmptyState), data integrity |
 | 8300-8900 | Core algorithms (TDEE, mode, targets, **refreshTodayTargets**), V2 shared infrastructure |
-| 8700-8730 | **Toast queue system** (showToast, processToastQueue) |
+| 8700-8730 | **Toast** (showToast — single snackbar, coalescing) |
 | 8900-9600 | Simple View rendering (remaining context on progress bars), schedule/exam cards |
 | 9600-10400 | Stimulant modeling, nudges, status |
 | 10400-12200 | Meal/workout CRUD (**"Add Another" on meal save**), import, quick meal (**date picker**) |
@@ -322,7 +323,7 @@ let pinValidated = false;        // line 7634
 | `calculateTargets(mode, tdee, weight, brain)` | 8222 | Calorie/protein/carb targets for mode |
 | `refreshTodayTargets()` | ~8875 | **NEW Mar 2026** — Recalculates TDEE+targets after historical data changes (14 call sites) |
 | `getTodayTotals()` | 8269 | Sum calories/protein/carbs from today's meals |
-| `showToast(msg, type)` | ~8713 | **UPDATED** — Queued toast system (success/warning), sequential display |
+| `showToast(msg, type, {duration})` | ~11296 | **Nov 2026** — ONE snackbar: a toast arriving while one is visible is merged in as a new line (newest 3), timer extended (default 2.2s, never shortens a longer one). No queue — logging used to play "logged" + "+10 XP" back to back for ~8s. While `#logModal`/`#qtySelectorModal` is open the toast is top-pinned and MUST keep `bottom: auto !important` (the snackbar layer's `bottom … !important` otherwise stretches it full-height). No boot "Synced from cloud" toast. |
 | `renderSimpleView()` | ~8900 | Main dashboard renderer (auto-corrects stale targets, shows remaining context) |
 | `getSimpleStatus()` | 9791 | Dashboard status icon/label/color |
 | `getEatingNudge()` | 9845 | Context-aware stimulant eating nudge |

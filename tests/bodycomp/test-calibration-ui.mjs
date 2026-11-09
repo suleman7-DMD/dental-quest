@@ -210,6 +210,22 @@ async function logicSuite(page) {
                 setHomeTrendRange(28);
                 return r;
             })(),
+            breakdown: (() => {
+                // Rows of "How today's TDEE is built" must add up to the TDEE
+                // shown everywhere; a workout logged today must move them live
+                const b = getTdeeBreakdown();
+                const live = getLiveTdeeEstimate();
+                const sums = b.bmr + b.movement + b.workouts.avg === b.formula && b.formula === live.raw &&
+                    b.formula + b.correction === b.calibrated && b.calibrated === live.calibrated;
+                const saved = JSON.stringify(state.today.workouts || {});
+                state.today.workouts = { ...(state.today.workouts || {}), wb: { id: 'wb', type: 'Run', calories: 350 } };
+                const withRun = getTdeeBreakdown();
+                state.today.workouts = JSON.parse(saved);
+                return {
+                    sums, avgBefore: b.workouts.avg, avgAfter: withRun.workouts.avg,
+                    tdeeBefore: b.calibrated, tdeeAfter: withRun.calibrated, todayKcal: withRun.workouts.dayKcal
+                };
+            })(),
             claude: generateClaudeExport(), weekly: generateWeeklyClaudeExport(), daily: generateExportText(),
             rawDeficitLive: getCurrentRawDeficit(), calibratedLive: getCurrentDeficit(),
             progressRow: generateProgressExport('2026-10-09', '2026-10-09').rows[0].deficit,
@@ -220,6 +236,11 @@ async function logicSuite(page) {
     ok(cal.correction < -60 && cal.correction > -400, `log says ~550/day, scale ~300/day → negative correction (got ${Math.round(cal.correction)})`);
     ok(cal.confidence !== 'high' && cal.sd > 60, `26 days is not High confidence (got ${cal.confidence}, ±${Math.round(cal.sd)})`);
     ok(cal.est.adjustment === Math.round(cal.correction) && cal.est.calibrated === cal.est.raw + cal.est.adjustment, 'calibrated TDEE = formula + learned correction');
+    ok(cal.breakdown.sums, 'TDEE breakdown rows (BMR + movement + workouts + calibration) add up to the live TDEE');
+    ok(cal.breakdown.todayKcal >= 350 && Math.abs(cal.breakdown.avgAfter - cal.breakdown.avgBefore - 50) <= 1,
+        `a 350 kcal workout today adds ~50/day to the 7-day workout average (${cal.breakdown.avgBefore} → ${cal.breakdown.avgAfter})`);
+    ok(cal.breakdown.tdeeAfter - cal.breakdown.tdeeBefore === cal.breakdown.avgAfter - cal.breakdown.avgBefore, 'today\'s workout moves the live TDEE by exactly its 7-day-average share');
+    ok(/How today's TDEE is built/.test(cal.details) && /BMR/.test(cal.details) && /Workouts/.test(cal.details) && /Your TDEE today/.test(cal.details), 'home dropdown shows the TDEE breakdown');
     ok(cal.targetsCal === cal.expected && cal.targetsCal !== cal.targetsRaw, 'daily targets plan against the calibrated TDEE');
     const tgt = JSON.parse(cal.targetsCal);
     ok(tgt.calories === 1900 + Math.round(cal.correction) && tgt.deficit === cal.est.calibrated - tgt.calories && tgt.floor === 1500 && JSON.parse(cal.targetsRaw).calories === 1900,
@@ -531,7 +552,8 @@ async function layoutSuite(page, label) {
         model: document.getElementById('metabolicAdaptation').textContent,
         svgs: ['tdeeCalibration', 'rateOfWeightLoss', 'metabolicAdaptation'].map(id => document.querySelectorAll(`#${id} svg[role="img"]`).length)
     }));
-    ok(/Learned correction\s*−\d+ ±\d+ kcal\/day/.test(cards.cal) && /90% range/.test(cards.cal) && /Confidence\s*(Provisional|Moderate)/.test(cards.cal), 'calibration card: correction ± SD, 90% range, confidence');
+    ok(/How today's TDEE is built/.test(cards.cal) && /Calibration\s*scale vs\. food log[^±]*±\d+\s*−\d+/.test(cards.cal) && /Your TDEE today/.test(cards.cal) &&
+        /90% range/.test(cards.cal) && /Confidence\s*(Provisional|Moderate)/.test(cards.cal), 'calibration card: breakdown with correction ± SD, 90% range, confidence');
     ok(/Latest update · Oct 9/.test(cards.cal) && /Don't add a separate under-counting subtractor/.test(cards.cal), 'calibration card: latest weigh-in update + no-extra-subtractor note');
     ok(/Current rate \(4-week trend\)/.test(cards.rate) && /Cross-check, weigh-ins only/.test(cards.rate), 'rate card: filter rate + raw cross-check');
     ok(/scale trend/.test(cards.model) && /original formula said/.test(cards.model) && /Accuracy check on your data/.test(cards.model) && /Formula bias/.test(cards.model), 'model card: 4-week comparison + backtest table');

@@ -1469,6 +1469,17 @@
         .tcal-check { flex-shrink: 0; width: 18px; height: 18px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; background: var(--accent-green-dim); color: var(--accent-green); font-size: 0.8em; font-weight: 700; }
         .tcal-foot { font-size: 0.82em; line-height: 1.45; color: var(--text-muted); padding: 0 2px; }
         .tcal-link { background: none; border: 0; padding: 0; font: inherit; color: var(--accent-blue); font-weight: 600; cursor: pointer; }
+        .tbuild { margin-bottom: 8px; }
+        .tbuild .tcal-head { margin-bottom: 4px; }
+        .tbuild-row { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; padding: 4px 0; }
+        .tbuild-label { min-width: 0; color: var(--text-secondary); }
+        .tbuild-label small { display: block; font-size: 0.78em; color: var(--text-muted); line-height: 1.35; }
+        .tbuild-row strong { color: var(--text-primary); font-variant-numeric: tabular-nums; white-space: nowrap; }
+        .tbuild-row.sub, .tbuild-row.total { border-top: 1px solid var(--border-color); }
+        .tbuild-row.sub .tbuild-label { color: var(--text-muted); }
+        .tbuild-row.total .tbuild-label { color: var(--text-primary); font-weight: 600; }
+        .tbuild-row.total strong { font-size: 1.15em; color: var(--accent-green); }
+        .tbuild-live { margin-top: 6px; line-height: 1.4; }
 
         .tdee-line {
             display: flex;
@@ -7217,7 +7228,9 @@
         #mealLibrarySection .ff-view-btn { flex: 1; min-height: 44px; font-size: 0.85rem; }
         .meal-action-footer { flex-shrink: 0; padding: 12px; border-top: 1px solid var(--border-color); background: var(--bg-secondary); }
         .toast { pointer-events: none; }
-        body:has(#logModal.active) #toast, body:has(#qtySelectorModal.active) #toast { bottom: auto; top: calc(var(--modal-viewport-top, 0px) + max(8px, env(safe-area-inset-top))); width: max-content; max-width: calc(100vw - 24px); overflow-wrap: anywhere; }
+        /* bottom must beat the snackbar layer's `bottom … !important` — with both
+           top and bottom pinned the toast stretched into a full-screen slab */
+        body:has(#logModal.active) #toast, body:has(#qtySelectorModal.active) #toast { bottom: auto !important; height: auto; top:calc(var(--modal-viewport-top, 0px) + max(8px, env(safe-area-inset-top))); width: max-content; max-width: calc(100vw - 24px); overflow-wrap: anywhere; }
         .meal-action-footer .submit-btn { margin: 8px 0 0; min-height: 48px; }
         .meal-entry-nav { display: flex; gap: 6px; }
         .meal-entry-nav button { flex: 1; min-width: 0; min-height: 44px; padding: 6px; background: var(--bg-primary); border: 1px solid var(--border-color); border-radius: 8px; color: var(--text-secondary); font: inherit; font-size: 0.8rem; cursor: pointer; }
@@ -11290,33 +11303,37 @@
             return blockedWindows.find(b => (b.endMinutes - b.startMinutes) >= 120);
         }
 
-        let toastQueue = [];
-        let toastShowing = false;
+        // One snackbar at a time. A toast that arrives while one is visible is
+        // merged into it as a new line (newest 3 kept) instead of queueing
+        // behind it — logging a meal fires "logged" + "+10 XP" back to back and
+        // the old queue played them one after another for ~8s.
+        const TOAST_DEFAULT_MS = 2200;
+        let toastLines = [];
+        let toastHasWarning = false;
+        let toastHideAt = 0;
+        let toastTimer = null;
 
         function showToast(message, type = 'success', options = {}) {
-            toastQueue.push({ message, type, duration: options.duration });
-            if (!toastShowing) processToastQueue();
-        }
-
-        function processToastQueue() {
-            if (toastQueue.length === 0) {
-                toastShowing = false;
-                return;
-            }
-            toastShowing = true;
-            const { message, type, duration } = toastQueue.shift();
             const toast = document.getElementById('toast');
-            if (!toast) { toastShowing = false; return; }
-            toast.textContent = message;
+            if (!toast) return;
+            const now = Date.now();
+            const visible = toast.classList.contains('show') && now < toastHideAt;
+            toastLines = visible ? [...toastLines, String(message)].slice(-3) : [String(message)];
+            toastHasWarning = (visible && toastHasWarning) || type === 'warning';
             // pre-line so multi-line rejection reports render as lines
             // while staying textContent-only (no HTML injection surface)
+            toast.textContent = toastLines.join('\n');
             toast.style.whiteSpace = 'pre-line';
-            toast.style.borderLeft = type === 'warning' ? '3px solid var(--accent-yellow)' : '3px solid var(--accent-green)';
+            toast.style.borderLeft = toastHasWarning ? '3px solid var(--accent-yellow)' : '3px solid var(--accent-green)';
             toast.classList.add('show');
-            setTimeout(() => {
+            // A long-duration toast still on screen (import report) is never cut short
+            toastHideAt = Math.max(visible ? toastHideAt : 0, now + (options.duration || TOAST_DEFAULT_MS));
+            clearTimeout(toastTimer);
+            toastTimer = setTimeout(() => {
                 toast.classList.remove('show');
-                setTimeout(() => processToastQueue(), 400);
-            }, duration || 3500);
+                toastLines = [];
+                toastHasWarning = false;
+            }, toastHideAt - now);
         }
 
         function updateSyncStatus(status, text) {
@@ -11906,35 +11923,48 @@
         // days count as 0), never includes future dates, and reads live
         // state.today for the in-progress day.
         function getAvgWorkoutCaloriesForDate(dateStr) {
+            return getWorkoutWindowForDate(dateStr).avg;
+        }
+
+        // The 7-day workout window behind getAvgWorkoutCaloriesForDate, with
+        // the pieces the TDEE breakdown shows (total, sessions, that day's burn).
+        function getWorkoutWindowForDate(dateStr) {
             const [y, m, d] = dateStr.split('-').map(Number);
             const liveDate = state.today?.date;
-            let total = 0;
+            let total = 0, sessions = 0, dayKcal = 0;
 
             for (let i = 0; i < 7; i++) {
                 const ds = getLocalDateString(new Date(y, m - 1, d - i));
+                let workouts = [];
                 if (ds === liveDate) {
-                    total += getValues(state.today?.workouts || {}).reduce((sum, w) => sum + (w.calories || 0), 0);
+                    workouts = getValues(state.today?.workouts || {});
                 } else {
                     const log = state.dailyLogs?.[ds];
-                    if (log?.workouts) {
-                        const workouts = Array.isArray(log.workouts) ? log.workouts : getValues(log.workouts);
-                        total += workouts.reduce((sum, w) => sum + (w.calories || 0), 0);
-                    }
+                    if (log?.workouts) workouts = Array.isArray(log.workouts) ? log.workouts : getValues(log.workouts);
                 }
+                const kcal = workouts.reduce((sum, w) => sum + (w.calories || 0), 0);
+                total += kcal;
+                sessions += workouts.length;
+                if (i === 0) dayKcal = kcal;
             }
 
-            return Math.round(total / 7);
+            return { total, sessions, dayKcal, avg: Math.round(total / 7) };
         }
 
         // Latest logged weight on or before dateStr, so historical TDEE uses the
         // weight from that era instead of today's. Falls back to the earliest
         // weigh-in (closest estimate for pre-history dates), then profile weight.
         function getWeightForDate(dateStr) {
+            return getWeighInRecordForDate(dateStr)?.weight ?? state.profile.currentWeight_lbs;
+        }
+
+        // The weigh-in record getWeightForDate reads (null = profile weight).
+        function getWeighInRecordForDate(dateStr) {
             const weighIns = getValues(state.weighIns || {}).filter(w => w.date && typeof w.weight === 'number');
-            if (weighIns.length === 0) return state.profile.currentWeight_lbs;
+            if (weighIns.length === 0) return null;
             const onOrBefore = weighIns.filter(w => w.date <= dateStr).sort((a, b) => b.date.localeCompare(a.date));
-            if (onOrBefore.length > 0) return onOrBefore[0].weight;
-            return weighIns.sort((a, b) => a.date.localeCompare(b.date))[0].weight;
+            if (onOrBefore.length > 0) return onOrBefore[0];
+            return weighIns.sort((a, b) => a.date.localeCompare(b.date))[0];
         }
 
         // Get 7-day average WORKOUT calories for display (excludes NEAT which is in multiplier)
@@ -12317,6 +12347,32 @@
             const run = getEnergyBalanceRun();
             const sd = adjustment !== 0 && run.ok ? Math.round(run.current.correctionSd) : null;
             return { raw, adjustment, calibrated: raw + adjustment, sd, date: liveDate };
+        }
+
+        // Live-day TDEE split into the inputs that build it. Every number is
+        // read from the same functions calculateTDEE / getLiveTdeeEstimate use,
+        // so the rows always add up to the TDEE shown everywhere else.
+        function getTdeeBreakdown() {
+            const date = state.today?.date || getLocalDateString();
+            const weighIn = getWeighInRecordForDate(date);
+            const weight = getWeightForDate(date);
+            const bmr = calculateBMR(weight, state.profile.height_cm, state.profile.age);
+            const activityLevel = state.profile?.activityLevel || 'sedentary';
+            const multiplier = ACTIVITY_MULTIPLIERS[activityLevel] || 1.2;
+            const base = Math.round(bmr * multiplier);
+            const workouts = getWorkoutWindowForDate(date);
+            const est = getLiveTdeeEstimate();
+            const run = getEnergyBalanceRun();
+            return {
+                date, weight, weighIn, bmr, activityLevel, multiplier,
+                movement: base - bmr, workouts,
+                formula: est.raw, // = base + workouts.avg
+                enabled: isTdeeCalibrationEnabled(),
+                run,
+                correction: est.adjustment,
+                correctionSd: run.ok ? Math.round(run.current.correctionSd) : null,
+                calibrated: est.calibrated
+            };
         }
 
         // TDEE that live targets plan against: the calibrated estimate when
@@ -13651,6 +13707,42 @@
             return `<svg class="tcal-spark" viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" aria-hidden="true"><polyline points="${pts.join(' ')}" fill="none" stroke="${color}" stroke-width="1.5" vector-effect="non-scaling-stroke" stroke-linejoin="round"/></svg>`;
         }
 
+        // "How today's TDEE is built": weigh-ins → BMR, workouts → 7-day
+        // average, food log vs. scale → calibration. Shared by the home
+        // dropdown and the Progress card.
+        function buildTdeeBreakdownHtml() {
+            const b = getTdeeBreakdown();
+            const row = (label, caption, value, cls = '') => `<div class="tbuild-row ${cls}">
+                <span class="tbuild-label">${label}${caption ? `<small>${caption}</small>` : ''}</span><strong>${value}</strong></div>`;
+            const plus = v => `${v < 0 ? '−' : '+'}${formatNumber(Math.abs(v))}`;
+
+            const wi = b.weighIn;
+            const weightSource = !wi ? 'profile weight (no weigh-ins yet)'
+                : wi.date === b.date ? "today's weigh-in"
+                : wi.date > b.date ? `first weigh-in · ${formatShortDate(wi.date)}`
+                : `weigh-in · ${formatShortDate(wi.date)}`;
+            const activity = b.activityLevel.replace(/([A-Z])/g, ' $1').toLowerCase();
+            const w = b.workouts;
+            const workoutCaption = w.total === 0 ? 'none logged in the last 7 days'
+                : `${formatNumber(w.total)} kcal · ${w.sessions} session${w.sessions === 1 ? '' : 's'} in 7 days ÷ 7${w.dayKcal ? ` · today ${formatNumber(w.dayKcal)}` : ''}`;
+
+            let calRow;
+            if (!b.enabled) calRow = row('Calibration', 'off in Settings — formula used as-is', '±0');
+            else if (!b.run.ok) calRow = row('Calibration', 'collecting — needs morning weigh-ins to compare with your food log', '±0');
+            else calRow = row('Calibration', `scale vs. food log · ${b.run.trackedDays} logged days, ${b.run.weighInDays} weigh-ins · ±${b.correctionSd}`, plus(b.correction));
+
+            return `<div class="tcal-card tbuild">
+                <div class="tcal-head"><span class="tcal-title">How today's TDEE is built</span></div>
+                ${row('BMR', `${b.weight} lb ${weightSource} · Mifflin–St Jeor`, formatNumber(b.bmr))}
+                ${row('Daily movement', `× ${b.multiplier} ${escapeHtml(activity)}`, plus(b.movement))}
+                ${row('Workouts', workoutCaption, plus(w.avg))}
+                ${row('Formula', '', formatNumber(b.formula), 'sub')}
+                ${calRow}
+                ${row("Your TDEE today", '', formatNumber(b.calibrated), 'total')}
+                <div class="tcal-sub tbuild-live">Updates live: a weigh-in changes BMR and the calibration the moment it's saved · a workout adds its burn ÷ 7 to each of the next 7 days · food counts once a day is complete (today's joins at midnight, so a half-logged day never looks like a huge deficit).</div>
+            </div>`;
+        }
+
         function buildHomeTrendHtml() {
             const status = getTdeeCalibrationStatus();
             const run = status.run;
@@ -13660,8 +13752,8 @@
             const est = getLiveTdeeEstimate();
             const lb = v => `${v > 0 ? '+' : v < 0 ? '−' : ''}${Math.abs(v).toFixed(1)}`;
             if (!run.ok) {
-                return `<div class="tcal"><div class="tcal-card"><div class="tcal-title">${escapeHtml(info.label)}</div>
-                    <div class="tcal-foot">${escapeHtml(info.basis)} Original formula today: ${formatNumber(est.raw)} kcal.</div></div></div>`;
+                return `<div class="tcal">${buildTdeeBreakdownHtml()}<div class="tcal-card"><div class="tcal-title">${escapeHtml(info.label)}</div>
+                    <div class="tcal-foot">${escapeHtml(info.basis)}</div></div></div>`;
             }
 
             const cur = run.current;
@@ -13735,11 +13827,12 @@
             const week = corrWeekAgo === null ? '' : ` · 7-day change ${formatSignedKcal(cur.correction - corrWeekAgo)}`;
             return `<div class="tcal">
                 ${chips}
+                ${buildTdeeBreakdownHtml()}
                 ${chartCard}
                 ${morning}
                 <div class="tcal-card">${tomorrowHtml}${accuracy}</div>
                 <div class="tcal-foot">${escapeHtml(info.label)}${week}. ${escapeHtml(info.basis)} ${status.enabled
-                    ? `TDEE = formula ${formatNumber(est.raw)} (BMR × activity + 7-day workouts) ${formatSignedKcal(correction)} learned. It already includes any under-logging — don't subtract extra.`
+                    ? `The calibration already includes any under-logging — don't subtract extra.`
                     : 'Calibration is off in Settings, so targets and deficits use the formula.'}
                     <button type="button" class="tcal-link" onclick="navigateToTab('progress')">Full analysis →</button></div>
             </div>`;
@@ -15787,7 +15880,7 @@
                     </div>
                     <div class="meal-macros">
                         <div class="meal-calories">${workout.duration || 0} min</div>
-                        <div class="meal-protein">+${workout.calories || 0} cal ceiling</div>
+                        <div class="meal-protein">${workout.calories || 0} kcal burned</div>
                     </div>
                     <div class="meal-actions">
                         <button class="meal-action-btn" onclick="editWorkout('${workout.id}')" title="Edit">✏️</button>
@@ -18221,7 +18314,9 @@
 
                 refreshTodayTargets();
 
-                showToast(`${type} logged! +${workout.calories} cal ceiling`);
+                // The daily target never rises with exercise — the burn goes
+                // into TDEE (÷ 7 over the week), so don't call it a "ceiling"
+                showToast(`${type} logged · ${workout.calories} kcal burned`);
             } else {
                 // Add to historical dailyLogs for past date
                 if (!state.dailyLogs[workoutDate]) {
@@ -22800,8 +22895,9 @@ CALIBRATED DEFICIT (estimate): ${formatSignedKcal(deficit + exportCal.current)} 
                             setTimeout(() => saveStateImmediate(), 800);
                         }
 
+                        // No toast: this runs on every app launch and the header
+                        // sync dot already says it. Force-sync keeps its toast.
                         updateSyncStatus('connected', 'Synced ✓');
-                        showToast('☁️ Synced from cloud');
                     } else {
                         // No Firebase data - check if we have local data
                         const hasLocalData = hasRealData(state);
@@ -27450,7 +27546,7 @@ CALIBRATED DEFICIT (estimate): ${formatSignedKcal(deficit + exportCal.current)} 
             const wrap = inner => `<div style="background:var(--bg-secondary);border:1px solid var(--border-color);border-radius:14px;padding:18px;margin-bottom:16px;font-size:0.9em;color:var(--text-secondary);">${inner}</div>`;
 
             if (!run.ok) {
-                container.innerHTML = wrap(`<div class="tdee-note"><strong>${escapeHtml(info.label)}</strong><br>${escapeHtml(info.basis)}</div>`);
+                container.innerHTML = wrap(`${buildTdeeBreakdownHtml()}<div class="tdee-note"><strong>${escapeHtml(info.label)}</strong><br>${escapeHtml(info.basis)}</div>`);
                 return;
             }
 
@@ -27458,14 +27554,11 @@ CALIBRATED DEFICIT (estimate): ${formatSignedKcal(deficit + exportCal.current)} 
             const raw = calculateTDEE(getWeightForDate(liveDate), state.profile.height_cm, state.profile.age, state.today?.date);
             const cur = run.current;
             const correction = Math.round(cur.correction);
-            const sd = Math.round(cur.correctionSd);
-            const calibrated = raw + correction;
             const lo = Math.round(raw + cur.correction - C.CI_Z * cur.correctionSd);
             const hi = Math.round(raw + cur.correction + C.CI_Z * cur.correctionSd);
 
-            let html = line('Original formula', `${formatNumber(raw)} kcal/day`);
-            html += line('Learned correction', `${formatSignedKcal(correction)} ±${sd} kcal/day`);
-            html += line(status.enabled ? 'Your TDEE (calibrated)' : 'Calibrated TDEE (not applied — off)', `${formatNumber(calibrated)} kcal/day`, 'total');
+            let html = buildTdeeBreakdownHtml();
+            if (!status.enabled) html += line('Calibrated TDEE (not applied — off)', `${formatNumber(raw + correction)} kcal/day`);
             html += line('90% range', `${formatNumber(lo)} – ${formatNumber(hi)}`);
             html += line('Confidence', escapeHtml(info.label));
             html += `<div class="tdee-note">${escapeHtml(info.basis)}</div>`;
