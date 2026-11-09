@@ -8130,8 +8130,11 @@
             /* legacy "green" becomes a fresh aqua everywhere the old JS colors with it */
             --accent-green: #4fd8c4; --accent-green-dim: rgba(79, 216, 196, 0.16);
             --bc-ok: #4fd8c4; --bc-ok-c: rgba(79, 216, 196, 0.16);
-            --tier-surplus: #ff6b6b; --tier-maint: #ffc43d; --tier-small: #2ec4d6; --tier-great: #4c8df6;
-            --tier-perfect: #8f7bff; --tier-fire: #ff6fb5; --tier-hot: #ff9a3c;
+            /* deficit tiers: one diverging scale — red (over) · slate · green (under) · amber (too far) */
+            --tier-surplus-big: #e5484d; --tier-surplus: #ff7a72; --tier-surplus-light: #ffb3ab;
+            --tier-maint: #94a3b8;
+            --tier-small: #7fdcae; --tier-great: #34d399; --tier-perfect: #3dffb0;
+            --tier-hot: #ffc43d;
         }
 
         /* ---------- keyframes ---------- */
@@ -8220,6 +8223,19 @@
         }
         .level-chip::before { content: "★"; font-size: 11px; }
         .level-chip:active { transform: scale(0.95); }
+        .quests-chips { display: inline-flex; align-items: center; gap: 6px; }
+        .progress-module { scroll-margin-top: calc(64px + env(safe-area-inset-top)); } /* clear the sticky app bar */
+        .grade-chip {
+            display: inline-flex; align-items: center; border-radius: 999px; padding: 4px 10px; font-size: 12px; font-weight: 750;
+            white-space: nowrap; cursor: pointer; font-variant-numeric: tabular-nums;
+            --gc: var(--text-muted); color: var(--gc); background: color-mix(in srgb, var(--gc) 14%, transparent); border: 1px solid color-mix(in srgb, var(--gc) 45%, transparent);
+        }
+        .grade-chip.grade-a { --gc: var(--tier-perfect, #3dffb0); }
+        .grade-chip.grade-b { --gc: var(--tier-great, #34d399); }
+        .grade-chip.grade-c { --gc: var(--tier-hot, #ffc43d); }
+        .grade-chip.grade-d { --gc: var(--tier-surplus, #ff7a72); }
+        .grade-chip.grade-f { --gc: var(--tier-surplus-big, #e5484d); }
+        .grade-chip:active { transform: scale(0.95); }
         .quests-row { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 2px; }
         .quest {
             --qc: var(--v-blue); --qcl: var(--v-blue-l);
@@ -8306,20 +8322,31 @@
         .quick-stat-chip.is-hot .chip-value { background: var(--v-grad-warm); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent !important; }
 
         /* ---------- deficit tier spectrum (calendar · averages · legend) ---------- */
-        .calendar-day.t-surplus, .davg.t-surplus, .cal-legend .sw.t-surplus { background: rgba(255, 107, 107, 0.26); color: #ffc9c3; box-shadow: none; }
-        .calendar-day.t-maint, .davg.t-maint, .cal-legend .sw.t-maint { background: rgba(255, 196, 61, 0.22); color: #ffe7a6; box-shadow: none; }
-        .calendar-day.t-small, .davg.t-small, .cal-legend .sw.t-small { background: rgba(46, 196, 214, 0.3); color: #c4f4fa; box-shadow: none; }
-        .calendar-day.t-great, .davg.t-great, .cal-legend .sw.t-great { background: linear-gradient(150deg, #3f7ff0, #5ea8ff); color: #fff; box-shadow: 0 3px 10px rgba(76, 141, 246, 0.28); }
-        .calendar-day.t-perfect, .davg.t-perfect, .cal-legend .sw.t-perfect { background: linear-gradient(150deg, #7458ff, #b07bff); color: #fff; box-shadow: 0 3px 12px rgba(143, 123, 255, 0.38); }
-        .calendar-day.t-fire, .davg.t-fire, .cal-legend .sw.t-fire {
-            background: linear-gradient(120deg, #ff5fa2, #ff9a3c, #ff5fa2); background-size: 200% 100%; color: #fff;
-            box-shadow: 0 4px 14px rgba(255, 111, 181, 0.42);
+        /* Diverging: deeper red = bigger surplus · slate = maintenance ·
+           brighter green = bigger deficit up to the glowing 700–999 peak ·
+           striped amber = 1,000+ too far (a warning, not "more green") */
+        .calendar-day.t-surplus-light, .davg.t-surplus-light, .cal-legend .sw.t-surplus-light { background: rgba(255, 107, 107, 0.17); color: #ffc9c3; box-shadow: inset 0 0 0 1px rgba(255, 107, 107, 0.28); }
+        .calendar-day.t-surplus, .davg.t-surplus, .cal-legend .sw.t-surplus { background: rgba(255, 92, 92, 0.42); color: #ffe3e0; box-shadow: none; }
+        .calendar-day.t-surplus-big, .davg.t-surplus-big, .cal-legend .sw.t-surplus-big {
+            background: linear-gradient(150deg, #d93a40, #ff5a5f); color: #fff;
+            box-shadow: 0 0 0 1px rgba(255, 120, 120, 0.55), 0 0 14px rgba(255, 72, 77, 0.5);
         }
-        .davg.t-fire, .cal-legend .sw.t-fire { animation: bcShimmer 4s linear infinite; }
+        .calendar-day.t-maint, .davg.t-maint, .cal-legend .sw.t-maint { background: rgba(148, 163, 184, 0.16); color: #cbd5e1; box-shadow: none; }
+        .calendar-day.t-small, .davg.t-small, .cal-legend .sw.t-small { background: rgba(52, 211, 153, 0.11); color: #9fdcc0; box-shadow: inset 0 0 0 1px rgba(52, 211, 153, 0.22); }
+        .calendar-day.t-great, .davg.t-great, .cal-legend .sw.t-great { background: linear-gradient(160deg, rgba(52, 211, 153, 0.62), rgba(32, 168, 120, 0.5)); color: #f0fff8; box-shadow: none; }
+        .calendar-day.t-perfect, .davg.t-perfect, .cal-legend .sw.t-perfect {
+            background: linear-gradient(150deg, #19c98a, #3dffb0); color: #03291b;
+            box-shadow: 0 0 0 1px rgba(110, 255, 196, 0.7), 0 0 16px rgba(61, 255, 176, 0.55);
+        }
+        .davg.t-perfect .davg-cov, .davg.t-perfect .davg-label { color: rgba(3, 41, 27, 0.75) !important; }
         .calendar-day.t-hot, .davg.t-hot, .cal-legend .sw.t-hot {
-            background: repeating-linear-gradient(135deg, rgba(255, 154, 60, 0.5) 0 6px, rgba(255, 154, 60, 0.3) 6px 12px);
-            color: #fff1e4; box-shadow: inset 0 0 0 2px var(--v-orange);
+            background: repeating-linear-gradient(135deg, rgba(255, 196, 61, 0.42) 0 6px, rgba(255, 196, 61, 0.2) 6px 12px);
+            color: #fff1c9; box-shadow: inset 0 0 0 2px var(--v-amber);
         }
+        .cal-legend-scale { grid-template-columns: repeat(8, minmax(0, 1fr)) !important; }
+        .cal-legend-scale .sw { letter-spacing: 0 !important; }
+        .cal-legend-ends { display: flex; justify-content: space-between; gap: 8px; margin-top: 5px; font-size: 10.5px; font-weight: 600; }
+        .cal-legend-ends .over { color: #ff8f87; } .cal-legend-ends .under { color: #4fe3a8; }
         .davg.t-none { background: var(--bc-surface-2); color: var(--text-muted); }
         .davg { transition: transform 0.2s ease; }
         .davg-val { font-weight: 750; }
@@ -8328,12 +8355,11 @@
 
         /* ---------- calendar ---------- */
         .calendar-day { animation: bcCellIn 0.4s cubic-bezier(0.2, 0.9, 0.3, 1.25) backwards; animation-delay: calc(var(--d, 0) * 11ms); transition: transform 0.15s ease, filter 0.15s ease; }
-        .calendar-day.t-fire { animation: bcCellIn 0.4s cubic-bezier(0.2, 0.9, 0.3, 1.25) backwards, bcShimmer 4s linear infinite; animation-delay: calc(var(--d, 0) * 11ms), 0s; }
         .calendar-day .cal-def { font-weight: 750 !important; }
         .calendar-day .cal-gym { background: #fff !important; box-shadow: 0 0 0 1.5px rgba(0, 0, 0, 0.28) !important; }
         .cal-key-gym { background: #fff !important; box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.3); }
         .cal-flair { position: absolute; left: 5px; top: 4px; font-size: 9px; line-height: 1; }
-        .calendar-day.t-perfect .cal-flair { color: #fff; animation: bcTwinkle 2.4s ease-in-out infinite; }
+        .calendar-day.t-perfect .cal-flair { color: #03291b; animation: bcTwinkle 2.4s ease-in-out infinite; }
         .calendar-day.today { box-shadow: inset 0 0 0 2px var(--v-blue-l) !important; }
         .calendar-day.today::after { content: ""; position: absolute; inset: 0; border-radius: inherit; animation: bcPulse 2.4s ease-out infinite; pointer-events: none; }
         .calendar-day.today .cal-num { background: var(--v-grad); color: #fff; box-shadow: 0 2px 10px rgba(143, 123, 255, 0.5); }
@@ -8361,13 +8387,16 @@
         .recent-progress-row:nth-child(2) .rp-bar i { animation-delay: 40ms; } .recent-progress-row:nth-child(3) .rp-bar i { animation-delay: 80ms; }
         .recent-progress-row:nth-child(4) .rp-bar i { animation-delay: 120ms; } .recent-progress-row:nth-child(5) .rp-bar i { animation-delay: 160ms; }
         .recent-progress-row:nth-child(6) .rp-bar i { animation-delay: 200ms; } .recent-progress-row:nth-child(7) .rp-bar i { animation-delay: 240ms; }
-        .rp-t-surplus { --rp-bg: rgba(255, 107, 107, 0.2); --rp-c: var(--v-red-l); --rp-fill: linear-gradient(90deg, #ff9a3c, #ff6b6b); }
-        .rp-t-maint { --rp-bg: rgba(255, 196, 61, 0.18); --rp-c: var(--v-amber-l); --rp-fill: var(--v-amber); }
-        .rp-t-small { --rp-bg: rgba(46, 196, 214, 0.2); --rp-c: var(--v-teal-l); --rp-fill: var(--v-teal); }
-        .rp-t-great { --rp-bg: rgba(76, 141, 246, 0.24); --rp-c: var(--v-blue-l); --rp-fill: var(--v-grad-cool); }
-        .rp-t-perfect { --rp-bg: rgba(143, 123, 255, 0.26); --rp-c: var(--v-violet-l); --rp-fill: linear-gradient(90deg, #4c8df6, #8f7bff); }
-        .rp-t-fire { --rp-bg: linear-gradient(140deg, rgba(255, 95, 162, 0.32), rgba(255, 154, 60, 0.3)); --rp-c: var(--v-pink-l); --rp-fill: var(--v-grad-warm); }
-        .rp-t-hot { --rp-bg: rgba(255, 154, 60, 0.24); --rp-c: var(--v-orange-l); --rp-fill: linear-gradient(90deg, #ff9a3c, #ff6b6b); }
+        .rp-t-surplus-light { --rp-bg: rgba(255, 107, 107, 0.14); --rp-c: #ffb3ab; --rp-fill: rgba(255, 107, 107, 0.55); }
+        .rp-t-surplus { --rp-bg: rgba(255, 92, 92, 0.3); --rp-c: #ff8f87; --rp-fill: #ff6b6b; }
+        .rp-t-surplus-big { --rp-bg: linear-gradient(150deg, rgba(217, 58, 64, 0.65), rgba(255, 90, 95, 0.55)); --rp-c: #ff6b6b; --rp-fill: linear-gradient(90deg, #ff6b6b, #e5484d); }
+        .rp-t-surplus-big .rp-badge { box-shadow: 0 0 12px rgba(255, 72, 77, 0.45); }
+        .rp-t-maint { --rp-bg: rgba(148, 163, 184, 0.16); --rp-c: #cbd5e1; --rp-fill: #94a3b8; }
+        .rp-t-small { --rp-bg: rgba(52, 211, 153, 0.1); --rp-c: #9be8c6; --rp-fill: rgba(52, 211, 153, 0.5); }
+        .rp-t-great { --rp-bg: rgba(52, 211, 153, 0.32); --rp-c: #4fe3a8; --rp-fill: #34d399; }
+        .rp-t-perfect { --rp-bg: linear-gradient(150deg, rgba(25, 201, 138, 0.7), rgba(61, 255, 176, 0.55)); --rp-c: #3dffb0; --rp-fill: linear-gradient(90deg, #19c98a, #3dffb0); }
+        .rp-t-perfect .rp-badge { box-shadow: 0 0 14px rgba(61, 255, 176, 0.45); }
+        .rp-t-hot { --rp-bg: repeating-linear-gradient(135deg, rgba(255, 196, 61, 0.32) 0 5px, rgba(255, 196, 61, 0.14) 5px 10px); --rp-c: #ffd36b; --rp-fill: #ffc43d; }
         .rp-t-none .rp-badge { color: var(--text-muted); font-size: 22px; }
         .recent-progress h3::before { content: ""; display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 8px; vertical-align: 2px; background: var(--v-grad); }
         .recent-progress-more { background: rgba(143, 123, 255, 0.14); color: var(--v-violet-l); }
@@ -8643,7 +8672,10 @@
             <section class="bc-card quests-card" id="questsCard" aria-labelledby="questsTitle">
                 <div class="card-head">
                     <span class="card-title" id="questsTitle">Daily quests <span class="quests-count" id="questsCount">0/5</span></span>
-                    <button type="button" class="level-chip" id="homeLevelChip" onclick="bcGo('badges')" aria-label="Level. Open Badges.">Lv 1</button>
+                    <span class="quests-chips">
+                        <button type="button" class="grade-chip" id="homeWeekGrade" onclick="openProgressReport('weeklyReportCard')" hidden>Week —</button>
+                        <button type="button" class="level-chip" id="homeLevelChip" onclick="bcGo('badges')" aria-label="Level. Open Badges.">Lv 1</button>
+                    </span>
                 </div>
                 <div class="quests-row" id="questsRow"></div>
                 <div class="quests-meter" id="questsMeter" aria-hidden="true"></div>
@@ -9252,7 +9284,8 @@
 
                 <!-- Calendar Legend: calibrated deficit tiers (same scale as the home badges) -->
                 <div class="cal-legend" aria-label="Calendar key">
-                    <div class="cal-legend-scale"><div><div class="sw t-surplus">🛑</div><div class="lbl"><strong>Surplus</strong>&lt;0</div></div><div><div class="sw t-maint">😐</div><div class="lbl"><strong>Maint.</strong>0–249</div></div><div><div class="sw t-small">🌱</div><div class="lbl"><strong>Small</strong>250+</div></div><div><div class="sw t-great">👍</div><div class="lbl"><strong>Great</strong>500+</div></div><div><div class="sw t-perfect">🎯</div><div class="lbl"><strong>Perfect</strong>700+</div></div><div><div class="sw t-fire">🔥🔥</div><div class="lbl"><strong>Fire</strong>900+</div></div><div><div class="sw t-hot">🥵</div><div class="lbl"><strong>Too far</strong>1k+</div></div></div>
+                    <div class="cal-legend-scale"><div title="Big surplus: 400+ kcal over TDEE"><div class="sw t-surplus-big">🛑</div><div class="lbl">−400</div></div><div title="Surplus: 150–399 kcal over"><div class="sw t-surplus">🔺</div><div class="lbl">−150</div></div><div title="Slight surplus: 1–149 kcal over"><div class="sw t-surplus-light">😬</div><div class="lbl">&lt;0</div></div><div title="Maintenance: 0–249 deficit"><div class="sw t-maint">😐</div><div class="lbl">0</div></div><div title="Small deficit: 250–499"><div class="sw t-small">🌱</div><div class="lbl">250</div></div><div title="Great: 500–699 deficit"><div class="sw t-great">👍</div><div class="lbl">500</div></div><div title="Perfect: 700–999 deficit"><div class="sw t-perfect">🎯</div><div class="lbl">700</div></div><div title="Too aggressive: 1,000+ deficit"><div class="sw t-hot">🥵</div><div class="lbl">1k+</div></div></div>
+                    <div class="cal-legend-ends"><span class="over">◀ Surplus · kcal over</span><span class="under">kcal under · Deficit ▶</span></div>
                     <div class="cal-legend-keys"><span><i class="cal-key-gym"></i>gym</span><span><i class="cal-key-box today"></i>today</span><span><i class="cal-key-box untracked"></i>untracked</span><span><i class="cal-key-box assumed"></i>assumed</span><span>number = calibrated deficit</span></div>
                 </div>
                 <!-- Month Stats Summary -->
@@ -10143,8 +10176,8 @@
                     ten_lbs: { id: 'ten_lbs', name: 'Double Digits', desc: 'Lose 10 pounds', icon: '🏆', xp: 500, unlocked: false },
                     halfway: { id: 'halfway', name: 'Halfway Hero', desc: 'Reach halfway to goal', icon: '⭐', xp: 750, unlocked: false },
                     protein_king: { id: 'protein_king', name: 'Protein King', desc: 'Hit protein target 7 days in a row', icon: '🥩', xp: 250, unlocked: false },
-                    deficit_master: { id: 'deficit_master', name: 'Deficit Master', desc: '7 days hitting deficit target', icon: '📉', xp: 250, unlocked: false },
-                    early_bird: { id: 'early_bird', name: 'Early Bird', desc: 'Log breakfast before 9am 5 times', icon: '🌅', xp: 150, unlocked: false },
+                    deficit_master: { id: 'deficit_master', name: 'Deficit Master', desc: '3,500 kcal deficit in 7 days (≈1 lb)', icon: '📉', xp: 250, unlocked: false },
+                    early_bird: { id: 'early_bird', name: 'Early Bird', desc: 'Log breakfast (5–9am) on 5 days', icon: '🌅', xp: 150, unlocked: false },
                     perfect_week: { id: 'perfect_week', name: 'Perfect Week', desc: 'Hit all targets for 7 days', icon: '✨', xp: 400, unlocked: false }
                 },
                 _version: 0,
@@ -10371,8 +10404,8 @@
                 ten_lbs: { id: 'ten_lbs', name: 'Double Digits', desc: 'Lose 10 pounds', icon: '🏆', xp: 500, unlocked: false },
                 halfway: { id: 'halfway', name: 'Halfway Hero', desc: 'Reach halfway to goal', icon: '⭐', xp: 750, unlocked: false },
                 protein_king: { id: 'protein_king', name: 'Protein King', desc: 'Hit protein target 7 days in a row', icon: '🥩', xp: 250, unlocked: false },
-                deficit_master: { id: 'deficit_master', name: 'Deficit Master', desc: '7 days hitting deficit target', icon: '📉', xp: 250, unlocked: false },
-                early_bird: { id: 'early_bird', name: 'Early Bird', desc: 'Log breakfast before 9am 5 times', icon: '🌅', xp: 150, unlocked: false },
+                deficit_master: { id: 'deficit_master', name: 'Deficit Master', desc: '3,500 kcal deficit in 7 days (≈1 lb)', icon: '📉', xp: 250, unlocked: false },
+                early_bird: { id: 'early_bird', name: 'Early Bird', desc: 'Log breakfast (5–9am) on 5 days', icon: '🌅', xp: 150, unlocked: false },
                 perfect_week: { id: 'perfect_week', name: 'Perfect Week', desc: 'Hit all targets for 7 days', icon: '✨', xp: 400, unlocked: false }
             },
 
@@ -12607,6 +12640,29 @@
             return { min: floor, max: target > floor ? target : floor + 150 };
         }
 
+        // Today's calorie zone (floor … calibrated budget) — what the quests,
+        // the live deficit bar and checkDayCompletion's XP all call "on target"
+        function getIntakeZone() {
+            const t = state.today?.targets || {};
+            const budget = t.calories ?? getIntakeGoals().budget;
+            return getCalorieBand(budget, t.floor ?? Math.min(INTAKE_BUDGET_FLOOR_KCAL, budget));
+        }
+
+        // Meal-to-meal feedback: the second toast line after a meal lands on
+        // today — what's left of the budget and where protein stands.
+        function getMealFeedbackLine() {
+            const totals = getTodayTotals();
+            const goals = getIntakeGoals();
+            const zone = getIntakeZone();
+            const left = goals.budget - totals.calories;
+            const protein = Math.round(totals.protein);
+            const cal = left < 0 ? `${formatNumber(-left)} over budget`
+                : totals.calories >= zone.min ? `In zone · ${formatNumber(left)} left`
+                : `${formatNumber(left)} left`;
+            const pro = protein >= goals.proteinMin ? `protein ${formatNumber(protein)}g ✓` : `protein ${formatNumber(protein)}/${goals.proteinMin}g`;
+            return `${cal} · ${pro}`;
+        }
+
         /**
          * Shared day status determination — ALL status computing must use this.
          * Replaces divergent logic in saveDayLog, recalculateDayLog, saveDayLogWithSnapshot.
@@ -13532,7 +13588,9 @@
             if (intake >= budget * 0.85) {
                 return { key: 'approaching', message: `Approaching daily intake target · ${formatNumber(remaining)} kcal remaining` };
             }
-            return { key: 'normal', message: `${formatNumber(remaining)} kcal remaining to plan` };
+            // (the hero already shows what's left — say what "on target" means)
+            const zone = getIntakeZone();
+            return { key: 'normal', message: `On target: ${formatNumber(zone.min)}–${formatNumber(zone.max)} kcal for the day` };
         }
 
         function renderIntakeBudget(intake) {
@@ -13928,7 +13986,14 @@
                 }
                 const pct = Math.max(0, Math.min((deficit / GOAL_DEFICIT) * 100, 100));
                 let grad, note, noteColor;
-                if (deficit >= GOAL_DEFICIT) {
+                // Live deficit = TDEE − eaten so far, so it starts huge every
+                // morning: don't call it "on track" until a day's worth is eaten
+                const zone = getIntakeZone();
+                if (deficit >= GOAL_DEFICIT && totals.calories < zone.min) {
+                    grad = 'linear-gradient(90deg, rgba(79, 216, 196, 0.35), rgba(76, 141, 246, 0.35))';
+                    // Where the day lands if you eat to budget — the hero owns "left"
+                    note = `so far · ≈${formatNumber(Math.round(tdee - zone.max))} at full budget`; noteColor = 'var(--text-muted)';
+                } else if (deficit >= GOAL_DEFICIT) {
                     grad = 'linear-gradient(90deg, var(--v-teal), var(--v-blue) 55%, var(--v-violet))';
                     note = 'on track'; noteColor = 'var(--v-teal-l)';
                 } else if (deficit >= 200) {
@@ -14136,10 +14201,13 @@
             container.innerHTML = dates.length ? dates.map(date => {
                 const log = state.dailyLogs[date];
                 const deficit = getDisplayDeficitForDate(date);
-                const balance = deficit == null ? null : -Math.round(deficit);
+                const d = deficit == null ? null : Math.round(deficit);
                 const exercise = getWorkoutTotalsForDate(date).totalCalories;
                 const label = parseLocalDate(date).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
-                const result = balance == null ? 'Untracked' : `${balance > 0 ? '+' : balance < 0 ? '−' : ''}${formatNumber(Math.abs(balance))} cal ${balance > 0 ? 'surplus' : balance < 0 ? 'deficit' : 'maintenance'}`;
+                // The word carries the direction (no sign) — "−612 cal deficit"
+                // read as a negative deficit next to the calendar's "612"
+                const result = d == null ? 'Untracked' : d === 0 ? 'Maintenance'
+                    : `${formatNumber(Math.abs(d))} cal ${d < 0 ? 'surplus' : 'deficit'}`;
                 const tier = getDeficitTier(deficit);
                 const mag = deficit == null ? 0 : Math.min(Math.abs(deficit) / 1000, 1) * 100;
                 return `<button type="button" class="recent-progress-row ${tier ? 'rp-t-' + tier.key : 'rp-t-none'}" onclick="showDayDetails('${date}')">
@@ -14160,13 +14228,18 @@
         // everywhere. Computed live from getDisplayDeficitForDate(), so tiers
         // follow the calibration as it learns.
         // ============================================
+        // Diverging scale (Nov 2026 rework of the old rainbow): reds deepen
+        // with the size of a surplus, neutral at maintenance, greens brighten
+        // up to the 700–999 peak (glowing), and 1,000+ is a separate striped
+        // amber "too far" warning — never a brighter green.
         const DEFICIT_TIERS = Object.freeze([
-            { key: 'surplus', min: -Infinity, label: 'Surplus', range: 'below 0', emoji: '🛑' },
+            { key: 'surplus-big', min: -Infinity, label: 'Big surplus', range: '400+ over', emoji: '🛑' },
+            { key: 'surplus', min: -399, label: 'Surplus', range: '150–399 over', emoji: '🔺' },
+            { key: 'surplus-light', min: -149, label: 'Slight surplus', range: '1–149 over', emoji: '😬' },
             { key: 'maint', min: 0, label: 'Maintenance', range: '0–249', emoji: '😐' },
             { key: 'small', min: 250, label: 'Small deficit', range: '250–499', emoji: '🌱' },
             { key: 'great', min: 500, label: 'Great', range: '500–699', emoji: '👍' },
-            { key: 'perfect', min: 700, label: 'Perfect', range: '700–899', emoji: '🎯' },
-            { key: 'fire', min: 900, label: 'Fire', range: '900–999', emoji: '🔥🔥' },
+            { key: 'perfect', min: 700, label: 'Perfect', range: '700–999', emoji: '🎯' },
             { key: 'hot', min: 1000, label: 'Too aggressive', range: '1,000+', emoji: '🥵' }
         ]);
 
@@ -14210,14 +14283,14 @@
                 const value = a.avg == null ? '—' : formatCompactDeficit(a.avg);
                 const title = a.avg == null
                     ? `${n}-day average: no logged days`
-                    : `${n}-day average: ${formatSignedKcal(Math.round(a.avg))} kcal/day ${a.avg >= 0 ? 'deficit' : 'surplus'} — ${tier.label} (${tier.range}) · ${a.known} of ${n} days logged · ${formatShortDate(a.start)} – ${formatShortDate(a.end)}`;
+                    : `${n}-day average: ${formatNumber(Math.abs(Math.round(a.avg)))} kcal/day ${a.avg >= 0 ? 'deficit' : 'surplus'} — ${tier.label} (${tier.range}) · ${a.known} of ${n} days logged · ${formatShortDate(a.start)} – ${formatShortDate(a.end)}`;
                 return `<div class="davg ${tier ? 't-' + tier.key : 't-none'}" role="listitem" title="${escapeHtml(title)}" aria-label="${escapeHtml(title)}">
                     <span class="davg-top"><span class="davg-label">${n}D</span><span class="davg-emoji" aria-hidden="true">${tier ? tier.emoji : ''}</span></span>
                     <span class="davg-val">${value}</span>
-                    <span class="davg-cov">${a.known}/${n} days</span>
+                    <span class="davg-cov">${a.known}/${n}</span>
                 </div>`;
             }).join('');
-            el.innerHTML = `<div class="davg-head"><span>Avg daily deficit</span><span>calibrated TDEE</span></div>
+            el.innerHTML = `<div class="davg-head"><span>Avg daily deficit</span><span>days logged · calibrated</span></div>
                 <div class="davg-strip" role="list">${tiles}</div>`;
         }
 
@@ -14440,16 +14513,23 @@
             const deficit = getLiveTdeeEstimate().calibrated - totals.calories;
             const over = totals.calories - goals.budget;
             const clamp = v => Math.max(0, Math.min(1, v));
+            // "Done" means a real day eaten inside the calorie zone — the same
+            // band as the "Hit calorie target!" XP (floor … budget). Before,
+            // Budget and Deficit both ticked after the first 100-kcal snack.
+            const band = getIntakeZone();
+            const inZone = totals.calories >= band.min && totals.calories <= band.max;
+            const ateDay = totals.calories >= band.min;
             return [
                 { key: 'weigh', label: 'Weigh in', icon: 'scale', tone: 'teal', done: weighedIn, progress: weighedIn ? 1 : 0,
                   sub: weighedIn ? 'Done' : 'To do', action: 'openWeighInModal()' },
                 { key: 'protein', label: 'Protein', icon: 'bolt', tone: 'violet', done: totals.protein >= goals.proteinMin,
                   progress: clamp(totals.protein / goals.proteinMin), sub: `${totals.protein}/${goals.proteinMin}g`, action: 'openQuickMealModal()' },
-                { key: 'budget', label: 'Budget', icon: 'target', tone: 'blue', done: hasFood && over <= 0, failed: over > 0,
+                { key: 'budget', label: 'Budget', icon: 'target', tone: 'blue', done: inZone, failed: over > 0,
                   progress: hasFood ? clamp(totals.calories / goals.budget) : 0,
-                  sub: !hasFood ? 'Log food' : over > 0 ? `+${formatNumber(over)}` : `${formatNumber(-over)} left`, action: 'openQuickMealModal()' },
-                { key: 'deficit', label: 'Deficit', icon: 'flame', tone: 'orange', done: hasFood && deficit >= 500,
-                  progress: hasFood ? clamp(deficit / 500) : 0, sub: hasFood ? `${deficit >= 0 ? '+' : '−'}${formatNumber(Math.abs(Math.round(deficit)))}` : '500 goal', action: "bcGo('today')" },
+                  sub: !hasFood ? 'Log food' : over > 0 ? `+${formatNumber(over)} over` : inZone ? 'In zone' : `${formatNumber(-over)} left`, action: 'openQuickMealModal()' },
+                { key: 'deficit', label: 'Deficit', icon: 'flame', tone: 'orange', done: ateDay && deficit >= 500, failed: hasFood && deficit < 500,
+                  progress: hasFood && deficit >= 500 ? clamp(totals.calories / band.min) : 0,
+                  sub: !hasFood ? '500 goal' : ateDay || deficit < 500 ? `${deficit >= 0 ? '+' : '−'}${formatNumber(Math.abs(Math.round(deficit)))}` : 'On pace', action: "bcGo('today')" },
                 { key: 'train', label: 'Train', icon: 'dumbbell', tone: 'pink', done: workoutCount > 0, progress: workoutCount > 0 ? 1 : 0,
                   sub: workoutCount > 0 ? `${workoutCount} logged` : 'To do', action: 'openWorkoutModal()' }
             ];
@@ -14473,6 +14553,17 @@
             if (meter) meter.innerHTML = quests.map(q => `<i class="q-${q.tone}${q.done ? ' on' : ''}"></i>`).join('');
             const card = document.getElementById('questsCard');
             card?.classList.toggle('all-done', done === quests.length);
+
+            const gradeChip = document.getElementById('homeWeekGrade');
+            if (gradeChip) {
+                const wk = getHomeWeekGrade();
+                gradeChip.hidden = !wk;
+                if (wk) {
+                    gradeChip.textContent = `${wk.label} ${wk.grade}`;
+                    gradeChip.className = `grade-chip ${gradeClass(wk.grade)}`;
+                    gradeChip.setAttribute('aria-label', `${wk.label === 'Week' ? 'This week' : 'Last week'}: grade ${wk.grade}. Open the Weekly Report Card.`);
+                }
+            }
 
             const chip = document.getElementById('homeLevelChip');
             if (chip && typeof getLevelInfo === 'function') {
@@ -16456,7 +16547,7 @@
                     state.today.meals = migrateArrayToObject(state.today.meals, 'meal');
                 }
                 state.today.meals[mealId] = meal;
-                showToast(`✓ Added ${name}`);
+                showToast(`✓ Added ${name}\n${getMealFeedbackLine()}`);
                 // Award XP for logging meal (only for new meals)
                 awardXP(XP_REWARDS.logMeal, 'Meal logged');
             } else {
@@ -17433,7 +17524,7 @@
                 state.today.meals[newMealId] = meal;
                 saveState();
                 saveDayLog();
-                showToast(`✓ ${meal.name} repeated`);
+                showToast(`✓ ${meal.name} repeated\n${getMealFeedbackLine()}`);
                 awardXP(10, 'Logged meal');
             } else {
                 if (!state.dailyLogs[targetDate]) {
@@ -18017,7 +18108,7 @@
                     state.today.meals = migrateArrayToObject(state.today.meals, 'meal');
                 }
                 state.today.meals[mealId] = meal;
-                showToast(`✓ ${meal.name} logged (${meal.calories} cal)`);
+                showToast(`✓ ${meal.name} · ${formatNumber(meal.calories)} cal\n${getMealFeedbackLine()}`);
                 awardXP(10, 'Logged meal');
             } else {
                 // Add to historical dailyLogs for past date
@@ -18548,7 +18639,7 @@
                 target: targets.calories,
                 targetProtein: targets.protein,
                 targetCarbs: targets.carbs ?? 0,
-                targetDeficit: targets.deficit ?? Math.max(0, tdee - targets.calories),
+                targetDeficit: Math.max(0, tdee - targets.calories), // RAW like tdee/deficit (targets.deficit is calibrated)
                 floor: targets.floor,
                 // Performance
                 tdee: tdee,  // Save TDEE for historical recalculations
@@ -24636,74 +24727,80 @@ CALIBRATED DEFICIT (estimate): ${formatSignedKcal(deficit + exportCal.current)} 
             }
         }
 
-        function checkAchievements() {
-            const achievements = state.achievements;
+        // Achievement copy that changed after users' state was seeded (the
+        // stored desc syncs from Firebase, so the Badges grid reads this first)
+        const ACHIEVEMENT_COPY = Object.freeze({
+            deficit_master: { desc: '3,500 kcal deficit in 7 days (≈1 lb)' },
+            early_bird: { desc: 'Log breakfast (5–9am) on 5 days' }
+        });
 
-            // First day — any tracked log (or a set-up live day) counts
-            if (!achievements.first_day.unlocked &&
-                (getSortedLogDates().length > 0 || state.today?.setupComplete)) {
-                unlockAchievement('first_day');
-            }
+        // Current value vs. target for every achievement — the ONE source for
+        // unlocking (checkAchievements) and the Progress list, so a row can
+        // never sit at "11/7" without unlocking. Protein King, Early Bird and
+        // Deficit Master used to have no unlock check at all, and Deficit
+        // Master duplicated Week Warrior's rule.
+        function getAchievementProgressList() {
+            const dates = Object.keys(state.dailyLogs || {}).sort();
+            const bestDeficitStreak = Math.max(calculateDeficitStreak(), calculateLongestDeficitStreak());
+            const startWeight = state.profile?.startingWeight_lbs || 190;
+            const currentWeight = getWeightForDate(getLocalDateString()) ?? startWeight;
+            const weightLost = Math.max(startWeight - currentWeight, 0);
+            const goal = getGoal();
+            const halfwayTarget = goal ? (startWeight - goal.weight) / 2 : null;
 
-            // Streak achievements — based on the longest deficit streak (≥500/day,
-            // untracked days break it). Unlocks are permanent once earned.
-            const longestDeficitStreak = calculateLongestDeficitStreak();
-            if (!achievements.week_streak.unlocked && longestDeficitStreak >= 7) {
-                unlockAchievement('week_streak');
-            }
-            if (!achievements.two_week_streak.unlocked && longestDeficitStreak >= 14) {
-                unlockAchievement('two_week_streak');
-            }
-            if (!achievements.month_streak.unlocked && longestDeficitStreak >= 30) {
-                unlockAchievement('month_streak');
-            }
-
-            // Perfect week — check for 7 CONSECUTIVE perfect days from dailyLogs
-            if (!achievements.perfect_week.unlocked) {
-                let consecPerfect = 0;
-                const sortedDates = Object.keys(state.dailyLogs || {}).sort();
-                if (sortedDates.length > 0) {
-                    const startD = parseLocalDate(sortedDates[0]);
-                    const endD = parseLocalDate(sortedDates[sortedDates.length - 1]);
-                    const cur = new Date(startD);
-                    while (cur <= endD) {
-                        const ds = getLocalDateString(cur);
-                        const log = state.dailyLogs[ds];
-                        if (log && (log.perfect || log.status === 'perfect')) {
-                            consecPerfect++;
-                            if (consecPerfect >= 7) { unlockAchievement('perfect_week'); break; }
-                        } else {
-                            consecPerfect = 0;
-                        }
-                        cur.setDate(cur.getDate() + 1);
-                    }
+            // Calendar-day walk so a gap breaks a streak
+            let proteinStreak = 0, perfectStreak = 0, pro = 0, perf = 0;
+            if (dates.length) {
+                for (let d = dates[0]; d <= dates[dates.length - 1]; d = calAddDays(d, 1)) {
+                    const log = state.dailyLogs[d];
+                    pro = log?.proteinHit ? pro + 1 : 0;
+                    perf = log && (log.perfect || log.status === 'perfect') ? perf + 1 : 0;
+                    proteinStreak = Math.max(proteinStreak, pro);
+                    perfectStreak = Math.max(perfectStreak, perf);
                 }
             }
 
-            // Weight loss achievements
-            const achWeight = getWeightForDate(getLocalDateString()) ?? state.profile.currentWeight_lbs;
-            const lbsLost = state.profile.startingWeight_lbs - achWeight;
-            if (!achievements.first_lb.unlocked && lbsLost >= 1) {
-                unlockAchievement('first_lb');
-            }
-            if (!achievements.five_lbs.unlocked && lbsLost >= 5) {
-                unlockAchievement('five_lbs');
-            }
-            if (!achievements.ten_lbs.unlocked && lbsLost >= 10) {
-                unlockAchievement('ten_lbs');
+            // Breakfast = food logged 5:00–8:59 (a 1am snack is not breakfast)
+            const earlyBird = dates.filter(d => getValues(state.dailyLogs[d]?.meals || {}).some(m => {
+                const min = m?.time ? parseTimeMinutes(m.time) : null;
+                return min != null && min >= 5 * 60 && min < 9 * 60;
+            })).length;
+
+            // Best calibrated 7-completed-day deficit (same math as Personal Records)
+            let bestWeek = 0;
+            const completed = dates.filter(isCompletedDay);
+            if (completed.length) {
+                for (let d = completed[0]; d <= completed[completed.length - 1]; d = calAddDays(d, 1)) {
+                    bestWeek = Math.max(bestWeek, Math.round(getTrailing7DayDeficit(d).total));
+                }
             }
 
-            // Halfway — only meaningful when a goal is set
-            const achGoal = getGoal();
-            if (achGoal && !achievements.halfway.unlocked) {
-                const totalToLose = state.profile.startingWeight_lbs - achGoal.weight;
-                if (totalToLose > 0 && lbsLost >= totalToLose / 2) {
-                    unlockAchievement('halfway');
-                }
+            return [
+                { id: 'first_day', icon: '🚀', name: 'First Day', desc: 'Complete your first day', current: dates.filter(d => hasAnyMeaningfulData(state.dailyLogs[d])).length || (state.today?.setupComplete ? 1 : 0), target: 1, xp: 50 },
+                { id: 'week_streak', icon: '🔥', name: 'Week Warrior', desc: '7 day deficit streak', current: bestDeficitStreak, target: 7, xp: 200 },
+                { id: 'two_week_streak', icon: '👑', name: 'Two Week King', desc: '14 day deficit streak', current: bestDeficitStreak, target: 14, xp: 500 },
+                { id: 'month_streak', icon: '💎', name: 'Monthly Master', desc: '30 day deficit streak', current: bestDeficitStreak, target: 30, xp: 1000 },
+                { id: 'first_lb', icon: '⬇️', name: 'First Pound', desc: 'Lose your first pound', current: weightLost, target: 1, xp: 100 },
+                { id: 'five_lbs', icon: '🎯', name: 'Five Down', desc: 'Lose 5 pounds', current: weightLost, target: 5, xp: 300 },
+                { id: 'ten_lbs', icon: '🏆', name: 'Ten Down', desc: 'Lose 10 pounds', current: weightLost, target: 10, xp: 500 },
+                ...(halfwayTarget > 0 ? [{ id: 'halfway', icon: '⭐', name: 'Halfway There', desc: 'Reach halfway to goal', current: weightLost, target: halfwayTarget, xp: 750 }] : []),
+                { id: 'protein_king', icon: '🥩', name: 'Protein King', desc: 'Hit protein 7 days in a row', current: proteinStreak, target: 7, xp: 250 },
+                { id: 'deficit_master', icon: '📉', name: 'Deficit Master', desc: ACHIEVEMENT_COPY.deficit_master.desc, current: bestWeek, target: 3500, xp: 250 },
+                { id: 'early_bird', icon: '🌅', name: 'Early Bird', desc: ACHIEVEMENT_COPY.early_bird.desc, current: earlyBird, target: 5, xp: 150 },
+                { id: 'perfect_week', icon: '✨', name: 'Perfect Week', desc: 'All targets for 7 days', current: perfectStreak, target: 7, xp: 400 }
+            ];
+        }
+
+        function checkAchievements(options = {}) {
+            const achievements = state.achievements || {};
+            for (const a of getAchievementProgressList()) {
+                if (achievements[a.id] && !achievements[a.id].unlocked && a.current >= a.target) unlockAchievement(a.id, options);
             }
         }
 
-        function unlockAchievement(achievementId) {
+        // options.quiet: snackbar instead of the full-screen overlay — for the
+        // on-open catch-up, where a surprise overlay would swallow a tap.
+        function unlockAchievement(achievementId, options = {}) {
             const achievement = state.achievements[achievementId];
             if (!achievement || achievement.unlocked) return;
 
@@ -24720,11 +24817,14 @@ CALIBRATED DEFICIT (estimate): ${formatSignedKcal(deficit + exportCal.current)} 
             state.gamification.xp += achievement.xp;
             const newLevel = getLevelInfo(state.gamification.xp).level;
 
-            // Show celebration
-            setTimeout(() => {
-                showCelebration('achievement', achievement);
-            }, 300);
-            if (newLevel > oldLevel) {
+            if (options.quiet) {
+                showToast(`🏅 ${achievement.name} unlocked · +${achievement.xp} XP` + (newLevel > oldLevel ? ` · Level ${newLevel}!` : ''));
+            } else {
+                setTimeout(() => {
+                    showCelebration('achievement', achievement);
+                }, 300);
+            }
+            if (newLevel > oldLevel && !options.quiet) {
                 setTimeout(() => {
                     showCelebration('levelUp', newLevel);
                 }, 800);
@@ -25151,34 +25251,14 @@ CALIBRATED DEFICIT (estimate): ${formatSignedKcal(deficit + exportCal.current)} 
                 return;
             }
 
-            const first = weighInsWithBF[0];
-            const last = weighInsWithBF[weighInsWithBF.length - 1];
-            const fatChange = last.fatMass - first.fatMass;
-            const leanChange = last.leanMass - first.leanMass;
-
-            // Determine recomp status
-            let status, statusColor, statusIcon;
-            if (fatChange < -0.5 && leanChange > 0.5) {
-                status = 'True Recomposition — losing fat AND gaining muscle';
-                statusColor = 'var(--accent-green)';
-                statusIcon = '\u{1F3AF}';
-            } else if (fatChange < -0.5 && leanChange >= -0.5) {
-                status = 'Fat Loss with Muscle Preservation';
-                statusColor = 'var(--accent-blue)';
-                statusIcon = '\u{1F4AA}';
-            } else if (fatChange < -0.5 && leanChange < -0.5) {
-                status = 'Losing both fat and muscle — increase protein/training';
-                statusColor = 'var(--accent-yellow)';
-                statusIcon = '\u26A0\uFE0F';
-            } else if (fatChange >= 0 && leanChange > 0.5) {
-                status = 'Lean gain phase — gaining muscle, slight fat increase';
-                statusColor = 'var(--accent-blue)';
-                statusIcon = '\u{1F4C8}';
-            } else {
-                status = 'Tracking — more data points needed for clear trend';
-                statusColor = 'var(--text-muted)';
-                statusIcon = '\u{1F4CA}';
-            }
+            // Same trend-line change and verdict as the Body Composition card
+            const change = getBodyCompChange();
+            if (!change.ok) { container.innerHTML = ''; return; }
+            const fatChange = change.fatChange;
+            const leanChange = change.leanChange;
+            const status = change.verdict.text;
+            const statusIcon = change.verdict.icon;
+            const statusColor = { success: 'var(--accent-green)', warning: 'var(--accent-yellow)', danger: 'var(--accent-red)' }[change.verdict.tone] || 'var(--text-secondary)';
 
             // Build dual-trend visual
             const chartWidth = 280;
@@ -25517,21 +25597,17 @@ CALIBRATED DEFICIT (estimate): ${formatSignedKcal(deficit + exportCal.current)} 
             const weekStartStr = t7.startDate;
             const agg = aggregateDailyLogs(weekStartStr, t7.endDate, { completedOnly: true });
 
-            // Calculate weekly weight change
-            const weighIns = getValues(state.weighIns || {}).sort((a, b) => (a.date || '').localeCompare(b.date || ''));
+            // 7-day change of the smoothed TREND weight (the filter behind the
+            // rate card), not raw reading − raw reading: two single weigh-ins
+            // swing ±1–2 lb with water and showed −2.3 lb next to a 0.6 lb/wk trend
             let weeklyWeightChange = '--';
             let weightColor = 'var(--text-primary)';
-            if (weighIns.length >= 2) {
-                const recent = weighIns[weighIns.length - 1];
-                let prevWeighIn = weighIns[0];
-                for (const wi of weighIns) {
-                    if (wi.date <= weekStartStr) prevWeighIn = wi;
-                }
-                if (prevWeighIn !== recent) {
-                    const change = recent.weight - prevWeighIn.weight;
-                    weeklyWeightChange = (change > 0 ? '+' : '') + change.toFixed(1) + ' lbs';
-                    weightColor = change <= 0 ? 'var(--accent-green)' : 'var(--accent-red)';
-                }
+            const wRun = getEnergyBalanceRun();
+            if (wRun.ok && wRun.series.length > 7) {
+                const s = wRun.series;
+                const change = s[s.length - 1].sTrend - s[s.length - 8].sTrend;
+                weeklyWeightChange = (change > 0 ? '+' : change < 0 ? '−' : '') + Math.abs(change).toFixed(1) + ' lbs';
+                weightColor = change <= 0 ? 'var(--accent-green)' : 'var(--accent-red)';
             }
 
             // Average daily deficit — only days with tracked/assumed nutrition count
@@ -25554,7 +25630,7 @@ CALIBRATED DEFICIT (estimate): ${formatSignedKcal(deficit + exportCal.current)} 
 
             container.innerHTML = `
                 <div class="ps-grid">
-                    <div class="ps-tile"><div class="ps-val" style="color: ${weightColor};">${weeklyWeightChange}</div><div class="ps-label">Weight, 7 days</div></div>
+                    <div class="ps-tile"><div class="ps-val" style="color: ${weightColor};">${weeklyWeightChange}</div><div class="ps-label">Trend weight, 7 days</div></div>
                     <div class="ps-tile"><div class="ps-val" style="color: ${deficitColor};">${avgDeficit}</div><div class="ps-label">Avg daily deficit</div></div>
                     <div class="ps-tile"><div class="ps-val" style="color: ${proteinColor};">${proteinCompliance}</div><div class="ps-label">Protein compliance</div></div>
                 </div>
@@ -25654,6 +25730,17 @@ CALIBRATED DEFICIT (estimate): ${formatSignedKcal(deficit + exportCal.current)} 
             } catch { /* ignore */ }
         }
 
+        // Jump from home to one Progress report, opened and in view
+        function openProgressReport(moduleId) {
+            bcGo('progress');
+            const wrapper = document.getElementById('pm_' + moduleId);
+            if (!wrapper) return;
+            if (wrapper.classList.contains('collapsed')) toggleProgressModule(moduleId);
+            // Skip the rise-in for this jump: its transform skews the target
+            document.getElementById('progressTab')?.classList.remove('bc-enter');
+            requestAnimationFrame(() => wrapper.scrollIntoView({ block: 'start', behavior: bcReducedMotion() ? 'auto' : 'smooth' }));
+        }
+
         function toggleProgressModule(moduleId) {
             const wrapper = document.getElementById('pm_' + moduleId);
             if (!wrapper) return;
@@ -25685,7 +25772,7 @@ CALIBRATED DEFICIT (estimate): ${formatSignedKcal(deficit + exportCal.current)} 
             // open/closed is remembered per report.
             const modules = [
                 ['dailySnapshot', 'Today\'s Progress', 'Today against your targets'],
-                ['weeklyReportCard', 'Weekly Report Card', 'Grades for the last 7 days'],
+                ['weeklyReportCard', 'Weekly Report Card', 'This week (Sun–Sat) and the last 4'],
                 ['consistencyScore', '30-Day Analytics', 'Consistency over the last month'],
                 ['bodyCompTrend', 'Body Composition', 'Fat and lean mass over time'],
                 ['refeedTracker', 'Refeed Log (optional)', 'Planned higher-calorie days'],
@@ -25739,14 +25826,61 @@ CALIBRATED DEFICIT (estimate): ${formatSignedKcal(deficit + exportCal.current)} 
             });
         }
 
+        // Fat/lean change from the body-fat % logged with weigh-ins, shared by
+        // Body Composition and Recomp Trajectory so the two always agree.
+        // A Theil–Sen line through EVERY reading (one per day), not first vs.
+        // last: a single impedance reading swings ~1 lb of "fat" with
+        // hydration, and the old card compared readings in storage order
+        // (unsorted), so its "first"/"latest" were arbitrary.
+        const BODY_COMP_NOISE_LB = 0.5;
+
+        function getBodyCompChange() {
+            const byDate = new Map();
+            for (const w of getValues(state.weighIns || {})) {
+                const weight = Number(w?.weight), bf = Number(w?.bodyFat);
+                if (!w || !calIsDate(w.date) || !Number.isFinite(weight) || !Number.isFinite(bf) || bf <= 0) continue;
+                if (calWeighInExclusionReason(w)) continue;
+                const prev = byDate.get(w.date);
+                if (!prev || weight < prev.weight) byDate.set(w.date, { date: w.date, weight, bodyFat: bf });
+            }
+            const days = [...byDate.values()].sort((a, b) => a.date.localeCompare(b.date))
+                .map(d => ({ ...d, fat: d.weight * d.bodyFat / 100, lean: d.weight * (1 - d.bodyFat / 100) }));
+            if (days.length < 2) return { readings: days.length, ok: false };
+            const x0 = calDayNumber(days[0].date);
+            const spanDays = calDayNumber(days[days.length - 1].date) - x0;
+            if (spanDays < 1) return { readings: days.length, ok: false };
+            const fit = key => calTheilSen(days.map(d => ({ x: calDayNumber(d.date) - x0, y: d[key] })));
+            const fatFit = fit('fat'), leanFit = fit('lean');
+            const fatChange = fatFit.slope * spanDays, leanChange = leanFit.slope * spanDays;
+            const fatStart = fatFit.intercept, leanStart = leanFit.intercept;
+            const totalLost = -(fatChange + leanChange);
+            const noise = BODY_COMP_NOISE_LB;
+            const fatDown = fatChange < -noise, fatUp = fatChange > noise;
+            const leanDown = leanChange < -noise, leanUp = leanChange > noise;
+            const fatPct = totalLost > 0 ? Math.round(calClamp(-fatChange / totalLost, 0, 1) * 100) : null;
+            let verdict;
+            if (fatDown && leanUp) verdict = { icon: '🎯', tone: 'success', text: 'Recomposition — fat down, lean up' };
+            else if (fatDown && !leanDown) verdict = { icon: '💪', tone: 'success', text: 'Losing fat, holding lean' };
+            else if (fatDown && leanDown) verdict = { icon: '⚠️', tone: 'warning', text: `Losing fat and some lean${fatPct != null ? ` (${fatPct}% fat)` : ''} — keep protein & lifting up` };
+            else if (leanDown) verdict = { icon: '🚨', tone: 'danger', text: 'Lean down, fat not — check protein & training' };
+            else if (fatUp) verdict = { icon: '📈', tone: 'neutral', text: leanUp ? 'Gaining fat and lean' : 'Fat trending up' };
+            else if (leanUp) verdict = { icon: '📈', tone: 'success', text: 'Lean trending up, fat steady' };
+            else verdict = { icon: '➖', tone: 'neutral', text: `Stable — changes are within scale noise (±${noise} lb)` };
+            return {
+                ok: true, readings: days.length, days, startDate: days[0].date, endDate: days[days.length - 1].date, spanDays,
+                fatChange, leanChange, totalLost, fatPct, verdict,
+                fatStart, fatEnd: fatStart + fatChange, leanStart, leanEnd: leanStart + leanChange
+            };
+        }
+
         // Body Composition Trend Card
         function renderBodyCompTrend() {
             const container = document.getElementById('bodyCompTrend');
             if (!container) return;
 
-            const weighInsWithBF = getValues(state.weighIns).filter(w => w.bodyFat != null && w.leanMass != null);
+            const c = getBodyCompChange();
 
-            if (weighInsWithBF.length < 2) {
+            if (!c.ok) {
                 container.innerHTML = `
                     <div class="comp-card">
                         <div class="comp-title">📊 Body Composition</div>
@@ -25758,37 +25892,10 @@ CALIBRATED DEFICIT (estimate): ${formatSignedKcal(deficit + exportCal.current)} 
                 return;
             }
 
-            const first = weighInsWithBF[0];
-            const latest = weighInsWithBF[weighInsWithBF.length - 1];
-
-            const fatChange = (latest.fatMass - first.fatMass).toFixed(1);
-            const leanChange = (latest.leanMass - first.leanMass).toFixed(1);
-            const totalChange = (latest.weight - first.weight).toFixed(1);
-
-            // Calculate what percentage of weight loss was fat vs muscle
-            const totalLost = first.weight - latest.weight;
-            const fatLost = first.fatMass - latest.fatMass;
-            const fatLossPercent = totalLost > 0 ? Math.round((fatLost / totalLost) * 100) : 0;
-
-            // Determine status
-            let status, statusClass, statusIcon;
-            if (parseFloat(leanChange) >= 0 && parseFloat(fatChange) < 0) {
-                status = 'Optimal — losing fat, preserving muscle';
-                statusClass = 'success';
-                statusIcon = '🎯';
-            } else if (parseFloat(leanChange) < -1 && parseFloat(fatChange) < 0) {
-                status = 'Warning — losing muscle with fat';
-                statusClass = 'warning';
-                statusIcon = '⚠️';
-            } else if (parseFloat(leanChange) < 0 && parseFloat(fatChange) >= 0) {
-                status = 'Bad — losing muscle, not fat';
-                statusClass = 'danger';
-                statusIcon = '🚨';
-            } else {
-                status = 'Tracking...';
-                statusClass = 'neutral';
-                statusIcon = '📈';
-            }
+            const fatChange = c.fatChange.toFixed(1);
+            const leanChange = c.leanChange.toFixed(1);
+            const lb = v => v.toFixed(1);
+            const status = c.verdict.text, statusClass = c.verdict.tone, statusIcon = c.verdict.icon;
 
             container.innerHTML = `
                 <div class="comp-card">
@@ -25802,24 +25909,23 @@ CALIBRATED DEFICIT (estimate): ${formatSignedKcal(deficit + exportCal.current)} 
                                 ${parseFloat(fatChange) < 0 ? '' : '+'}${fatChange} lbs
                             </div>
                             <div class="comp-stat-label">Fat Mass</div>
-                            <div class="comp-stat-detail">${first.fatMass} → ${latest.fatMass}</div>
+                            <div class="comp-stat-detail">${lb(c.fatStart)} → ${lb(c.fatEnd)}</div>
                         </div>
                         <div class="comp-stat">
                             <div class="comp-stat-value ${parseFloat(leanChange) >= 0 ? 'positive' : 'negative'}">
                                 ${parseFloat(leanChange) >= 0 ? '+' : ''}${leanChange} lbs
                             </div>
                             <div class="comp-stat-label">Lean Mass</div>
-                            <div class="comp-stat-detail">${first.leanMass} → ${latest.leanMass}</div>
+                            <div class="comp-stat-detail">${lb(c.leanStart)} → ${lb(c.leanEnd)}</div>
                         </div>
                     </div>
-                    ${totalLost > 0 ? `
+                    ${c.fatPct != null && c.totalLost >= BODY_COMP_NOISE_LB ? `
                         <div class="comp-ratio">
-                            Of ${Math.abs(totalChange)} lbs lost: <strong>${fatLossPercent}% fat</strong>, ${100 - fatLossPercent}% lean
+                            Of ${lb(c.totalLost)} lbs lost: <strong>${c.fatPct}% fat</strong>, ${100 - c.fatPct}% lean
                         </div>
                     ` : ''}
                     <div class="comp-footer">
-                        Since ${parseLocalDate(first.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
-                        (${weighInsWithBF.length} weigh-ins)
+                        Trend line through ${c.readings} body-fat readings, ${formatShortDate(c.startDate)} – ${formatShortDate(c.endDate)}. Smart-scale estimates: read the direction, not single changes.
                     </div>
                 </div>
             `;
@@ -26501,10 +26607,13 @@ CALIBRATED DEFICIT (estimate): ${formatSignedKcal(deficit + exportCal.current)} 
                 if (effDef != null) {
                     deficitDays++;
                     totalDeficit += effDef;
-                    const targetDeficit = log.targetDeficit ??
-                        ((log.tdee != null && log.target != null)
-                            ? Math.max(0, log.tdee - log.target)
-                            : (log.mode === 'ORANGE' ? 0 : (log.mode === 'YELLOW' ? 300 : 500)));
+                    // Planned deficit on the SAME basis as effDef (raw TDEE +
+                    // that date's calibration): a stored targetDeficit could be
+                    // raw or calibrated depending on which path saved the day,
+                    // and calibrated-actual vs raw-plan docked on-plan days ~25 pts
+                    const targetDeficit = (log.tdee != null && log.target != null)
+                        ? Math.max(0, log.tdee + getCalibrationAdjustmentForDate(log.dateStr) - log.target)
+                        : (log.targetDeficit ?? (log.mode === 'ORANGE' ? 0 : (log.mode === 'YELLOW' ? 300 : 500)));
                     totalDefScore += calculateDayDeficitScore(effDef, targetDeficit);
                 }
 
@@ -26550,6 +26659,18 @@ CALIBRATED DEFICIT (estimate): ${formatSignedKcal(deficit + exportCal.current)} 
             if (score >= 63) return 'D+';
             if (score >= 60) return 'D';
             return 'F';
+        }
+
+        // The home quests header's grade: this week's Weekly Report Card grade
+        // once 3 days have finished (the card's own rule), else last week's.
+        function getHomeWeekGrade() {
+            const { start } = getWeekRange(new Date());
+            const logs = getWeekLogs(start);
+            if (logs.length && logs.completedDays >= 3) return { label: 'Week', grade: scoreToGrade(calculateWeekScore(logs).score) };
+            const prev = new Date(start);
+            prev.setDate(prev.getDate() - 7);
+            const last = getWeekLogs(prev);
+            return last.length ? { label: 'Last wk', grade: scoreToGrade(calculateWeekScore(last).score) } : null;
         }
 
         function gradeClass(grade) {
@@ -26738,8 +26859,8 @@ CALIBRATED DEFICIT (estimate): ${formatSignedKcal(deficit + exportCal.current)} 
                 { icon: '🥩', value: `${highestProtein.value}g`, label: 'Best Protein Day', date: formatDate(highestProtein.date) },
                 { icon: '📉', value: formatNumber(biggestDeficit.value), label: 'Biggest Deficit', date: formatDate(biggestDeficit.date) },
                 { icon: '📆', value: formatNumber(bestWeekDeficit.value), label: 'Best 7-Day Deficit', date: bestWeekDeficit.label },
-                { icon: '🔥', value: `${calculateLongestDeficitStreak()}d`, label: 'Longest Deficit Streak', date: '' },
-                { icon: '✨', value: `${consecutivePerfect.value}d`, label: 'Perfect Day Streak', date: '' },
+                { icon: '🔥', value: `${calculateLongestDeficitStreak()}d`, label: 'Longest Deficit Streak', date: '500+ kcal days in a row' },
+                { icon: '✨', value: `${consecutivePerfect.value}d`, label: 'Perfect Day Streak', date: 'calories in zone + protein' },
                 { icon: '💪', value: `${longestGymStreak}d`, label: 'Gym Streak Record', date: '' },
                 { icon: '⚖️', value: lowestWeight.value ? `${lowestWeight.value} lbs` : '--', label: 'Lowest Weight', date: formatDate(lowestWeight.date) },
             ];
@@ -27699,7 +27820,7 @@ CALIBRATED DEFICIT (estimate): ${formatSignedKcal(deficit + exportCal.current)} 
                     </div>
 
                     <div style="font-size:0.7em;color:var(--text-muted);margin-top:10px;padding-top:8px;border-top:1px solid var(--border-color);">
-                        Fat vs. lean tissue change is not estimated — protein intake and training frequency cannot establish it, and smart-scale body-fat readings are not used. Strength maintenance is best judged from your lift numbers, which BodyComp does not record; improving lifts during a deficit are a good sign that lean mass is being preserved.
+                        This card doesn't split fat vs. lean — protein intake and training frequency can't establish it. Body Composition does, from the body-fat % on your weigh-ins (a trend line, since single smart-scale readings swing with hydration). Strength maintenance is best judged from your lift numbers, which BodyComp does not record; improving lifts during a deficit are a good sign that lean mass is being preserved.
                     </div>
                 </div>
             `;
@@ -27797,68 +27918,7 @@ CALIBRATED DEFICIT (estimate): ${formatSignedKcal(deficit + exportCal.current)} 
             const container = document.getElementById('achievementProgress');
             if (!container) return;
 
-            const allLogs = Object.entries(state.dailyLogs || {}).sort((a, b) => a[0].localeCompare(b[0]));
-            const weighIns = getValues(state.weighIns).sort((a, b) => (a.date || '').localeCompare(b.date || ''));
-
-            // Streak achievements run off the deficit streak — the
-            // app-usage streak (gamification.streak) is dead (Aug 2026)
-            const bestDeficitStreak = Math.max(calculateDeficitStreak(), calculateLongestDeficitStreak());
-
-            // Weight loss progress
-            const startWeight = state.profile?.startingWeight_lbs || 190;
-            const currentWeight = getWeightForDate(getLocalDateString()) || 190;
-            const weightLost = Math.max(startWeight - currentWeight, 0);
-            // Halfway achievement needs a set goal — row hidden when unset
-            const goal = getGoal();
-            const halfwayTarget = goal ? (startWeight - goal.weight) / 2 : null;
-
-            // FIX: Iterate ALL calendar dates so gaps break streaks (same fix as renderPersonalRecords)
-            let proteinStreak = 0, tempProStreak = 0;
-            let perfectStreak = 0, tempPerfStreak = 0;
-            const achLogDates = allLogs.map(l => l[0]);
-            if (achLogDates.length > 0) {
-                const achStart = parseLocalDate(achLogDates[0]);
-                const achEnd = parseLocalDate(achLogDates[achLogDates.length - 1]);
-                const achCur = new Date(achStart);
-                while (achCur <= achEnd) {
-                    const ds = getLocalDateString(achCur);
-                    const log = state.dailyLogs[ds];
-                    // Protein streak
-                    if (log && log.proteinHit) { tempProStreak++; proteinStreak = Math.max(proteinStreak, tempProStreak); }
-                    else { tempProStreak = 0; }
-                    // Perfect streak
-                    if (log && (log.perfect || log.status === 'perfect')) { tempPerfStreak++; perfectStreak = Math.max(perfectStreak, tempPerfStreak); }
-                    else { tempPerfStreak = 0; }
-                    achCur.setDate(achCur.getDate() + 1);
-                }
-            }
-
-            // Early bird count (meals before 9am)
-            let earlyBirdCount = 0;
-            allLogs.forEach(([d, l]) => {
-                const meals = l.meals ? (Array.isArray(l.meals) ? l.meals : Object.values(l.meals)) : [];
-                const hasEarlyMeal = meals.some(m => {
-                    if (!m.time) return false;
-                    const minutes = parseTimeMinutes(m.time);
-                    return minutes != null && minutes < 9 * 60;
-                });
-                if (hasEarlyMeal) earlyBirdCount++;
-            });
-
-            const achievements = [
-                { id: 'first_day', icon: '🚀', name: 'First Day', desc: 'Complete your first day', current: allLogs.filter(([, log]) => hasAnyMeaningfulData(log)).length, target: 1, xp: 50 },
-                { id: 'week_streak', icon: '🔥', name: 'Week Warrior', desc: '7 day deficit streak', current: bestDeficitStreak, target: 7, xp: 200 },
-                { id: 'two_week_streak', icon: '👑', name: 'Two Week King', desc: '14 day deficit streak', current: bestDeficitStreak, target: 14, xp: 500 },
-                { id: 'month_streak', icon: '💎', name: 'Monthly Master', desc: '30 day deficit streak', current: bestDeficitStreak, target: 30, xp: 1000 },
-                { id: 'first_lb', icon: '⬇️', name: 'First Pound', desc: 'Lose your first pound', current: weightLost, target: 1, xp: 100 },
-                { id: 'five_lbs', icon: '🎯', name: 'Five Down', desc: 'Lose 5 pounds', current: weightLost, target: 5, xp: 300 },
-                { id: 'ten_lbs', icon: '🏆', name: 'Ten Down', desc: 'Lose 10 pounds', current: weightLost, target: 10, xp: 500 },
-                ...(halfwayTarget > 0 ? [{ id: 'halfway', icon: '⭐', name: 'Halfway There', desc: 'Reach halfway to goal', current: weightLost, target: halfwayTarget, xp: 750 }] : []),
-                { id: 'protein_king', icon: '🥩', name: 'Protein King', desc: 'Hit protein 7 days in a row', current: proteinStreak, target: 7, xp: 250 },
-                { id: 'deficit_master', icon: '📉', name: 'Deficit Master', desc: '7 days hitting deficit', current: bestDeficitStreak, target: 7, xp: 250 },
-                { id: 'early_bird', icon: '🌅', name: 'Early Bird', desc: 'Log breakfast before 9am 5x', current: earlyBirdCount, target: 5, xp: 150 },
-                { id: 'perfect_week', icon: '✨', name: 'Perfect Week', desc: 'All targets for 7 days', current: perfectStreak, target: 7, xp: 400 },
-            ];
+            const achievements = getAchievementProgressList();
 
             const isUnlocked = (id) => state.achievements?.[id]?.unlocked;
 
@@ -27869,8 +27929,8 @@ CALIBRATED DEFICIT (estimate): ${formatSignedKcal(deficit + exportCal.current)} 
                         ${achievements.map(a => {
                             const unlocked = isUnlocked(a.id);
                             const pct = Math.min(Math.round((a.current / a.target) * 100), 100);
-                            const displayCurrent = typeof a.current === 'number' ? (a.current % 1 === 0 ? a.current : a.current.toFixed(1)) : a.current;
-                            const displayTarget = typeof a.target === 'number' ? (a.target % 1 === 0 ? a.target : a.target.toFixed(1)) : a.target;
+                            const fmt = v => typeof v === 'number' ? (v % 1 === 0 ? formatNumber(v) : v.toFixed(1)) : v;
+                            const displayCurrent = fmt(a.current), displayTarget = fmt(a.target);
                             return `<div class="achievement-progress-item ${unlocked ? 'unlocked' : ''}">
                                 <div class="achievement-progress-header">
                                     <span class="achievement-progress-name">${a.icon} ${a.name}</span>
@@ -27907,18 +27967,19 @@ CALIBRATED DEFICIT (estimate): ${formatSignedKcal(deficit + exportCal.current)} 
                 if (ltDef != null) totalDeficit += ltDef;
             });
 
-            // Total weight lost
+            // Weight lost — same start and current weight as the home goal card
+            // and the weight achievements (it used the first weigh-in instead,
+            // so it said 5.1 lb next to the goal card's 8.1)
             const weighIns = getValues(state.weighIns).sort((a, b) => (a.date || '').localeCompare(b.date || ''));
-            let totalWeightLost = 0;
-            if (weighIns.length >= 2) {
-                totalWeightLost = Math.max(weighIns[0].weight - weighIns[weighIns.length - 1].weight, 0);
-            }
+            const ltStart = state.profile?.startingWeight_lbs ?? weighIns[0]?.weight;
+            const ltCurrent = weighIns.length ? getWeightForDate(getLocalDateString()) : null;
+            const totalWeightLost = ltStart != null && ltCurrent != null ? Math.max(ltStart - ltCurrent, 0) : 0;
 
             const stats = [
                 { value: daysTracked, label: 'Days Tracked' },
                 { value: formatNumber(totalCalories), label: 'Total Calories' },
                 { value: formatNumber(totalProtein) + 'g', label: 'Total Protein' },
-                { value: totalWorkouts, label: 'Workouts' },
+                { value: totalWorkouts, label: 'Gym Days' }, // days with a workout; Workout Stats counts sessions
                 { value: formatNumber(Math.round(totalDeficit)), label: 'Total Deficit (cal)' },
                 { value: totalWeightLost > 0 ? totalWeightLost.toFixed(1) + ' lbs' : '--', label: 'Weight Lost' },
             ];
@@ -28024,7 +28085,7 @@ CALIBRATED DEFICIT (estimate): ${formatSignedKcal(deficit + exportCal.current)} 
                 if (isToday) {
                     cellTitle = `Today (in progress)${gym ? ' · gym' : ''}`;
                 } else if (tier) {
-                    cellTitle = `${tier.label}: ${formatSignedKcal(Math.round(deficit))} kcal ${deficit >= 0 ? 'deficit' : 'surplus'}${assumed ? ' (assumed)' : ''}${tracked ? ` · ${displayCalories} cal, ${displayProtein}g P` : ''}${gym ? ' · gym' : ''}`;
+                    cellTitle = `${tier.label}: ${formatNumber(Math.abs(Math.round(deficit)))} kcal ${deficit >= 0 ? 'deficit' : 'surplus'}${assumed ? ' (assumed)' : ''}${tracked ? ` · ${displayCalories} cal, ${displayProtein}g P` : ''}${gym ? ' · gym' : ''}`;
                 } else if (log) {
                     cellTitle = `${gym ? 'Gym · ' : ''}nutrition not tracked`;
                 } else if (isPastNoData) {
@@ -28039,7 +28100,7 @@ CALIBRATED DEFICIT (estimate): ${formatSignedKcal(deficit + exportCal.current)} 
                     isPastNoData ? 'past-empty' : '',
                     isFuture ? 'future' : ''].filter(Boolean).join(' ');
                 const defLabel = tier ? `${assumed ? '≈' : ''}${formatCompactDeficit(deficit)}` : '';
-                const flair = tier && (tier.key === 'fire' || tier.key === 'perfect') ? `<span class="cal-flair" aria-hidden="true">${tier.key === 'fire' ? '🔥' : '✦'}</span>` : '';
+                const flair = tier?.key === 'perfect' ? '<span class="cal-flair" aria-hidden="true">✦</span>' : '';
                 html += `<div class="${classes}" style="--d:${startPadding + day - 1}"
                               ${isFuture ? '' : `onclick="showDayDetails('${dateStr}')"`}
                               title="${escapeHtml(cellTitle)}" aria-label="${escapeHtml(`${formatShortDate(dateStr)}: ${cellTitle}`)}">
@@ -28515,7 +28576,7 @@ CALIBRATED DEFICIT (estimate): ${formatSignedKcal(deficit + exportCal.current)} 
                     <div class="achievement-card ${achievement.unlocked ? 'unlocked' : ''}">
                         <div class="achievement-icon">${achievement.icon}</div>
                         <div class="achievement-name">${escapeHtml(achievement.name)}</div>
-                        <div class="achievement-desc">${escapeHtml(achievement.desc)}</div>
+                        <div class="achievement-desc">${escapeHtml(ACHIEVEMENT_COPY[id]?.desc ?? achievement.desc)}</div>
                         <div class="achievement-xp">+${achievement.xp} XP</div>
                     </div>
                 `;
@@ -28641,6 +28702,11 @@ CALIBRATED DEFICIT (estimate): ${formatSignedKcal(deficit + exportCal.current)} 
             // from initializeUI's other call sites free no-ops.
             setTimeout(() => runHistoryUpgradeV3(), 1500);
             setTimeout(() => runFrequentFoodFatPatch(), 1600);
+            // Badges already earned (e.g. after an import or a rule change)
+            // unlock on open instead of sitting at "11/7" until the next log.
+            setTimeout(() => {
+                if (pinValidated && hasLoadedFromCloud && !isInitialLoad && state?._dataLoaded) checkAchievements({ quiet: true });
+            }, 2500);
         }
 
         // v3: Auto-start the day using ecosystem data
@@ -28989,7 +29055,7 @@ CALIBRATED DEFICIT (estimate): ${formatSignedKcal(deficit + exportCal.current)} 
                 target: targets.calories,
                 targetProtein: targets.protein,
                 targetCarbs: targets.carbs ?? 0,
-                targetDeficit: targets.deficit ?? Math.max(0, tdee - targets.calories),
+                targetDeficit: Math.max(0, tdee - targets.calories), // RAW like tdee/deficit (targets.deficit is calibrated)
                 floor: targets.floor,
                 // Performance
                 tdee: tdee,

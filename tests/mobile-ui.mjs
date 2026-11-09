@@ -183,7 +183,7 @@ try {
                     if (JSON.stringify(state) !== before) throw new Error('History render mutated state');
                 });
                 const history = await page.locator('#recentProgressList').innerText();
-                for (const expected of ['−500 cal deficit', '320 cal exercise', '+200 cal surplus', '−100 cal deficit', 'Assumed', 'Untracked', '0 cal maintenance', '−300 cal deficit']) assert(history.includes(expected), expected);
+                for (const expected of ['500 cal deficit', '320 cal exercise', '200 cal surplus', '100 cal deficit', 'Assumed', 'Untracked', 'Maintenance', '300 cal deficit']) assert(history.includes(expected), expected);
                 await page.waitForFunction(() => getComputedStyle(document.getElementById('qtySelectorModal')).visibility === 'hidden');
                 await page.locator('#recentProgressList').scrollIntoViewIfNeeded();
                 await page.screenshot({ path: `/tmp/bodycomp-${engine.name()}-${viewport.width}.png` });

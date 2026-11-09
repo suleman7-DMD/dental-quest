@@ -92,7 +92,7 @@ async function fits(page, selector) {
     assert(result.docOverflow <= 1, `page scrolls horizontally: ${JSON.stringify(result)}`);
 }
 
-const getDeficitTierKey = d => { const v = Math.round(d); return v < 0 ? 'surplus' : v < 250 ? 'maint' : v < 500 ? 'small' : v < 700 ? 'great' : v < 900 ? 'perfect' : v < 1000 ? 'fire' : 'hot'; };
+const getDeficitTierKey = d => { const v = Math.round(d); return v < -399 ? 'surplus-big' : v < -149 ? 'surplus' : v < 0 ? 'surplus-light' : v < 250 ? 'maint' : v < 500 ? 'small' : v < 700 ? 'great' : v < 1000 ? 'perfect' : 'hot'; };
 
 let checks = 0;
 const ok = (cond, message) => { assert(cond, message); checks++; };
@@ -305,8 +305,9 @@ async function logicSuite(page) {
         __setTodayIntake(1800);
         saveDayLog();
         renderSimpleView();
-        const bounds = [[-1, 'surplus'], [0, 'maint'], [249, 'maint'], [250, 'small'], [499, 'small'], [500, 'great'], [699, 'great'],
-            [700, 'perfect'], [899, 'perfect'], [900, 'fire'], [999, 'fire'], [1000, 'hot'], [2400, 'hot']].every(([v, k]) => getDeficitTier(v).key === k);
+        const bounds = [[-2000, 'surplus-big'], [-400, 'surplus-big'], [-399, 'surplus'], [-150, 'surplus'], [-149, 'surplus-light'], [-1, 'surplus-light'],
+            [0, 'maint'], [249, 'maint'], [250, 'small'], [499, 'small'], [500, 'great'], [699, 'great'],
+            [700, 'perfect'], [999, 'perfect'], [1000, 'hot'], [2400, 'hot']].every(([v, k]) => getDeficitTier(v).key === k);
         // Independent averages: raw stored deficit + that day's learned correction
         const indep = n => {
             let t = 0, k = 0;
@@ -350,21 +351,22 @@ async function logicSuite(page) {
             bounds, tiles, expected, calOk: calOk.filter(x => x !== 'ok'),
             oct3: cells['2026-10-03'], oct9: cells['2026-10-09'], sep12: cells['2026-09-12'],
             legend: document.querySelector('.cal-legend')?.innerText,
+            legendSwatches: document.querySelectorAll('.cal-legend .sw').length,
             onTrackRaw100, mix: document.getElementById('consistencyScore').innerText
         };
     });
-    ok(tiers.bounds, 'tier boundaries: <0 surplus · 0–249 · 250–499 · 500 great · 700 perfect · 900 fire · 1000+ too aggressive');
+    ok(tiers.bounds, 'tier boundaries: 400+/150+/1+ over = three reds · 0–249 maint · 250 · 500 · 700–999 perfect · 1000+ too aggressive');
     ok(tiers.tiles.length === 5 && tiers.tiles.map(t => t.title.match(/^(\d+)-day/)[1]).join() === '3,7,14,30,60', 'home badges: 3/7/14/30/60-day');
     tiers.expected.forEach((e, i) => {
-        ok(tiers.tiles[i].val === e.val && tiers.tiles[i].cls.includes(`t-${e.tier ?? 'none'}`) && tiers.tiles[i].cov === `${e.k}/${e.n} days`,
+        ok(tiers.tiles[i].val === e.val && tiers.tiles[i].cls.includes(`t-${e.tier ?? 'none'}`) && tiers.tiles[i].cov === `${e.k}/${e.n}`,
             `${e.n}D badge = independent calibrated average ${e.val} (${e.tier}, ${e.k}/${e.n}) — got ${JSON.stringify(tiers.tiles[i])}`);
     });
     ok(/Oct 2 – Oct 8/.test(tiers.tiles[1].title), `7D window = last 7 completed days, live day excluded (${tiers.tiles[1].title})`);
     ok(tiers.calOk.length === 0, `every calendar day colored by its calibrated tier, labeled with its deficit, gym dot when trained: ${tiers.calOk.join('; ')}`);
-    ok(tiers.oct3.cls.includes('t-surplus') && tiers.oct3.def.startsWith('−'), 'Oct 3 surplus is red with a negative number');
+    ok(/\bt-surplus-big\b/.test(tiers.oct3.cls) && tiers.oct3.def.startsWith('−'), `Oct 3 (~700 over) is the deepest red with a negative number (${tiers.oct3.cls})`);
     ok(tiers.oct9.cls.includes('today') && !/\bt-/.test(tiers.oct9.cls) && tiers.oct9.def === null, 'live day: ring only, not graded while in progress');
     ok(tiers.sep12.cls.includes('past-empty') && tiers.sep12.def === null, 'untracked past day: dashed, no number');
-    ok(/Surplus/.test(tiers.legend) && /Great/.test(tiers.legend) && /Perfect/.test(tiers.legend) && /Fire/.test(tiers.legend) && /gym/.test(tiers.legend) && /calibrated deficit/.test(tiers.legend), 'calendar legend explains the tier scale');
+    ok(/Surplus/.test(tiers.legend) && /Deficit/.test(tiers.legend) && /1k\+/.test(tiers.legend) && tiers.legendSwatches === 8 && /gym/.test(tiers.legend) && /calibrated deficit/.test(tiers.legend), 'calendar legend: 8-step red→green→amber scale with ends labeled');
     ok(tiers.onTrackRaw100 === false, 'on-track uses the calibrated deficit (raw +100 / stored "good" is not on track)');
     ok(/Deficit Tiers \(calibrated\)/.test(tiers.mix) && !/Day Status Distribution/.test(tiers.mix), '30-day analytics shows the calibrated tier mix');
 
@@ -512,6 +514,59 @@ async function logicSuite(page) {
     });
     ok(manual.afterFirst.length === 1 && manual.afterFirst[0] === manual.original && manual.noteShown, 'first tap asks, does not overwrite');
     ok(manual.afterSecond.length === 1 && manual.afterSecond[0] === 190.5, 'explicit second tap replaces');
+
+    // ---------- Home quests / meal feedback / week grade / badges (Nov 2026 audit) ----------
+    const home = await page.evaluate(() => {
+        __seed();
+        const zone = getIntakeZone(), goals = getIntakeGoals();
+        __setTodayIntake(150); // a morning snack is not a finished day
+        renderSimpleView();
+        const q = Object.fromEntries(getDailyQuests().map(x => [x.key, x]));
+        const morning = { budget: q.budget.done, deficit: q.deficit.done, deficitSub: q.deficit.sub, budgetSub: q.budget.sub,
+            feedback: getMealFeedbackLine(), bar: document.getElementById('deficitValues')?.innerText };
+        __setTodayIntake(zone.min + 20);
+        const q2 = Object.fromEntries(getDailyQuests().map(x => [x.key, x]));
+        const liveDef = getLiveTdeeEstimate().calibrated - (zone.min + 20);
+        const inZone = { budget: q2.budget.done, deficit: q2.deficit.done, liveDef, feedback: getMealFeedbackLine() };
+        __setTodayIntake(goals.budget + 300);
+        const q3 = Object.fromEntries(getDailyQuests().map(x => [x.key, x]));
+        const overDay = { failed: q3.budget.failed, sub: q3.budget.sub, feedback: getMealFeedbackLine() };
+        // Saved plan deficit is RAW (the filter's basis), like log.tdee/deficit
+        __setTodayIntake(1800); saveDayLog();
+        const saved = state.dailyLogs[state.today.date];
+        // Week grade chip = the Weekly Report Card grade (Fri Oct 9: Oct 4–8 finished)
+        renderSimpleView();
+        const chip = document.getElementById('homeWeekGrade');
+        showDetailsView(); switchDashboardTab('progress'); renderWeeklyReportCard();
+        const cardGrade = document.querySelector('#weeklyReportCard .report-grade-letter')?.textContent.trim();
+        // An on-plan day (ate exactly the target) scores full deficit marks
+        const d = '2026-10-08', log = state.dailyLogs[d];
+        const onPlan = calculateWeekScore([{ ...log, dateStr: d, calories: log.target, deficit: log.tdee - log.target }]).avgDefScore;
+        // Body composition ignores storage order
+        const bcA = getBodyCompChange();
+        const entries = Object.entries(state.weighIns).reverse();
+        state.weighIns = Object.fromEntries(entries);
+        const bcB = getBodyCompChange();
+        // A badge already earned unlocks on the next check
+        ['2026-10-01', '2026-10-02', '2026-10-05', '2026-10-06', '2026-10-07'].forEach(dd => { state.dailyLogs[dd].meals.m1.time = '7:30 AM'; });
+        const eb = getAchievementProgressList().find(a => a.id === 'early_bird');
+        const before = state.achievements.early_bird?.unlocked;
+        checkAchievements();
+        return { morning, inZone, overDay, zone, goals, saved: { td: saved.targetDeficit, raw: Math.max(0, saved.tdee - saved.target) },
+            chip: { hidden: chip.hidden, text: chip.textContent }, cardGrade, onPlan,
+            bc: [bcA.fatChange, bcB.fatChange, bcA.startDate, bcB.startDate], eb: { cur: eb.current, before, after: state.achievements.early_bird?.unlocked } };
+    });
+    ok(!home.morning.budget && !home.morning.deficit && home.morning.deficitSub === 'On pace' && home.morning.budgetSub === `${(home.goals.budget - 150).toLocaleString('en-US')} left`,
+        `150 kcal morning: Budget/Deficit quests not done (${JSON.stringify(home.morning)})`);
+    ok(/so far · ≈[\d,]+ at full budget/.test(home.morning.bar), `deficit bar projects the day at full budget, no second "left" number (${home.morning.bar})`);
+    ok(home.morning.feedback.startsWith(`${(home.goals.budget - 150).toLocaleString('en-US')} left · protein 40/`), `meal toast line = the hero's left + protein (${home.morning.feedback})`);
+    ok(home.inZone.budget && home.inZone.deficit === (home.inZone.liveDef >= 500) && /^In zone · /.test(home.inZone.feedback), `in-zone day: Budget done, Deficit done iff ≥500 (${home.inZone.liveDef})`);
+    ok(home.overDay.failed && home.overDay.sub === '+300 over' && /^300 over budget/.test(home.overDay.feedback), 'over budget: quest failed, toast says so');
+    ok(home.saved.td === home.saved.raw, `saved targetDeficit is raw tdee − target (${home.saved.td} vs ${home.saved.raw})`);
+    ok(!home.chip.hidden && home.cardGrade && home.chip.text === `Week ${home.cardGrade}`, `home week chip = report card grade (${home.chip.text} / ${home.cardGrade})`);
+    ok(home.onPlan === 100, `eating exactly the target scores full deficit marks (got ${home.onPlan})`);
+    ok(home.bc[0] === home.bc[1] && home.bc[2] === home.bc[3] && home.bc[2] === '2026-09-13', `body comp independent of storage order (${home.bc})`);
+    ok(home.eb.cur === 6 && !home.eb.before && home.eb.after, `5 seeded 7:30 breakfasts + today's 8:00 = 6 → earned badge unlocks on check (${JSON.stringify(home.eb)})`);
 }
 
 async function layoutSuite(page, label) {
